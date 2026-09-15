@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Invoice extends Model
 {
-    protected $fillable = ['company_id', 'project_id', 'status', 'surcharge', 'issued_on', 'due_on', 'stripe_checkout_session_id'];
+    protected $fillable = ['company_id', 'project_id', 'contact_id', 'status', 'surcharge', 'issued_on', 'due_on', 'stripe_checkout_session_id'];
 
     protected $casts = [
         'surcharge' => 'boolean',
@@ -24,6 +24,11 @@ class Invoice extends Model
     public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class);
+    }
+
+    public function contact(): BelongsTo
+    {
+        return $this->belongsTo(Contact::class);
     }
 
     public function items(): HasMany

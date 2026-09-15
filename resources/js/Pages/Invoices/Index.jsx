@@ -8,7 +8,7 @@ import { api } from '../../lib/api';
 import { getTray, clearTray } from '../../lib/tray';
 
 function emptyDraft() {
-    return { company_id: '', items: [{ description: '', amount: '' }], surcharge: false };
+    return { company_id: '', contact_id: '', items: [{ description: '', amount: '' }], surcharge: false };
 }
 
 export default function InvoicesIndex({ invoices, companies }) {
@@ -17,13 +17,27 @@ export default function InvoicesIndex({ invoices, companies }) {
     const [error, setError] = useState('');
     const [saving, setSaving] = useState(false);
 
+    function billingContactFor(companyId) {
+        const company = companies.find((c) => String(c.id) === String(companyId));
+        return company?.contacts?.find((c) => c.is_billing);
+    }
+    const contactsForCompany = companies.find((c) => String(c.id) === String(draft.company_id))?.contacts || [];
+
+    function handleCompanyChange(value) {
+        const billingContact = billingContactFor(value);
+        setDraft({ ...draft, company_id: value, contact_id: billingContact ? String(billingContact.id) : '' });
+    }
+
     useEffect(() => {
         if (window.location.search.includes('from_tray=1')) {
             const tray = getTray();
             if (tray.length > 0) {
                 const companyIds = [...new Set(tray.map((t) => t.company_id))];
+                const singleCompanyId = companyIds.length === 1 ? String(companyIds[0]) : '';
+                const billingContact = singleCompanyId ? billingContactFor(singleCompanyId) : null;
                 setDraft({
-                    company_id: companyIds.length === 1 ? String(companyIds[0]) : '',
+                    company_id: singleCompanyId,
+                    contact_id: billingContact ? String(billingContact.id) : '',
                     items: tray.map((t) => ({
                         description: t.description,
                         amount: String(t.amount.toFixed(2)),
@@ -77,6 +91,7 @@ export default function InvoicesIndex({ invoices, companies }) {
         setError('');
         try {
             const invoice = await api.post(`/api/companies/${draft.company_id}/invoices`, {
+                contact_id: draft.contact_id || null,
                 surcharge: draft.surcharge,
                 items: validItems,
             });
@@ -118,15 +133,32 @@ export default function InvoicesIndex({ invoices, companies }) {
 
             {showForm && (
                 <div className="bg-white rounded-lg border border-border p-4 mb-6">
-                    <select
-                        required
-                        value={draft.company_id}
-                        onChange={(e) => setDraft({ ...draft, company_id: e.target.value })}
-                        className="border border-border rounded px-3 py-2 text-sm mb-4 w-full"
-                    >
-                        <option value="">Select client</option>
-                        {companies.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-                    </select>
+                    <div className="grid grid-cols-2 gap-3 mb-4">
+                        <select
+                            required
+                            value={draft.company_id}
+                            onChange={(e) => handleCompanyChange(e.target.value)}
+                            className="border border-border rounded px-3 py-2 text-sm"
+                        >
+                            <option value="">Select client</option>
+                            {companies.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                        </select>
+                        <select
+                            value={draft.contact_id}
+                            disabled={!draft.company_id}
+                            onChange={(e) => setDraft({ ...draft, contact_id: e.target.value })}
+                            className="border border-border rounded px-3 py-2 text-sm disabled:bg-paper disabled:text-sage"
+                        >
+                            <option value="">
+                                {draft.company_id ? 'Bill to (no specific contact)' : 'Select a client first'}
+                            </option>
+                            {contactsForCompany.map((contact) => (
+                                <option key={contact.id} value={contact.id}>
+                                    {contact.name}{contact.email ? ` (${contact.email})` : ''}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
 
                     <div className="mb-3">
                         {draft.items.map((item, idx) => (

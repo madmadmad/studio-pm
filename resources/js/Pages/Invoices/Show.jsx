@@ -31,6 +31,7 @@ export default function InvoicesShow({ invoice }) {
             </div>
             <p className="text-sm text-sage mb-6">
                 Issued {formatDate(invoice.issued_on)} &middot; Due {formatDate(invoice.due_on)}
+                {invoice.contact && <> &middot; Billed to {invoice.contact.name}</>}
             </p>
 
             <div className="bg-white rounded-lg border border-border p-4 mb-6">

@@ -44,7 +44,9 @@ export default function ProposalsForm({ proposal, companies, services }) {
     const contactsForCompany = companies.find((c) => String(c.id) === String(form.company_id))?.contacts || [];
 
     function handleCompanyChange(value) {
-        setForm({ ...form, company_id: value, contact_id: '' });
+        const company = companies.find((c) => String(c.id) === String(value));
+        const primaryContact = company?.contacts?.find((c) => c.is_primary);
+        setForm({ ...form, company_id: value, contact_id: primaryContact ? String(primaryContact.id) : '' });
     }
 
     function updateItem(idx, field, value) {

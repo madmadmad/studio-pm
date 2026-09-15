@@ -21,6 +21,7 @@ class InvoiceController extends Controller
     {
         $data = $request->validate([
             'project_id' => ['nullable', Rule::exists('projects', 'id')->where('company_id', $company->id)],
+            'contact_id' => ['nullable', Rule::exists('contacts', 'id')->where('company_id', $company->id)],
             'surcharge' => ['boolean'],
             'due_on' => ['nullable', 'date'],
             'items' => ['required', 'array', 'min:1'],
@@ -34,6 +35,7 @@ class InvoiceController extends Controller
         $invoice = DB::transaction(function () use ($data, $company) {
             $invoice = $company->invoices()->create([
                 'project_id' => $data['project_id'] ?? null,
+                'contact_id' => $data['contact_id'] ?? null,
                 'status' => 'draft',
                 'surcharge' => $data['surcharge'] ?? false,
                 'issued_on' => now(),

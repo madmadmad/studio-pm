@@ -93,4 +93,34 @@ class InvoiceMarkPaidTest extends TestCase
         $transaction = Transaction::where('invoice_id', $invoice->id)->first();
         $this->assertEqualsWithDelta(400.0, (float) $transaction->amount, 0.001);
     }
+
+    public function test_an_invoice_can_be_addressed_to_a_specific_billing_contact(): void
+    {
+        $user = User::factory()->create();
+        $company = Company::create(['name' => 'Alder & Finch Design']);
+        $contact = $company->contacts()->create(['name' => 'Accounts Payable', 'email' => 'ap@alderfinch.co', 'is_billing' => true]);
+
+        $response = $this->actingAs($user)->postJson("/api/companies/{$company->id}/invoices", [
+            'contact_id' => $contact->id,
+            'items' => [['description' => 'Design work', 'amount' => 1000]],
+        ]);
+
+        $response->assertCreated();
+        $this->assertDatabaseHas('invoices', ['id' => $response->json('id'), 'contact_id' => $contact->id]);
+    }
+
+    public function test_an_invoice_contact_from_a_different_company_is_rejected(): void
+    {
+        $user = User::factory()->create();
+        $companyA = Company::create(['name' => 'Alder & Finch Design']);
+        $companyB = Company::create(['name' => 'Marsh Grove Bakery']);
+        $otherContact = $companyB->contacts()->create(['name' => 'Tomas Marsh']);
+
+        $response = $this->actingAs($user)->postJson("/api/companies/{$companyA->id}/invoices", [
+            'contact_id' => $otherContact->id,
+            'items' => [['description' => 'Design work', 'amount' => 1000]],
+        ]);
+
+        $response->assertUnprocessable();
+    }
 }

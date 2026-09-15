@@ -98,6 +98,7 @@ export default function ClientsIndex({ companies }) {
                                 <th className="px-4 py-2 font-medium">Contact</th>
                                 <th className="px-4 py-2 font-medium">Rate</th>
                                 <th className="px-4 py-2 font-medium">Status</th>
+                                <th className="px-4 py-2 font-medium"></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -116,6 +117,11 @@ export default function ClientsIndex({ companies }) {
                                     </td>
                                     <td className="px-4 py-3">
                                         <CompanyStatusBadge company={c} />
+                                    </td>
+                                    <td className="px-4 py-3 text-right">
+                                        <Link href={`/clients/${c.id}`} className="text-sm font-medium text-sage hover:text-ink">
+                                            Edit
+                                        </Link>
                                     </td>
                                 </tr>
                             ))}

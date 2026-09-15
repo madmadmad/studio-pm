@@ -16,13 +16,13 @@ class InvoicePageController extends Controller
 
         return Inertia::render('Invoices/Index', [
             'invoices' => $invoices,
-            'companies' => Company::orderBy('name')->get(['id', 'name']),
+            'companies' => Company::with('contacts')->orderBy('name')->get(['id', 'name']),
         ]);
     }
 
     public function show(Invoice $invoice): Response
     {
-        $invoice->load(['items.service', 'items.timeEntries', 'company', 'payments']);
+        $invoice->load(['items.service', 'items.timeEntries', 'company', 'contact', 'payments']);
 
         return Inertia::render('Invoices/Show', [
             'invoice' => $invoice,
