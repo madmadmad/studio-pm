@@ -14,7 +14,7 @@ class ProposalPageController extends Controller
     public function index(): Response
     {
         return Inertia::render('Proposals/Index', [
-            'proposals' => Proposal::with('company')->latest()->get(),
+            'proposals' => Proposal::with(['company', 'contact'])->latest()->get(),
         ]);
     }
 
@@ -22,7 +22,7 @@ class ProposalPageController extends Controller
     {
         return Inertia::render('Proposals/Form', [
             'proposal' => null,
-            'companies' => Company::orderBy('name')->get(['id', 'name']),
+            'companies' => Company::with('contacts')->orderBy('name')->get(['id', 'name']),
             'services' => Service::orderBy('name')->get(),
         ]);
     }
@@ -30,8 +30,8 @@ class ProposalPageController extends Controller
     public function edit(Proposal $proposal): Response
     {
         return Inertia::render('Proposals/Form', [
-            'proposal' => $proposal->load('items'),
-            'companies' => Company::orderBy('name')->get(['id', 'name']),
+            'proposal' => $proposal->load('items', 'contact'),
+            'companies' => Company::with('contacts')->orderBy('name')->get(['id', 'name']),
             'services' => Service::orderBy('name')->get(),
         ]);
     }

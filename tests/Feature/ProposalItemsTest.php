@@ -11,6 +11,41 @@ class ProposalItemsTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_a_proposal_can_be_addressed_to_a_specific_contact(): void
+    {
+        $user = User::factory()->create();
+        $company = Company::create(['name' => 'Alder & Finch Design']);
+        $contact = $company->contacts()->create(['name' => 'Rosa Alder', 'email' => 'rosa@alderfinch.co']);
+
+        $response = $this->actingAs($user)->postJson("/api/companies/{$company->id}/proposals", [
+            'title' => 'Marketing Support',
+            'body' => '<p>Scope</p>',
+            'contact_id' => $contact->id,
+        ]);
+
+        $response->assertCreated();
+        $this->assertDatabaseHas('proposals', [
+            'id' => $response->json('id'),
+            'contact_id' => $contact->id,
+        ]);
+    }
+
+    public function test_a_contact_from_a_different_company_is_rejected(): void
+    {
+        $user = User::factory()->create();
+        $companyA = Company::create(['name' => 'Alder & Finch Design']);
+        $companyB = Company::create(['name' => 'Marsh Grove Bakery']);
+        $otherContact = $companyB->contacts()->create(['name' => 'Tomas Marsh', 'email' => 'tomas@marshgrove.com']);
+
+        $response = $this->actingAs($user)->postJson("/api/companies/{$companyA->id}/proposals", [
+            'title' => 'Marketing Support',
+            'body' => '<p>Scope</p>',
+            'contact_id' => $otherContact->id,
+        ]);
+
+        $response->assertUnprocessable();
+    }
+
     public function test_creating_a_proposal_with_line_items_computes_the_estimate_from_them(): void
     {
         $user = User::factory()->create();

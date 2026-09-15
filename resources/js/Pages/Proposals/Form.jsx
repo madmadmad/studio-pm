@@ -7,10 +7,11 @@ import { api } from '../../lib/api';
 
 function emptyForm(proposal) {
     if (!proposal) {
-        return { company_id: '', title: '', body: '', estimate_amount: '', items: [] };
+        return { company_id: '', contact_id: '', title: '', body: '', estimate_amount: '', items: [] };
     }
     return {
         company_id: String(proposal.company_id),
+        contact_id: proposal.contact_id ? String(proposal.contact_id) : '',
         title: proposal.title,
         body: proposal.body,
         estimate_amount: proposal.estimate_amount ?? '',
@@ -40,6 +41,11 @@ export default function ProposalsForm({ proposal, companies, services }) {
     const [dragIndex, setDragIndex] = useState(null);
 
     const itemsTotal = form.items.reduce((s, i) => s + lineAmount(i), 0);
+    const contactsForCompany = companies.find((c) => String(c.id) === String(form.company_id))?.contacts || [];
+
+    function handleCompanyChange(value) {
+        setForm({ ...form, company_id: value, contact_id: '' });
+    }
 
     function updateItem(idx, field, value) {
         const items = form.items.map((item, i) => {
@@ -89,6 +95,7 @@ export default function ProposalsForm({ proposal, companies, services }) {
             const payload = {
                 title: form.title,
                 body: form.body,
+                contact_id: form.contact_id || null,
                 estimate_amount: validItems.length > 0 ? undefined : (form.estimate_amount || null),
                 items: validItems.length > 0 ? validItems : undefined,
             };
@@ -118,12 +125,29 @@ export default function ProposalsForm({ proposal, companies, services }) {
                     <select
                         value={form.company_id}
                         disabled={isEditing}
-                        onChange={(e) => setForm({ ...form, company_id: e.target.value })}
+                        onChange={(e) => handleCompanyChange(e.target.value)}
                         className="border border-border rounded px-3 py-2 text-sm disabled:bg-paper disabled:text-sage"
                     >
                         <option value="">Select client</option>
                         {companies.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                     </select>
+                    <select
+                        value={form.contact_id}
+                        disabled={!form.company_id}
+                        onChange={(e) => setForm({ ...form, contact_id: e.target.value })}
+                        className="border border-border rounded px-3 py-2 text-sm disabled:bg-paper disabled:text-sage"
+                    >
+                        <option value="">
+                            {form.company_id ? 'Send to (no specific contact)' : 'Select a client first'}
+                        </option>
+                        {contactsForCompany.map((contact) => (
+                            <option key={contact.id} value={contact.id}>
+                                {contact.name}{contact.email ? ` (${contact.email})` : ''}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+                <div className="mb-3">
                     {form.items.length === 0 ? (
                         <input
                             type="number"
@@ -131,7 +155,7 @@ export default function ProposalsForm({ proposal, companies, services }) {
                             placeholder="Estimate amount ($)"
                             value={form.estimate_amount}
                             onChange={(e) => setForm({ ...form, estimate_amount: e.target.value })}
-                            className="border border-border rounded px-3 py-2 text-sm font-mono"
+                            className="border border-border rounded px-3 py-2 text-sm font-mono w-full"
                         />
                     ) : (
                         <div className="border border-border rounded px-3 py-2 text-sm font-mono bg-paper text-sage">

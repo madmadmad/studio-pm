@@ -8,6 +8,7 @@ use App\Notifications\ProposalAccepted;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Validation\Rule;
 
 class ProposalController extends Controller
 {
@@ -34,11 +35,13 @@ class ProposalController extends Controller
             'title' => ['required', 'string', 'max:255'],
             'body' => ['required', 'string'], // rich text HTML from the editor
             'estimate_amount' => ['nullable', 'numeric', 'min:0'],
+            'contact_id' => ['nullable', Rule::exists('contacts', 'id')->where('company_id', $company->id)],
             ...$this->itemRules(),
         ]);
 
         $proposal = DB::transaction(function () use ($data, $company) {
             $proposal = $company->proposals()->create([
+                'contact_id' => $data['contact_id'] ?? null,
                 'title' => $data['title'],
                 'body' => $data['body'],
                 'estimate_amount' => $data['estimate_amount'] ?? null,
@@ -62,11 +65,13 @@ class ProposalController extends Controller
             'title' => ['required', 'string', 'max:255'],
             'body' => ['required', 'string'],
             'estimate_amount' => ['nullable', 'numeric', 'min:0'],
+            'contact_id' => ['nullable', Rule::exists('contacts', 'id')->where('company_id', $proposal->company_id)],
             ...$this->itemRules(),
         ]);
 
         DB::transaction(function () use ($data, $proposal) {
             $proposal->update([
+                'contact_id' => $data['contact_id'] ?? null,
                 'title' => $data['title'],
                 'body' => $data['body'],
                 'estimate_amount' => $data['estimate_amount'] ?? null,
