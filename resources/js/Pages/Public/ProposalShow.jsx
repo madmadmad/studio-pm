@@ -32,7 +32,7 @@ function FeeSummary({ proposal }) {
                 >
                     <div className="col-span-6">
                         <div className="font-medium">{item.description}</div>
-                        {item.details && (
+                        {item.details && item.details !== item.description && (
                             <div className="text-xs text-sage mt-2 whitespace-pre-wrap">{item.details}</div>
                         )}
                     </div>

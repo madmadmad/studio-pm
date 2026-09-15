@@ -34,10 +34,16 @@ export default function ProposalsIndex({ proposals, companies, services }) {
             if (field === 'service_id' && value) {
                 const service = services.find((s) => String(s.id) === String(value));
                 if (service) {
-                    next.description = next.description || service.name;
+                    next.description = service.name;
                     next.details = next.details || service.description || '';
                     next.rate = service.default_rate;
                 }
+            }
+            if (field === 'service_id' && !value) {
+                next.description = next.details;
+            }
+            if (field === 'details' && !next.service_id) {
+                next.description = value;
             }
             return next;
         });
@@ -135,21 +141,15 @@ export default function ProposalsIndex({ proposals, companies, services }) {
                         <div className="text-xs font-semibold text-sage mb-2 uppercase tracking-wide">Services</div>
                         {form.items.map((item, idx) => (
                             <div key={idx} className="mb-3 pb-3 border-b border-border last:border-b-0">
-                                <div className="grid grid-cols-12 gap-2 mb-2 items-start">
+                                <div className="grid grid-cols-12 gap-2 mb-2">
                                     <select
                                         value={item.service_id}
                                         onChange={(e) => updateItem(idx, 'service_id', e.target.value)}
-                                        className="col-span-3 border border-border rounded px-2 py-2 text-xs"
+                                        className="col-span-5 h-9 border border-border rounded px-2 text-sm"
                                     >
                                         <option value="">Custom</option>
                                         {services.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
                                     </select>
-                                    <input
-                                        placeholder="Description"
-                                        value={item.description}
-                                        onChange={(e) => updateItem(idx, 'description', e.target.value)}
-                                        className="col-span-4 border border-border rounded px-2 py-2 text-sm"
-                                    />
                                     <input
                                         type="number"
                                         min="0"
@@ -157,7 +157,7 @@ export default function ProposalsIndex({ proposals, companies, services }) {
                                         placeholder="Qty"
                                         value={item.quantity}
                                         onChange={(e) => updateItem(idx, 'quantity', e.target.value)}
-                                        className="col-span-2 border border-border rounded px-2 py-2 text-sm font-mono"
+                                        className="col-span-2 h-9 border border-border rounded px-2 text-sm font-mono"
                                     />
                                     <input
                                         type="number"
@@ -166,14 +166,14 @@ export default function ProposalsIndex({ proposals, companies, services }) {
                                         placeholder="Rate"
                                         value={item.rate}
                                         onChange={(e) => updateItem(idx, 'rate', e.target.value)}
-                                        className="col-span-2 border border-border rounded px-2 py-2 text-sm font-mono"
+                                        className="col-span-2 h-9 border border-border rounded px-2 text-sm font-mono"
                                     />
-                                    <div className="col-span-1 flex items-center justify-end gap-1 h-full pt-2 text-sm font-mono">
+                                    <div className="col-span-3 h-9 flex items-center justify-end text-sm font-mono">
                                         {formatCurrency(lineAmount(item))}
                                     </div>
                                 </div>
                                 <textarea
-                                    placeholder="Description details shown to the client (optional)"
+                                    placeholder="Description shown to the client"
                                     value={item.details}
                                     onChange={(e) => updateItem(idx, 'details', e.target.value)}
                                     rows={2}
