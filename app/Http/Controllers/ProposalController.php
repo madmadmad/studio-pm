@@ -16,18 +16,25 @@ class ProposalController extends Controller
         return $company->proposals()->latest()->get();
     }
 
-    public function store(Request $request, Company $company)
+    protected function itemRules(): array
     {
-        $data = $request->validate([
-            'title' => ['required', 'string', 'max:255'],
-            'body' => ['required', 'string'], // rich text HTML from the editor
-            'estimate_amount' => ['nullable', 'numeric', 'min:0'],
+        return [
             'items' => ['nullable', 'array'],
             'items.*.description' => ['required_with:items', 'string'],
             'items.*.details' => ['nullable', 'string'],
             'items.*.quantity' => ['required_with:items', 'numeric', 'min:0.01'],
             'items.*.rate' => ['required_with:items', 'numeric', 'min:0'],
             'items.*.service_id' => ['nullable', 'exists:services,id'],
+        ];
+    }
+
+    public function store(Request $request, Company $company)
+    {
+        $data = $request->validate([
+            'title' => ['required', 'string', 'max:255'],
+            'body' => ['required', 'string'], // rich text HTML from the editor
+            'estimate_amount' => ['nullable', 'numeric', 'min:0'],
+            ...$this->itemRules(),
         ]);
 
         $proposal = DB::transaction(function () use ($data, $company) {
@@ -47,6 +54,35 @@ class ProposalController extends Controller
         });
 
         return $proposal->load('items');
+    }
+
+    public function update(Request $request, Proposal $proposal)
+    {
+        $data = $request->validate([
+            'title' => ['required', 'string', 'max:255'],
+            'body' => ['required', 'string'],
+            'estimate_amount' => ['nullable', 'numeric', 'min:0'],
+            ...$this->itemRules(),
+        ]);
+
+        DB::transaction(function () use ($data, $proposal) {
+            $proposal->update([
+                'title' => $data['title'],
+                'body' => $data['body'],
+                'estimate_amount' => $data['estimate_amount'] ?? null,
+            ]);
+
+            // Replace the line items wholesale rather than diffing -- simpler,
+            // and proposal items don't carry any state worth preserving by ID.
+            $proposal->items()->delete();
+
+            if (! empty($data['items'])) {
+                $proposal->items()->createMany($data['items']);
+                $proposal->update(['estimate_amount' => $proposal->fresh('items')->itemsTotal()]);
+            }
+        });
+
+        return $proposal->fresh()->load('items');
     }
 
     public function send(Proposal $proposal)

@@ -21,6 +21,7 @@ function lineAmount(item) {
 
 export default function ProposalsIndex({ proposals, companies, services }) {
     const [showForm, setShowForm] = useState(false);
+    const [editingId, setEditingId] = useState(null);
     const [form, setForm] = useState(emptyForm());
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
@@ -56,6 +57,38 @@ export default function ProposalsIndex({ proposals, companies, services }) {
         setForm({ ...form, items: form.items.filter((_, i) => i !== idx) });
     }
 
+    function openNewProposal() {
+        setEditingId(null);
+        setForm(emptyForm());
+        setError('');
+        setShowForm(true);
+    }
+
+    function openEditProposal(proposal) {
+        setEditingId(proposal.id);
+        setForm({
+            company_id: String(proposal.company_id),
+            title: proposal.title,
+            body: proposal.body,
+            estimate_amount: proposal.estimate_amount ?? '',
+            items: proposal.items.map((item) => ({
+                service_id: item.service_id ? String(item.service_id) : '',
+                description: item.description,
+                details: item.details ?? '',
+                quantity: item.quantity,
+                rate: item.rate,
+            })),
+        });
+        setError('');
+        setShowForm(true);
+    }
+
+    function closeForm() {
+        setShowForm(false);
+        setEditingId(null);
+        setForm(emptyForm());
+    }
+
     async function saveProposal() {
         if (!form.company_id || !form.title || !form.body) {
             setError('Client, title, and scope of work are all required.');
@@ -65,14 +98,18 @@ export default function ProposalsIndex({ proposals, companies, services }) {
         setSaving(true);
         setError('');
         try {
-            await api.post(`/api/companies/${form.company_id}/proposals`, {
+            const payload = {
                 title: form.title,
                 body: form.body,
                 estimate_amount: validItems.length > 0 ? undefined : (form.estimate_amount || null),
                 items: validItems.length > 0 ? validItems : undefined,
-            });
-            setForm(emptyForm());
-            setShowForm(false);
+            };
+            if (editingId) {
+                await api.patch(`/api/proposals/${editingId}`, payload);
+            } else {
+                await api.post(`/api/companies/${form.company_id}/proposals`, payload);
+            }
+            closeForm();
             router.reload({ only: ['proposals'] });
         } catch (err) {
             setError(err.message);
@@ -95,7 +132,7 @@ export default function ProposalsIndex({ proposals, companies, services }) {
             <Head title="Proposals" />
             <div className="flex items-center justify-between mb-1">
                 <h1 className="text-2xl font-semibold">Proposals</h1>
-                <button onClick={() => setShowForm(true)} className="bg-ink text-white text-sm font-medium px-3 py-1.5 rounded">
+                <button onClick={openNewProposal} className="bg-ink text-white text-sm font-medium px-3 py-1.5 rounded">
                     New proposal
                 </button>
             </div>
@@ -103,11 +140,13 @@ export default function ProposalsIndex({ proposals, companies, services }) {
 
             {showForm && (
                 <div className="bg-white rounded-lg border border-border p-4 mb-6">
+                    <div className="text-sm font-semibold mb-3">{editingId ? 'Edit proposal' : 'New proposal'}</div>
                     <div className="grid grid-cols-2 gap-3 mb-3">
                         <select
                             value={form.company_id}
+                            disabled={!!editingId}
                             onChange={(e) => setForm({ ...form, company_id: e.target.value })}
-                            className="border border-border rounded px-3 py-2 text-sm"
+                            className="border border-border rounded px-3 py-2 text-sm disabled:bg-paper disabled:text-sage"
                         >
                             <option value="">Select client</option>
                             {companies.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -202,8 +241,10 @@ export default function ProposalsIndex({ proposals, companies, services }) {
                     {error && <div className="text-sm mb-3 text-brick">{error}</div>}
 
                     <div className="flex gap-2 justify-end">
-                        <button type="button" onClick={() => setShowForm(false)} className="text-sm px-3 py-1.5 rounded text-sage">Cancel</button>
-                        <button type="button" disabled={saving} onClick={saveProposal} className="bg-ink text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50">Save draft</button>
+                        <button type="button" onClick={closeForm} className="text-sm px-3 py-1.5 rounded text-sage">Cancel</button>
+                        <button type="button" disabled={saving} onClick={saveProposal} className="bg-ink text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50">
+                            {editingId ? 'Save changes' : 'Save draft'}
+                        </button>
                     </div>
                 </div>
             )}
@@ -232,20 +273,25 @@ export default function ProposalsIndex({ proposals, companies, services }) {
                                     </td>
                                     <td className="px-4 py-3"><ProposalStatusBadge proposal={proposal} /></td>
                                     <td className="px-4 py-3 text-right">
-                                        {proposal.status === 'draft' && (
-                                            <button onClick={() => sendProposal(proposal)} className="text-sm font-medium text-brass">Send</button>
-                                        )}
-                                        {proposal.status === 'sent' && (
-                                            <button
-                                                onClick={() => navigator.clipboard.writeText(acceptLink(proposal))}
-                                                className="text-sm font-medium text-sage"
-                                            >
-                                                Copy link
+                                        <div className="flex items-center justify-end gap-3">
+                                            <button onClick={() => openEditProposal(proposal)} className="text-sm font-medium text-sage hover:text-ink">
+                                                Edit
                                             </button>
-                                        )}
-                                        {proposal.status === 'accepted' && (
-                                            <span className="text-xs text-sage">{formatDate(proposal.accepted_at)}</span>
-                                        )}
+                                            {proposal.status === 'draft' && (
+                                                <button onClick={() => sendProposal(proposal)} className="text-sm font-medium text-brass">Send</button>
+                                            )}
+                                            {proposal.status === 'sent' && (
+                                                <button
+                                                    onClick={() => navigator.clipboard.writeText(acceptLink(proposal))}
+                                                    className="text-sm font-medium text-sage"
+                                                >
+                                                    Copy link
+                                                </button>
+                                            )}
+                                            {proposal.status === 'accepted' && (
+                                                <span className="text-xs text-sage">{formatDate(proposal.accepted_at)}</span>
+                                            )}
+                                        </div>
                                     </td>
                                 </tr>
                             ))}
