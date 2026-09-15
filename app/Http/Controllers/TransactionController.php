@@ -42,13 +42,16 @@ class TransactionController extends Controller
     public function summary(Request $request)
     {
         $month = $request->query('month', now()->format('Y-m'));
+        [$year, $monthNumber] = explode('-', $month);
 
         $income = Transaction::where('type', 'income')
-            ->whereRaw("DATE_FORMAT(occurred_on, '%Y-%m') = ?", [$month])
+            ->whereYear('occurred_on', $year)
+            ->whereMonth('occurred_on', $monthNumber)
             ->sum('amount');
 
         $expenses = Transaction::where('type', 'expense')
-            ->whereRaw("DATE_FORMAT(occurred_on, '%Y-%m') = ?", [$month])
+            ->whereYear('occurred_on', $year)
+            ->whereMonth('occurred_on', $monthNumber)
             ->sum('amount');
 
         return [

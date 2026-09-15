@@ -1,0 +1,236 @@
+import { Head, Link, router } from '@inertiajs/react';
+import { useEffect, useState } from 'react';
+import AppLayout from '../../Layouts/AppLayout';
+import EmptyState from '../../Components/EmptyState';
+import { InvoiceStatusBadge } from '../../Components/StatusBadges';
+import { formatCurrency, formatDate, invoiceSubtotal, invoiceSurchargeAmount, invoiceTotal } from '../../lib/format';
+import { api } from '../../lib/api';
+import { getTray, clearTray } from '../../lib/tray';
+
+function emptyDraft() {
+    return { company_id: '', items: [{ description: '', amount: '' }], surcharge: false };
+}
+
+export default function InvoicesIndex({ invoices, companies }) {
+    const [showForm, setShowForm] = useState(false);
+    const [draft, setDraft] = useState(emptyDraft());
+    const [error, setError] = useState('');
+    const [saving, setSaving] = useState(false);
+
+    useEffect(() => {
+        if (window.location.search.includes('from_tray=1')) {
+            const tray = getTray();
+            if (tray.length > 0) {
+                const companyIds = [...new Set(tray.map((t) => t.company_id))];
+                setDraft({
+                    company_id: companyIds.length === 1 ? String(companyIds[0]) : '',
+                    items: tray.map((t) => ({
+                        description: t.description,
+                        amount: String(t.amount.toFixed(2)),
+                        time_entry_ids: [t.time_entry_id],
+                    })),
+                    surcharge: false,
+                });
+                setShowForm(true);
+            }
+            window.history.replaceState(null, '', '/invoices');
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    const subtotal = invoiceSubtotal(draft.items);
+    const surchargeAmount = invoiceSurchargeAmount(draft.items, draft.surcharge);
+    const total = invoiceTotal(draft.items, draft.surcharge);
+    const outstandingTotal = invoices
+        .filter((i) => i.status === 'sent')
+        .reduce((s, i) => s + invoiceTotal(i.items, i.surcharge), 0);
+
+    function updateItem(idx, field, value) {
+        const items = draft.items.map((it, i) => (i === idx ? { ...it, [field]: value } : it));
+        setDraft({ ...draft, items });
+    }
+    function addItemRow() {
+        setDraft({ ...draft, items: [...draft.items, { description: '', amount: '' }] });
+    }
+    function removeItemRow(idx) {
+        setDraft({ ...draft, items: draft.items.filter((_, i) => i !== idx) });
+    }
+
+    function openNewInvoice() {
+        setDraft(emptyDraft());
+        setError('');
+        setShowForm(true);
+    }
+
+    async function saveInvoice(status) {
+        if (!draft.company_id) {
+            setError('Select a client first.');
+            return;
+        }
+        const validItems = draft.items.filter((i) => i.description.trim() && parseFloat(i.amount) > 0);
+        if (validItems.length === 0) {
+            setError('Add at least one line item with a description and amount.');
+            return;
+        }
+
+        setSaving(true);
+        setError('');
+        try {
+            const invoice = await api.post(`/api/companies/${draft.company_id}/invoices`, {
+                surcharge: draft.surcharge,
+                items: validItems,
+            });
+            if (status === 'sent') {
+                await api.post(`/api/invoices/${invoice.id}/send`);
+            }
+            clearTray();
+            setShowForm(false);
+            router.reload({ only: ['invoices'] });
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setSaving(false);
+        }
+    }
+
+    async function sendInvoice(invoice) {
+        await api.post(`/api/invoices/${invoice.id}/send`);
+        router.reload({ only: ['invoices'] });
+    }
+
+    async function markPaid(invoice) {
+        await api.post(`/api/invoices/${invoice.id}/mark-paid`);
+        router.reload({ only: ['invoices'] });
+    }
+
+    return (
+        <AppLayout>
+            <Head title="Invoices" />
+            <div className="flex items-center justify-between mb-1">
+                <h1 className="text-2xl font-semibold">Invoices</h1>
+                <button onClick={openNewInvoice} className="bg-ink text-white text-sm font-medium px-3 py-1.5 rounded">
+                    New invoice
+                </button>
+            </div>
+            <p className="text-sm text-sage mb-6">
+                {formatCurrency(outstandingTotal)} outstanding across {invoices.filter((i) => i.status === 'sent').length} sent invoices.
+            </p>
+
+            {showForm && (
+                <div className="bg-white rounded-lg border border-border p-4 mb-6">
+                    <select
+                        required
+                        value={draft.company_id}
+                        onChange={(e) => setDraft({ ...draft, company_id: e.target.value })}
+                        className="border border-border rounded px-3 py-2 text-sm mb-4 w-full"
+                    >
+                        <option value="">Select client</option>
+                        {companies.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    </select>
+
+                    <div className="mb-3">
+                        {draft.items.map((item, idx) => (
+                            <div key={idx} className="flex gap-2 mb-2">
+                                <input
+                                    placeholder="Description"
+                                    value={item.description}
+                                    onChange={(e) => updateItem(idx, 'description', e.target.value)}
+                                    className="border border-border rounded px-3 py-2 text-sm flex-1"
+                                />
+                                <input
+                                    placeholder="Amount"
+                                    type="number"
+                                    min="0"
+                                    step="0.01"
+                                    value={item.amount}
+                                    onChange={(e) => updateItem(idx, 'amount', e.target.value)}
+                                    className="border border-border rounded px-3 py-2 text-sm font-mono w-28"
+                                />
+                                {draft.items.length > 1 && (
+                                    <button type="button" onClick={() => removeItemRow(idx)} className="text-sm px-2 text-brick">Remove</button>
+                                )}
+                            </div>
+                        ))}
+                        <button type="button" onClick={addItemRow} className="text-sm font-medium text-brass">+ Add line item</button>
+                    </div>
+
+                    <label className="flex items-center gap-2 text-sm mb-4">
+                        <input
+                            type="checkbox"
+                            checked={draft.surcharge}
+                            onChange={(e) => setDraft({ ...draft, surcharge: e.target.checked })}
+                        />
+                        Client covers card processing fee (3%)
+                    </label>
+
+                    <div className="text-sm mb-4 space-y-1">
+                        <div className="flex justify-between text-sage">
+                            <span>Subtotal</span>
+                            <span className="font-mono">{formatCurrency(subtotal)}</span>
+                        </div>
+                        {draft.surcharge && (
+                            <div className="flex justify-between text-sage">
+                                <span>Card fee (3%)</span>
+                                <span className="font-mono">{formatCurrency(surchargeAmount)}</span>
+                            </div>
+                        )}
+                        <div className="flex justify-between font-semibold">
+                            <span>Total</span>
+                            <span className="font-mono">{formatCurrency(total)}</span>
+                        </div>
+                    </div>
+
+                    {error && <div className="text-sm mb-3 text-brick">{error}</div>}
+
+                    <div className="flex gap-2 justify-end">
+                        <button type="button" onClick={() => setShowForm(false)} className="text-sm px-3 py-1.5 rounded text-sage">Cancel</button>
+                        <button type="button" disabled={saving} onClick={() => saveInvoice('draft')} className="text-sm font-medium px-3 py-1.5 rounded border border-border disabled:opacity-50">Save as draft</button>
+                        <button type="button" disabled={saving} onClick={() => saveInvoice('sent')} className="bg-ink text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50">Send invoice</button>
+                    </div>
+                </div>
+            )}
+
+            <div className="bg-white rounded-lg border border-border overflow-hidden">
+                {invoices.length === 0 ? (
+                    <EmptyState text="No invoices yet." />
+                ) : (
+                    <table className="w-full text-sm">
+                        <thead>
+                            <tr className="text-left border-b border-border text-sage">
+                                <th className="px-4 py-2 font-medium">Client</th>
+                                <th className="px-4 py-2 font-medium">Issued</th>
+                                <th className="px-4 py-2 font-medium">Due</th>
+                                <th className="px-4 py-2 font-medium">Total</th>
+                                <th className="px-4 py-2 font-medium">Status</th>
+                                <th className="px-4 py-2 font-medium"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {invoices.map((invoice) => (
+                                <tr key={invoice.id} className="border-b border-border last:border-b-0">
+                                    <td className="px-4 py-3 font-medium">
+                                        <Link href={`/invoices/${invoice.id}`} className="hover:underline">
+                                            {invoice.company?.name}
+                                        </Link>
+                                    </td>
+                                    <td className="px-4 py-3 text-sage">{formatDate(invoice.issued_on)}</td>
+                                    <td className="px-4 py-3 text-sage">{formatDate(invoice.due_on)}</td>
+                                    <td className="px-4 py-3 font-mono">{formatCurrency(invoiceTotal(invoice.items, invoice.surcharge))}</td>
+                                    <td className="px-4 py-3"><InvoiceStatusBadge invoice={invoice} /></td>
+                                    <td className="px-4 py-3 text-right">
+                                        {invoice.status === 'draft' && (
+                                            <button onClick={() => sendInvoice(invoice)} className="text-sm font-medium text-brass">Send</button>
+                                        )}
+                                        {invoice.status === 'sent' && (
+                                            <button onClick={() => markPaid(invoice)} className="text-sm font-medium text-pine">Mark paid</button>
+                                        )}
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                )}
+            </div>
+        </AppLayout>
+    );
+}
