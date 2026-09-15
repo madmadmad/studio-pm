@@ -6,6 +6,7 @@ use App\Models\Company;
 use App\Models\Proposal;
 use App\Notifications\ProposalAccepted;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 
 class ProposalController extends Controller
@@ -21,9 +22,30 @@ class ProposalController extends Controller
             'title' => ['required', 'string', 'max:255'],
             'body' => ['required', 'string'], // rich text HTML from the editor
             'estimate_amount' => ['nullable', 'numeric', 'min:0'],
+            'items' => ['nullable', 'array'],
+            'items.*.description' => ['required_with:items', 'string'],
+            'items.*.quantity' => ['required_with:items', 'numeric', 'min:0.01'],
+            'items.*.rate' => ['required_with:items', 'numeric', 'min:0'],
+            'items.*.service_id' => ['nullable', 'exists:services,id'],
         ]);
 
-        return $company->proposals()->create($data + ['status' => 'draft']);
+        $proposal = DB::transaction(function () use ($data, $company) {
+            $proposal = $company->proposals()->create([
+                'title' => $data['title'],
+                'body' => $data['body'],
+                'estimate_amount' => $data['estimate_amount'] ?? null,
+                'status' => 'draft',
+            ]);
+
+            if (! empty($data['items'])) {
+                $proposal->items()->createMany($data['items']);
+                $proposal->update(['estimate_amount' => $proposal->fresh('items')->itemsTotal()]);
+            }
+
+            return $proposal;
+        });
+
+        return $proposal->load('items');
     }
 
     public function send(Proposal $proposal)
@@ -39,7 +61,7 @@ class ProposalController extends Controller
     // Public, unauthenticated -- the client opens this link to read the proposal.
     public function showPublic(string $token)
     {
-        return Proposal::where('accept_token', $token)->firstOrFail();
+        return Proposal::with('items.service')->where('accept_token', $token)->firstOrFail();
     }
 
     // Public, unauthenticated -- the client clicks Accept here.

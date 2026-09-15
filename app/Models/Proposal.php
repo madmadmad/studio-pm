@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
 class Proposal extends Model
@@ -25,5 +26,15 @@ class Proposal extends Model
     public function company(): BelongsTo
     {
         return $this->belongsTo(Company::class);
+    }
+
+    public function items(): HasMany
+    {
+        return $this->hasMany(ProposalItem::class);
+    }
+
+    public function itemsTotal(): float
+    {
+        return round($this->items->sum(fn (ProposalItem $item) => $item->amount()), 2);
     }
 }

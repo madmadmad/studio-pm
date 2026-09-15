@@ -11,7 +11,7 @@ class PublicProposalController extends Controller
 {
     public function show(string $token): Response
     {
-        $proposal = Proposal::with('company')
+        $proposal = Proposal::with(['company', 'items.service'])
             ->where('accept_token', $token)
             ->firstOrFail();
 
