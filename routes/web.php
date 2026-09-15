@@ -37,6 +37,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/invoices/{invoice}', [InvoicePageController::class, 'show'])->name('invoices.show');
 
     Route::get('/proposals', [ProposalPageController::class, 'index'])->name('proposals.index');
+    Route::get('/proposals/create', [ProposalPageController::class, 'create'])->name('proposals.create');
+    Route::get('/proposals/{proposal}/edit', [ProposalPageController::class, 'edit'])->name('proposals.edit');
 
     Route::get('/bookkeeping', [BookkeepingPageController::class, 'index'])->name('bookkeeping.index');
 
