@@ -80,7 +80,8 @@ body {
 }
 .proposal-body h1,
 .proposal-body h2,
-.proposal-body h3 {
+.proposal-body h3,
+.proposal-body h4 {
     font-weight: 600;
     margin: 0.75em 0 0.4em;
 }
