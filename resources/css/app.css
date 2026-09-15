@@ -3,9 +3,46 @@
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 
+/*
+ * Self-hosted, served from /public/webfonts (NOT /public/build) so it
+ * survives `npm run build` -- Vite empties its whole outDir every build.
+ */
+@font-face {
+    font-family: 'Neue Haas Grotesk Display';
+    src: url('/webfonts/NeueHaasGroteskDisplay45Light/font.woff2') format('woff2'),
+        url('/webfonts/NeueHaasGroteskDisplay45Light/font.woff') format('woff');
+    font-weight: 300;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: 'Neue Haas Grotesk Display';
+    src: url('/webfonts/NeueHaasGroteskDisplay55Roman/font.woff2') format('woff2'),
+        url('/webfonts/NeueHaasGroteskDisplay55Roman/font.woff') format('woff');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: 'Neue Haas Grotesk Display';
+    src: url('/webfonts/NeueHaasGroteskDisplay65Medium/font.woff2') format('woff2'),
+        url('/webfonts/NeueHaasGroteskDisplay65Medium/font.woff') format('woff');
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: 'Neue Haas Grotesk Display';
+    src: url('/webfonts/NeueHaasGroteskDisplay75Bold/font.woff2') format('woff2'),
+        url('/webfonts/NeueHaasGroteskDisplay75Bold/font.woff') format('woff');
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+
 @theme {
-    --font-sans: 'Public Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-sans: 'Neue Haas Grotesk Display', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
+        'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
     --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, monospace;
 
     --color-ink: #16231d;
