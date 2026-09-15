@@ -3,6 +3,7 @@ import { Link, router, usePage } from '@inertiajs/react';
 const NAV_ITEMS = [
     { href: '/', label: 'Overview' },
     { href: '/clients', label: 'Clients' },
+    { href: '/projects', label: 'Projects' },
     { href: '/time-entries', label: 'Time' },
     { href: '/timesheets', label: 'Timesheets' },
     { href: '/invoices', label: 'Invoices' },

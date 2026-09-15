@@ -5,6 +5,7 @@ use App\Http\Controllers\Web\BookkeepingPageController;
 use App\Http\Controllers\Web\ClientPageController;
 use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\InvoicePageController;
+use App\Http\Controllers\Web\ProjectPageController;
 use App\Http\Controllers\Web\ProposalPageController;
 use App\Http\Controllers\Web\PublicProposalController;
 use App\Http\Controllers\Web\ServicePageController;
@@ -25,6 +26,8 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/clients', [ClientPageController::class, 'index'])->name('clients.index');
     Route::get('/clients/{company}', [ClientPageController::class, 'show'])->name('clients.show');
+
+    Route::get('/projects', [ProjectPageController::class, 'index'])->name('projects.index');
 
     Route::get('/time-entries', [TimePageController::class, 'index'])->name('time.index');
     Route::get('/timesheets', [TimePageController::class, 'weekly'])->name('timesheets.index');
