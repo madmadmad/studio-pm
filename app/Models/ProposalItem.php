@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ProposalItem extends Model
 {
-    protected $fillable = ['proposal_id', 'service_id', 'description', 'quantity', 'rate'];
+    protected $fillable = ['proposal_id', 'service_id', 'description', 'details', 'quantity', 'rate'];
 
     public function proposal(): BelongsTo
     {

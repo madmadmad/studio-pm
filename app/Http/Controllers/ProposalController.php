@@ -24,6 +24,7 @@ class ProposalController extends Controller
             'estimate_amount' => ['nullable', 'numeric', 'min:0'],
             'items' => ['nullable', 'array'],
             'items.*.description' => ['required_with:items', 'string'],
+            'items.*.details' => ['nullable', 'string'],
             'items.*.quantity' => ['required_with:items', 'numeric', 'min:0.01'],
             'items.*.rate' => ['required_with:items', 'numeric', 'min:0'],
             'items.*.service_id' => ['nullable', 'exists:services,id'],

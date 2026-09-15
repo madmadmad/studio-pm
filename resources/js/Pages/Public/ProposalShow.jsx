@@ -30,7 +30,12 @@ function FeeSummary({ proposal }) {
                     key={item.id}
                     className={`px-6 py-4 grid grid-cols-12 text-sm ${idx < proposal.items.length - 1 ? 'border-b border-border' : ''}`}
                 >
-                    <div className="col-span-6 font-medium">{item.description}</div>
+                    <div className="col-span-6">
+                        <div className="font-medium">{item.description}</div>
+                        {item.details && (
+                            <div className="text-xs text-sage mt-2 whitespace-pre-wrap">{item.details}</div>
+                        )}
+                    </div>
                     <div className="col-span-2 text-right font-mono">{parseFloat(item.quantity)}</div>
                     <div className="col-span-2 text-right font-mono">
                         {formatCurrency(item.rate)}{item.service?.unit === 'hourly' ? ' / hour' : ''}

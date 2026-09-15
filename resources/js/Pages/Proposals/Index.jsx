@@ -12,7 +12,7 @@ function emptyForm() {
 }
 
 function emptyItem() {
-    return { service_id: '', description: '', quantity: 1, rate: '' };
+    return { service_id: '', description: '', details: '', quantity: 1, rate: '' };
 }
 
 function lineAmount(item) {
@@ -35,6 +35,7 @@ export default function ProposalsIndex({ proposals, companies, services }) {
                 const service = services.find((s) => String(s.id) === String(value));
                 if (service) {
                     next.description = next.description || service.name;
+                    next.details = next.details || service.description || '';
                     next.rate = service.default_rate;
                 }
             }
@@ -133,46 +134,55 @@ export default function ProposalsIndex({ proposals, companies, services }) {
                     <div className="mb-4">
                         <div className="text-xs font-semibold text-sage mb-2 uppercase tracking-wide">Services</div>
                         {form.items.map((item, idx) => (
-                            <div key={idx} className="grid grid-cols-12 gap-2 mb-2 items-start">
-                                <select
-                                    value={item.service_id}
-                                    onChange={(e) => updateItem(idx, 'service_id', e.target.value)}
-                                    className="col-span-3 border border-border rounded px-2 py-2 text-xs"
-                                >
-                                    <option value="">Custom</option>
-                                    {services.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-                                </select>
-                                <input
-                                    placeholder="Description"
-                                    value={item.description}
-                                    onChange={(e) => updateItem(idx, 'description', e.target.value)}
-                                    className="col-span-4 border border-border rounded px-2 py-2 text-sm"
-                                />
-                                <input
-                                    type="number"
-                                    min="0"
-                                    step="0.25"
-                                    placeholder="Qty"
-                                    value={item.quantity}
-                                    onChange={(e) => updateItem(idx, 'quantity', e.target.value)}
-                                    className="col-span-2 border border-border rounded px-2 py-2 text-sm font-mono"
-                                />
-                                <input
-                                    type="number"
-                                    min="0"
-                                    step="0.01"
-                                    placeholder="Rate"
-                                    value={item.rate}
-                                    onChange={(e) => updateItem(idx, 'rate', e.target.value)}
-                                    className="col-span-2 border border-border rounded px-2 py-2 text-sm font-mono"
-                                />
-                                <div className="col-span-1 flex items-center justify-end gap-1 h-full pt-2 text-sm font-mono">
-                                    {formatCurrency(lineAmount(item))}
+                            <div key={idx} className="mb-3 pb-3 border-b border-border last:border-b-0">
+                                <div className="grid grid-cols-12 gap-2 mb-2 items-start">
+                                    <select
+                                        value={item.service_id}
+                                        onChange={(e) => updateItem(idx, 'service_id', e.target.value)}
+                                        className="col-span-3 border border-border rounded px-2 py-2 text-xs"
+                                    >
+                                        <option value="">Custom</option>
+                                        {services.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+                                    </select>
+                                    <input
+                                        placeholder="Description"
+                                        value={item.description}
+                                        onChange={(e) => updateItem(idx, 'description', e.target.value)}
+                                        className="col-span-4 border border-border rounded px-2 py-2 text-sm"
+                                    />
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        step="0.25"
+                                        placeholder="Qty"
+                                        value={item.quantity}
+                                        onChange={(e) => updateItem(idx, 'quantity', e.target.value)}
+                                        className="col-span-2 border border-border rounded px-2 py-2 text-sm font-mono"
+                                    />
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        step="0.01"
+                                        placeholder="Rate"
+                                        value={item.rate}
+                                        onChange={(e) => updateItem(idx, 'rate', e.target.value)}
+                                        className="col-span-2 border border-border rounded px-2 py-2 text-sm font-mono"
+                                    />
+                                    <div className="col-span-1 flex items-center justify-end gap-1 h-full pt-2 text-sm font-mono">
+                                        {formatCurrency(lineAmount(item))}
+                                    </div>
                                 </div>
+                                <textarea
+                                    placeholder="Description details shown to the client (optional)"
+                                    value={item.details}
+                                    onChange={(e) => updateItem(idx, 'details', e.target.value)}
+                                    rows={2}
+                                    className="w-full border border-border rounded px-2 py-2 text-xs text-sage mb-1"
+                                />
                                 <button
                                     type="button"
                                     onClick={() => removeItem(idx)}
-                                    className="col-span-12 text-xs text-brick text-right -mt-1"
+                                    className="text-xs text-brick"
                                 >
                                     Remove
                                 </button>
