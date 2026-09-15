@@ -33,8 +33,8 @@ function TabBar({ tab, setTab }) {
 }
 
 function OverviewTab({ project }) {
-    const totalHours = project.timeEntries.reduce((s, e) => s + parseFloat(e.hours), 0);
-    const unbilledHours = project.timeEntries.filter((e) => !e.billed).reduce((s, e) => s + parseFloat(e.hours), 0);
+    const totalHours = project.time_entries.reduce((s, e) => s + parseFloat(e.hours), 0);
+    const unbilledHours = project.time_entries.filter((e) => !e.billed).reduce((s, e) => s + parseFloat(e.hours), 0);
     const doneTasks = project.tasks.filter((t) => t.status === 'done').length;
     const totalInvoiced = project.invoices.reduce((s, inv) => s + invoiceTotal(inv.items, inv.surcharge), 0);
 
@@ -273,7 +273,7 @@ function TimeTab({ project }) {
                 <button type="submit" disabled={saving} className="col-span-3 bg-ink text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50 justify-self-end w-fit">Log time</button>
             </form>
             <div className="bg-white rounded-lg border border-border overflow-hidden">
-                {project.timeEntries.length === 0 ? (
+                {project.time_entries.length === 0 ? (
                     <EmptyState text="No time logged yet." />
                 ) : (
                     <table className="w-full text-sm">
@@ -286,7 +286,7 @@ function TimeTab({ project }) {
                             </tr>
                         </thead>
                         <tbody>
-                            {project.timeEntries.map((entry) => (
+                            {project.time_entries.map((entry) => (
                                 <tr key={entry.id} className="border-b border-border last:border-b-0">
                                     <td className="px-4 py-2">{formatDate(entry.date)}</td>
                                     <td className="px-4 py-2 font-mono">{entry.hours}h</td>
