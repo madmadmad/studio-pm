@@ -23,12 +23,19 @@ class ProjectController extends Controller
         return $company->projects()->create($data);
     }
 
+    public function show(Project $project)
+    {
+        return $project->load('tasks', 'notes', 'messages', 'invoices', 'transactions', 'company');
+    }
+
     public function update(Request $request, Project $project)
     {
         $data = $request->validate([
             'name' => ['sometimes', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'status' => ['sometimes', 'in:active,on_hold,completed'],
+            'team_names' => ['sometimes', 'array'],
+            'team_names.*' => ['string', 'max:255'],
         ]);
 
         $project->update($data);

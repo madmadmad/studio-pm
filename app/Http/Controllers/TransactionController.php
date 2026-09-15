@@ -24,6 +24,7 @@ class TransactionController extends Controller
             'category' => ['nullable', 'string'],
             'occurred_on' => ['required', 'date'],
             'description' => ['nullable', 'string'],
+            'project_id' => ['nullable', 'exists:projects,id'],
         ]);
 
         return Transaction::create($data);

@@ -147,7 +147,11 @@ export default function ProjectsIndex({ projects, companies }) {
                         <tbody>
                             {visibleProjects.map((project) => (
                                 <tr key={project.id} className="border-b border-border last:border-b-0">
-                                    <td className="px-4 py-3 font-medium">{project.name}</td>
+                                    <td className="px-4 py-3 font-medium">
+                                        <Link href={`/projects/${project.id}`} className="hover:underline">
+                                            {project.name}
+                                        </Link>
+                                    </td>
                                     <td className="px-4 py-3">
                                         <Link href={`/clients/${project.company.id}`} className="text-sage hover:underline">
                                             {project.company.name}

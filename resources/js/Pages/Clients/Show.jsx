@@ -123,7 +123,9 @@ function ProjectsCard({ company }) {
                     {company.projects.map((project) => (
                         <div key={project.id} className="py-3">
                             <div className="flex items-center justify-between mb-2">
-                                <span className="text-sm font-medium">{project.name}</span>
+                                <Link href={`/projects/${project.id}`} className="text-sm font-medium hover:underline">
+                                    {project.name}
+                                </Link>
                                 <ProjectStatusBadge project={project} />
                             </div>
                             <ul className="pl-2">

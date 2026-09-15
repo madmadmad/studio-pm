@@ -17,4 +17,21 @@ class ProjectPageController extends Controller
             'companies' => Company::orderBy('name')->get(['id', 'name']),
         ]);
     }
+
+    public function show(Project $project): Response
+    {
+        $project->load([
+            'company',
+            'tasks',
+            'notes',
+            'messages',
+            'timeEntries.task',
+            'invoices.items',
+            'transactions' => fn ($query) => $query->orderByDesc('occurred_on'),
+        ]);
+
+        return Inertia::render('Projects/Show', [
+            'project' => $project,
+        ]);
+    }
 }

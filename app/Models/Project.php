@@ -8,7 +8,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Project extends Model
 {
-    protected $fillable = ['company_id', 'name', 'description', 'status'];
+    protected $fillable = ['company_id', 'name', 'description', 'status', 'team_names'];
+
+    protected $casts = [
+        'team_names' => 'array',
+    ];
 
     public function company(): BelongsTo
     {
@@ -23,5 +27,25 @@ class Project extends Model
     public function timeEntries(): HasMany
     {
         return $this->hasMany(TimeEntry::class);
+    }
+
+    public function invoices(): HasMany
+    {
+        return $this->hasMany(Invoice::class);
+    }
+
+    public function transactions(): HasMany
+    {
+        return $this->hasMany(Transaction::class);
+    }
+
+    public function notes(): HasMany
+    {
+        return $this->hasMany(Note::class)->latest();
+    }
+
+    public function messages(): HasMany
+    {
+        return $this->hasMany(Message::class)->latest('sent_at');
     }
 }

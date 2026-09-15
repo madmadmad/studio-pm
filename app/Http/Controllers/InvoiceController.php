@@ -8,6 +8,7 @@ use App\Models\TimeEntry;
 use App\Models\Transaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class InvoiceController extends Controller
 {
@@ -19,6 +20,7 @@ class InvoiceController extends Controller
     public function store(Request $request, Company $company)
     {
         $data = $request->validate([
+            'project_id' => ['nullable', Rule::exists('projects', 'id')->where('company_id', $company->id)],
             'surcharge' => ['boolean'],
             'due_on' => ['nullable', 'date'],
             'items' => ['required', 'array', 'min:1'],
@@ -31,6 +33,7 @@ class InvoiceController extends Controller
 
         $invoice = DB::transaction(function () use ($data, $company) {
             $invoice = $company->invoices()->create([
+                'project_id' => $data['project_id'] ?? null,
                 'status' => 'draft',
                 'surcharge' => $data['surcharge'] ?? false,
                 'issued_on' => now(),
@@ -88,6 +91,7 @@ class InvoiceController extends Controller
             'category' => 'client invoice',
             'occurred_on' => now(),
             'invoice_id' => $invoice->id,
+            'project_id' => $invoice->project_id,
         ]);
 
         return $invoice->load('items', 'payments');
