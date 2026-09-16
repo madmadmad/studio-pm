@@ -13,7 +13,7 @@ use App\Http\Controllers\TimeEntryController;
 use App\Http\Controllers\TransactionController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware('auth:sanctum')->name('api.')->group(function () {
     Route::apiResource('companies', CompanyController::class);
     Route::apiResource('companies.contacts', ContactController::class)->shallow();
     Route::apiResource('companies.projects', ProjectController::class)->shallow();
