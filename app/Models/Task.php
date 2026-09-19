@@ -28,4 +28,9 @@ class Task extends Model
     {
         return $this->hasMany(Subtask::class)->orderBy('position');
     }
+
+    public function files(): HasMany
+    {
+        return $this->hasMany(TaskFile::class)->latest();
+    }
 }

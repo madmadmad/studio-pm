@@ -1,6 +1,6 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
-import { ArrowLeft, CaretRight, Check, DotsSixVertical, X } from '@phosphor-icons/react';
+import { ArrowLeft, CaretRight, Check, DotsSixVertical, DownloadSimple, Paperclip, X } from '@phosphor-icons/react';
 import AppLayout from '../../Layouts/AppLayout';
 import EmptyState from '../../Components/EmptyState';
 import Badge from '../../Components/Badge';
@@ -267,6 +267,89 @@ function SubtasksSection({ task, onChange }) {
     );
 }
 
+function formatFileSize(bytes) {
+    if (!bytes) return '0 KB';
+    const units = ['B', 'KB', 'MB', 'GB'];
+    let value = bytes;
+    let unitIndex = 0;
+    while (value >= 1024 && unitIndex < units.length - 1) {
+        value /= 1024;
+        unitIndex++;
+    }
+    return `${value.toFixed(unitIndex === 0 ? 0 : 1)} ${units[unitIndex]}`;
+}
+
+function FilesSection({ task, onChange }) {
+    const inputRef = useRef(null);
+    const [uploading, setUploading] = useState(false);
+    const files = task.files || [];
+
+    async function handleFileChange(e) {
+        const selected = e.target.files[0];
+        if (!selected) return;
+        setUploading(true);
+        try {
+            const formData = new FormData();
+            formData.append('file', selected);
+            await api.postForm(`/api/tasks/${task.id}/files`, formData);
+            onChange();
+        } finally {
+            setUploading(false);
+            e.target.value = '';
+        }
+    }
+
+    async function remove(file) {
+        await api.delete(`/api/files/${file.id}`);
+        onChange();
+    }
+
+    return (
+        <div className="mb-6">
+            <div className="flex items-center justify-between mb-2">
+                <div className="text-xs font-semibold text-sage">Files</div>
+                <button
+                    onClick={() => inputRef.current.click()}
+                    disabled={uploading}
+                    className="text-sm font-medium text-pine flex items-center gap-1 disabled:opacity-50"
+                >
+                    <Paperclip size={14} /> {uploading ? 'Uploading…' : 'Add file'}
+                </button>
+                <input ref={inputRef} type="file" onChange={handleFileChange} className="hidden" />
+            </div>
+            {files.length === 0 ? (
+                <EmptyState text="No files yet." />
+            ) : (
+                <div className="border border-border rounded-lg overflow-hidden">
+                    {files.map((file) => (
+                        <div
+                            key={file.id}
+                            className="flex items-center justify-between px-3 py-2 border-b border-border last:border-b-0 group"
+                        >
+                            <div className="min-w-0">
+                                <div className="text-sm truncate">{file.filename}</div>
+                                <div className="text-xs text-sage">{formatFileSize(file.size)}</div>
+                            </div>
+                            <div className="flex items-center gap-1 flex-shrink-0">
+                                <a href={file.url} download={file.filename} title="Download" className="text-sage hover:text-ink p-1.5">
+                                    <DownloadSimple size={16} />
+                                </a>
+                                <button
+                                    onClick={() => remove(file)}
+                                    title="Remove"
+                                    className="text-sage hover:text-brick p-1.5 opacity-0 group-hover:opacity-100"
+                                >
+                                    <X size={14} />
+                                </button>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+}
+
 function TaskDrawer({ task, teamNames, onClose, onChange }) {
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
@@ -341,6 +424,8 @@ function TaskDrawer({ task, teamNames, onClose, onChange }) {
                     </div>
 
                     <SubtasksSection task={task} onChange={onChange} />
+
+                    <FilesSection task={task} onChange={onChange} />
 
                     <div className="mb-6">
                         <div className="text-xs font-semibold text-sage mb-2">Due date</div>

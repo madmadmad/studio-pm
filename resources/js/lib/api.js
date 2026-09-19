@@ -3,6 +3,20 @@ function readCookie(name) {
     return match ? decodeURIComponent(match[1]) : null;
 }
 
+async function parseResponse(response) {
+    const isJson = response.headers.get('content-type')?.includes('application/json');
+    const data = isJson ? await response.json() : null;
+
+    if (!response.ok) {
+        const error = new Error(data?.message || `Request failed (${response.status})`);
+        error.status = response.status;
+        error.errors = data?.errors || null;
+        throw error;
+    }
+
+    return data;
+}
+
 async function request(method, url, body) {
     const headers = {
         Accept: 'application/json',
@@ -26,17 +40,26 @@ async function request(method, url, body) {
         body: body !== undefined ? JSON.stringify(body) : undefined,
     });
 
-    const isJson = response.headers.get('content-type')?.includes('application/json');
-    const data = isJson ? await response.json() : null;
+    return parseResponse(response);
+}
 
-    if (!response.ok) {
-        const error = new Error(data?.message || `Request failed (${response.status})`);
-        error.status = response.status;
-        error.errors = data?.errors || null;
-        throw error;
+async function requestForm(url, formData) {
+    const headers = { Accept: 'application/json' };
+    const token = readCookie('XSRF-TOKEN');
+    if (token) {
+        headers['X-XSRF-TOKEN'] = token;
     }
 
-    return data;
+    // No Content-Type header -- the browser sets multipart/form-data with
+    // the correct boundary itself when the body is a FormData instance.
+    const response = await fetch(url, {
+        method: 'POST',
+        headers,
+        credentials: 'same-origin',
+        body: formData,
+    });
+
+    return parseResponse(response);
 }
 
 export const api = {
@@ -45,4 +68,5 @@ export const api = {
     patch: (url, body) => request('PATCH', url, body ?? {}),
     put: (url, body) => request('PUT', url, body ?? {}),
     delete: (url) => request('DELETE', url),
+    postForm: (url, formData) => requestForm(url, formData),
 };

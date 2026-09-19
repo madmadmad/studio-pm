@@ -23,6 +23,7 @@ class ProjectPageController extends Controller
         $project->load([
             'company',
             'tasks.subtasks',
+            'tasks.files',
             'notes',
             'messages',
             'timeEntries.task',
