@@ -267,7 +267,7 @@ function SubtasksSection({ task, onChange }) {
     );
 }
 
-function TaskDrawer({ task, teamNames, companyName, onClose, onChange }) {
+function TaskDrawer({ task, teamNames, onClose, onChange }) {
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
 
@@ -316,22 +316,16 @@ function TaskDrawer({ task, teamNames, companyName, onClose, onChange }) {
                         className="text-xl font-semibold w-full mb-4 border border-transparent hover:border-border focus:border-border rounded px-1 -mx-1 focus:outline-none"
                     />
 
-                    <div className="flex items-center gap-8 text-sm mb-6 pb-4 border-b border-border">
-                        <div>
-                            <div className="text-xs text-sage mb-1">Client</div>
-                            <div>{companyName}</div>
-                        </div>
-                        <div>
-                            <div className="text-xs text-sage mb-1">Assignee</div>
-                            <select
-                                value={task.assignee ?? ''}
-                                onChange={(e) => updateField('assignee', e.target.value)}
-                                className="border border-border rounded px-2 py-1 text-sm"
-                            >
-                                <option value="">Unassigned</option>
-                                {teamNames.map((name) => <option key={name} value={name}>{name}</option>)}
-                            </select>
-                        </div>
+                    <div className="text-sm mb-6 pb-4 border-b border-border">
+                        <div className="text-xs text-sage mb-1">Assignee</div>
+                        <select
+                            value={task.assignee ?? ''}
+                            onChange={(e) => updateField('assignee', e.target.value)}
+                            className="border border-border rounded px-2 py-1 text-sm"
+                        >
+                            <option value="">Unassigned</option>
+                            {teamNames.map((name) => <option key={name} value={name}>{name}</option>)}
+                        </select>
                     </div>
 
                     <div className="mb-6">
@@ -418,7 +412,6 @@ function TasksTab({ project }) {
                 <TaskDrawer
                     task={selectedTask}
                     teamNames={teamNames}
-                    companyName={project.company.name}
                     onClose={() => setSelectedTaskId(null)}
                     onChange={reload}
                 />
