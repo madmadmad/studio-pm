@@ -1,4 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react';
+import { useState } from 'react';
 import AppLayout from '../../Layouts/AppLayout';
 import EmptyState from '../../Components/EmptyState';
 import { ProposalStatusBadge } from '../../Components/StatusBadges';
@@ -6,6 +7,8 @@ import { formatCurrency, formatDate } from '../../lib/format';
 import { api } from '../../lib/api';
 
 export default function ProposalsIndex({ proposals }) {
+    const [copiedId, setCopiedId] = useState(null);
+
     async function sendProposal(proposal) {
         await api.post(`/api/proposals/${proposal.id}/send`);
         router.reload({ only: ['proposals'] });
@@ -13,6 +16,12 @@ export default function ProposalsIndex({ proposals }) {
 
     function acceptLink(proposal) {
         return `${window.location.origin}/p/${proposal.accept_token}`;
+    }
+
+    function copyLink(proposal) {
+        navigator.clipboard.writeText(acceptLink(proposal));
+        setCopiedId(proposal.id);
+        setTimeout(() => setCopiedId((id) => (id === proposal.id ? null : id)), 1500);
     }
 
     return (
@@ -65,18 +74,21 @@ export default function ProposalsIndex({ proposals }) {
                                     <td className="px-4 py-3"><ProposalStatusBadge proposal={proposal} /></td>
                                     <td className="px-4 py-3 text-right">
                                         <div className="flex items-center justify-end gap-3">
+                                            <a href={`/p/${proposal.accept_token}`} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-sage hover:underline">
+                                                Preview
+                                            </a>
                                             <Link href={`/proposals/${proposal.id}/edit`} className="text-sm font-medium text-pine hover:underline">
                                                 Edit
                                             </Link>
                                             {proposal.status === 'draft' && (
                                                 <button onClick={() => sendProposal(proposal)} className="text-sm font-medium text-brass">Send</button>
                                             )}
-                                            {proposal.status === 'sent' && (
+                                            {proposal.status !== 'draft' && (
                                                 <button
-                                                    onClick={() => navigator.clipboard.writeText(acceptLink(proposal))}
+                                                    onClick={() => copyLink(proposal)}
                                                     className="text-sm font-medium text-sage"
                                                 >
-                                                    Copy link
+                                                    {copiedId === proposal.id ? 'Copied!' : 'Copy link'}
                                                 </button>
                                             )}
                                             {proposal.status === 'accepted' && (

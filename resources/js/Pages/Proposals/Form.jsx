@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { ArrowLeft, DotsSixVertical } from '@phosphor-icons/react';
 import AppLayout from '../../Layouts/AppLayout';
 import RichTextEditor from '../../Components/RichTextEditor';
+import { ProposalStatusBadge } from '../../Components/StatusBadges';
 import { formatCurrency } from '../../lib/format';
 import { api } from '../../lib/api';
 
@@ -53,6 +54,8 @@ export default function ProposalsForm({ proposal, companies, services, presetCom
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
     const [dragIndex, setDragIndex] = useState(null);
+    const [sending, setSending] = useState(false);
+    const [copied, setCopied] = useState(false);
 
     const itemsTotal = form.items.reduce((s, i) => s + lineAmount(i), 0);
     const selectedCompany = companies.find((c) => String(c.id) === String(form.company_id));
@@ -155,6 +158,26 @@ export default function ProposalsForm({ proposal, companies, services, presetCom
         }
     }
 
+    function acceptLink() {
+        return `${window.location.origin}/p/${proposal.accept_token}`;
+    }
+
+    async function sendProposal() {
+        setSending(true);
+        try {
+            await api.post(`/api/proposals/${proposal.id}/send`);
+            router.reload();
+        } finally {
+            setSending(false);
+        }
+    }
+
+    function copyLink() {
+        navigator.clipboard.writeText(acceptLink());
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1500);
+    }
+
     return (
         <AppLayout>
             <Head title={isEditing ? `Edit — ${proposal.title}` : 'New proposal'} />
@@ -164,7 +187,26 @@ export default function ProposalsForm({ proposal, companies, services, presetCom
                     <ArrowLeft size={14} /> Proposals
                 </Link>
             </div>
-            <h1 className="font-display text-2xl font-semibold mb-6">{isEditing ? 'Edit proposal' : 'New proposal'}</h1>
+            <div className="flex items-center justify-between mb-6">
+                <h1 className="font-display text-2xl font-semibold">{isEditing ? 'Edit proposal' : 'New proposal'}</h1>
+                {isEditing && (
+                    <div className="flex items-center gap-3">
+                        <ProposalStatusBadge proposal={proposal} />
+                        <a href={`/p/${proposal.accept_token}`} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-sage hover:underline">
+                            Preview
+                        </a>
+                        {proposal.status === 'draft' ? (
+                            <button type="button" disabled={sending} onClick={sendProposal} className="text-sm font-medium text-brass disabled:opacity-50">
+                                {sending ? 'Sending…' : 'Send'}
+                            </button>
+                        ) : (
+                            <button type="button" onClick={copyLink} className="text-sm font-medium text-sage">
+                                {copied ? 'Copied!' : 'Copy link'}
+                            </button>
+                        )}
+                    </div>
+                )}
+            </div>
 
             <div className="bg-white rounded-lg border border-border p-4">
                 <div className="grid grid-cols-2 gap-3 mb-3">
