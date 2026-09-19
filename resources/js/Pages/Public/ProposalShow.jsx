@@ -16,7 +16,7 @@ function FeeSummary({ proposal }) {
                 <div className="tabular-nums text-lg font-semibold">{formatCurrency(total)}</div>
             </div>
 
-            <div className="py-3 grid grid-cols-12 text-xs font-medium text-sage">
+            <div className="py-3 grid grid-cols-12 text-xs font-medium text-sage border-b border-border">
                 <div className="col-span-6">Items</div>
                 <div className="col-span-2 text-right">Qty</div>
                 <div className="col-span-2 text-right">Price</div>
@@ -41,7 +41,7 @@ function FeeSummary({ proposal }) {
                 </div>
             ))}
 
-            <div className="py-4 flex items-center justify-between">
+            <div className="pt-4 flex items-center justify-between border-t border-border">
                 <div className="font-semibold">Total</div>
                 <div className="tabular-nums text-lg font-semibold">{formatCurrency(total)}</div>
             </div>
@@ -69,7 +69,7 @@ export default function ProposalShow({ proposal, token, studio }) {
             <div className="max-w-2xl mx-auto">
                 <img src="/images/studio-lockup.svg" alt="Studio" className="w-[200px] h-auto mb-8" />
 
-                <div className="grid grid-cols-2 gap-4 mb-8 text-sm">
+                <div className="grid grid-cols-2 gap-4 pb-8 mb-8 border-b border-border text-sm">
                     <div className="text-sage">
                         <div className="font-medium text-ink">{studio.name}</div>
                         {studio.address && <div className="whitespace-pre-line">{studio.address}</div>}
@@ -90,7 +90,7 @@ export default function ProposalShow({ proposal, token, studio }) {
                 )}
 
                 <div
-                    className="proposal-body mb-6"
+                    className="proposal-body pb-6 mb-6 border-b border-border"
                     dangerouslySetInnerHTML={{ __html: proposal.body }}
                 />
 
