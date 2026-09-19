@@ -7,29 +7,24 @@ function FeeSummary({ proposal }) {
     const total = proposal.items.reduce((s, item) => s + parseFloat(item.quantity) * parseFloat(item.rate), 0);
 
     return (
-        <div className="bg-white rounded-lg border border-border mb-6 overflow-hidden">
-            <div className="px-6 pt-6 pb-4">
-                <div className="flex items-center justify-between">
-                    <h2 className="text-lg font-semibold">Fee Summary</h2>
-                </div>
+        <div className="mb-6">
+            <div className="pb-4">
+                <h2 className="text-lg font-semibold">Fee Summary</h2>
             </div>
-            <div className="px-6 pb-2 flex items-center justify-between border-b border-border pb-4">
+            <div className="pb-4 flex items-center justify-between">
                 <div className="font-semibold">Estimate</div>
                 <div className="tabular-nums text-lg font-semibold">{formatCurrency(total)}</div>
             </div>
 
-            <div className="px-6 py-3 grid grid-cols-12 text-xs font-medium text-sage border-b border-border">
+            <div className="py-3 grid grid-cols-12 text-xs font-medium text-sage">
                 <div className="col-span-6">Items</div>
                 <div className="col-span-2 text-right">Qty</div>
                 <div className="col-span-2 text-right">Price</div>
                 <div className="col-span-2 text-right">Total</div>
             </div>
 
-            {proposal.items.map((item, idx) => (
-                <div
-                    key={item.id}
-                    className={`px-6 py-4 grid grid-cols-12 text-sm ${idx < proposal.items.length - 1 ? 'border-b border-border' : ''}`}
-                >
+            {proposal.items.map((item) => (
+                <div key={item.id} className="py-4 grid grid-cols-12 text-sm">
                     <div className="col-span-6">
                         <div className="font-medium">{item.description}</div>
                         {item.details && item.details !== item.description && (
@@ -46,7 +41,7 @@ function FeeSummary({ proposal }) {
                 </div>
             ))}
 
-            <div className="px-6 py-4 flex items-center justify-between bg-paper">
+            <div className="py-4 flex items-center justify-between">
                 <div className="font-semibold">Total</div>
                 <div className="tabular-nums text-lg font-semibold">{formatCurrency(total)}</div>
             </div>
@@ -69,7 +64,7 @@ export default function ProposalShow({ proposal, token, studio }) {
     }
 
     return (
-        <div className="min-h-screen bg-paper text-ink px-4 py-12">
+        <div className="min-h-screen bg-white text-ink px-4 py-12">
             <Head title={proposal.title} />
             <div className="max-w-2xl mx-auto">
                 <img src="/images/studio-lockup.svg" alt="Studio" className="w-[200px] h-auto mb-8" />
@@ -95,7 +90,7 @@ export default function ProposalShow({ proposal, token, studio }) {
                 )}
 
                 <div
-                    className="bg-white rounded-lg border border-border p-6 proposal-body mb-6"
+                    className="proposal-body mb-6"
                     dangerouslySetInnerHTML={{ __html: proposal.body }}
                 />
 
