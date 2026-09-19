@@ -1,5 +1,6 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
+import { Check, Copy, Eye, PaperPlaneTilt, PencilSimple } from '@phosphor-icons/react';
 import AppLayout from '../../Layouts/AppLayout';
 import EmptyState from '../../Components/EmptyState';
 import { ProposalStatusBadge } from '../../Components/StatusBadges';
@@ -74,21 +75,24 @@ export default function ProposalsIndex({ proposals }) {
                                     <td className="px-4 py-3"><ProposalStatusBadge proposal={proposal} /></td>
                                     <td className="px-4 py-3 text-right">
                                         <div className="flex items-center justify-end gap-3">
-                                            <a href={`/p/${proposal.accept_token}`} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-sage hover:underline">
-                                                Preview
+                                            <a href={`/p/${proposal.accept_token}`} target="_blank" rel="noopener noreferrer" title="Preview" className="text-sage hover:text-ink">
+                                                <Eye size={16} />
                                             </a>
-                                            <Link href={`/proposals/${proposal.id}/edit`} className="text-sm font-medium text-pine hover:underline">
-                                                Edit
+                                            <Link href={`/proposals/${proposal.id}/edit`} title="Edit" className="text-pine hover:text-pine/70">
+                                                <PencilSimple size={16} />
                                             </Link>
                                             {proposal.status === 'draft' && (
-                                                <button onClick={() => sendProposal(proposal)} className="text-sm font-medium text-brass">Send</button>
+                                                <button onClick={() => sendProposal(proposal)} title="Send" className="text-brass hover:text-brass/70">
+                                                    <PaperPlaneTilt size={16} />
+                                                </button>
                                             )}
                                             {proposal.status !== 'draft' && (
                                                 <button
                                                     onClick={() => copyLink(proposal)}
-                                                    className="text-sm font-medium text-sage"
+                                                    title={copiedId === proposal.id ? 'Copied!' : 'Copy link'}
+                                                    className="text-sage hover:text-ink"
                                                 >
-                                                    {copiedId === proposal.id ? 'Copied!' : 'Copy link'}
+                                                    {copiedId === proposal.id ? <Check size={16} /> : <Copy size={16} />}
                                                 </button>
                                             )}
                                             {proposal.status === 'accepted' && (
