@@ -1269,6 +1269,11 @@ function BillingTab({ project }) {
                                                     {copiedInvoiceId === invoice.id ? <Check size={16} /> : <Copy size={16} />}
                                                 </button>
                                             )}
+                                            {invoice.status !== 'draft' && (
+                                                <a href={`/invoices/${invoice.id}/pdf`} title="Download PDF" className="text-sage hover:text-ink">
+                                                    <DownloadSimple size={16} />
+                                                </a>
+                                            )}
                                             {invoice.status === 'sent' && (
                                                 <button onClick={() => markInvoicePaid(invoice)} title="Mark paid" className="text-pine hover:text-pine/70">
                                                     <CheckCircle size={16} />

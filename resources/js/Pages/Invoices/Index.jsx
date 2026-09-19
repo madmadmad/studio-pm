@@ -1,6 +1,6 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
-import { Check, CheckCircle, Copy, Eye, PaperPlaneTilt, PencilSimple, Trash } from '@phosphor-icons/react';
+import { Check, CheckCircle, Copy, DownloadSimple, Eye, PaperPlaneTilt, PencilSimple, Trash } from '@phosphor-icons/react';
 import AppLayout from '../../Layouts/AppLayout';
 import EmptyState from '../../Components/EmptyState';
 import { InvoiceStatusBadge } from '../../Components/StatusBadges';
@@ -318,6 +318,11 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
                                                 <button onClick={() => copyLink(invoice)} title={copiedId === invoice.id ? 'Copied!' : 'Copy link'} className="text-sage hover:text-ink">
                                                     {copiedId === invoice.id ? <Check size={16} /> : <Copy size={16} />}
                                                 </button>
+                                            )}
+                                            {invoice.status !== 'draft' && (
+                                                <a href={`/invoices/${invoice.id}/pdf`} title="Download PDF" className="text-sage hover:text-ink">
+                                                    <DownloadSimple size={16} />
+                                                </a>
                                             )}
                                             {invoice.status === 'sent' && (
                                                 <button onClick={() => markPaid(invoice)} title="Mark paid" className="text-pine hover:text-pine/70">

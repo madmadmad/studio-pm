@@ -1,6 +1,6 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
-import { ArrowLeft } from '@phosphor-icons/react';
+import { ArrowLeft, DownloadSimple } from '@phosphor-icons/react';
 import AppLayout from '../../Layouts/AppLayout';
 import { InvoiceStatusBadge } from '../../Components/StatusBadges';
 import { formatCurrency, formatDate, invoiceSubtotal, invoiceSurchargeAmount, invoiceTotal } from '../../lib/format';
@@ -107,6 +107,11 @@ export default function InvoicesShow({ invoice }) {
                     <button onClick={copyLink} className="text-sm font-medium text-sage">
                         {copied ? 'Copied!' : 'Copy link'}
                     </button>
+                    {invoice.status !== 'draft' && (
+                        <a href={`/invoices/${invoice.id}/pdf`} className="text-sm font-medium text-sage inline-flex items-center gap-1">
+                            <DownloadSimple size={14} /> PDF
+                        </a>
+                    )}
                     {invoice.status === 'draft' && !editing && (
                         <button onClick={startEditing} className="text-sm font-medium text-pine">Edit</button>
                     )}
