@@ -80,6 +80,7 @@ export default function ProposalShow({ proposal, token, studio }) {
                         {studio.address && <div className="whitespace-pre-line">{studio.address}</div>}
                         {studio.email && <div>{studio.email}</div>}
                         {studio.phone && <div>{studio.phone}</div>}
+                        {studio.website && <div>{studio.website}</div>}
                     </div>
                     <div className="text-right">
                         <div className="font-medium text-ink">{proposal.company.name}</div>

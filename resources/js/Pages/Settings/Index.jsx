@@ -9,6 +9,7 @@ export default function SettingsIndex({ studioProfile }) {
         address: studioProfile.address ?? '',
         email: studioProfile.email ?? '',
         phone: studioProfile.phone ?? '',
+        website: studioProfile.website ?? '',
     });
     const [saving, setSaving] = useState(false);
     const [saved, setSaved] = useState(false);
@@ -59,6 +60,12 @@ export default function SettingsIndex({ studioProfile }) {
                     placeholder="Phone"
                     value={form.phone}
                     onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                    className="border border-border rounded px-3 py-2 text-sm w-full mb-2"
+                />
+                <input
+                    placeholder="Website"
+                    value={form.website}
+                    onChange={(e) => setForm({ ...form, website: e.target.value })}
                     className="border border-border rounded px-3 py-2 text-sm w-full mb-3"
                 />
                 <div className="flex items-center justify-end gap-3">

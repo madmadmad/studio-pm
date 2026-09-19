@@ -14,6 +14,7 @@ class StudioProfileController extends Controller
             'address' => ['nullable', 'string'],
             'email' => ['nullable', 'email', 'max:255'],
             'phone' => ['nullable', 'string', 'max:50'],
+            'website' => ['nullable', 'string', 'max:255'],
         ]);
 
         $profile = StudioProfile::current();
