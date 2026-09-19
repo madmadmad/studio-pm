@@ -23,4 +23,9 @@ class Task extends Model
     {
         return $this->hasMany(TimeEntry::class);
     }
+
+    public function subtasks(): HasMany
+    {
+        return $this->hasMany(Subtask::class)->orderBy('position');
+    }
 }

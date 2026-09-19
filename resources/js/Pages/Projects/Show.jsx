@@ -125,6 +125,151 @@ const TASK_STATUS_OPTIONS = [
     { value: 'done', label: 'Done' },
 ];
 
+function initials(name) {
+    if (!name) return null;
+    return name.trim().split(/\s+/).map((p) => p[0]).slice(0, 2).join('').toUpperCase();
+}
+
+const SUBTASK_STATUS_DOT = {
+    todo: 'border-2 border-border',
+    in_progress: 'bg-brass',
+    done: 'bg-pine',
+};
+
+function SubtaskRow({ subtask, teamNames, onChange, isDragging, onDragStart, onDragOver, onDrop, onDragEnd }) {
+    const [title, setTitle] = useState(subtask.title);
+
+    useEffect(() => setTitle(subtask.title), [subtask.id]);
+
+    async function updateField(field, value) {
+        await api.patch(`/api/subtasks/${subtask.id}`, { [field]: value });
+        onChange();
+    }
+
+    function toggleDone() {
+        updateField('status', subtask.status === 'done' ? 'todo' : 'done');
+    }
+
+    function cycleAssignee() {
+        const options = [null, ...teamNames];
+        const next = options[(options.indexOf(subtask.assignee) + 1) % options.length];
+        updateField('assignee', next);
+    }
+
+    function cycleStatus() {
+        const order = ['todo', 'in_progress', 'done'];
+        const next = order[(order.indexOf(subtask.status) + 1) % order.length];
+        updateField('status', next);
+    }
+
+    async function remove() {
+        await api.delete(`/api/subtasks/${subtask.id}`);
+        onChange();
+    }
+
+    return (
+        <div
+            draggable
+            onDragStart={onDragStart}
+            onDragOver={onDragOver}
+            onDrop={onDrop}
+            onDragEnd={onDragEnd}
+            className={`flex items-center gap-2 py-2 border-b border-border last:border-b-0 group ${isDragging ? 'opacity-40' : ''}`}
+        >
+            <span className="text-sage cursor-grab select-none text-xs opacity-0 group-hover:opacity-100 flex-shrink-0">⠿</span>
+            <button
+                onClick={toggleDone}
+                className={`w-5 h-5 rounded flex items-center justify-center flex-shrink-0 text-xs ${
+                    subtask.status === 'done' ? 'bg-pine text-white' : 'border border-border'
+                }`}
+            >
+                {subtask.status === 'done' && '✓'}
+            </button>
+            <input
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                onBlur={() => title !== subtask.title && updateField('title', title)}
+                className={`flex-1 min-w-0 text-sm border-none focus:outline-none bg-transparent ${
+                    subtask.status === 'done' ? 'line-through text-sage' : ''
+                }`}
+            />
+            <button
+                onClick={cycleAssignee}
+                title={subtask.assignee || 'Unassigned'}
+                className="w-6 h-6 rounded-full bg-ink text-white text-[10px] flex items-center justify-center flex-shrink-0"
+            >
+                {initials(subtask.assignee) || '?'}
+            </button>
+            <button
+                onClick={cycleStatus}
+                title={subtask.status}
+                className={`w-3 h-3 rounded-full flex-shrink-0 ${SUBTASK_STATUS_DOT[subtask.status]}`}
+            />
+            <button onClick={remove} className="text-sage hover:text-brick opacity-0 group-hover:opacity-100 text-xs flex-shrink-0 px-1">
+                &times;
+            </button>
+        </div>
+    );
+}
+
+function SubtasksSection({ task, teamNames, onChange }) {
+    const [title, setTitle] = useState('');
+    const [dragIndex, setDragIndex] = useState(null);
+    const subtasks = task.subtasks || [];
+
+    async function addSubtask(e) {
+        e.preventDefault();
+        if (!title.trim()) return;
+        await api.post(`/api/tasks/${task.id}/subtasks`, { title });
+        setTitle('');
+        onChange();
+    }
+
+    async function reorder(fromIndex, toIndex) {
+        if (fromIndex === null || fromIndex === toIndex) return;
+        const items = [...subtasks];
+        const [moved] = items.splice(fromIndex, 1);
+        items.splice(toIndex, 0, moved);
+        await Promise.all(items.map((s, idx) => api.patch(`/api/subtasks/${s.id}`, { position: idx })));
+        onChange();
+    }
+
+    return (
+        <div className="mb-6">
+            <div className="text-xs font-semibold text-sage uppercase tracking-wide mb-2">Subtasks</div>
+            {subtasks.length > 0 && (
+                <div className="mb-1">
+                    {subtasks.map((subtask, idx) => (
+                        <SubtaskRow
+                            key={subtask.id}
+                            subtask={subtask}
+                            teamNames={teamNames}
+                            onChange={onChange}
+                            isDragging={dragIndex === idx}
+                            onDragStart={() => setDragIndex(idx)}
+                            onDragOver={(e) => e.preventDefault()}
+                            onDrop={() => {
+                                reorder(dragIndex, idx);
+                                setDragIndex(null);
+                            }}
+                            onDragEnd={() => setDragIndex(null)}
+                        />
+                    ))}
+                </div>
+            )}
+            <form onSubmit={addSubtask} className="flex items-center gap-2 pt-1">
+                <span className="text-sage text-sm">+</span>
+                <input
+                    placeholder="Add subtask"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    className="flex-1 text-sm border-none focus:outline-none bg-transparent placeholder:text-sage"
+                />
+            </form>
+        </div>
+    );
+}
+
 function TaskDrawer({ task, teamNames, companyName, onClose, onChange }) {
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
@@ -203,6 +348,8 @@ function TaskDrawer({ task, teamNames, companyName, onClose, onChange }) {
                             className="w-full border border-border rounded px-3 py-2 text-sm"
                         />
                     </div>
+
+                    <SubtasksSection task={task} teamNames={teamNames} onChange={onChange} />
 
                     <div className="mb-6">
                         <div className="text-xs font-semibold text-sage uppercase tracking-wide mb-2">Due date</div>

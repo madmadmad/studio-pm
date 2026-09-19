@@ -8,6 +8,7 @@ use App\Http\Controllers\NoteController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProposalController;
 use App\Http\Controllers\ServiceController;
+use App\Http\Controllers\SubtaskController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TimeEntryController;
 use App\Http\Controllers\TransactionController;
@@ -18,6 +19,7 @@ Route::middleware('auth:sanctum')->name('api.')->group(function () {
     Route::apiResource('companies.contacts', ContactController::class)->shallow();
     Route::apiResource('companies.projects', ProjectController::class)->shallow();
     Route::apiResource('projects.tasks', TaskController::class)->shallow();
+    Route::apiResource('tasks.subtasks', SubtaskController::class)->shallow()->only(['store', 'update', 'destroy']);
     Route::apiResource('projects.notes', NoteController::class)->shallow()->only(['index', 'store', 'destroy']);
     Route::apiResource('projects.messages', MessageController::class)->shallow()->only(['index', 'store']);
     Route::apiResource('services', ServiceController::class);

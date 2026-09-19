@@ -22,7 +22,7 @@ class ProjectPageController extends Controller
     {
         $project->load([
             'company',
-            'tasks',
+            'tasks.subtasks',
             'notes',
             'messages',
             'timeEntries.task',
