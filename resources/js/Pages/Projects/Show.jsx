@@ -980,19 +980,66 @@ function ProposalsTab({ project }) {
     );
 }
 
+function proposalToInvoiceItems(proposal) {
+    return proposal.items.map((item) => ({
+        description: item.description,
+        amount: (parseFloat(item.quantity) * parseFloat(item.rate)).toFixed(2),
+        service_id: item.service_id ? String(item.service_id) : '',
+    }));
+}
+
+function emptyInvoiceForm() {
+    return { proposal_id: '', items: [{ description: '', amount: '' }], surcharge: false };
+}
+
 function BillingTab({ project }) {
     const [showForm, setShowForm] = useState(false);
-    const [form, setForm] = useState({ description: '', amount: '', surcharge: false });
+    const [form, setForm] = useState(emptyInvoiceForm());
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
     const budget = parseFloat(project.budget) || 0;
     const totalInvoiced = project.invoices.reduce((s, inv) => s + invoiceTotal(inv.items, inv.surcharge), 0);
     const remaining = budget - totalInvoiced;
+    const proposalsWithItems = project.proposals.filter((p) => p.items.length > 0);
+
+    function openForm() {
+        // Start from the most recently accepted proposal's line items when
+        // there's exactly one to choose from -- otherwise let the user pick.
+        const accepted = proposalsWithItems.filter((p) => p.status === 'accepted');
+        if (accepted.length === 1) {
+            setForm({ proposal_id: String(accepted[0].id), items: proposalToInvoiceItems(accepted[0]), surcharge: false });
+        } else {
+            setForm(emptyInvoiceForm());
+        }
+        setError('');
+        setShowForm(true);
+    }
+
+    function copyFromProposal(proposalId) {
+        if (!proposalId) {
+            setForm({ ...form, proposal_id: '', items: [{ description: '', amount: '' }] });
+            return;
+        }
+        const proposal = proposalsWithItems.find((p) => String(p.id) === proposalId);
+        setForm({ ...form, proposal_id: proposalId, items: proposalToInvoiceItems(proposal) });
+    }
+
+    function updateItem(idx, field, value) {
+        const items = form.items.map((it, i) => (i === idx ? { ...it, [field]: value } : it));
+        setForm({ ...form, items });
+    }
+    function addItemRow() {
+        setForm({ ...form, items: [...form.items, { description: '', amount: '' }] });
+    }
+    function removeItemRow(idx) {
+        setForm({ ...form, items: form.items.filter((_, i) => i !== idx) });
+    }
 
     async function createInvoice(e) {
         e.preventDefault();
-        if (!form.description || !(parseFloat(form.amount) > 0)) {
-            setError('Description and a positive amount are required.');
+        const validItems = form.items.filter((i) => i.description.trim() && parseFloat(i.amount) > 0);
+        if (validItems.length === 0) {
+            setError('Add at least one line item with a description and amount.');
             return;
         }
         setSaving(true);
@@ -1001,9 +1048,9 @@ function BillingTab({ project }) {
             await api.post(`/api/companies/${project.company_id}/invoices`, {
                 project_id: project.id,
                 surcharge: form.surcharge,
-                items: [{ description: form.description, amount: form.amount }],
+                items: validItems,
             });
-            setForm({ description: '', amount: '', surcharge: false });
+            setForm(emptyInvoiceForm());
             setShowForm(false);
             reload();
         } catch (err) {
@@ -1023,28 +1070,52 @@ function BillingTab({ project }) {
                         Remaining <span className={`tabular-nums font-medium ${remaining < 0 ? 'text-brick' : 'text-ink'}`}>{formatCurrency(remaining)}</span>
                     </div>
                 ) : <div />}
-                <button onClick={() => setShowForm(!showForm)} className="bg-ink text-white text-sm font-medium px-3 py-1.5 rounded">
+                <button onClick={() => (showForm ? setShowForm(false) : openForm())} className="bg-ink text-white text-sm font-medium px-3 py-1.5 rounded">
                     {showForm ? 'Cancel' : 'New invoice'}
                 </button>
             </div>
 
             {showForm && (
                 <form onSubmit={createInvoice} className="bg-white rounded-lg border border-border p-4 mb-4">
-                    <input
-                        placeholder="Description (e.g. Monthly retainer — September)"
-                        value={form.description}
-                        onChange={(e) => setForm({ ...form, description: e.target.value })}
-                        className="border border-border rounded px-3 py-2 text-sm w-full mb-2"
-                    />
-                    <input
-                        type="number"
-                        min="0.01"
-                        step="0.01"
-                        placeholder="Amount"
-                        value={form.amount}
-                        onChange={(e) => setForm({ ...form, amount: e.target.value })}
-                        className="border border-border rounded px-3 py-2 text-sm tabular-nums w-full mb-2"
-                    />
+                    {proposalsWithItems.length > 0 && (
+                        <select
+                            value={form.proposal_id}
+                            onChange={(e) => copyFromProposal(e.target.value)}
+                            className="border border-border rounded px-3 py-2 text-sm w-full mb-3"
+                        >
+                            <option value="">Copy line items from a proposal…</option>
+                            {proposalsWithItems.map((p) => (
+                                <option key={p.id} value={p.id}>{p.title} ({formatCurrency(p.estimate_amount)})</option>
+                            ))}
+                        </select>
+                    )}
+
+                    <div className="mb-3">
+                        {form.items.map((item, idx) => (
+                            <div key={idx} className="flex gap-2 mb-2">
+                                <input
+                                    placeholder="Description"
+                                    value={item.description}
+                                    onChange={(e) => updateItem(idx, 'description', e.target.value)}
+                                    className="border border-border rounded px-3 py-2 text-sm flex-1"
+                                />
+                                <input
+                                    type="number"
+                                    min="0"
+                                    step="0.01"
+                                    placeholder="Amount"
+                                    value={item.amount}
+                                    onChange={(e) => updateItem(idx, 'amount', e.target.value)}
+                                    className="border border-border rounded px-3 py-2 text-sm tabular-nums w-28"
+                                />
+                                {form.items.length > 1 && (
+                                    <button type="button" onClick={() => removeItemRow(idx)} className="text-sm px-2 text-brick">Remove</button>
+                                )}
+                            </div>
+                        ))}
+                        <button type="button" onClick={addItemRow} className="text-sm font-medium text-brass">+ Add line item</button>
+                    </div>
+
                     <label className="flex items-center gap-2 text-sm mb-2">
                         <input type="checkbox" checked={form.surcharge} onChange={(e) => setForm({ ...form, surcharge: e.target.checked })} />
                         Client covers card processing fee (3%)
