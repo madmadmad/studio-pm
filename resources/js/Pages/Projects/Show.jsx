@@ -4,6 +4,7 @@ import { ArrowLeft, CaretRight, Check, DotsSixVertical, DownloadSimple, Papercli
 import AppLayout from '../../Layouts/AppLayout';
 import EmptyState from '../../Components/EmptyState';
 import Badge from '../../Components/Badge';
+import RichTextEditor from '../../Components/RichTextEditor';
 import { ProjectStatusBadge, TaskStatusBadge, InvoiceStatusBadge } from '../../Components/StatusBadges';
 import { formatCurrency, formatDate, invoiceTotal } from '../../lib/format';
 import { api } from '../../lib/api';
@@ -505,13 +506,17 @@ function TasksTab({ project }) {
     );
 }
 
+function isBlankHtml(html) {
+    return !html || !html.replace(/<[^>]*>/g, '').trim();
+}
+
 function NotesTab({ project }) {
     const [body, setBody] = useState('');
     const [saving, setSaving] = useState(false);
 
     async function addNote(e) {
         e.preventDefault();
-        if (!body.trim()) return;
+        if (isBlankHtml(body)) return;
         setSaving(true);
         try {
             await api.post(`/api/projects/${project.id}/notes`, { body });
@@ -525,15 +530,11 @@ function NotesTab({ project }) {
     return (
         <div>
             <form onSubmit={addNote} className="bg-white rounded-lg border border-border p-4 mb-4">
-                <textarea
-                    placeholder="Add an internal note…"
-                    value={body}
-                    onChange={(e) => setBody(e.target.value)}
-                    rows={3}
-                    className="border border-border rounded px-3 py-2 text-sm w-full mb-2"
-                />
+                <div className="mb-2">
+                    <RichTextEditor value={body} onChange={setBody} />
+                </div>
                 <div className="flex justify-end">
-                    <button type="submit" disabled={saving} className="bg-pine text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50">Add note</button>
+                    <button type="submit" disabled={saving || isBlankHtml(body)} className="bg-pine text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50">Add note</button>
                 </div>
             </form>
             {project.notes.length === 0 ? (
@@ -542,8 +543,11 @@ function NotesTab({ project }) {
                 <div className="space-y-3">
                     {project.notes.map((note) => (
                         <div key={note.id} className="bg-white rounded-lg border border-border p-4">
-                            <div className="text-xs text-sage mb-1">{formatDate(note.created_at)}</div>
-                            <div className="text-sm whitespace-pre-wrap">{note.body}</div>
+                            <div className="text-xs text-sage mb-2">{formatDate(note.created_at)}</div>
+                            <div
+                                className="proposal-body text-sm line-clamp-3"
+                                dangerouslySetInnerHTML={{ __html: note.body }}
+                            />
                         </div>
                     ))}
                 </div>

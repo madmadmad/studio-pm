@@ -1,5 +1,6 @@
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
+import { useEffect } from 'react';
 
 function ToolbarButton({ active, onClick, children }) {
     return (
@@ -24,6 +25,21 @@ export default function RichTextEditor({ value, onChange }) {
             },
         },
     });
+
+    // Tiptap's `content` option only seeds the editor on mount, so it never
+    // sees later changes to `value` on its own -- needed when a parent
+    // resets the field (e.g. clearing the composer after a successful
+    // submit). Only resync when the incoming value actually differs from
+    // what's already in the editor, so normal typing (which flows the same
+    // value right back through onChange) doesn't fight the cursor.
+    useEffect(() => {
+        if (!editor) return;
+        const current = editor.getHTML();
+        const next = value || '';
+        if (next !== current) {
+            editor.commands.setContent(next, { emitUpdate: false });
+        }
+    }, [value, editor]);
 
     if (!editor) return null;
 
