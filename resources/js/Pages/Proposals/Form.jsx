@@ -56,6 +56,7 @@ export default function ProposalsForm({ proposal, companies, services, presetCom
     const [dragIndex, setDragIndex] = useState(null);
     const [sending, setSending] = useState(false);
     const [copied, setCopied] = useState(false);
+    const [unaccepting, setUnaccepting] = useState(false);
 
     const itemsTotal = form.items.reduce((s, i) => s + lineAmount(i), 0);
     const selectedCompany = companies.find((c) => String(c.id) === String(form.company_id));
@@ -178,6 +179,17 @@ export default function ProposalsForm({ proposal, companies, services, presetCom
         setTimeout(() => setCopied(false), 1500);
     }
 
+    async function unacceptProposal() {
+        if (!confirm('Revert this proposal to sent? The client will be able to accept it again.')) return;
+        setUnaccepting(true);
+        try {
+            await api.post(`/api/proposals/${proposal.id}/unaccept`);
+            router.reload();
+        } finally {
+            setUnaccepting(false);
+        }
+    }
+
     return (
         <AppLayout>
             <Head title={isEditing ? `Edit — ${proposal.title}` : 'New proposal'} />
@@ -202,6 +214,11 @@ export default function ProposalsForm({ proposal, companies, services, presetCom
                         ) : (
                             <button type="button" onClick={copyLink} className="text-sm font-medium text-sage">
                                 {copied ? 'Copied!' : 'Copy link'}
+                            </button>
+                        )}
+                        {proposal.status === 'accepted' && (
+                            <button type="button" disabled={unaccepting} onClick={unacceptProposal} className="text-sm font-medium text-brick disabled:opacity-50">
+                                {unaccepting ? 'Reverting…' : 'Unaccept'}
                             </button>
                         )}
                     </div>

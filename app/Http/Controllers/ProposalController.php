@@ -109,6 +109,15 @@ class ProposalController extends Controller
         return $proposal;
     }
 
+    // Authenticated only -- reverts a mistaken or premature acceptance back
+    // to sent, so the client's link still works and they can accept again.
+    public function unaccept(Proposal $proposal)
+    {
+        $proposal->update(['status' => 'sent', 'accepted_at' => null]);
+
+        return $proposal;
+    }
+
     // Public, unauthenticated -- the client opens this link to read the proposal.
     public function showPublic(string $token)
     {

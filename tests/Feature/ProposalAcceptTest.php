@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Company;
 use App\Models\Proposal;
+use App\Models\User;
 use App\Notifications\ProposalAccepted;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
@@ -62,5 +63,26 @@ class ProposalAcceptTest extends TestCase
     public function test_unknown_token_returns_not_found(): void
     {
         $this->postJson('/api/proposals/does-not-exist/accept')->assertNotFound();
+    }
+
+    public function test_an_authenticated_user_can_unaccept_a_proposal(): void
+    {
+        $user = User::factory()->create();
+        $proposal = $this->makeProposal();
+        $this->postJson("/api/proposals/{$proposal->accept_token}/accept")->assertOk();
+
+        $response = $this->actingAs($user)->postJson("/api/proposals/{$proposal->id}/unaccept");
+
+        $response->assertOk();
+        $proposal->refresh();
+        $this->assertSame('sent', $proposal->status);
+        $this->assertNull($proposal->accepted_at);
+    }
+
+    public function test_unaccepting_requires_authentication(): void
+    {
+        $proposal = $this->makeProposal();
+
+        $this->postJson("/api/proposals/{$proposal->id}/unaccept")->assertUnauthorized();
     }
 }
