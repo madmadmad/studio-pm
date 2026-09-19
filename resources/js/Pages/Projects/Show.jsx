@@ -1,5 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import AppLayout from '../../Layouts/AppLayout';
 import EmptyState from '../../Components/EmptyState';
 import Badge from '../../Components/Badge';
@@ -73,8 +73,9 @@ function OverviewTab({ project }) {
     );
 }
 
-function TaskRow({ task, teamNames, onChange }) {
-    async function cycleStatus() {
+function TaskRow({ task, teamNames, onChange, onOpen }) {
+    async function cycleStatus(e) {
+        e.stopPropagation();
         const order = ['todo', 'in_progress', 'done'];
         const next = order[(order.indexOf(task.status) + 1) % order.length];
         await api.patch(`/api/tasks/${task.id}`, { status: next });
@@ -88,8 +89,10 @@ function TaskRow({ task, teamNames, onChange }) {
 
     return (
         <div className="grid grid-cols-12 gap-2 items-center px-4 py-2 border-b border-border last:border-b-0 text-sm">
-            <div className="col-span-5">{task.title}</div>
-            <div className="col-span-3">
+            <button onClick={() => onOpen(task.id)} className="col-span-5 text-left hover:underline">
+                {task.title}
+            </button>
+            <div className="col-span-3" onClick={(e) => e.stopPropagation()}>
                 <select
                     value={task.assignee ?? ''}
                     onChange={(e) => updateField('assignee', e.target.value)}
@@ -116,9 +119,113 @@ function TaskRow({ task, teamNames, onChange }) {
     );
 }
 
+const TASK_STATUS_OPTIONS = [
+    { value: 'todo', label: 'To do' },
+    { value: 'in_progress', label: 'In progress' },
+    { value: 'done', label: 'Done' },
+];
+
+function TaskDrawer({ task, teamNames, companyName, onClose, onChange }) {
+    const [title, setTitle] = useState('');
+    const [description, setDescription] = useState('');
+
+    useEffect(() => {
+        if (task) {
+            setTitle(task.title);
+            setDescription(task.description ?? '');
+        }
+    }, [task?.id]);
+
+    useEffect(() => {
+        function onKeyDown(e) {
+            if (e.key === 'Escape') onClose();
+        }
+        window.addEventListener('keydown', onKeyDown);
+        return () => window.removeEventListener('keydown', onKeyDown);
+    }, [onClose]);
+
+    async function updateField(field, value) {
+        await api.patch(`/api/tasks/${task.id}`, { [field]: value || null });
+        onChange();
+    }
+
+    return (
+        <div className="fixed inset-0 z-50">
+            <div className="absolute inset-0 bg-ink/20 drawer-overlay" onClick={onClose} />
+            <div className="absolute right-0 top-0 h-full w-full max-w-md bg-white shadow-xl flex flex-col drawer-panel">
+                <div className="flex items-center justify-between px-6 py-4 border-b border-border">
+                    <select
+                        value={task.status}
+                        onChange={(e) => updateField('status', e.target.value)}
+                        className="text-sm font-medium border border-border rounded px-2 py-1"
+                    >
+                        {TASK_STATUS_OPTIONS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
+                    </select>
+                    <button onClick={onClose} className="text-sage hover:text-ink text-xl leading-none px-1">
+                        &times;
+                    </button>
+                </div>
+
+                <div className="flex-1 overflow-y-auto px-6 py-4">
+                    <input
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
+                        onBlur={() => title !== task.title && updateField('title', title)}
+                        className="text-xl font-semibold w-full mb-4 border border-transparent hover:border-border focus:border-border rounded px-1 -mx-1 focus:outline-none"
+                    />
+
+                    <div className="flex items-center gap-8 text-sm mb-6 pb-4 border-b border-border">
+                        <div>
+                            <div className="text-xs text-sage mb-1">Client</div>
+                            <div>{companyName}</div>
+                        </div>
+                        <div>
+                            <div className="text-xs text-sage mb-1">Assignee</div>
+                            <select
+                                value={task.assignee ?? ''}
+                                onChange={(e) => updateField('assignee', e.target.value)}
+                                className="border border-border rounded px-2 py-1 text-sm"
+                            >
+                                <option value="">Unassigned</option>
+                                {teamNames.map((name) => <option key={name} value={name}>{name}</option>)}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div className="mb-6">
+                        <div className="text-xs font-semibold text-sage uppercase tracking-wide mb-2">Description</div>
+                        <textarea
+                            value={description}
+                            onChange={(e) => setDescription(e.target.value)}
+                            onBlur={() => description !== (task.description ?? '') && updateField('description', description)}
+                            rows={6}
+                            placeholder="Add a description…"
+                            className="w-full border border-border rounded px-3 py-2 text-sm"
+                        />
+                    </div>
+
+                    <div className="mb-6">
+                        <div className="text-xs font-semibold text-sage uppercase tracking-wide mb-2">Due date</div>
+                        <input
+                            type="date"
+                            value={task.due_date ? task.due_date.slice(0, 10) : ''}
+                            onChange={(e) => updateField('due_date', e.target.value)}
+                            className="border border-border rounded px-3 py-2 text-sm"
+                        />
+                    </div>
+
+                    <div className="text-xs text-sage">Created {formatDate(task.created_at)}</div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
 function TasksTab({ project }) {
     const [title, setTitle] = useState('');
+    const [selectedTaskId, setSelectedTaskId] = useState(null);
     const teamNames = project.team_names || [];
+    const selectedTask = project.tasks.find((t) => t.id === selectedTaskId) || null;
 
     async function addTask(e) {
         e.preventDefault();
@@ -151,11 +258,27 @@ function TasksTab({ project }) {
                             <div className="col-span-2 text-right">Status</div>
                         </div>
                         {project.tasks.map((task) => (
-                            <TaskRow key={task.id} task={task} teamNames={teamNames} onChange={reload} />
+                            <TaskRow
+                                key={task.id}
+                                task={task}
+                                teamNames={teamNames}
+                                onChange={reload}
+                                onOpen={setSelectedTaskId}
+                            />
                         ))}
                     </>
                 )}
             </div>
+
+            {selectedTask && (
+                <TaskDrawer
+                    task={selectedTask}
+                    teamNames={teamNames}
+                    companyName={project.company.name}
+                    onClose={() => setSelectedTaskId(null)}
+                    onChange={reload}
+                />
+            )}
         </div>
     );
 }
