@@ -1053,6 +1053,7 @@ function BillingTab({ project }) {
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
     const [copiedInvoiceId, setCopiedInvoiceId] = useState(null);
+    const [deletingInvoiceId, setDeletingInvoiceId] = useState(null);
     const budget = parseFloat(project.budget) || 0;
     const totalInvoiced = project.invoices.reduce((s, inv) => s + invoiceTotal(inv.items, inv.surcharge), 0);
     const remaining = budget - totalInvoiced;
@@ -1139,6 +1140,21 @@ function BillingTab({ project }) {
         }
         setCopiedInvoiceId(invoice.id);
         setTimeout(() => setCopiedInvoiceId((id) => (id === invoice.id ? null : id)), 1500);
+    }
+
+    async function deleteInvoice(invoice) {
+        if (deletingInvoiceId === invoice.id) return; // already in flight -- ignore a repeat click
+        const amount = formatCurrency(invoiceTotal(invoice.items, invoice.surcharge));
+        if (!confirm(`Delete this ${amount} invoice? This can't be undone.`)) return;
+        setDeletingInvoiceId(invoice.id);
+        try {
+            await api.delete(`/api/invoices/${invoice.id}`);
+            reload();
+        } catch (err) {
+            alert(err.message || 'Could not delete this invoice.');
+        } finally {
+            setDeletingInvoiceId(null);
+        }
     }
 
     return (
@@ -1277,6 +1293,16 @@ function BillingTab({ project }) {
                                             {invoice.status === 'sent' && (
                                                 <button onClick={() => markInvoicePaid(invoice)} title="Mark paid" className="text-pine hover:text-pine/70">
                                                     <CheckCircle size={16} />
+                                                </button>
+                                            )}
+                                            {invoice.status !== 'paid' && (
+                                                <button
+                                                    onClick={() => deleteInvoice(invoice)}
+                                                    disabled={deletingInvoiceId === invoice.id}
+                                                    title="Delete"
+                                                    className="text-sage hover:text-brick disabled:opacity-50"
+                                                >
+                                                    <Trash size={16} />
                                                 </button>
                                             )}
                                         </div>
