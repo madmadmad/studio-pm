@@ -95,9 +95,9 @@ export default function ProposalShow({ proposal, token, studio }) {
                     <button
                         onClick={accept}
                         disabled={accepting}
-                        className="bg-ink text-white text-sm font-medium px-4 py-2 rounded disabled:opacity-50"
+                        className="bg-brass text-white text-sm font-medium px-4 py-2 rounded hover:bg-brass/90 transition-colors disabled:opacity-50"
                     >
-                        {accepting ? 'Accepting…' : 'Accept proposal'}
+                        {accepting ? 'Accepting…' : 'Accept Proposal'}
                     </button>
                 )}
             </div>
