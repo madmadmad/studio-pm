@@ -128,7 +128,7 @@ export default function TimeIndex({ timeEntries, companies, projects }) {
                                         </Link>
                                     </td>
                                     <td className="px-4 py-3 text-sage">{entry.project?.name ?? '—'}</td>
-                                    <td className="px-4 py-3 font-mono">{entry.hours}h</td>
+                                    <td className="px-4 py-3 tabular-nums">{entry.hours}h</td>
                                     <td className="px-4 py-3 text-sage">{entry.note}</td>
                                     <td className="px-4 py-3 text-right">
                                         {entry.billed ? (
@@ -154,7 +154,7 @@ export default function TimeIndex({ timeEntries, companies, projects }) {
                 <div className="rounded-lg p-4 flex items-center justify-between bg-brass-soft">
                     <div className="text-sm">
                         {tray.length} {tray.length === 1 ? 'entry' : 'entries'} ready to bill &mdash;{' '}
-                        <span className="font-mono">{formatCurrency(traySubtotal)}</span>
+                        <span className="tabular-nums">{formatCurrency(traySubtotal)}</span>
                     </div>
                     <button onClick={createInvoiceFromTray} className="bg-brass text-white text-sm font-medium px-3 py-1.5 rounded">
                         Create invoice

@@ -36,6 +36,7 @@
     font-weight: 500;
     font-style: normal;
     font-display: swap;
+    unicode-range: U+0-2F, U+3A-10FFFF;
 }
 @font-face {
     font-family: 'Inter Display';
@@ -43,6 +44,7 @@
     font-weight: 600;
     font-style: normal;
     font-display: swap;
+    unicode-range: U+0-2F, U+3A-10FFFF;
 }
 @font-face {
     font-family: 'Inter Display';
@@ -50,6 +52,7 @@
     font-weight: 700;
     font-style: normal;
     font-display: swap;
+    unicode-range: U+0-2F, U+3A-10FFFF;
 }
 @font-face {
     font-family: 'Inter Display';
@@ -57,13 +60,37 @@
     font-weight: 800;
     font-style: normal;
     font-display: swap;
+    unicode-range: U+0-2F, U+3A-10FFFF;
+}
+/*
+ * Digits (0-9) always render with Inter's numeral shapes, even inside
+ * Inter Display text, so numbers look identical everywhere in the app.
+ * The unicode-range above carves digits out of the Inter Display faces;
+ * these faces fill that range from Inter instead. No 700/800 Inter cut
+ * is self-hosted, so SemiBold covers that range too -- close enough
+ * that only the surrounding letters read as bolder.
+ */
+@font-face {
+    font-family: 'Inter Display';
+    src: url('/webfonts/Inter/Inter-Medium.woff2') format('woff2');
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+    unicode-range: U+30-39;
+}
+@font-face {
+    font-family: 'Inter Display';
+    src: url('/webfonts/Inter/Inter-SemiBold.woff2') format('woff2');
+    font-weight: 600 800;
+    font-style: normal;
+    font-display: swap;
+    unicode-range: U+30-39;
 }
 
 @theme {
     --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
     --font-display: 'Inter Display', 'Inter', ui-sans-serif, system-ui, sans-serif;
-    --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, monospace;
 
     /*
      * Brand palette: Porcelain / Fern / Shadow Grey / Gunmetal / Watermelon / Hot Fuchsia.

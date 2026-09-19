@@ -46,7 +46,7 @@ export default function ServicesIndex({ services }) {
             {showForm && (
                 <form onSubmit={submit} className="bg-white rounded-lg border border-border p-4 mb-6 grid grid-cols-2 gap-3">
                     <input required placeholder="Service name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="border border-border rounded px-3 py-2 text-sm col-span-2" />
-                    <input required type="number" min="0" step="0.01" placeholder="Default rate ($)" value={form.default_rate} onChange={(e) => setForm({ ...form, default_rate: e.target.value })} className="border border-border rounded px-3 py-2 text-sm font-mono" />
+                    <input required type="number" min="0" step="0.01" placeholder="Default rate ($)" value={form.default_rate} onChange={(e) => setForm({ ...form, default_rate: e.target.value })} className="border border-border rounded px-3 py-2 text-sm tabular-nums" />
                     <select value={form.unit} onChange={(e) => setForm({ ...form, unit: e.target.value })} className="border border-border rounded px-3 py-2 text-sm">
                         <option value="hourly">Hourly</option>
                         <option value="fixed">Fixed</option>
@@ -76,7 +76,7 @@ export default function ServicesIndex({ services }) {
                             {services.map((service) => (
                                 <tr key={service.id} className="border-b border-border last:border-b-0">
                                     <td className="px-4 py-3 font-medium">{service.name}</td>
-                                    <td className="px-4 py-3 font-mono">{formatCurrency(service.default_rate)}</td>
+                                    <td className="px-4 py-3 tabular-nums">{formatCurrency(service.default_rate)}</td>
                                     <td className="px-4 py-3 text-sage capitalize">{service.unit}</td>
                                     <td className="px-4 py-3 text-right">
                                         <button onClick={() => remove(service)} className="text-xs text-sage hover:text-brick">Remove</button>

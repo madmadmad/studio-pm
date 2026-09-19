@@ -264,7 +264,7 @@ function InvoicesCard({ company }) {
                                 {formatDate(invoice.issued_on)}
                             </Link>
                             <div className="flex items-center gap-3">
-                                <span className="font-mono">{formatCurrency(invoiceTotal(invoice.items, invoice.surcharge))}</span>
+                                <span className="tabular-nums">{formatCurrency(invoiceTotal(invoice.items, invoice.surcharge))}</span>
                                 <InvoiceStatusBadge invoice={invoice} />
                             </div>
                         </li>
@@ -288,7 +288,7 @@ function ProposalsCard({ company }) {
                             <span>{proposal.title}</span>
                             <div className="flex items-center gap-3">
                                 {proposal.estimate_amount && (
-                                    <span className="font-mono">{formatCurrency(proposal.estimate_amount)}</span>
+                                    <span className="tabular-nums">{formatCurrency(proposal.estimate_amount)}</span>
                                 )}
                                 <ProposalStatusBadge proposal={proposal} />
                             </div>

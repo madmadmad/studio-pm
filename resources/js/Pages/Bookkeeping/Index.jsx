@@ -56,7 +56,7 @@ export default function BookkeepingIndex({ transactions, summary }) {
                         <option value="income">Income</option>
                         <option value="expense">Expense</option>
                     </select>
-                    <input required type="number" min="0.01" step="0.01" placeholder="Amount" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} className="border border-border rounded px-3 py-2 text-sm font-mono" />
+                    <input required type="number" min="0.01" step="0.01" placeholder="Amount" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} className="border border-border rounded px-3 py-2 text-sm tabular-nums" />
                     <input placeholder="Category" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} className="border border-border rounded px-3 py-2 text-sm" />
                     <input required type="date" value={form.occurred_on} onChange={(e) => setForm({ ...form, occurred_on: e.target.value })} className="border border-border rounded px-3 py-2 text-sm" />
                     <input placeholder="Description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="border border-border rounded px-3 py-2 text-sm col-span-2" />
@@ -89,7 +89,7 @@ export default function BookkeepingIndex({ transactions, summary }) {
                                     <td className="px-4 py-2 capitalize">{t.type}</td>
                                     <td className="px-4 py-2 text-sage">{t.category ?? '—'}</td>
                                     <td className="px-4 py-2 text-sage">{t.description}</td>
-                                    <td className={`px-4 py-2 text-right font-mono ${t.type === 'income' ? 'text-pine' : 'text-brick'}`}>
+                                    <td className={`px-4 py-2 text-right tabular-nums ${t.type === 'income' ? 'text-pine' : 'text-brick'}`}>
                                         {t.type === 'income' ? '+' : '-'}{formatCurrency(t.amount)}
                                     </td>
                                     <td className="px-4 py-2 text-right">

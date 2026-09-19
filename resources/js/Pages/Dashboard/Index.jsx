@@ -34,7 +34,7 @@ export default function DashboardIndex({ metrics, recentInvoices }) {
                                 <div className="text-xs text-sage">{formatDate(invoice.issued_on)}</div>
                             </div>
                             <div className="flex items-center gap-3">
-                                <span className="font-mono text-sm">{formatCurrency(invoice.total)}</span>
+                                <span className="tabular-nums text-sm">{formatCurrency(invoice.total)}</span>
                                 <InvoiceStatusBadge invoice={invoice} />
                             </div>
                         </Link>

@@ -62,7 +62,7 @@ export default function TimeWeekly({ weekStart, weekEnd, entries, companies }) {
                 </div>
             </div>
             <p className="text-sm text-sage mb-6">
-                <span className="font-mono">{totalHours}h</span> logged this week. Edits here update the same entries shown in Time Tracking.
+                <span className="tabular-nums">{totalHours}h</span> logged this week. Edits here update the same entries shown in Time Tracking.
             </p>
 
             <div className="bg-white rounded-lg border border-border overflow-hidden">
@@ -83,7 +83,7 @@ export default function TimeWeekly({ weekStart, weekEnd, entries, companies }) {
                                 <tr key={entry.id} className="border-b border-border last:border-b-0">
                                     <td className="px-4 py-2">{formatDate(entry.date)}</td>
                                     <td className="px-4 py-2 text-sage">{entry.company?.name ?? '—'}</td>
-                                    <td className="px-2 py-1 font-mono w-24">
+                                    <td className="px-2 py-1 tabular-nums w-24">
                                         <EditableCell entry={entry} field="hours" type="number" />
                                     </td>
                                     <td className="px-2 py-1">

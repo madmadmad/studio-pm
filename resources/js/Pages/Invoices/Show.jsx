@@ -49,7 +49,7 @@ export default function InvoicesShow({ invoice }) {
                         {invoice.items.map((item) => (
                             <tr key={item.id} className="border-b border-border last:border-b-0">
                                 <td className="py-2">{item.description}</td>
-                                <td className="py-2 text-right font-mono">{formatCurrency(item.amount)}</td>
+                                <td className="py-2 text-right tabular-nums">{formatCurrency(item.amount)}</td>
                             </tr>
                         ))}
                     </tbody>
@@ -58,17 +58,17 @@ export default function InvoicesShow({ invoice }) {
                 <div className="text-sm space-y-1 ml-auto max-w-xs">
                     <div className="flex justify-between text-sage">
                         <span>Subtotal</span>
-                        <span className="font-mono">{formatCurrency(subtotal)}</span>
+                        <span className="tabular-nums">{formatCurrency(subtotal)}</span>
                     </div>
                     {invoice.surcharge && (
                         <div className="flex justify-between text-sage">
                             <span>Card fee (3%)</span>
-                            <span className="font-mono">{formatCurrency(surchargeAmount)}</span>
+                            <span className="tabular-nums">{formatCurrency(surchargeAmount)}</span>
                         </div>
                     )}
                     <div className="flex justify-between font-semibold">
                         <span>Total</span>
-                        <span className="font-mono">{formatCurrency(total)}</span>
+                        <span className="tabular-nums">{formatCurrency(total)}</span>
                     </div>
                 </div>
             </div>
@@ -80,7 +80,7 @@ export default function InvoicesShow({ invoice }) {
                         {invoice.payments.map((payment) => (
                             <li key={payment.id} className="py-2 flex justify-between">
                                 <span>{formatDate(payment.paid_at)}</span>
-                                <span className="font-mono">{formatCurrency(parseFloat(payment.amount) + parseFloat(payment.surcharge_amount))}</span>
+                                <span className="tabular-nums">{formatCurrency(parseFloat(payment.amount) + parseFloat(payment.surcharge_amount))}</span>
                             </li>
                         ))}
                     </ul>

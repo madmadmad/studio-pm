@@ -160,10 +160,10 @@ export default function ProposalsForm({ proposal, companies, services }) {
                             placeholder="Estimate amount ($)"
                             value={form.estimate_amount}
                             onChange={(e) => setForm({ ...form, estimate_amount: e.target.value })}
-                            className="border border-border rounded px-3 py-2 text-sm font-mono w-full"
+                            className="border border-border rounded px-3 py-2 text-sm tabular-nums w-full"
                         />
                     ) : (
-                        <div className="border border-border rounded px-3 py-2 text-sm font-mono bg-paper text-sage">
+                        <div className="border border-border rounded px-3 py-2 text-sm tabular-nums bg-paper text-sage">
                             Estimate: {formatCurrency(itemsTotal)} (from line items)
                         </div>
                     )}
@@ -218,7 +218,7 @@ export default function ProposalsForm({ proposal, companies, services }) {
                                         placeholder="Qty"
                                         value={item.quantity}
                                         onChange={(e) => updateItem(idx, 'quantity', e.target.value)}
-                                        className="col-span-2 h-9 border border-border rounded px-2 text-sm font-mono"
+                                        className="col-span-2 h-9 border border-border rounded px-2 text-sm tabular-nums"
                                     />
                                     <input
                                         type="number"
@@ -227,9 +227,9 @@ export default function ProposalsForm({ proposal, companies, services }) {
                                         placeholder="Rate"
                                         value={item.rate}
                                         onChange={(e) => updateItem(idx, 'rate', e.target.value)}
-                                        className="col-span-2 h-9 border border-border rounded px-2 text-sm font-mono"
+                                        className="col-span-2 h-9 border border-border rounded px-2 text-sm tabular-nums"
                                     />
-                                    <div className="col-span-3 h-9 flex items-center justify-end text-sm font-mono">
+                                    <div className="col-span-3 h-9 flex items-center justify-end text-sm tabular-nums">
                                         {formatCurrency(lineAmount(item))}
                                     </div>
                                 </div>
@@ -257,7 +257,7 @@ export default function ProposalsForm({ proposal, companies, services }) {
                     {form.items.length > 0 && (
                         <div className="flex justify-end mt-3 pt-3 border-t border-border">
                             <div className="text-sm font-semibold">
-                                Total: <span className="font-mono">{formatCurrency(itemsTotal)}</span>
+                                Total: <span className="tabular-nums">{formatCurrency(itemsTotal)}</span>
                             </div>
                         </div>
                     )}

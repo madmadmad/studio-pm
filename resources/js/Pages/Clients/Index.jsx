@@ -112,7 +112,7 @@ export default function ClientsIndex({ companies }) {
                                     <td className="px-4 py-3 text-sage">
                                         {c.contacts?.[0] ? `${c.contacts[0].name} · ${c.contacts[0].email ?? ''}` : '—'}
                                     </td>
-                                    <td className="px-4 py-3 font-mono">
+                                    <td className="px-4 py-3 tabular-nums">
                                         {c.default_hourly_rate ? `${formatCurrency(c.default_hourly_rate)}/hr` : '—'}
                                     </td>
                                     <td className="px-4 py-3">

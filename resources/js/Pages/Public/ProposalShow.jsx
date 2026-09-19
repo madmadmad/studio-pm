@@ -15,7 +15,7 @@ function FeeSummary({ proposal }) {
             </div>
             <div className="px-6 pb-2 flex items-center justify-between border-b border-border pb-4">
                 <div className="font-semibold">Estimate</div>
-                <div className="font-mono text-lg font-semibold">{formatCurrency(total)}</div>
+                <div className="tabular-nums text-lg font-semibold">{formatCurrency(total)}</div>
             </div>
 
             <div className="px-6 py-3 grid grid-cols-12 text-xs font-medium text-sage border-b border-border">
@@ -36,11 +36,11 @@ function FeeSummary({ proposal }) {
                             <div className="text-xs text-sage mt-2 whitespace-pre-wrap">{item.details}</div>
                         )}
                     </div>
-                    <div className="col-span-2 text-right font-mono">{parseFloat(item.quantity)}</div>
-                    <div className="col-span-2 text-right font-mono">
+                    <div className="col-span-2 text-right tabular-nums">{parseFloat(item.quantity)}</div>
+                    <div className="col-span-2 text-right tabular-nums">
                         {formatCurrency(item.rate)}{item.service?.unit === 'hourly' ? ' / hour' : ''}
                     </div>
-                    <div className="col-span-2 text-right font-mono">
+                    <div className="col-span-2 text-right tabular-nums">
                         {formatCurrency(parseFloat(item.quantity) * parseFloat(item.rate))}
                     </div>
                 </div>
@@ -48,7 +48,7 @@ function FeeSummary({ proposal }) {
 
             <div className="px-6 py-4 flex items-center justify-between bg-paper">
                 <div className="font-semibold">Total</div>
-                <div className="font-mono text-lg font-semibold">{formatCurrency(total)}</div>
+                <div className="tabular-nums text-lg font-semibold">{formatCurrency(total)}</div>
             </div>
         </div>
     );
@@ -75,7 +75,7 @@ export default function ProposalShow({ proposal, token }) {
                 <div className="text-xs text-sage mb-1">{proposal.company.name}</div>
                 <h1 className="font-display text-2xl font-semibold mb-1">{proposal.title}</h1>
                 {proposal.items.length === 0 && proposal.estimate_amount && (
-                    <div className="font-mono text-sage mb-6">Estimate: {formatCurrency(proposal.estimate_amount)}</div>
+                    <div className="tabular-nums text-sage mb-6">Estimate: {formatCurrency(proposal.estimate_amount)}</div>
                 )}
 
                 <div

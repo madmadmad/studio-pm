@@ -176,7 +176,7 @@ export default function InvoicesIndex({ invoices, companies }) {
                                     step="0.01"
                                     value={item.amount}
                                     onChange={(e) => updateItem(idx, 'amount', e.target.value)}
-                                    className="border border-border rounded px-3 py-2 text-sm font-mono w-28"
+                                    className="border border-border rounded px-3 py-2 text-sm tabular-nums w-28"
                                 />
                                 {draft.items.length > 1 && (
                                     <button type="button" onClick={() => removeItemRow(idx)} className="text-sm px-2 text-brick">Remove</button>
@@ -198,17 +198,17 @@ export default function InvoicesIndex({ invoices, companies }) {
                     <div className="text-sm mb-4 space-y-1">
                         <div className="flex justify-between text-sage">
                             <span>Subtotal</span>
-                            <span className="font-mono">{formatCurrency(subtotal)}</span>
+                            <span className="tabular-nums">{formatCurrency(subtotal)}</span>
                         </div>
                         {draft.surcharge && (
                             <div className="flex justify-between text-sage">
                                 <span>Card fee (3%)</span>
-                                <span className="font-mono">{formatCurrency(surchargeAmount)}</span>
+                                <span className="tabular-nums">{formatCurrency(surchargeAmount)}</span>
                             </div>
                         )}
                         <div className="flex justify-between font-semibold">
                             <span>Total</span>
-                            <span className="font-mono">{formatCurrency(total)}</span>
+                            <span className="tabular-nums">{formatCurrency(total)}</span>
                         </div>
                     </div>
 
@@ -247,7 +247,7 @@ export default function InvoicesIndex({ invoices, companies }) {
                                     </td>
                                     <td className="px-4 py-3 text-sage">{formatDate(invoice.issued_on)}</td>
                                     <td className="px-4 py-3 text-sage">{formatDate(invoice.due_on)}</td>
-                                    <td className="px-4 py-3 font-mono">{formatCurrency(invoiceTotal(invoice.items, invoice.surcharge))}</td>
+                                    <td className="px-4 py-3 tabular-nums">{formatCurrency(invoiceTotal(invoice.items, invoice.surcharge))}</td>
                                     <td className="px-4 py-3"><InvoiceStatusBadge invoice={invoice} /></td>
                                     <td className="px-4 py-3 text-right">
                                         {invoice.status === 'draft' && (

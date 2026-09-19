@@ -54,7 +54,7 @@ export default function ProposalsIndex({ proposals }) {
                                             {proposal.title}
                                         </Link>
                                     </td>
-                                    <td className="px-4 py-3 font-mono">
+                                    <td className="px-4 py-3 tabular-nums">
                                         {proposal.estimate_amount ? formatCurrency(proposal.estimate_amount) : '—'}
                                     </td>
                                     <td className="px-4 py-3"><ProposalStatusBadge proposal={proposal} /></td>

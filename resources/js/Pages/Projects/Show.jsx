@@ -46,19 +46,19 @@ function OverviewTab({ project }) {
             <div className="grid grid-cols-4 gap-4 mb-6">
                 <div className="bg-white rounded-lg border border-border p-4">
                     <div className="text-xs text-sage mb-1">Tasks</div>
-                    <div className="font-mono text-xl">{doneTasks}/{project.tasks.length}</div>
+                    <div className="tabular-nums text-xl">{doneTasks}/{project.tasks.length}</div>
                 </div>
                 <div className="bg-white rounded-lg border border-border p-4">
                     <div className="text-xs text-sage mb-1">Hours logged</div>
-                    <div className="font-mono text-xl">{totalHours}h</div>
+                    <div className="tabular-nums text-xl">{totalHours}h</div>
                 </div>
                 <div className="bg-white rounded-lg border border-border p-4">
                     <div className="text-xs text-sage mb-1">Unbilled hours</div>
-                    <div className="font-mono text-xl">{unbilledHours}h</div>
+                    <div className="tabular-nums text-xl">{unbilledHours}h</div>
                 </div>
                 <div className="bg-white rounded-lg border border-border p-4">
                     <div className="text-xs text-sage mb-1">Total invoiced</div>
-                    <div className="font-mono text-xl">{formatCurrency(totalInvoiced)}</div>
+                    <div className="tabular-nums text-xl">{formatCurrency(totalInvoiced)}</div>
                 </div>
             </div>
             {project.team_names?.length > 0 && (
@@ -725,7 +725,7 @@ function TimeEntryRow({ entry, onOpen }) {
     return (
         <div className="grid grid-cols-12 gap-2 items-center px-4 py-2 border-b border-border last:border-b-0 text-sm group">
             <div className="col-span-2 text-sage">{formatDate(entry.date)}</div>
-            <div className="col-span-2 font-mono">{entry.hours}h</div>
+            <div className="col-span-2 tabular-nums">{entry.hours}h</div>
             <div className="col-span-6 flex items-center gap-2">
                 <span className="truncate text-sage">{entry.task ? entry.task.title : entry.note || '—'}</span>
                 <button
@@ -809,7 +809,7 @@ function TimeEntryDrawer({ entry, tasks, onClose, onChange }) {
                                 value={hours}
                                 onChange={(e) => setHours(e.target.value)}
                                 onBlur={() => Number(hours) !== Number(entry.hours) && updateField('hours', hours)}
-                                className="border border-border rounded px-2 py-1 text-sm w-full font-mono"
+                                className="border border-border rounded px-2 py-1 text-sm w-full tabular-nums"
                             />
                         </div>
                     </div>
@@ -973,7 +973,7 @@ function BillingTab({ project }) {
                         placeholder="Amount"
                         value={form.amount}
                         onChange={(e) => setForm({ ...form, amount: e.target.value })}
-                        className="border border-border rounded px-3 py-2 text-sm font-mono w-full mb-2"
+                        className="border border-border rounded px-3 py-2 text-sm tabular-nums w-full mb-2"
                     />
                     <label className="flex items-center gap-2 text-sm mb-2">
                         <input type="checkbox" checked={form.surcharge} onChange={(e) => setForm({ ...form, surcharge: e.target.checked })} />
@@ -1006,7 +1006,7 @@ function BillingTab({ project }) {
                                             {formatDate(invoice.issued_on)}
                                         </Link>
                                     </td>
-                                    <td className="px-4 py-2 font-mono">{formatCurrency(invoiceTotal(invoice.items, invoice.surcharge))}</td>
+                                    <td className="px-4 py-2 tabular-nums">{formatCurrency(invoiceTotal(invoice.items, invoice.surcharge))}</td>
                                     <td className="px-4 py-2"><InvoiceStatusBadge invoice={invoice} /></td>
                                 </tr>
                             ))}
@@ -1041,13 +1041,13 @@ function ExpensesTab({ project }) {
     return (
         <div>
             <form onSubmit={addExpense} className="bg-white rounded-lg border border-border p-4 mb-4 grid grid-cols-2 gap-2">
-                <input required type="number" min="0.01" step="0.01" placeholder="Amount" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} className="border border-border rounded px-3 py-2 text-sm font-mono" />
+                <input required type="number" min="0.01" step="0.01" placeholder="Amount" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} className="border border-border rounded px-3 py-2 text-sm tabular-nums" />
                 <input placeholder="Category" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} className="border border-border rounded px-3 py-2 text-sm" />
                 <input required type="date" value={form.occurred_on} onChange={(e) => setForm({ ...form, occurred_on: e.target.value })} className="border border-border rounded px-3 py-2 text-sm" />
                 <input placeholder="Description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="border border-border rounded px-3 py-2 text-sm" />
                 <button type="submit" disabled={saving} className="col-span-2 bg-pine text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50 justify-self-end w-fit">Add expense</button>
             </form>
-            <div className="text-sm text-sage mb-2">Total expenses: <span className="font-mono text-brick">{formatCurrency(total)}</span></div>
+            <div className="text-sm text-sage mb-2">Total expenses: <span className="tabular-nums text-brick">{formatCurrency(total)}</span></div>
             <div className="bg-white rounded-lg border border-border overflow-hidden">
                 {expenses.length === 0 ? (
                     <EmptyState text="No expenses logged for this project." />
@@ -1067,7 +1067,7 @@ function ExpensesTab({ project }) {
                                     <td className="px-4 py-2">{formatDate(t.occurred_on)}</td>
                                     <td className="px-4 py-2 text-sage">{t.category ?? '—'}</td>
                                     <td className="px-4 py-2 text-sage">{t.description}</td>
-                                    <td className="px-4 py-2 text-right font-mono text-brick">{formatCurrency(t.amount)}</td>
+                                    <td className="px-4 py-2 text-right tabular-nums text-brick">{formatCurrency(t.amount)}</td>
                                 </tr>
                             ))}
                         </tbody>
