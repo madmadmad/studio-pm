@@ -88,10 +88,17 @@ function TaskRow({ task, teamNames, onChange, onOpen }) {
     }
 
     return (
-        <div className="grid grid-cols-12 gap-2 items-center px-4 py-2 border-b border-border last:border-b-0 text-sm">
-            <button onClick={() => onOpen(task.id)} className="col-span-5 text-left hover:underline">
-                {task.title}
-            </button>
+        <div className="grid grid-cols-12 gap-2 items-center px-4 py-2 border-b border-border last:border-b-0 text-sm group">
+            <div className="col-span-5 flex items-center gap-2">
+                <span className="truncate">{task.title}</span>
+                <button
+                    onClick={() => onOpen(task.id)}
+                    title="Open task"
+                    className="flex-shrink-0 w-7 h-7 flex items-center justify-center rounded border border-border text-sage font-semibold opacity-0 group-hover:opacity-100 hover:text-ink hover:border-ink transition-opacity"
+                >
+                    &gt;
+                </button>
+            </div>
             <div className="col-span-3" onClick={(e) => e.stopPropagation()}>
                 <select
                     value={task.assignee ?? ''}
@@ -297,7 +304,7 @@ function TaskDrawer({ task, teamNames, companyName, onClose, onChange }) {
     return (
         <div className="fixed inset-0 z-50">
             <div className="absolute inset-0 bg-ink/20 drawer-overlay" onClick={onClose} />
-            <div className="absolute right-0 top-0 h-full w-full max-w-md bg-white shadow-xl flex flex-col drawer-panel">
+            <div className="absolute right-0 top-0 h-full w-[600px] max-w-[95vw] bg-white shadow-xl flex flex-col drawer-panel">
                 <div className="flex items-center justify-between px-6 py-4 border-b border-border">
                     <select
                         value={task.status}
