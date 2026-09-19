@@ -82,7 +82,8 @@ export default function ProposalShow({ proposal, token, studio }) {
                         {studio.phone && <div>{studio.phone}</div>}
                         {studio.website && <div>{studio.website}</div>}
                     </div>
-                    <div className="text-right">
+                    <div className="border-l border-border pl-5">
+                        <div className="text-xs font-semibold text-sage mb-2">Client</div>
                         <div className="font-medium text-ink">{proposal.company.name}</div>
                         {proposal.project && <div className="text-sage">{proposal.project.name}</div>}
                     </div>
