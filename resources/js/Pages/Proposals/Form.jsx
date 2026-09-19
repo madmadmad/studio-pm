@@ -6,6 +6,7 @@ import RichTextEditor from '../../Components/RichTextEditor';
 import { ProposalStatusBadge } from '../../Components/StatusBadges';
 import { formatCurrency } from '../../lib/format';
 import { api } from '../../lib/api';
+import { copyToClipboard } from '../../lib/clipboard';
 
 const NEW_PROJECT = '__new__';
 
@@ -173,8 +174,12 @@ export default function ProposalsForm({ proposal, companies, services, presetCom
         }
     }
 
-    function copyLink() {
-        navigator.clipboard.writeText(acceptLink());
+    async function copyLink() {
+        const ok = await copyToClipboard(acceptLink());
+        if (!ok) {
+            alert('Could not copy the link. Copy it manually instead.');
+            return;
+        }
         setCopied(true);
         setTimeout(() => setCopied(false), 1500);
     }

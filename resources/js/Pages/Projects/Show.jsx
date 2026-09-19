@@ -8,6 +8,7 @@ import RichTextEditor from '../../Components/RichTextEditor';
 import { ProjectStatusBadge, TaskStatusBadge, InvoiceStatusBadge, ProposalStatusBadge } from '../../Components/StatusBadges';
 import { formatCurrency, formatDate, invoiceTotal } from '../../lib/format';
 import { api } from '../../lib/api';
+import { copyToClipboard } from '../../lib/clipboard';
 
 const TABS = ['Overview', 'Tasks', 'Notes', 'Messages', 'Time', 'Proposals', 'Billing', 'Expenses', 'Team'];
 const STATUS_OPTIONS = ['active', 'on_hold', 'completed'];
@@ -1130,8 +1131,12 @@ function BillingTab({ project }) {
         reload();
     }
 
-    function copyInvoiceLink(invoice) {
-        navigator.clipboard.writeText(`${window.location.origin}/i/${invoice.public_token}`);
+    async function copyInvoiceLink(invoice) {
+        const ok = await copyToClipboard(`${window.location.origin}/i/${invoice.public_token}`);
+        if (!ok) {
+            alert('Could not copy the link. Copy it manually instead.');
+            return;
+        }
         setCopiedInvoiceId(invoice.id);
         setTimeout(() => setCopiedInvoiceId((id) => (id === invoice.id ? null : id)), 1500);
     }

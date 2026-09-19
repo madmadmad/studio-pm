@@ -7,6 +7,7 @@ import { InvoiceStatusBadge } from '../../Components/StatusBadges';
 import { formatCurrency, formatDate, invoiceSubtotal, invoiceSurchargeAmount, invoiceTotal } from '../../lib/format';
 import { api } from '../../lib/api';
 import { getTray, clearTray } from '../../lib/tray';
+import { copyToClipboard } from '../../lib/clipboard';
 
 function emptyDraft() {
     return { company_id: '', contact_id: '', items: [{ description: '', amount: '' }], surcharge: false };
@@ -27,8 +28,12 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
         setInvoices(invoicesProp);
     }, [invoicesProp]);
 
-    function copyLink(invoice) {
-        navigator.clipboard.writeText(`${window.location.origin}/i/${invoice.public_token}`);
+    async function copyLink(invoice) {
+        const ok = await copyToClipboard(`${window.location.origin}/i/${invoice.public_token}`);
+        if (!ok) {
+            alert('Could not copy the link. Copy it manually instead.');
+            return;
+        }
         setCopiedId(invoice.id);
         setTimeout(() => setCopiedId((id) => (id === invoice.id ? null : id)), 1500);
     }

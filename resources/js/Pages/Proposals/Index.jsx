@@ -6,6 +6,7 @@ import EmptyState from '../../Components/EmptyState';
 import { ProposalStatusBadge } from '../../Components/StatusBadges';
 import { formatCurrency, formatDate } from '../../lib/format';
 import { api } from '../../lib/api';
+import { copyToClipboard } from '../../lib/clipboard';
 
 export default function ProposalsIndex({ proposals }) {
     const [copiedId, setCopiedId] = useState(null);
@@ -19,8 +20,12 @@ export default function ProposalsIndex({ proposals }) {
         return `${window.location.origin}/p/${proposal.accept_token}`;
     }
 
-    function copyLink(proposal) {
-        navigator.clipboard.writeText(acceptLink(proposal));
+    async function copyLink(proposal) {
+        const ok = await copyToClipboard(acceptLink(proposal));
+        if (!ok) {
+            alert('Could not copy the link. Copy it manually instead.');
+            return;
+        }
         setCopiedId(proposal.id);
         setTimeout(() => setCopiedId((id) => (id === proposal.id ? null : id)), 1500);
     }

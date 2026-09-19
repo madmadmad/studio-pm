@@ -5,6 +5,7 @@ import AppLayout from '../../Layouts/AppLayout';
 import { InvoiceStatusBadge } from '../../Components/StatusBadges';
 import { formatCurrency, formatDate, invoiceSubtotal, invoiceSurchargeAmount, invoiceTotal } from '../../lib/format';
 import { api } from '../../lib/api';
+import { copyToClipboard } from '../../lib/clipboard';
 
 function editFormFrom(invoice) {
     return {
@@ -36,8 +37,12 @@ export default function InvoicesShow({ invoice }) {
         router.reload();
     }
 
-    function copyLink() {
-        navigator.clipboard.writeText(`${window.location.origin}/i/${invoice.public_token}`);
+    async function copyLink() {
+        const ok = await copyToClipboard(`${window.location.origin}/i/${invoice.public_token}`);
+        if (!ok) {
+            alert('Could not copy the link. Copy it manually instead.');
+            return;
+        }
         setCopied(true);
         setTimeout(() => setCopied(false), 1500);
     }
