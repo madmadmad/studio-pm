@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Company;
 use App\Models\Invoice;
 use App\Models\TimeEntry;
-use App\Models\Transaction;
+use App\Services\StripeCheckoutService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -104,33 +104,30 @@ class InvoiceController extends Controller
     {
         $invoice->update(['status' => 'sent']);
 
-        // Create the Stripe Checkout Session here via StripeCheckoutService
-        // and store its ID on $invoice->stripe_checkout_session_id.
-        // That's also where the surcharge toggle actually takes effect.
-
         return $invoice->load('items');
     }
 
     public function markPaid(Invoice $invoice)
     {
-        $invoice->update(['status' => 'paid']);
-
-        $invoice->payments()->create([
-            'amount' => $invoice->subtotal(),
-            'surcharge_amount' => $invoice->surchargeAmount(),
-            'paid_at' => now(),
-        ]);
-
-        // Feeds the simple bookkeeping ledger automatically -- no manual entry needed.
-        Transaction::create([
-            'type' => 'income',
-            'amount' => $invoice->total(),
-            'category' => 'client invoice',
-            'occurred_on' => now(),
-            'invoice_id' => $invoice->id,
-            'project_id' => $invoice->project_id,
-        ]);
+        $invoice->recordPayment();
 
         return $invoice->load('items', 'payments');
+    }
+
+    // Public, unauthenticated -- the "Pay Now" button on the client-facing
+    // invoice page. Creates a Stripe Checkout Session and hands back its
+    // URL for the browser to redirect to; MarkInvoicePaidFromStripeWebhook
+    // is what actually marks the invoice paid once Stripe confirms it.
+    public function checkout(string $token, StripeCheckoutService $checkout)
+    {
+        $invoice = Invoice::with('items')->where('public_token', $token)->firstOrFail();
+
+        abort_unless($invoice->status === 'sent', 422, 'This invoice is not ready to be paid.');
+
+        $session = $checkout->createSessionFor($invoice);
+
+        $invoice->update(['stripe_checkout_session_id' => $session->id]);
+
+        return ['url' => $session->url];
     }
 }

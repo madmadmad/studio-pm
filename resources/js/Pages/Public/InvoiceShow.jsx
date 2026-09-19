@@ -1,5 +1,7 @@
 import { Head } from '@inertiajs/react';
+import { useState } from 'react';
 import { formatCurrency, formatDate, invoiceSubtotal, invoiceSurchargeAmount, invoiceTotal } from '../../lib/format';
+import { api } from '../../lib/api';
 
 function InvoiceItems({ invoice }) {
     const subtotal = invoiceSubtotal(invoice.items);
@@ -42,6 +44,20 @@ function InvoiceItems({ invoice }) {
 
 export default function InvoiceShow({ invoice, studio }) {
     const paidAt = invoice.payments[0]?.paid_at;
+    const [paying, setPaying] = useState(false);
+    const [error, setError] = useState('');
+
+    async function payNow() {
+        setPaying(true);
+        setError('');
+        try {
+            const { url } = await api.post(`/api/invoices/${invoice.public_token}/checkout`);
+            window.location.href = url;
+        } catch (err) {
+            setError(err.message);
+            setPaying(false);
+        }
+    }
 
     return (
         <div className="min-h-screen bg-white text-ink px-4 py-10">
@@ -79,8 +95,20 @@ export default function InvoiceShow({ invoice, studio }) {
                     <div className="rounded-lg p-4 bg-pine-soft text-pine text-sm font-medium">
                         Paid{paidAt ? ` on ${formatDate(paidAt)}` : ''}. Thank you!
                     </div>
+                ) : invoice.status === 'sent' ? (
+                    <div>
+                        <button
+                            onClick={payNow}
+                            disabled={paying}
+                            className="bg-brass text-white text-sm font-medium px-4 py-2 rounded hover:bg-brass/90 transition-colors disabled:opacity-50"
+                        >
+                            {paying ? 'Redirecting…' : 'Pay Now'}
+                        </button>
+                        <div className="text-xs text-sage mt-2">Due {formatDate(invoice.due_on)}</div>
+                        {error && <div className="text-sm text-brick mt-2">{error}</div>}
+                    </div>
                 ) : (
-                    <div className="text-sm text-sage">Payment due {formatDate(invoice.due_on)}.</div>
+                    <div className="text-sm text-sage">Due {formatDate(invoice.due_on)}.</div>
                 )}
             </div>
         </div>

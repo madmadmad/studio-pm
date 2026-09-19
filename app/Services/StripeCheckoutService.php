@@ -30,8 +30,11 @@ class StripeCheckoutService
             // Note: as of now this parameter is on a preview Stripe API
             // version, so check your dashboard/API version before relying on it.
             'automatic_surcharge' => ['enabled' => $invoice->surcharge],
-            'success_url' => url('/invoices/' . $invoice->id . '?paid=1'),
-            'cancel_url' => url('/invoices/' . $invoice->id),
+            // The client isn't logged in -- send them back to the public
+            // invoice page (/i/{token}), not the authenticated /invoices/{id}
+            // one they can't reach.
+            'success_url' => url('/i/'.$invoice->public_token.'?paid=1'),
+            'cancel_url' => url('/i/'.$invoice->public_token),
         ]);
     }
 }

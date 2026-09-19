@@ -63,4 +63,26 @@ class Invoice extends Model
     {
         return $this->subtotal() + $this->surchargeAmount();
     }
+
+    // Shared by the manual "Mark paid" action and the Stripe webhook, so
+    // both paths record the same payment + bookkeeping entry.
+    public function recordPayment(): void
+    {
+        $this->update(['status' => 'paid']);
+
+        $this->payments()->create([
+            'amount' => $this->subtotal(),
+            'surcharge_amount' => $this->surchargeAmount(),
+            'paid_at' => now(),
+        ]);
+
+        Transaction::create([
+            'type' => 'income',
+            'amount' => $this->total(),
+            'category' => 'client invoice',
+            'occurred_on' => now(),
+            'invoice_id' => $this->id,
+            'project_id' => $this->project_id,
+        ]);
+    }
 }

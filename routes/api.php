@@ -51,3 +51,6 @@ Route::middleware('auth:sanctum')->name('api.')->group(function () {
 // than a full client portal: one document, one Accept button, no login.
 Route::get('proposals/{token}', [ProposalController::class, 'showPublic']);
 Route::post('proposals/{token}/accept', [ProposalController::class, 'accept']);
+
+// Public, no auth -- the "Pay Now" button on the client-facing invoice page.
+Route::post('invoices/{token}/checkout', [InvoiceController::class, 'checkout']);
