@@ -16,10 +16,23 @@ class NoteController extends Controller
     public function store(Request $request, Project $project)
     {
         $data = $request->validate([
-            'body' => ['required', 'string'],
+            'title' => ['nullable', 'string', 'max:255'],
+            'body' => ['nullable', 'string'],
         ]);
 
         return $project->notes()->create($data);
+    }
+
+    public function update(Request $request, Note $note)
+    {
+        $data = $request->validate([
+            'title' => ['nullable', 'string', 'max:255'],
+            'body' => ['nullable', 'string'],
+        ]);
+
+        $note->update($data);
+
+        return $note;
     }
 
     public function destroy(Note $note)

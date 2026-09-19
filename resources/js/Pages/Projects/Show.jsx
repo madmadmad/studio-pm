@@ -1,6 +1,6 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
-import { ArrowLeft, CaretRight, Check, DotsSixVertical, DownloadSimple, Paperclip, X } from '@phosphor-icons/react';
+import { ArrowLeft, CaretRight, Check, DotsSixVertical, DownloadSimple, Paperclip, Trash, X } from '@phosphor-icons/react';
 import AppLayout from '../../Layouts/AppLayout';
 import EmptyState from '../../Components/EmptyState';
 import Badge from '../../Components/Badge';
@@ -506,51 +506,144 @@ function TasksTab({ project }) {
     );
 }
 
-function isBlankHtml(html) {
-    return !html || !html.replace(/<[^>]*>/g, '').trim();
+function NoteRow({ note, onOpen }) {
+    return (
+        <button
+            onClick={() => onOpen(note.id)}
+            className="w-full flex items-center justify-between gap-2 px-4 py-3 border-b border-border last:border-b-0 text-sm text-left group hover:bg-paper"
+        >
+            <span className="truncate font-medium">{note.title || 'Untitled note'}</span>
+            <span className="flex items-center gap-2 flex-shrink-0">
+                <span className="text-xs text-sage">{formatDate(note.updated_at)}</span>
+                <span className="w-7 h-7 flex items-center justify-center rounded border border-border text-sage opacity-0 group-hover:opacity-100 transition-opacity">
+                    <CaretRight size={14} weight="bold" />
+                </span>
+            </span>
+        </button>
+    );
+}
+
+function NoteDrawer({ note, onClose, onChange }) {
+    const [title, setTitle] = useState('');
+    const [body, setBody] = useState('');
+    const bodySaveTimeout = useRef(null);
+
+    useEffect(() => {
+        if (note) {
+            setTitle(note.title ?? '');
+            setBody(note.body ?? '');
+        }
+    }, [note?.id]);
+
+    useEffect(() => {
+        function onKeyDown(e) {
+            if (e.key === 'Escape') onClose();
+        }
+        window.addEventListener('keydown', onKeyDown);
+        return () => window.removeEventListener('keydown', onKeyDown);
+    }, [onClose]);
+
+    // Flush any pending debounced body save if the drawer closes mid-type,
+    // so the last few keystrokes aren't silently dropped.
+    useEffect(() => () => clearTimeout(bodySaveTimeout.current), []);
+
+    async function updateField(field, value) {
+        await api.patch(`/api/notes/${note.id}`, { [field]: value || null });
+        onChange();
+    }
+
+    function handleBodyChange(value) {
+        setBody(value);
+        clearTimeout(bodySaveTimeout.current);
+        // Local state already renders the change instantly -- debounce the
+        // network save (and the resulting project reload) so typing
+        // doesn't fire a request, and a resync, on every keystroke.
+        bodySaveTimeout.current = setTimeout(() => updateField('body', value), 600);
+    }
+
+    async function remove() {
+        await api.delete(`/api/notes/${note.id}`);
+        onClose();
+        onChange();
+    }
+
+    return (
+        <div className="fixed inset-0 z-50">
+            <div className="absolute inset-0 bg-ink/20 drawer-overlay" onClick={onClose} />
+            <div className="absolute right-0 top-0 h-full w-[600px] max-w-[95vw] bg-white shadow-xl flex flex-col drawer-panel">
+                <div className="flex items-center justify-between px-6 py-4 border-b border-border">
+                    <span className="text-xs text-sage">Edited {formatDate(note.updated_at)}</span>
+                    <div className="flex items-center gap-3">
+                        <button onClick={remove} title="Delete note" className="text-sage hover:text-brick px-1">
+                            <Trash size={18} />
+                        </button>
+                        <button onClick={onClose} className="text-sage hover:text-ink px-1">
+                            <X size={20} />
+                        </button>
+                    </div>
+                </div>
+
+                <div className="flex-1 overflow-y-auto px-6 py-4">
+                    <input
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
+                        onBlur={() => title !== (note.title ?? '') && updateField('title', title)}
+                        placeholder="Untitled note"
+                        className="text-xl font-semibold w-full mb-4 border border-transparent hover:border-border focus:border-border rounded px-1 -mx-1 focus:outline-none"
+                    />
+
+                    <RichTextEditor value={body} onChange={handleBodyChange} />
+                </div>
+            </div>
+        </div>
+    );
 }
 
 function NotesTab({ project }) {
-    const [body, setBody] = useState('');
-    const [saving, setSaving] = useState(false);
+    const [selectedNoteId, setSelectedNoteId] = useState(null);
+    const [creating, setCreating] = useState(false);
+    const selectedNote = project.notes.find((n) => n.id === selectedNoteId) || null;
 
-    async function addNote(e) {
-        e.preventDefault();
-        if (isBlankHtml(body)) return;
-        setSaving(true);
+    async function createNote() {
+        setCreating(true);
         try {
-            await api.post(`/api/projects/${project.id}/notes`, { body });
-            setBody('');
-            reload();
+            const note = await api.post(`/api/projects/${project.id}/notes`, {});
+            router.reload({
+                only: ['project'],
+                onSuccess: () => setSelectedNoteId(note.id),
+            });
         } finally {
-            setSaving(false);
+            setCreating(false);
         }
     }
 
     return (
         <div>
-            <form onSubmit={addNote} className="bg-white rounded-lg border border-border p-4 mb-4">
-                <div className="mb-2">
-                    <RichTextEditor value={body} onChange={setBody} />
-                </div>
-                <div className="flex justify-end">
-                    <button type="submit" disabled={saving || isBlankHtml(body)} className="bg-pine text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50">Add note</button>
-                </div>
-            </form>
-            {project.notes.length === 0 ? (
-                <EmptyState text="No notes yet." />
-            ) : (
-                <div className="space-y-3">
-                    {project.notes.map((note) => (
-                        <div key={note.id} className="bg-white rounded-lg border border-border p-4">
-                            <div className="text-xs text-sage mb-2">{formatDate(note.created_at)}</div>
-                            <div
-                                className="proposal-body text-sm line-clamp-3"
-                                dangerouslySetInnerHTML={{ __html: note.body }}
-                            />
-                        </div>
-                    ))}
-                </div>
+            <div className="flex justify-end mb-4">
+                <button
+                    onClick={createNote}
+                    disabled={creating}
+                    className="bg-pine text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50"
+                >
+                    + New note
+                </button>
+            </div>
+            <div className="bg-white rounded-lg border border-border overflow-hidden">
+                {project.notes.length === 0 ? (
+                    <EmptyState text="No notes yet." />
+                ) : (
+                    project.notes.map((note) => (
+                        <NoteRow key={note.id} note={note} onOpen={setSelectedNoteId} />
+                    ))
+                )}
+            </div>
+
+            {selectedNote && (
+                <NoteDrawer
+                    note={selectedNote}
+                    onClose={() => setSelectedNoteId(null)}
+                    onChange={reload}
+                />
             )}
         </div>
     );

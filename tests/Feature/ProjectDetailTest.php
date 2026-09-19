@@ -113,4 +113,38 @@ class ProjectDetailTest extends TestCase
         $response->assertOk();
         $response->assertJsonCount(1);
     }
+
+    public function test_a_blank_note_can_be_created_with_no_title_or_body(): void
+    {
+        $user = User::factory()->create();
+        $company = Company::create(['name' => 'Alder & Finch Design']);
+        $project = $company->projects()->create(['name' => 'Brand refresh']);
+
+        $response = $this->actingAs($user)->postJson("/api/projects/{$project->id}/notes", []);
+
+        $response->assertCreated();
+        $this->assertDatabaseHas('notes', ['project_id' => $project->id, 'title' => null, 'body' => null]);
+    }
+
+    public function test_a_note_title_and_body_can_be_updated_and_deleted(): void
+    {
+        $user = User::factory()->create();
+        $company = Company::create(['name' => 'Alder & Finch Design']);
+        $project = $company->projects()->create(['name' => 'Brand refresh']);
+        $note = $project->notes()->create([]);
+
+        $this->actingAs($user)->patchJson("/api/notes/{$note->id}", [
+            'title' => 'Kickoff notes',
+            'body' => '<p>Great call.</p>',
+        ])->assertOk();
+
+        $this->assertDatabaseHas('notes', [
+            'id' => $note->id,
+            'title' => 'Kickoff notes',
+            'body' => '<p>Great call.</p>',
+        ]);
+
+        $this->actingAs($user)->deleteJson("/api/notes/{$note->id}")->assertNoContent();
+        $this->assertDatabaseMissing('notes', ['id' => $note->id]);
+    }
 }
