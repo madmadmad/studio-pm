@@ -853,7 +853,7 @@ function TimeEntryDrawer({ entry, tasks, onClose, onChange }) {
 }
 
 function TimeTab({ project }) {
-    const [form, setForm] = useState({ date: '', hours: '', note: '' });
+    const [form, setForm] = useState({ date: '', task_id: '', hours: '', note: '' });
     const [saving, setSaving] = useState(false);
     const [selectedEntryId, setSelectedEntryId] = useState(null);
     const selectedEntry = project.time_entries.find((e) => e.id === selectedEntryId) || null;
@@ -866,11 +866,12 @@ function TimeTab({ project }) {
             await api.post('/api/time-entries', {
                 company_id: project.company_id,
                 project_id: project.id,
+                task_id: form.task_id || null,
                 date: form.date,
                 hours: form.hours,
                 note: form.note,
             });
-            setForm({ date: '', hours: '', note: '' });
+            setForm({ date: '', task_id: '', hours: '', note: '' });
             reload();
         } finally {
             setSaving(false);
@@ -879,11 +880,15 @@ function TimeTab({ project }) {
 
     return (
         <div>
-            <form onSubmit={logTime} className="bg-white rounded-lg border border-border p-4 mb-4 grid grid-cols-3 gap-2">
+            <form onSubmit={logTime} className="bg-white rounded-lg border border-border p-4 mb-4 grid grid-cols-4 gap-2">
                 <input required type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className="border border-border rounded px-3 py-2 text-sm" />
+                <select value={form.task_id} onChange={(e) => setForm({ ...form, task_id: e.target.value })} className="border border-border rounded px-3 py-2 text-sm">
+                    <option value="">No task</option>
+                    {project.tasks.map((t) => <option key={t.id} value={t.id}>{t.title}</option>)}
+                </select>
                 <input required type="number" min="0.25" step="0.25" placeholder="Hours" value={form.hours} onChange={(e) => setForm({ ...form, hours: e.target.value })} className="border border-border rounded px-3 py-2 text-sm" />
                 <input placeholder="Note" value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} className="border border-border rounded px-3 py-2 text-sm" />
-                <button type="submit" disabled={saving} className="col-span-3 bg-pine text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50 justify-self-end w-fit">Log time</button>
+                <button type="submit" disabled={saving} className="col-span-4 bg-pine text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50 justify-self-end w-fit">Log time</button>
             </form>
             <div className="bg-white rounded-lg border border-border overflow-hidden">
                 {project.time_entries.length === 0 ? (
