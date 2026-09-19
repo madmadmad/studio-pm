@@ -130,8 +130,12 @@ export default function InvoicesIndex({ invoices, companies }) {
         const amount = formatCurrency(invoiceTotal(invoice.items, invoice.surcharge));
         const warning = `Delete this ${amount} invoice to ${invoice.company?.name}? This can't be undone.`;
         if (!confirm(warning)) return;
-        await api.delete(`/api/invoices/${invoice.id}`);
-        router.reload({ only: ['invoices'] });
+        try {
+            await api.delete(`/api/invoices/${invoice.id}`);
+            router.reload({ only: ['invoices'] });
+        } catch (err) {
+            alert(err.message || 'Could not delete this invoice.');
+        }
     }
 
     return (
