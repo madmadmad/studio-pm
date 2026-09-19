@@ -54,7 +54,7 @@ function FeeSummary({ proposal }) {
     );
 }
 
-export default function ProposalShow({ proposal, token }) {
+export default function ProposalShow({ proposal, token, studio }) {
     const [status, setStatus] = useState(proposal.status);
     const [accepting, setAccepting] = useState(false);
 
@@ -73,7 +73,20 @@ export default function ProposalShow({ proposal, token }) {
             <Head title={proposal.title} />
             <div className="max-w-2xl mx-auto">
                 <img src="/images/studio-lockup.svg" alt="Studio" className="w-[200px] h-auto mb-8" />
-                <div className="text-xs text-sage mb-1">{proposal.company.name}</div>
+
+                <div className="grid grid-cols-2 gap-4 mb-8 text-sm">
+                    <div className="text-sage">
+                        <div className="font-medium text-ink">{studio.name}</div>
+                        {studio.address && <div className="whitespace-pre-line">{studio.address}</div>}
+                        {studio.email && <div>{studio.email}</div>}
+                        {studio.phone && <div>{studio.phone}</div>}
+                    </div>
+                    <div className="text-right">
+                        <div className="font-medium text-ink">{proposal.company.name}</div>
+                        {proposal.project && <div className="text-sage">{proposal.project.name}</div>}
+                    </div>
+                </div>
+
                 <h1 className="font-display text-2xl font-semibold mb-1">{proposal.title}</h1>
                 {proposal.items.length === 0 && proposal.estimate_amount && (
                     <div className="tabular-nums text-sage mb-6">Estimate: {formatCurrency(proposal.estimate_amount)}</div>

@@ -10,6 +10,7 @@ const NAV_ITEMS = [
     { href: '/proposals', label: 'Proposals' },
     { href: '/bookkeeping', label: 'Bookkeeping' },
     { href: '/services', label: 'Services' },
+    { href: '/settings', label: 'Settings' },
 ];
 
 export default function AppLayout({ children }) {

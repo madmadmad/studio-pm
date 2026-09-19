@@ -9,6 +9,7 @@ use App\Http\Controllers\Web\ProjectPageController;
 use App\Http\Controllers\Web\ProposalPageController;
 use App\Http\Controllers\Web\PublicProposalController;
 use App\Http\Controllers\Web\ServicePageController;
+use App\Http\Controllers\Web\SettingsPageController;
 use App\Http\Controllers\Web\TimePageController;
 use Illuminate\Support\Facades\Route;
 
@@ -43,4 +44,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/bookkeeping', [BookkeepingPageController::class, 'index'])->name('bookkeeping.index');
 
     Route::get('/services', [ServicePageController::class, 'index'])->name('services.index');
+
+    Route::get('/settings', [SettingsPageController::class, 'index'])->name('settings.index');
 });

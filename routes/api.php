@@ -8,6 +8,7 @@ use App\Http\Controllers\NoteController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProposalController;
 use App\Http\Controllers\ServiceController;
+use App\Http\Controllers\StudioProfileController;
 use App\Http\Controllers\SubtaskController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TaskFileController;
@@ -41,6 +42,8 @@ Route::middleware('auth:sanctum')->name('api.')->group(function () {
 
     Route::apiResource('transactions', TransactionController::class)->only(['index', 'store', 'destroy']);
     Route::get('bookkeeping/summary', [TransactionController::class, 'summary']);
+
+    Route::patch('studio-profile', [StudioProfileController::class, 'update']);
 });
 
 // Public, no auth -- the client-facing surface for proposals. Much smaller
