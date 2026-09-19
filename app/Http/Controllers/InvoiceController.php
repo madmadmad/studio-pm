@@ -26,6 +26,7 @@ class InvoiceController extends Controller
             'due_on' => ['nullable', 'date'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.description' => ['required', 'string'],
+            'items.*.details' => ['nullable', 'string'],
             'items.*.amount' => ['required', 'numeric', 'min:0.01'],
             'items.*.service_id' => ['nullable', 'exists:services,id'],
             'items.*.time_entry_ids' => ['nullable', 'array'],
@@ -45,6 +46,7 @@ class InvoiceController extends Controller
             foreach ($data['items'] as $item) {
                 $invoiceItem = $invoice->items()->create([
                     'description' => $item['description'],
+                    'details' => $item['details'] ?? null,
                     'amount' => $item['amount'],
                     'service_id' => $item['service_id'] ?? null,
                 ]);
@@ -75,6 +77,7 @@ class InvoiceController extends Controller
             'due_on' => ['nullable', 'date'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.description' => ['required', 'string'],
+            'items.*.details' => ['nullable', 'string'],
             'items.*.amount' => ['required', 'numeric', 'min:0.01'],
             'items.*.service_id' => ['nullable', 'exists:services,id'],
         ]);

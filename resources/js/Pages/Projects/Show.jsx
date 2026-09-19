@@ -1033,6 +1033,7 @@ function ProposalsTab({ project }) {
 function proposalToInvoiceItems(proposal, remaining) {
     const items = proposal.items.map((item) => ({
         description: item.description,
+        details: item.details && item.details !== item.description ? item.details : '',
         amount: parseFloat(item.quantity) * parseFloat(item.rate),
         service_id: item.service_id ? String(item.service_id) : '',
     }));
@@ -1174,25 +1175,34 @@ function BillingTab({ project }) {
 
                     <div className="mb-3">
                         {form.items.map((item, idx) => (
-                            <div key={idx} className="flex gap-2 mb-2">
-                                <input
-                                    placeholder="Description"
-                                    value={item.description}
-                                    onChange={(e) => updateItem(idx, 'description', e.target.value)}
-                                    className="border border-border rounded px-3 py-2 text-sm flex-1"
+                            <div key={idx} className="mb-2 pb-2 border-b border-border last:border-b-0">
+                                <div className="flex gap-2 mb-1">
+                                    <input
+                                        placeholder="Description"
+                                        value={item.description}
+                                        onChange={(e) => updateItem(idx, 'description', e.target.value)}
+                                        className="border border-border rounded px-3 py-2 text-sm flex-1"
+                                    />
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        step="0.01"
+                                        placeholder="Amount"
+                                        value={item.amount}
+                                        onChange={(e) => updateItem(idx, 'amount', e.target.value)}
+                                        className="border border-border rounded px-3 py-2 text-sm tabular-nums w-28"
+                                    />
+                                    {form.items.length > 1 && (
+                                        <button type="button" onClick={() => removeItemRow(idx)} className="text-sm px-2 text-brick">Remove</button>
+                                    )}
+                                </div>
+                                <textarea
+                                    placeholder="Description shown to the client (optional)"
+                                    value={item.details || ''}
+                                    onChange={(e) => updateItem(idx, 'details', e.target.value)}
+                                    rows={2}
+                                    className="border border-border rounded px-3 py-2 text-xs text-sage w-full"
                                 />
-                                <input
-                                    type="number"
-                                    min="0"
-                                    step="0.01"
-                                    placeholder="Amount"
-                                    value={item.amount}
-                                    onChange={(e) => updateItem(idx, 'amount', e.target.value)}
-                                    className="border border-border rounded px-3 py-2 text-sm tabular-nums w-28"
-                                />
-                                {form.items.length > 1 && (
-                                    <button type="button" onClick={() => removeItemRow(idx)} className="text-sm px-2 text-brick">Remove</button>
-                                )}
                             </div>
                         ))}
                         <button type="button" onClick={addItemRow} className="text-sm font-medium text-brass">+ Add line item</button>

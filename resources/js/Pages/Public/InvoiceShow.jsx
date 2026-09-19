@@ -17,7 +17,12 @@ function InvoiceItems({ invoice }) {
 
             {invoice.items.map((item) => (
                 <div key={item.id} className="py-4 grid grid-cols-12 text-sm">
-                    <div className="col-span-8">{item.description}</div>
+                    <div className="col-span-8">
+                        <div className="font-medium">{item.description}</div>
+                        {item.details && item.details !== item.description && (
+                            <div className="text-xs text-sage mt-2 whitespace-pre-wrap">{item.details}</div>
+                        )}
+                    </div>
                     <div className="col-span-4 text-right tabular-nums">{formatCurrency(item.amount)}</div>
                 </div>
             ))}
