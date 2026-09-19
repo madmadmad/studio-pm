@@ -51,6 +51,13 @@
     font-style: normal;
     font-display: swap;
 }
+@font-face {
+    font-family: 'Inter Display';
+    src: url('/webfonts/InterDisplay/InterDisplay-ExtraBold.woff2') format('woff2');
+    font-weight: 800;
+    font-style: normal;
+    font-display: swap;
+}
 
 @theme {
     --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
@@ -84,6 +91,16 @@ body {
     letter-spacing: -0.011em;
 }
 
+/*
+ * Headlines: heavier weight and tighter tracking than body text.
+ * Unlayered, so it wins over Tailwind's layered font-semibold/font-medium
+ * utility on the same element without having to edit every page's class.
+ */
+.font-display {
+    font-weight: 800;
+    letter-spacing: -0.03rem;
+}
+
 .proposal-body {
     line-height: 1.6;
 }
@@ -105,7 +122,8 @@ body {
 .proposal-body h3,
 .proposal-body h4 {
     font-family: var(--font-display);
-    font-weight: 600;
+    font-weight: 800;
+    letter-spacing: -0.03rem;
     margin: 0.75em 0 0.4em;
 }
 
