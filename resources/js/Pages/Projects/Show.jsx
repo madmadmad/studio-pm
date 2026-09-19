@@ -980,12 +980,19 @@ function ProposalsTab({ project }) {
     );
 }
 
-function proposalToInvoiceItems(proposal) {
-    return proposal.items.map((item) => ({
+// Copies a proposal's line items as invoice items. When less than the full
+// proposal amount remains in the project's budget (some of it already
+// invoiced), scales each item down proportionally so the new invoice starts
+// at exactly what's left, rather than re-billing the full proposal total.
+function proposalToInvoiceItems(proposal, remaining) {
+    const items = proposal.items.map((item) => ({
         description: item.description,
-        amount: (parseFloat(item.quantity) * parseFloat(item.rate)).toFixed(2),
+        amount: parseFloat(item.quantity) * parseFloat(item.rate),
         service_id: item.service_id ? String(item.service_id) : '',
     }));
+    const proposalTotal = items.reduce((s, i) => s + i.amount, 0);
+    const scale = proposalTotal > 0 && remaining < proposalTotal ? Math.max(remaining, 0) / proposalTotal : 1;
+    return items.map((item) => ({ ...item, amount: (item.amount * scale).toFixed(2) }));
 }
 
 function emptyInvoiceForm() {
@@ -1001,13 +1008,18 @@ function BillingTab({ project }) {
     const totalInvoiced = project.invoices.reduce((s, inv) => s + invoiceTotal(inv.items, inv.surcharge), 0);
     const remaining = budget - totalInvoiced;
     const proposalsWithItems = project.proposals.filter((p) => p.items.length > 0);
+    const selectedProposal = proposalsWithItems.find((p) => String(p.id) === form.proposal_id);
+    const selectedProposalTotal = selectedProposal
+        ? selectedProposal.items.reduce((s, i) => s + parseFloat(i.quantity) * parseFloat(i.rate), 0)
+        : 0;
+    const wasScaledToRemaining = selectedProposal && remaining < selectedProposalTotal;
 
     function openForm() {
         // Start from the most recently accepted proposal's line items when
         // there's exactly one to choose from -- otherwise let the user pick.
         const accepted = proposalsWithItems.filter((p) => p.status === 'accepted');
         if (accepted.length === 1) {
-            setForm({ proposal_id: String(accepted[0].id), items: proposalToInvoiceItems(accepted[0]), surcharge: false });
+            setForm({ proposal_id: String(accepted[0].id), items: proposalToInvoiceItems(accepted[0], remaining), surcharge: false });
         } else {
             setForm(emptyInvoiceForm());
         }
@@ -1021,7 +1033,7 @@ function BillingTab({ project }) {
             return;
         }
         const proposal = proposalsWithItems.find((p) => String(p.id) === proposalId);
-        setForm({ ...form, proposal_id: proposalId, items: proposalToInvoiceItems(proposal) });
+        setForm({ ...form, proposal_id: proposalId, items: proposalToInvoiceItems(proposal, remaining) });
     }
 
     function updateItem(idx, field, value) {
@@ -1088,16 +1100,23 @@ function BillingTab({ project }) {
             {showForm && (
                 <form onSubmit={createInvoice} className="bg-white rounded-lg border border-border p-4 mb-4">
                     {proposalsWithItems.length > 0 && (
-                        <select
-                            value={form.proposal_id}
-                            onChange={(e) => copyFromProposal(e.target.value)}
-                            className="border border-border rounded px-3 py-2 text-sm w-full mb-3"
-                        >
-                            <option value="">Copy line items from a proposal…</option>
-                            {proposalsWithItems.map((p) => (
-                                <option key={p.id} value={p.id}>{p.title} ({formatCurrency(p.estimate_amount)})</option>
-                            ))}
-                        </select>
+                        <div className="mb-3">
+                            <select
+                                value={form.proposal_id}
+                                onChange={(e) => copyFromProposal(e.target.value)}
+                                className="border border-border rounded px-3 py-2 text-sm w-full"
+                            >
+                                <option value="">Copy line items from a proposal…</option>
+                                {proposalsWithItems.map((p) => (
+                                    <option key={p.id} value={p.id}>{p.title} ({formatCurrency(p.estimate_amount)})</option>
+                                ))}
+                            </select>
+                            {wasScaledToRemaining && (
+                                <div className="text-xs text-sage mt-1">
+                                    Scaled to the {formatCurrency(Math.max(remaining, 0))} left in the budget.
+                                </div>
+                            )}
+                        </div>
                     )}
 
                     <div className="mb-3">
