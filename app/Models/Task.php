@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Task extends Model
 {
-    protected $fillable = ['project_id', 'title', 'description', 'status', 'due_date'];
+    protected $fillable = ['project_id', 'title', 'assignee', 'description', 'status', 'due_date'];
 
     protected $casts = [
         'due_date' => 'date',

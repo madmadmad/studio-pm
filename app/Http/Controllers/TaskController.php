@@ -17,6 +17,7 @@ class TaskController extends Controller
     {
         $data = $request->validate([
             'title' => ['required', 'string', 'max:255'],
+            'assignee' => ['nullable', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'due_date' => ['nullable', 'date'],
         ]);
@@ -28,6 +29,7 @@ class TaskController extends Controller
     {
         $data = $request->validate([
             'title' => ['sometimes', 'string', 'max:255'],
+            'assignee' => ['nullable', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'status' => ['sometimes', 'in:todo,in_progress,done'],
             'due_date' => ['nullable', 'date'],

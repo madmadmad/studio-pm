@@ -73,21 +73,58 @@ function OverviewTab({ project }) {
     );
 }
 
+function TaskRow({ task, teamNames, onChange }) {
+    async function cycleStatus() {
+        const order = ['todo', 'in_progress', 'done'];
+        const next = order[(order.indexOf(task.status) + 1) % order.length];
+        await api.patch(`/api/tasks/${task.id}`, { status: next });
+        onChange();
+    }
+
+    async function updateField(field, value) {
+        await api.patch(`/api/tasks/${task.id}`, { [field]: value || null });
+        onChange();
+    }
+
+    return (
+        <div className="grid grid-cols-12 gap-2 items-center px-4 py-2 border-b border-border last:border-b-0 text-sm">
+            <div className="col-span-5">{task.title}</div>
+            <div className="col-span-3">
+                <select
+                    value={task.assignee ?? ''}
+                    onChange={(e) => updateField('assignee', e.target.value)}
+                    className="h-8 border border-transparent hover:border-border rounded px-2 text-sm w-full bg-transparent text-sage"
+                >
+                    <option value="">Unassigned</option>
+                    {teamNames.map((name) => <option key={name} value={name}>{name}</option>)}
+                </select>
+            </div>
+            <div className="col-span-2">
+                <input
+                    type="date"
+                    value={task.due_date ? task.due_date.slice(0, 10) : ''}
+                    onChange={(e) => updateField('due_date', e.target.value)}
+                    className="h-8 border border-transparent hover:border-border rounded px-2 text-xs w-full bg-transparent text-sage"
+                />
+            </div>
+            <div className="col-span-2 text-right">
+                <button onClick={cycleStatus}>
+                    <TaskStatusBadge task={task} />
+                </button>
+            </div>
+        </div>
+    );
+}
+
 function TasksTab({ project }) {
     const [title, setTitle] = useState('');
+    const teamNames = project.team_names || [];
 
     async function addTask(e) {
         e.preventDefault();
         if (!title) return;
         await api.post(`/api/projects/${project.id}/tasks`, { title });
         setTitle('');
-        reload();
-    }
-
-    async function cycleStatus(task) {
-        const order = ['todo', 'in_progress', 'done'];
-        const next = order[(order.indexOf(task.status) + 1) % order.length];
-        await api.patch(`/api/tasks/${task.id}`, { status: next });
         reload();
     }
 
@@ -106,16 +143,17 @@ function TasksTab({ project }) {
                 {project.tasks.length === 0 ? (
                     <EmptyState text="No tasks yet." />
                 ) : (
-                    <ul className="text-sm divide-y divide-border">
+                    <>
+                        <div className="grid grid-cols-12 gap-2 px-4 py-2 border-b border-border text-xs font-medium text-sage uppercase tracking-wide">
+                            <div className="col-span-5">Task</div>
+                            <div className="col-span-3">Assignee</div>
+                            <div className="col-span-2">Due date</div>
+                            <div className="col-span-2 text-right">Status</div>
+                        </div>
                         {project.tasks.map((task) => (
-                            <li key={task.id} className="px-4 py-3 flex items-center justify-between">
-                                <span>{task.title}</span>
-                                <button onClick={() => cycleStatus(task)}>
-                                    <TaskStatusBadge task={task} />
-                                </button>
-                            </li>
+                            <TaskRow key={task.id} task={task} teamNames={teamNames} onChange={reload} />
                         ))}
-                    </ul>
+                    </>
                 )}
             </div>
         </div>
