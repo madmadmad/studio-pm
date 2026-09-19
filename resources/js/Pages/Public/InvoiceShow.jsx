@@ -88,7 +88,7 @@ export default function InvoiceShow({ invoice, studio }) {
 
                 <h1 className="font-display text-2xl font-semibold pb-2">
                     <span className="font-sans font-normal text-sage">Invoice </span>
-                    #{invoice.id}
+                    #{invoice.invoice_number}
                 </h1>
                 <div className="text-sm text-sage pb-8 mb-8 border-b border-border">
                     Issued {formatDate(invoice.issued_on)} &middot; Due {formatDate(invoice.due_on)}

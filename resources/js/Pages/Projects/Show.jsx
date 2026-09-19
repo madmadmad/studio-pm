@@ -1226,6 +1226,7 @@ function BillingTab({ project }) {
                     <table className="w-full text-sm">
                         <thead>
                             <tr className="text-left border-b border-border text-sage">
+                                <th className="px-4 py-2 font-medium">#</th>
                                 <th className="px-4 py-2 font-medium">Issued</th>
                                 <th className="px-4 py-2 font-medium">Total</th>
                                 <th className="px-4 py-2 font-medium">Status</th>
@@ -1235,6 +1236,7 @@ function BillingTab({ project }) {
                         <tbody>
                             {project.invoices.map((invoice) => (
                                 <tr key={invoice.id} className="border-b border-border last:border-b-0">
+                                    <td className="px-4 py-2 tabular-nums text-sage">{invoice.invoice_number}</td>
                                     <td className="px-4 py-2">
                                         <Link href={`/invoices/${invoice.id}`} className="hover:underline">
                                             {formatDate(invoice.issued_on)}

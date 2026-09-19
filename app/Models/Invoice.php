@@ -21,6 +21,7 @@ class Invoice extends Model
     {
         static::creating(function (Invoice $invoice) {
             $invoice->public_token ??= Str::random(40);
+            $invoice->invoice_number ??= (static::max('invoice_number') ?? 999) + 1;
         });
     }
 

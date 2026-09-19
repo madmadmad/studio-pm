@@ -272,6 +272,7 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
                     <table className="w-full text-sm">
                         <thead>
                             <tr className="text-left border-b border-border text-sage">
+                                <th className="px-4 py-2 font-medium">#</th>
                                 <th className="px-4 py-2 font-medium">Client</th>
                                 <th className="px-4 py-2 font-medium">Issued</th>
                                 <th className="px-4 py-2 font-medium">Due</th>
@@ -283,6 +284,7 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
                         <tbody>
                             {invoices.map((invoice) => (
                                 <tr key={invoice.id} className="border-b border-border last:border-b-0">
+                                    <td className="px-4 py-3 tabular-nums text-sage">{invoice.invoice_number}</td>
                                     <td className="px-4 py-3 font-medium">
                                         <Link href={`/invoices/${invoice.id}`} className="hover:underline">
                                             {invoice.company?.name}
