@@ -54,7 +54,7 @@ export default function ProposalShow({ proposal, token, studio }) {
     return (
         <div className="min-h-screen bg-white text-ink px-4 py-10">
             <Head title={proposal.title} />
-            <div className="max-w-[800px] mx-auto p-[60px] shadow-[0_20px_60px_rgba(35,38,46,0.12)]">
+            <div className="max-w-[800px] mx-auto p-[60px] rounded-[6px] shadow-[0_20px_60px_rgba(35,38,46,0.12)]">
                 <img src="/images/studio-lockup.svg" alt="Studio" className="w-[200px] h-auto mb-8" />
 
                 <div className="grid grid-cols-2 gap-4 pb-8 mb-8 border-b border-border text-sm">
