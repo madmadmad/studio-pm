@@ -6,13 +6,26 @@ import RichTextEditor from '../../Components/RichTextEditor';
 import { formatCurrency } from '../../lib/format';
 import { api } from '../../lib/api';
 
-function emptyForm(proposal) {
+const NEW_PROJECT = '__new__';
+
+function emptyForm(proposal, presetCompanyId, presetProjectId) {
     if (!proposal) {
-        return { company_id: '', contact_id: '', title: '', body: '', estimate_amount: '', items: [] };
+        return {
+            company_id: presetCompanyId ? String(presetCompanyId) : '',
+            contact_id: '',
+            project_id: presetProjectId ? String(presetProjectId) : '',
+            new_project_name: '',
+            title: '',
+            body: '',
+            estimate_amount: '',
+            items: [],
+        };
     }
     return {
         company_id: String(proposal.company_id),
         contact_id: proposal.contact_id ? String(proposal.contact_id) : '',
+        project_id: proposal.project_id ? String(proposal.project_id) : '',
+        new_project_name: '',
         title: proposal.title,
         body: proposal.body,
         estimate_amount: proposal.estimate_amount ?? '',
@@ -34,20 +47,39 @@ function lineAmount(item) {
     return (parseFloat(item.quantity) || 0) * (parseFloat(item.rate) || 0);
 }
 
-export default function ProposalsForm({ proposal, companies, services }) {
+export default function ProposalsForm({ proposal, companies, services, presetCompanyId, presetProjectId }) {
     const isEditing = !!proposal;
-    const [form, setForm] = useState(emptyForm(proposal));
+    const [form, setForm] = useState(emptyForm(proposal, presetCompanyId, presetProjectId));
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
     const [dragIndex, setDragIndex] = useState(null);
 
     const itemsTotal = form.items.reduce((s, i) => s + lineAmount(i), 0);
-    const contactsForCompany = companies.find((c) => String(c.id) === String(form.company_id))?.contacts || [];
+    const selectedCompany = companies.find((c) => String(c.id) === String(form.company_id));
+    const contactsForCompany = selectedCompany?.contacts || [];
+    const projectsForCompany = selectedCompany?.projects || [];
+    // Arriving from a project's detail page pins both the client and the
+    // project so the proposal can't accidentally end up attached elsewhere.
+    const contextLocked = !isEditing && !!presetProjectId;
 
     function handleCompanyChange(value) {
         const company = companies.find((c) => String(c.id) === String(value));
         const primaryContact = company?.contacts?.find((c) => c.is_primary);
-        setForm({ ...form, company_id: value, contact_id: primaryContact ? String(primaryContact.id) : '' });
+        setForm({
+            ...form,
+            company_id: value,
+            contact_id: primaryContact ? String(primaryContact.id) : '',
+            project_id: '',
+            new_project_name: '',
+        });
+    }
+
+    function handleProjectChange(value) {
+        if (value === NEW_PROJECT) {
+            setForm({ ...form, project_id: '', new_project_name: form.new_project_name || '' });
+        } else {
+            setForm({ ...form, project_id: value, new_project_name: '' });
+        }
     }
 
     function updateItem(idx, field, value) {
@@ -91,6 +123,10 @@ export default function ProposalsForm({ proposal, companies, services }) {
             setError('Client, title, and scope of work are all required.');
             return;
         }
+        if (!isEditing && !form.project_id && !form.new_project_name.trim()) {
+            setError('Pick a project for this proposal, or name a new one to create.');
+            return;
+        }
         const validItems = form.items.filter((i) => i.description.trim() && parseFloat(i.rate) >= 0);
         setSaving(true);
         setError('');
@@ -102,6 +138,10 @@ export default function ProposalsForm({ proposal, companies, services }) {
                 estimate_amount: validItems.length > 0 ? undefined : (form.estimate_amount || null),
                 items: validItems.length > 0 ? validItems : undefined,
             };
+            if (!isEditing) {
+                payload.project_id = form.project_id || null;
+                payload.new_project_name = form.project_id ? null : form.new_project_name.trim();
+            }
             if (isEditing) {
                 await api.patch(`/api/proposals/${proposal.id}`, payload);
             } else {
@@ -129,7 +169,7 @@ export default function ProposalsForm({ proposal, companies, services }) {
                 <div className="grid grid-cols-2 gap-3 mb-3">
                     <select
                         value={form.company_id}
-                        disabled={isEditing}
+                        disabled={isEditing || contextLocked}
                         onChange={(e) => handleCompanyChange(e.target.value)}
                         className="border border-border rounded px-3 py-2 text-sm disabled:bg-paper disabled:text-sage"
                     >
@@ -151,6 +191,40 @@ export default function ProposalsForm({ proposal, companies, services }) {
                             </option>
                         ))}
                     </select>
+                </div>
+                <div className="mb-3">
+                    {isEditing ? (
+                        <div className="border border-border rounded px-3 py-2 text-sm bg-paper text-sage">
+                            Project: {proposal.project?.name ?? '—'}
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-2 gap-3">
+                            <select
+                                value={form.company_id ? (form.project_id || NEW_PROJECT) : ''}
+                                disabled={!form.company_id || contextLocked}
+                                onChange={(e) => handleProjectChange(e.target.value)}
+                                className="border border-border rounded px-3 py-2 text-sm disabled:bg-paper disabled:text-sage"
+                            >
+                                {!form.company_id ? (
+                                    <option value="">Select a client first</option>
+                                ) : (
+                                    <>
+                                        {projectsForCompany.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+                                        <option value={NEW_PROJECT}>+ New project</option>
+                                    </>
+                                )}
+                            </select>
+                            {!form.project_id && (
+                                <input
+                                    placeholder="New project name"
+                                    value={form.new_project_name}
+                                    disabled={!form.company_id}
+                                    onChange={(e) => setForm({ ...form, new_project_name: e.target.value })}
+                                    className="border border-border rounded px-3 py-2 text-sm disabled:bg-paper disabled:text-sage"
+                                />
+                            )}
+                        </div>
+                    )}
                 </div>
                 <div className="mb-3">
                     {form.items.length === 0 ? (

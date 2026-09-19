@@ -36,11 +36,20 @@ class ProposalController extends Controller
             'body' => ['required', 'string'], // rich text HTML from the editor
             'estimate_amount' => ['nullable', 'numeric', 'min:0'],
             'contact_id' => ['nullable', Rule::exists('contacts', 'id')->where('company_id', $company->id)],
+            'project_id' => ['required_without:new_project_name', 'nullable', Rule::exists('projects', 'id')->where('company_id', $company->id)],
+            'new_project_name' => ['required_without:project_id', 'nullable', 'string', 'max:255'],
             ...$this->itemRules(),
         ]);
 
         $proposal = DB::transaction(function () use ($data, $company) {
+            $projectId = $data['project_id'] ?? null;
+
+            if (! $projectId && ! empty($data['new_project_name'])) {
+                $projectId = $company->projects()->create(['name' => $data['new_project_name']])->id;
+            }
+
             $proposal = $company->proposals()->create([
+                'project_id' => $projectId,
                 'contact_id' => $data['contact_id'] ?? null,
                 'title' => $data['title'],
                 'body' => $data['body'],
@@ -56,7 +65,7 @@ class ProposalController extends Controller
             return $proposal;
         });
 
-        return $proposal->load('items');
+        return $proposal->load('items', 'project');
     }
 
     public function update(Request $request, Proposal $proposal)
@@ -87,7 +96,7 @@ class ProposalController extends Controller
             }
         });
 
-        return $proposal->fresh()->load('items');
+        return $proposal->fresh()->load('items', 'project');
     }
 
     public function send(Proposal $proposal)

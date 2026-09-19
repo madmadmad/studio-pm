@@ -21,6 +21,7 @@ class ProposalItemsTest extends TestCase
             'title' => 'Marketing Support',
             'body' => '<p>Scope</p>',
             'contact_id' => $contact->id,
+            'new_project_name' => 'Marketing Support',
         ]);
 
         $response->assertCreated();
@@ -41,9 +42,79 @@ class ProposalItemsTest extends TestCase
             'title' => 'Marketing Support',
             'body' => '<p>Scope</p>',
             'contact_id' => $otherContact->id,
+            'new_project_name' => 'Marketing Support',
         ]);
 
         $response->assertUnprocessable();
+    }
+
+    public function test_a_project_from_a_different_company_is_rejected(): void
+    {
+        $user = User::factory()->create();
+        $companyA = Company::create(['name' => 'Alder & Finch Design']);
+        $companyB = Company::create(['name' => 'Marsh Grove Bakery']);
+        $otherProject = $companyB->projects()->create(['name' => 'Menu redesign']);
+
+        $response = $this->actingAs($user)->postJson("/api/companies/{$companyA->id}/proposals", [
+            'title' => 'Marketing Support',
+            'body' => '<p>Scope</p>',
+            'project_id' => $otherProject->id,
+        ]);
+
+        $response->assertUnprocessable();
+    }
+
+    public function test_a_proposal_requires_a_project_to_be_picked_or_created(): void
+    {
+        $user = User::factory()->create();
+        $company = Company::create(['name' => 'Alder & Finch Design']);
+
+        $response = $this->actingAs($user)->postJson("/api/companies/{$company->id}/proposals", [
+            'title' => 'Marketing Support',
+            'body' => '<p>Scope</p>',
+        ]);
+
+        $response->assertUnprocessable();
+    }
+
+    public function test_a_proposal_can_be_created_against_an_existing_project(): void
+    {
+        $user = User::factory()->create();
+        $company = Company::create(['name' => 'Alder & Finch Design']);
+        $project = $company->projects()->create(['name' => 'Brand refresh']);
+
+        $response = $this->actingAs($user)->postJson("/api/companies/{$company->id}/proposals", [
+            'title' => 'Marketing Support',
+            'body' => '<p>Scope</p>',
+            'project_id' => $project->id,
+        ]);
+
+        $response->assertCreated();
+        $this->assertDatabaseHas('proposals', [
+            'id' => $response->json('id'),
+            'project_id' => $project->id,
+        ]);
+        $this->assertDatabaseCount('projects', 1);
+    }
+
+    public function test_a_proposal_can_create_a_new_project_by_name(): void
+    {
+        $user = User::factory()->create();
+        $company = Company::create(['name' => 'Alder & Finch Design']);
+
+        $response = $this->actingAs($user)->postJson("/api/companies/{$company->id}/proposals", [
+            'title' => 'Marketing Support',
+            'body' => '<p>Scope</p>',
+            'new_project_name' => 'Q4 Rebrand',
+        ]);
+
+        $response->assertCreated();
+        $this->assertDatabaseHas('projects', ['company_id' => $company->id, 'name' => 'Q4 Rebrand']);
+        $project = $company->projects()->where('name', 'Q4 Rebrand')->firstOrFail();
+        $this->assertDatabaseHas('proposals', [
+            'id' => $response->json('id'),
+            'project_id' => $project->id,
+        ]);
     }
 
     public function test_creating_a_proposal_with_line_items_computes_the_estimate_from_them(): void
@@ -54,6 +125,7 @@ class ProposalItemsTest extends TestCase
         $response = $this->actingAs($user)->postJson("/api/companies/{$company->id}/proposals", [
             'title' => 'Marketing Support',
             'body' => '<p>Scope</p>',
+            'new_project_name' => 'Marketing Support',
             'items' => [
                 ['description' => 'Production Art (5 decks)', 'quantity' => 15, 'rate' => 130],
                 ['description' => 'Development', 'quantity' => 4, 'rate' => 130],
@@ -75,6 +147,7 @@ class ProposalItemsTest extends TestCase
         $response = $this->actingAs($user)->postJson("/api/companies/{$company->id}/proposals", [
             'title' => 'Flat quote',
             'body' => '<p>Scope</p>',
+            'new_project_name' => 'Flat quote project',
             'estimate_amount' => 500,
         ]);
 
@@ -91,6 +164,7 @@ class ProposalItemsTest extends TestCase
         $created = $this->actingAs($user)->postJson("/api/companies/{$company->id}/proposals", [
             'title' => 'Marketing Support',
             'body' => '<p>Original scope</p>',
+            'new_project_name' => 'Marketing Support',
             'items' => [
                 ['description' => 'Design', 'quantity' => 10, 'rate' => 100],
             ],
@@ -128,6 +202,7 @@ class ProposalItemsTest extends TestCase
         $created = $this->actingAs($user)->postJson("/api/companies/{$company->id}/proposals", [
             'title' => 'Marketing Support',
             'body' => '<p>Scope</p>',
+            'new_project_name' => 'Marketing Support',
             'items' => [
                 ['description' => 'Design', 'quantity' => 10, 'rate' => 100],
             ],

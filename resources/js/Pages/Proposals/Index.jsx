@@ -34,6 +34,7 @@ export default function ProposalsIndex({ proposals }) {
                         <thead>
                             <tr className="text-left border-b border-border text-sage">
                                 <th className="px-4 py-2 font-medium">Client</th>
+                                <th className="px-4 py-2 font-medium">Project</th>
                                 <th className="px-4 py-2 font-medium">Title</th>
                                 <th className="px-4 py-2 font-medium">Estimate</th>
                                 <th className="px-4 py-2 font-medium">Status</th>
@@ -48,6 +49,13 @@ export default function ProposalsIndex({ proposals }) {
                                         {proposal.contact && (
                                             <div className="text-xs text-sage">{proposal.contact.name}</div>
                                         )}
+                                    </td>
+                                    <td className="px-4 py-3">
+                                        {proposal.project ? (
+                                            <Link href={`/projects/${proposal.project.id}`} className="hover:underline">
+                                                {proposal.project.name}
+                                            </Link>
+                                        ) : '—'}
                                     </td>
                                     <td className="px-4 py-3">
                                         <Link href={`/proposals/${proposal.id}/edit`} className="hover:underline">

@@ -5,11 +5,11 @@ import AppLayout from '../../Layouts/AppLayout';
 import EmptyState from '../../Components/EmptyState';
 import Badge from '../../Components/Badge';
 import RichTextEditor from '../../Components/RichTextEditor';
-import { ProjectStatusBadge, TaskStatusBadge, InvoiceStatusBadge } from '../../Components/StatusBadges';
+import { ProjectStatusBadge, TaskStatusBadge, InvoiceStatusBadge, ProposalStatusBadge } from '../../Components/StatusBadges';
 import { formatCurrency, formatDate, invoiceTotal } from '../../lib/format';
 import { api } from '../../lib/api';
 
-const TABS = ['Overview', 'Tasks', 'Notes', 'Messages', 'Time', 'Billing', 'Expenses', 'Team'];
+const TABS = ['Overview', 'Tasks', 'Notes', 'Messages', 'Time', 'Proposals', 'Billing', 'Expenses', 'Team'];
 const STATUS_OPTIONS = ['active', 'on_hold', 'completed'];
 
 function reload() {
@@ -920,6 +920,55 @@ function TimeTab({ project }) {
     );
 }
 
+function ProposalsTab({ project }) {
+    return (
+        <div>
+            <div className="flex justify-end mb-4">
+                <Link
+                    href={`/proposals/create?company_id=${project.company_id}&project_id=${project.id}`}
+                    className="bg-ink text-white text-sm font-medium px-3 py-1.5 rounded"
+                >
+                    New proposal
+                </Link>
+            </div>
+
+            <div className="bg-white rounded-lg border border-border overflow-hidden">
+                {project.proposals.length === 0 ? (
+                    <EmptyState text="No proposals for this project yet." />
+                ) : (
+                    <table className="w-full text-sm">
+                        <thead>
+                            <tr className="text-left border-b border-border text-sage">
+                                <th className="px-4 py-2 font-medium">Title</th>
+                                <th className="px-4 py-2 font-medium">Estimate</th>
+                                <th className="px-4 py-2 font-medium">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {project.proposals.map((proposal) => (
+                                <tr key={proposal.id} className="border-b border-border last:border-b-0">
+                                    <td className="px-4 py-3">
+                                        <Link href={`/proposals/${proposal.id}/edit`} className="hover:underline">
+                                            {proposal.title}
+                                        </Link>
+                                        {proposal.contact && (
+                                            <div className="text-xs text-sage">{proposal.contact.name}</div>
+                                        )}
+                                    </td>
+                                    <td className="px-4 py-3 tabular-nums">
+                                        {proposal.estimate_amount ? formatCurrency(proposal.estimate_amount) : '—'}
+                                    </td>
+                                    <td className="px-4 py-3"><ProposalStatusBadge proposal={proposal} /></td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                )}
+            </div>
+        </div>
+    );
+}
+
 function BillingTab({ project }) {
     const [showForm, setShowForm] = useState(false);
     const [form, setForm] = useState({ description: '', amount: '', surcharge: false });
@@ -1160,6 +1209,7 @@ export default function ProjectsShow({ project }) {
             {tab === 'Notes' && <NotesTab project={project} />}
             {tab === 'Messages' && <MessagesTab project={project} />}
             {tab === 'Time' && <TimeTab project={project} />}
+            {tab === 'Proposals' && <ProposalsTab project={project} />}
             {tab === 'Billing' && <BillingTab project={project} />}
             {tab === 'Expenses' && <ExpensesTab project={project} />}
             {tab === 'Team' && <TeamTab project={project} />}

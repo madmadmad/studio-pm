@@ -9,7 +9,7 @@ use Illuminate\Support\Str;
 
 class Proposal extends Model
 {
-    protected $fillable = ['company_id', 'contact_id', 'title', 'body', 'estimate_amount', 'status', 'sent_at', 'accepted_at'];
+    protected $fillable = ['company_id', 'project_id', 'contact_id', 'title', 'body', 'estimate_amount', 'status', 'sent_at', 'accepted_at'];
 
     protected $casts = [
         'sent_at' => 'datetime',
@@ -26,6 +26,11 @@ class Proposal extends Model
     public function company(): BelongsTo
     {
         return $this->belongsTo(Company::class);
+    }
+
+    public function project(): BelongsTo
+    {
+        return $this->belongsTo(Project::class);
     }
 
     public function contact(): BelongsTo
