@@ -52,7 +52,7 @@ export default function AppLayout({ children }) {
                 </div>
             </aside>
 
-            <main className="flex-1 p-8 max-w-4xl">{children}</main>
+            <main className="flex-1 min-w-0 p-8">{children}</main>
         </div>
     );
 }

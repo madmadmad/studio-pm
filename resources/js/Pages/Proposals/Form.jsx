@@ -158,6 +158,7 @@ export default function ProposalsForm({ proposal, companies, services, presetCom
     return (
         <AppLayout>
             <Head title={isEditing ? `Edit — ${proposal.title}` : 'New proposal'} />
+            <div className="max-w-3xl">
             <div className="mb-1">
                 <Link href="/proposals" className="text-sm text-sage hover:underline inline-flex items-center gap-1">
                     <ArrowLeft size={14} /> Proposals
@@ -345,6 +346,7 @@ export default function ProposalsForm({ proposal, companies, services, presetCom
                         {isEditing ? 'Save changes' : 'Save draft'}
                     </button>
                 </div>
+            </div>
             </div>
         </AppLayout>
     );
