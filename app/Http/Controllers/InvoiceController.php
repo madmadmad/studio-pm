@@ -65,6 +65,41 @@ class InvoiceController extends Controller
         return $invoice->load('items');
     }
 
+    public function update(Request $request, Invoice $invoice)
+    {
+        abort_unless($invoice->status === 'draft', 422, 'Only draft invoices can be edited.');
+
+        $data = $request->validate([
+            'contact_id' => ['nullable', Rule::exists('contacts', 'id')->where('company_id', $invoice->company_id)],
+            'surcharge' => ['boolean'],
+            'due_on' => ['nullable', 'date'],
+            'items' => ['required', 'array', 'min:1'],
+            'items.*.description' => ['required', 'string'],
+            'items.*.amount' => ['required', 'numeric', 'min:0.01'],
+            'items.*.service_id' => ['nullable', 'exists:services,id'],
+        ]);
+
+        DB::transaction(function () use ($data, $invoice) {
+            $invoice->update([
+                'contact_id' => $data['contact_id'] ?? null,
+                'surcharge' => $data['surcharge'] ?? false,
+                'due_on' => $data['due_on'] ?? $invoice->due_on,
+            ]);
+
+            // Replacing items wholesale (simplest, matches how proposal items
+            // are edited) would otherwise leave any time entries billed to
+            // the old items stuck "billed" with nothing to point at -- free
+            // them up so those hours can be invoiced again later.
+            $oldItemIds = $invoice->items()->pluck('id');
+            TimeEntry::whereIn('invoice_item_id', $oldItemIds)->update(['billed' => false, 'invoice_item_id' => null]);
+            $invoice->items()->delete();
+
+            $invoice->items()->createMany($data['items']);
+        });
+
+        return $invoice->fresh()->load('items');
+    }
+
     public function send(Invoice $invoice)
     {
         $invoice->update(['status' => 'sent']);

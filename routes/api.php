@@ -33,7 +33,7 @@ Route::middleware('auth:sanctum')->name('api.')->group(function () {
     Route::delete('time-entries/{timeEntry}', [TimeEntryController::class, 'destroy']);
     Route::get('timesheets/weekly', [TimeEntryController::class, 'weekly']);
 
-    Route::apiResource('companies.invoices', InvoiceController::class)->shallow()->only(['index', 'store']);
+    Route::apiResource('companies.invoices', InvoiceController::class)->shallow()->only(['index', 'store', 'update']);
     Route::post('invoices/{invoice}/send', [InvoiceController::class, 'send']);
     Route::post('invoices/{invoice}/mark-paid', [InvoiceController::class, 'markPaid']);
 

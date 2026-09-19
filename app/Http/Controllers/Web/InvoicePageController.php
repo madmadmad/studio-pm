@@ -22,7 +22,7 @@ class InvoicePageController extends Controller
 
     public function show(Invoice $invoice): Response
     {
-        $invoice->load(['items.service', 'items.timeEntries', 'company', 'contact', 'payments']);
+        $invoice->load(['items.service', 'items.timeEntries', 'company.contacts', 'contact', 'payments']);
 
         return Inertia::render('Invoices/Show', [
             'invoice' => $invoice,

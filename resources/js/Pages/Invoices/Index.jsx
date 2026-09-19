@@ -250,12 +250,17 @@ export default function InvoicesIndex({ invoices, companies }) {
                                     <td className="px-4 py-3 tabular-nums">{formatCurrency(invoiceTotal(invoice.items, invoice.surcharge))}</td>
                                     <td className="px-4 py-3"><InvoiceStatusBadge invoice={invoice} /></td>
                                     <td className="px-4 py-3 text-right">
-                                        {invoice.status === 'draft' && (
-                                            <button onClick={() => sendInvoice(invoice)} className="text-sm font-medium text-brass">Send</button>
-                                        )}
-                                        {invoice.status === 'sent' && (
-                                            <button onClick={() => markPaid(invoice)} className="text-sm font-medium text-pine">Mark paid</button>
-                                        )}
+                                        <div className="flex items-center justify-end gap-3">
+                                            {invoice.status === 'draft' && (
+                                                <Link href={`/invoices/${invoice.id}`} className="text-sm font-medium text-pine hover:underline">Edit</Link>
+                                            )}
+                                            {invoice.status === 'draft' && (
+                                                <button onClick={() => sendInvoice(invoice)} className="text-sm font-medium text-brass">Send</button>
+                                            )}
+                                            {invoice.status === 'sent' && (
+                                                <button onClick={() => markPaid(invoice)} className="text-sm font-medium text-pine">Mark paid</button>
+                                            )}
+                                        </div>
                                     </td>
                                 </tr>
                             ))}
