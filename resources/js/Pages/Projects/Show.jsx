@@ -721,9 +721,142 @@ function MessagesTab({ project }) {
     );
 }
 
+function TimeEntryRow({ entry, onOpen }) {
+    return (
+        <div className="grid grid-cols-12 gap-2 items-center px-4 py-2 border-b border-border last:border-b-0 text-sm group">
+            <div className="col-span-2 text-sage">{formatDate(entry.date)}</div>
+            <div className="col-span-2 font-mono">{entry.hours}h</div>
+            <div className="col-span-6 flex items-center gap-2">
+                <span className="truncate text-sage">{entry.task ? entry.task.title : entry.note || '—'}</span>
+                <button
+                    onClick={() => onOpen(entry.id)}
+                    title="Open entry"
+                    className="flex-shrink-0 w-7 h-7 flex items-center justify-center rounded border border-border text-sage opacity-0 group-hover:opacity-100 hover:text-ink hover:border-ink transition-opacity"
+                >
+                    <CaretRight size={14} weight="bold" />
+                </button>
+            </div>
+            <div className="col-span-2 text-right">
+                {entry.billed ? <Badge tone="pine" label="Billed" /> : <Badge tone="neutral" label="Unbilled" />}
+            </div>
+        </div>
+    );
+}
+
+function TimeEntryDrawer({ entry, tasks, onClose, onChange }) {
+    const [hours, setHours] = useState('');
+    const [note, setNote] = useState('');
+
+    useEffect(() => {
+        if (entry) {
+            setHours(entry.hours);
+            setNote(entry.note ?? '');
+        }
+    }, [entry?.id]);
+
+    useEffect(() => {
+        function onKeyDown(e) {
+            if (e.key === 'Escape') onClose();
+        }
+        window.addEventListener('keydown', onKeyDown);
+        return () => window.removeEventListener('keydown', onKeyDown);
+    }, [onClose]);
+
+    async function updateField(field, value) {
+        await api.patch(`/api/time-entries/${entry.id}`, { [field]: value });
+        onChange();
+    }
+
+    async function remove() {
+        await api.delete(`/api/time-entries/${entry.id}`);
+        onClose();
+        onChange();
+    }
+
+    return (
+        <div className="fixed inset-0 z-50">
+            <div className="absolute inset-0 bg-ink/20 drawer-overlay" onClick={onClose} />
+            <div className="absolute right-0 top-0 h-full w-[600px] max-w-[95vw] bg-white shadow-xl flex flex-col drawer-panel">
+                <div className="flex items-center justify-between px-6 py-4 border-b border-border">
+                    {entry.billed ? <Badge tone="pine" label="Billed" /> : <Badge tone="neutral" label="Unbilled" />}
+                    <div className="flex items-center gap-3">
+                        <button onClick={remove} title="Delete entry" className="text-sage hover:text-brick px-1">
+                            <Trash size={18} />
+                        </button>
+                        <button onClick={onClose} className="text-sage hover:text-ink px-1">
+                            <X size={20} />
+                        </button>
+                    </div>
+                </div>
+
+                <div className="flex-1 overflow-y-auto px-6 py-4">
+                    <div className="grid grid-cols-2 gap-3 mb-6 pb-4 border-b border-border">
+                        <div>
+                            <div className="text-xs font-semibold text-sage mb-1">Date</div>
+                            <input
+                                type="date"
+                                value={entry.date.slice(0, 10)}
+                                onChange={(e) => updateField('date', e.target.value)}
+                                className="border border-border rounded px-2 py-1 text-sm w-full"
+                            />
+                        </div>
+                        <div>
+                            <div className="text-xs font-semibold text-sage mb-1">Hours</div>
+                            <input
+                                type="number"
+                                min="0.25"
+                                step="0.25"
+                                value={hours}
+                                onChange={(e) => setHours(e.target.value)}
+                                onBlur={() => Number(hours) !== Number(entry.hours) && updateField('hours', hours)}
+                                className="border border-border rounded px-2 py-1 text-sm w-full font-mono"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="mb-6">
+                        <div className="text-xs font-semibold text-sage mb-1">Task</div>
+                        <select
+                            value={entry.task_id ?? ''}
+                            onChange={(e) => updateField('task_id', e.target.value || null)}
+                            className="border border-border rounded px-2 py-1 text-sm w-full"
+                        >
+                            <option value="">No task</option>
+                            {tasks.map((t) => <option key={t.id} value={t.id}>{t.title}</option>)}
+                        </select>
+                    </div>
+
+                    <div className="mb-6">
+                        <div className="text-xs font-semibold text-sage mb-2">Note</div>
+                        <AutoResizeTextarea
+                            value={note}
+                            onChange={(e) => setNote(e.target.value)}
+                            onBlur={() => note !== (entry.note ?? '') && updateField('note', note)}
+                            placeholder="Add a note…"
+                            className="w-full border border-border rounded px-3 py-2 text-sm"
+                        />
+                    </div>
+
+                    <label className="flex items-center gap-2 text-sm">
+                        <input
+                            type="checkbox"
+                            checked={entry.billable}
+                            disabled={entry.billed}
+                            onChange={(e) => updateField('billable', e.target.checked)}
+                        />
+                        Billable
+                    </label>
+                </div>
+            </div>
+        </div>
+    );
+}
+
 function TimeTab({ project }) {
     const [form, setForm] = useState({ date: '', hours: '', note: '' });
     const [saving, setSaving] = useState(false);
+    const [selectedEntryId, setSelectedEntryId] = useState(null);
+    const selectedEntry = project.time_entries.find((e) => e.id === selectedEntryId) || null;
 
     async function logTime(e) {
         e.preventDefault();
@@ -756,30 +889,28 @@ function TimeTab({ project }) {
                 {project.time_entries.length === 0 ? (
                     <EmptyState text="No time logged yet." />
                 ) : (
-                    <table className="w-full text-sm">
-                        <thead>
-                            <tr className="text-left border-b border-border text-sage">
-                                <th className="px-4 py-2 font-medium">Date</th>
-                                <th className="px-4 py-2 font-medium">Hours</th>
-                                <th className="px-4 py-2 font-medium">Note</th>
-                                <th className="px-4 py-2 font-medium"></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {project.time_entries.map((entry) => (
-                                <tr key={entry.id} className="border-b border-border last:border-b-0">
-                                    <td className="px-4 py-2">{formatDate(entry.date)}</td>
-                                    <td className="px-4 py-2 font-mono">{entry.hours}h</td>
-                                    <td className="px-4 py-2 text-sage">{entry.note}</td>
-                                    <td className="px-4 py-2 text-right">
-                                        {entry.billed ? <Badge tone="pine" label="Billed" /> : <Badge tone="neutral" label="Unbilled" />}
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                    <>
+                        <div className="grid grid-cols-12 gap-2 px-4 py-2 border-b border-border text-xs font-medium text-sage">
+                            <div className="col-span-2">Date</div>
+                            <div className="col-span-2">Hours</div>
+                            <div className="col-span-6">Task / Note</div>
+                            <div className="col-span-2 text-right">Status</div>
+                        </div>
+                        {project.time_entries.map((entry) => (
+                            <TimeEntryRow key={entry.id} entry={entry} onOpen={setSelectedEntryId} />
+                        ))}
+                    </>
                 )}
             </div>
+
+            {selectedEntry && (
+                <TimeEntryDrawer
+                    entry={selectedEntry}
+                    tasks={project.tasks}
+                    onClose={() => setSelectedEntryId(null)}
+                    onChange={reload}
+                />
+            )}
         </div>
     );
 }

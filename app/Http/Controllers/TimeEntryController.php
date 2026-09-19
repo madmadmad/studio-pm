@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\TimeEntry;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Validation\Rule;
 
 class TimeEntryController extends Controller
 {
@@ -40,6 +41,13 @@ class TimeEntryController extends Controller
             'date' => ['sometimes', 'date'],
             'hours' => ['sometimes', 'numeric', 'min:0.25'],
             'note' => ['nullable', 'string'],
+            'task_id' => [
+                'nullable',
+                $timeEntry->project_id
+                    ? Rule::exists('tasks', 'id')->where('project_id', $timeEntry->project_id)
+                    : 'exists:tasks,id',
+            ],
+            'billable' => ['sometimes', 'boolean'],
         ]);
 
         $timeEntry->update($data);
