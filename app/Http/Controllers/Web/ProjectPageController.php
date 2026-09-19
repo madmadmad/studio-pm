@@ -28,7 +28,7 @@ class ProjectPageController extends Controller
             'messages',
             'timeEntries.task',
             'invoices.items',
-            'proposals.contact',
+            'proposals',
             'transactions' => fn ($query) => $query->orderByDesc('occurred_on'),
         ]);
 

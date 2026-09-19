@@ -951,9 +951,6 @@ function ProposalsTab({ project }) {
                                         <Link href={`/proposals/${proposal.id}/edit`} className="hover:underline">
                                             {proposal.title}
                                         </Link>
-                                        {proposal.contact && (
-                                            <div className="text-xs text-sage">{proposal.contact.name}</div>
-                                        )}
                                     </td>
                                     <td className="px-4 py-3 tabular-nums">
                                         {proposal.estimate_amount ? formatCurrency(proposal.estimate_amount) : '—'}
