@@ -72,6 +72,7 @@ export default function ProposalShow({ proposal, token }) {
         <div className="min-h-screen bg-paper text-ink px-4 py-12">
             <Head title={proposal.title} />
             <div className="max-w-2xl mx-auto">
+                <img src="/images/studio-lockup.svg" alt="Studio" className="h-10 w-auto mb-8" />
                 <div className="text-xs text-sage mb-1">{proposal.company.name}</div>
                 <h1 className="font-display text-2xl font-semibold mb-1">{proposal.title}</h1>
                 {proposal.items.length === 0 && proposal.estimate_amount && (
