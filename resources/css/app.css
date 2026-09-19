@@ -119,6 +119,26 @@ body {
 }
 
 /*
+ * Every link and button in the app should read as clickable, regardless
+ * of which Tailwind utilities (or none) an individual element carries.
+ * Buttons default to `cursor: default` in browsers (unlike links), and
+ * button text has been a mix of font-medium/font-semibold/plain -- this
+ * makes both consistent app-wide without touching every className.
+ * Unlayered, so it wins over Tailwind's layered utilities on the same
+ * element (same trick as .font-display above).
+ */
+a,
+button:not(:disabled) {
+    cursor: pointer;
+}
+button:disabled {
+    cursor: not-allowed;
+}
+button {
+    font-weight: 700;
+}
+
+/*
  * Headlines: heavier weight and tighter tracking than body text.
  * Unlayered, so it wins over Tailwind's layered font-semibold/font-medium
  * utility on the same element without having to edit every page's class.
