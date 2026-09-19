@@ -7,6 +7,7 @@ use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\InvoicePageController;
 use App\Http\Controllers\Web\ProjectPageController;
 use App\Http\Controllers\Web\ProposalPageController;
+use App\Http\Controllers\Web\PublicInvoiceController;
 use App\Http\Controllers\Web\PublicProposalController;
 use App\Http\Controllers\Web\ServicePageController;
 use App\Http\Controllers\Web\SettingsPageController;
@@ -21,6 +22,7 @@ Route::middleware('guest')->group(function () {
 Route::post('/logout', [LoginController::class, 'destroy'])->middleware('auth')->name('logout');
 
 Route::get('/p/{token}', [PublicProposalController::class, 'show'])->name('proposals.public');
+Route::get('/i/{token}', [PublicInvoiceController::class, 'show'])->name('invoices.public');
 
 Route::middleware('auth')->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');

@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 
 class Invoice extends Model
 {
@@ -15,6 +16,13 @@ class Invoice extends Model
         'issued_on' => 'date',
         'due_on' => 'date',
     ];
+
+    protected static function booted(): void
+    {
+        static::creating(function (Invoice $invoice) {
+            $invoice->public_token ??= Str::random(40);
+        });
+    }
 
     public function company(): BelongsTo
     {

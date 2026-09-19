@@ -1,6 +1,6 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
-import { CheckCircle, PaperPlaneTilt, PencilSimple } from '@phosphor-icons/react';
+import { Check, CheckCircle, Copy, Eye, PaperPlaneTilt, PencilSimple } from '@phosphor-icons/react';
 import AppLayout from '../../Layouts/AppLayout';
 import EmptyState from '../../Components/EmptyState';
 import { InvoiceStatusBadge } from '../../Components/StatusBadges';
@@ -17,6 +17,13 @@ export default function InvoicesIndex({ invoices, companies }) {
     const [draft, setDraft] = useState(emptyDraft());
     const [error, setError] = useState('');
     const [saving, setSaving] = useState(false);
+    const [copiedId, setCopiedId] = useState(null);
+
+    function copyLink(invoice) {
+        navigator.clipboard.writeText(`${window.location.origin}/i/${invoice.public_token}`);
+        setCopiedId(invoice.id);
+        setTimeout(() => setCopiedId((id) => (id === invoice.id ? null : id)), 1500);
+    }
 
     function billingContactFor(companyId) {
         const company = companies.find((c) => String(c.id) === String(companyId));
@@ -252,6 +259,9 @@ export default function InvoicesIndex({ invoices, companies }) {
                                     <td className="px-4 py-3"><InvoiceStatusBadge invoice={invoice} /></td>
                                     <td className="px-4 py-3 text-right">
                                         <div className="flex items-center justify-end gap-3">
+                                            <a href={`/i/${invoice.public_token}`} target="_blank" rel="noopener noreferrer" title="Preview" className="text-sage hover:text-ink">
+                                                <Eye size={16} />
+                                            </a>
                                             {invoice.status === 'draft' && (
                                                 <Link href={`/invoices/${invoice.id}`} title="Edit" className="text-pine hover:text-pine/70">
                                                     <PencilSimple size={16} />
@@ -260,6 +270,11 @@ export default function InvoicesIndex({ invoices, companies }) {
                                             {invoice.status === 'draft' && (
                                                 <button onClick={() => sendInvoice(invoice)} title="Send" className="text-brass hover:text-brass/70">
                                                     <PaperPlaneTilt size={16} />
+                                                </button>
+                                            )}
+                                            {invoice.status !== 'draft' && (
+                                                <button onClick={() => copyLink(invoice)} title={copiedId === invoice.id ? 'Copied!' : 'Copy link'} className="text-sage hover:text-ink">
+                                                    {copiedId === invoice.id ? <Check size={16} /> : <Copy size={16} />}
                                                 </button>
                                             )}
                                             {invoice.status === 'sent' && (

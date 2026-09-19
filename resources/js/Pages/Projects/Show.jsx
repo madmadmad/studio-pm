@@ -1,6 +1,6 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
-import { ArrowLeft, CaretRight, Check, CheckCircle, DotsSixVertical, DownloadSimple, Paperclip, PaperPlaneTilt, PencilSimple, Trash, X } from '@phosphor-icons/react';
+import { ArrowLeft, CaretRight, Check, CheckCircle, Copy, DotsSixVertical, DownloadSimple, Eye, Paperclip, PaperPlaneTilt, PencilSimple, Trash, X } from '@phosphor-icons/react';
 import AppLayout from '../../Layouts/AppLayout';
 import EmptyState from '../../Components/EmptyState';
 import Badge from '../../Components/Badge';
@@ -1004,6 +1004,7 @@ function BillingTab({ project }) {
     const [form, setForm] = useState(emptyInvoiceForm());
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
+    const [copiedInvoiceId, setCopiedInvoiceId] = useState(null);
     const budget = parseFloat(project.budget) || 0;
     const totalInvoiced = project.invoices.reduce((s, inv) => s + invoiceTotal(inv.items, inv.surcharge), 0);
     const remaining = budget - totalInvoiced;
@@ -1080,6 +1081,12 @@ function BillingTab({ project }) {
     async function markInvoicePaid(invoice) {
         await api.post(`/api/invoices/${invoice.id}/mark-paid`);
         reload();
+    }
+
+    function copyInvoiceLink(invoice) {
+        navigator.clipboard.writeText(`${window.location.origin}/i/${invoice.public_token}`);
+        setCopiedInvoiceId(invoice.id);
+        setTimeout(() => setCopiedInvoiceId((id) => (id === invoice.id ? null : id)), 1500);
     }
 
     return (
@@ -1181,6 +1188,9 @@ function BillingTab({ project }) {
                                     <td className="px-4 py-2"><InvoiceStatusBadge invoice={invoice} /></td>
                                     <td className="px-4 py-2 text-right">
                                         <div className="flex items-center justify-end gap-3">
+                                            <a href={`/i/${invoice.public_token}`} target="_blank" rel="noopener noreferrer" title="Preview" className="text-sage hover:text-ink">
+                                                <Eye size={16} />
+                                            </a>
                                             {invoice.status === 'draft' && (
                                                 <Link href={`/invoices/${invoice.id}`} title="Edit" className="text-pine hover:text-pine/70">
                                                     <PencilSimple size={16} />
@@ -1189,6 +1199,11 @@ function BillingTab({ project }) {
                                             {invoice.status === 'draft' && (
                                                 <button onClick={() => sendInvoice(invoice)} title="Send" className="text-brass hover:text-brass/70">
                                                     <PaperPlaneTilt size={16} />
+                                                </button>
+                                            )}
+                                            {invoice.status !== 'draft' && (
+                                                <button onClick={() => copyInvoiceLink(invoice)} title={copiedInvoiceId === invoice.id ? 'Copied!' : 'Copy link'} className="text-sage hover:text-ink">
+                                                    {copiedInvoiceId === invoice.id ? <Check size={16} /> : <Copy size={16} />}
                                                 </button>
                                             )}
                                             {invoice.status === 'sent' && (

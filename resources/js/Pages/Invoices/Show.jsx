@@ -20,6 +20,7 @@ export default function InvoicesShow({ invoice }) {
     const [form, setForm] = useState(() => editFormFrom(invoice));
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
+    const [copied, setCopied] = useState(false);
 
     const subtotal = invoiceSubtotal(invoice.items);
     const surchargeAmount = invoiceSurchargeAmount(invoice.items, invoice.surcharge);
@@ -33,6 +34,12 @@ export default function InvoicesShow({ invoice }) {
     async function markPaid() {
         await api.post(`/api/invoices/${invoice.id}/mark-paid`);
         router.reload();
+    }
+
+    function copyLink() {
+        navigator.clipboard.writeText(`${window.location.origin}/i/${invoice.public_token}`);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1500);
     }
 
     function startEditing() {
@@ -89,6 +96,12 @@ export default function InvoicesShow({ invoice }) {
                 <h1 className="font-display text-2xl font-semibold">{invoice.company.name}</h1>
                 <div className="flex items-center gap-3">
                     <InvoiceStatusBadge invoice={invoice} />
+                    <a href={`/i/${invoice.public_token}`} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-sage hover:underline">
+                        Preview
+                    </a>
+                    <button onClick={copyLink} className="text-sm font-medium text-sage">
+                        {copied ? 'Copied!' : 'Copy link'}
+                    </button>
                     {invoice.status === 'draft' && !editing && (
                         <button onClick={startEditing} className="text-sm font-medium text-pine">Edit</button>
                     )}
