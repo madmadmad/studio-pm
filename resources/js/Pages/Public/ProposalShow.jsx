@@ -8,10 +8,7 @@ function FeeSummary({ proposal }) {
 
     return (
         <div className="mb-6">
-            <div className="pb-4 flex items-center justify-between">
-                <div className="font-display text-lg font-semibold">Estimate</div>
-                <div className="tabular-nums text-lg font-semibold">{formatCurrency(total)}</div>
-            </div>
+            <div className="font-display text-lg font-semibold pb-4">Estimate</div>
 
             <div className="py-3 grid grid-cols-12 text-xs font-medium text-sage border-b border-border">
                 <div className="col-span-8">Items</div>
