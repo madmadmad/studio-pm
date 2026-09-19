@@ -45,16 +45,22 @@
         'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
     --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, monospace;
 
-    --color-ink: #16231d;
-    --color-paper: #f6f7f4;
-    --color-border: #dfe3da;
-    --color-sage: #5c6b62;
-    --color-brass: #a6802e;
-    --color-brass-soft: #efe3c8;
-    --color-pine: #2f6b4f;
-    --color-pine-soft: #dcebe1;
-    --color-brick: #a13f2e;
-    --color-brick-soft: #f3dcd6;
+    /*
+     * Brand palette: Porcelain / Fern / Shadow Grey / Gunmetal / Watermelon / Hot Fuchsia.
+     * Shadow Grey -> navigation + primary text. Porcelain -> workspace background.
+     * Watermelon -> accent (links, active nav, "in progress" states).
+     * Fern -> edit/save actions and "done" states. Hot Fuchsia -> danger/overdue.
+     */
+    --color-ink: #23262e;
+    --color-paper: #f4f4ef;
+    --color-border: #e7e7e9;
+    --color-sage: #373b45;
+    --color-brass: #f41347;
+    --color-brass-soft: #fce2e8;
+    --color-pine: #507e40;
+    --color-pine-soft: #e7efe3;
+    --color-brick: #ff365b;
+    --color-brick-soft: #ffe3e9;
 }
 
 body {

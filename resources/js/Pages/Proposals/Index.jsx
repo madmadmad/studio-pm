@@ -60,7 +60,7 @@ export default function ProposalsIndex({ proposals }) {
                                     <td className="px-4 py-3"><ProposalStatusBadge proposal={proposal} /></td>
                                     <td className="px-4 py-3 text-right">
                                         <div className="flex items-center justify-end gap-3">
-                                            <Link href={`/proposals/${proposal.id}/edit`} className="text-sm font-medium text-sage hover:text-ink">
+                                            <Link href={`/proposals/${proposal.id}/edit`} className="text-sm font-medium text-pine hover:underline">
                                                 Edit
                                             </Link>
                                             {proposal.status === 'draft' && (

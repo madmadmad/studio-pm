@@ -1,5 +1,5 @@
 const TONES = {
-    neutral: 'bg-[#EDEFEA] text-sage',
+    neutral: 'bg-[#E7E7E9] text-sage',
     brass: 'bg-brass-soft text-brass',
     pine: 'bg-pine-soft text-pine',
     brick: 'bg-brick-soft text-brick',

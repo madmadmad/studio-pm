@@ -80,7 +80,7 @@ export default function ClientsIndex({ companies }) {
                         <button type="button" onClick={() => setShowForm(false)} className="text-sm px-3 py-1.5 rounded text-sage">
                             Cancel
                         </button>
-                        <button type="submit" disabled={saving} className="bg-ink text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50">
+                        <button type="submit" disabled={saving} className="bg-pine text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50">
                             Save client
                         </button>
                     </div>
@@ -119,7 +119,7 @@ export default function ClientsIndex({ companies }) {
                                         <CompanyStatusBadge company={c} />
                                     </td>
                                     <td className="px-4 py-3 text-right">
-                                        <Link href={`/clients/${c.id}`} className="text-sm font-medium text-sage hover:text-ink">
+                                        <Link href={`/clients/${c.id}`} className="text-sm font-medium text-pine hover:underline">
                                             Edit
                                         </Link>
                                     </td>

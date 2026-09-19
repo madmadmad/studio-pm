@@ -42,7 +42,7 @@ function DetailsCard({ company }) {
                     <h1 className="text-2xl font-semibold">{company.name}</h1>
                     <div className="flex items-center gap-3">
                         <CompanyStatusBadge company={company} />
-                        <button onClick={() => setEditing(true)} className="text-sm font-medium text-sage hover:text-ink">
+                        <button onClick={() => setEditing(true)} className="text-sm font-medium text-pine hover:underline">
                             Edit
                         </button>
                     </div>
@@ -68,7 +68,7 @@ function DetailsCard({ company }) {
             </select>
             <div className="flex gap-2 col-span-2 justify-end">
                 <button type="button" onClick={() => setEditing(false)} className="text-sm px-3 py-1.5 rounded text-sage">Cancel</button>
-                <button type="submit" disabled={saving} className="bg-ink text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50">Save</button>
+                <button type="submit" disabled={saving} className="bg-pine text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50">Save</button>
             </div>
         </form>
     );
@@ -124,7 +124,7 @@ function ContactsCard({ company }) {
                         <input type="checkbox" checked={form.is_billing} onChange={(e) => setForm({ ...form, is_billing: e.target.checked })} />
                         Billing contact
                     </label>
-                    <button type="submit" className="col-span-2 bg-ink text-white text-sm font-medium px-3 py-1.5 rounded">Save contact</button>
+                    <button type="submit" className="col-span-2 bg-pine text-white text-sm font-medium px-3 py-1.5 rounded">Save contact</button>
                 </form>
             )}
 
@@ -211,7 +211,7 @@ function ProjectsCard({ company }) {
             {showForm && (
                 <form onSubmit={submit} className="flex gap-2 mb-4">
                     <input required placeholder="Project name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="border border-border rounded px-3 py-2 text-sm flex-1" />
-                    <button type="submit" className="bg-ink text-white text-sm font-medium px-3 py-1.5 rounded">Save</button>
+                    <button type="submit" className="bg-pine text-white text-sm font-medium px-3 py-1.5 rounded">Save</button>
                 </form>
             )}
 
@@ -239,7 +239,7 @@ function ProjectsCard({ company }) {
                                     onChange={(e) => setTaskInputs({ ...taskInputs, [project.id]: e.target.value })}
                                     className="border border-border rounded px-2 py-1 text-xs flex-1"
                                 />
-                                <button onClick={() => addTask(project.id)} className="text-xs font-medium text-brass">Add</button>
+                                <button onClick={() => addTask(project.id)} className="text-xs font-medium text-pine">Add</button>
                             </div>
                         </div>
                     ))}

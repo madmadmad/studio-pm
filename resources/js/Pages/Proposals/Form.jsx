@@ -264,7 +264,7 @@ export default function ProposalsForm({ proposal, companies, services }) {
 
                 <div className="flex gap-2 justify-end">
                     <Link href="/proposals" className="text-sm px-3 py-1.5 rounded text-sage">Cancel</Link>
-                    <button type="button" disabled={saving} onClick={save} className="bg-ink text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50">
+                    <button type="button" disabled={saving} onClick={save} className="bg-pine text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50">
                         {isEditing ? 'Save changes' : 'Save draft'}
                     </button>
                 </div>

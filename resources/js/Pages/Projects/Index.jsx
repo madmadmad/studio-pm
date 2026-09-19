@@ -126,7 +126,7 @@ export default function ProjectsIndex({ projects, companies }) {
                     {error && <div className="text-sm text-brick col-span-2">{error}</div>}
                     <div className="flex gap-2 col-span-2 justify-end">
                         <button type="button" onClick={() => setShowForm(false)} className="text-sm px-3 py-1.5 rounded text-sage">Cancel</button>
-                        <button type="submit" disabled={saving} className="bg-ink text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50">Save project</button>
+                        <button type="submit" disabled={saving} className="bg-pine text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50">Save project</button>
                     </div>
                 </form>
             )}

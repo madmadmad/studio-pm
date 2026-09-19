@@ -98,7 +98,7 @@ export default function TimeIndex({ timeEntries, companies, projects }) {
                     <input placeholder="What did you work on?" value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} className="border border-border rounded px-3 py-2 text-sm col-span-2" />
                     <div className="flex gap-2 col-span-2 justify-end">
                         <button type="button" onClick={() => setShowForm(false)} className="text-sm px-3 py-1.5 rounded text-sage">Cancel</button>
-                        <button type="submit" disabled={saving} className="bg-ink text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50">Log time</button>
+                        <button type="submit" disabled={saving} className="bg-pine text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50">Log time</button>
                     </div>
                 </form>
             )}

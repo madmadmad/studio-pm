@@ -100,7 +100,7 @@ function TasksTab({ project }) {
                     onChange={(e) => setTitle(e.target.value)}
                     className="border border-border rounded px-3 py-2 text-sm flex-1"
                 />
-                <button type="submit" className="bg-ink text-white text-sm font-medium px-3 py-1.5 rounded">Add</button>
+                <button type="submit" className="bg-pine text-white text-sm font-medium px-3 py-1.5 rounded">Add</button>
             </form>
             <div className="bg-white rounded-lg border border-border overflow-hidden">
                 {project.tasks.length === 0 ? (
@@ -150,7 +150,7 @@ function NotesTab({ project }) {
                     className="border border-border rounded px-3 py-2 text-sm w-full mb-2"
                 />
                 <div className="flex justify-end">
-                    <button type="submit" disabled={saving} className="bg-ink text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50">Add note</button>
+                    <button type="submit" disabled={saving} className="bg-pine text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50">Add note</button>
                 </div>
             </form>
             {project.notes.length === 0 ? (
@@ -270,7 +270,7 @@ function TimeTab({ project }) {
                 <input required type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className="border border-border rounded px-3 py-2 text-sm" />
                 <input required type="number" min="0.25" step="0.25" placeholder="Hours" value={form.hours} onChange={(e) => setForm({ ...form, hours: e.target.value })} className="border border-border rounded px-3 py-2 text-sm" />
                 <input placeholder="Note" value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} className="border border-border rounded px-3 py-2 text-sm" />
-                <button type="submit" disabled={saving} className="col-span-3 bg-ink text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50 justify-self-end w-fit">Log time</button>
+                <button type="submit" disabled={saving} className="col-span-3 bg-pine text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50 justify-self-end w-fit">Log time</button>
             </form>
             <div className="bg-white rounded-lg border border-border overflow-hidden">
                 {project.time_entries.length === 0 ? (
@@ -365,7 +365,7 @@ function BillingTab({ project }) {
                     </label>
                     {error && <div className="text-sm text-brick mb-2">{error}</div>}
                     <div className="flex justify-end">
-                        <button type="submit" disabled={saving} className="bg-ink text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50">Create draft invoice</button>
+                        <button type="submit" disabled={saving} className="bg-pine text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50">Create draft invoice</button>
                     </div>
                 </form>
             )}
@@ -429,7 +429,7 @@ function ExpensesTab({ project }) {
                 <input placeholder="Category" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} className="border border-border rounded px-3 py-2 text-sm" />
                 <input required type="date" value={form.occurred_on} onChange={(e) => setForm({ ...form, occurred_on: e.target.value })} className="border border-border rounded px-3 py-2 text-sm" />
                 <input placeholder="Description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="border border-border rounded px-3 py-2 text-sm" />
-                <button type="submit" disabled={saving} className="col-span-2 bg-ink text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50 justify-self-end w-fit">Add expense</button>
+                <button type="submit" disabled={saving} className="col-span-2 bg-pine text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50 justify-self-end w-fit">Add expense</button>
             </form>
             <div className="text-sm text-sage mb-2">Total expenses: <span className="font-mono text-brick">{formatCurrency(total)}</span></div>
             <div className="bg-white rounded-lg border border-border overflow-hidden">
@@ -498,7 +498,7 @@ function TeamTab({ project }) {
                     onChange={(e) => setInput(e.target.value)}
                     className="border border-border rounded px-3 py-2 text-sm flex-1"
                 />
-                <button type="submit" disabled={saving} className="bg-ink text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50">Add</button>
+                <button type="submit" disabled={saving} className="bg-pine text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50">Add</button>
             </form>
             {names.length === 0 ? (
                 <EmptyState text="No one assigned yet." />

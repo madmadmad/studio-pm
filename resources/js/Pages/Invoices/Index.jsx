@@ -216,7 +216,7 @@ export default function InvoicesIndex({ invoices, companies }) {
 
                     <div className="flex gap-2 justify-end">
                         <button type="button" onClick={() => setShowForm(false)} className="text-sm px-3 py-1.5 rounded text-sage">Cancel</button>
-                        <button type="button" disabled={saving} onClick={() => saveInvoice('draft')} className="text-sm font-medium px-3 py-1.5 rounded border border-border disabled:opacity-50">Save as draft</button>
+                        <button type="button" disabled={saving} onClick={() => saveInvoice('draft')} className="text-sm font-medium px-3 py-1.5 rounded border border-pine text-pine disabled:opacity-50">Save as draft</button>
                         <button type="button" disabled={saving} onClick={() => saveInvoice('sent')} className="bg-ink text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50">Send invoice</button>
                     </div>
                 </div>
