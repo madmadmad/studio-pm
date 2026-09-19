@@ -110,6 +110,7 @@ export default function InvoicesShow({ invoice }) {
             <p className="text-sm text-sage mb-6">
                 Issued {formatDate(invoice.issued_on)} &middot; Due {formatDate(invoice.due_on)}
                 {invoice.contact && <> &middot; Billed to {invoice.contact.name}</>}
+                {invoice.project?.po_number && <> &middot; PO #{invoice.project.po_number}</>}
             </p>
 
             {editing ? (

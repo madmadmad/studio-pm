@@ -39,7 +39,7 @@ class InvoiceController extends Controller
                 'status' => 'draft',
                 'surcharge' => $data['surcharge'] ?? false,
                 'issued_on' => now(),
-                'due_on' => $data['due_on'] ?? now()->addDays(14),
+                'due_on' => $data['due_on'] ?? now()->addDays(30), // Net 30 by default
             ]);
 
             foreach ($data['items'] as $item) {

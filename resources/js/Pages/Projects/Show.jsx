@@ -34,6 +34,51 @@ function TabBar({ tab, setTab }) {
     );
 }
 
+function PoNumberField({ project }) {
+    const [editing, setEditing] = useState(false);
+    const [value, setValue] = useState(project.po_number || '');
+    const [saving, setSaving] = useState(false);
+
+    async function save() {
+        setSaving(true);
+        try {
+            await api.patch(`/api/projects/${project.id}`, { po_number: value.trim() || null });
+            setEditing(false);
+            reload();
+        } finally {
+            setSaving(false);
+        }
+    }
+
+    if (editing) {
+        return (
+            <div className="flex items-center gap-2 mb-6">
+                <input
+                    autoFocus
+                    value={value}
+                    onChange={(e) => setValue(e.target.value)}
+                    placeholder="PO number"
+                    className="border border-border rounded px-3 py-1.5 text-sm"
+                />
+                <button onClick={save} disabled={saving} className="text-sm font-medium text-pine disabled:opacity-50">Save</button>
+                <button onClick={() => setEditing(false)} className="text-sm text-sage">Cancel</button>
+            </div>
+        );
+    }
+
+    return (
+        <div className="flex items-center gap-2 text-sm text-sage mb-6">
+            <span>PO Number: {project.po_number || '—'}</span>
+            <button
+                onClick={() => { setValue(project.po_number || ''); setEditing(true); }}
+                className="text-sm font-medium text-pine"
+            >
+                Edit
+            </button>
+        </div>
+    );
+}
+
 function OverviewTab({ project }) {
     const totalHours = project.time_entries.reduce((s, e) => s + parseFloat(e.hours), 0);
     const unbilledHours = project.time_entries.filter((e) => !e.billed).reduce((s, e) => s + parseFloat(e.hours), 0);
@@ -45,6 +90,7 @@ function OverviewTab({ project }) {
     return (
         <div>
             {project.description && <p className="text-sm text-sage mb-6">{project.description}</p>}
+            <PoNumberField project={project} />
             <div className={`grid gap-4 mb-6 ${budget > 0 ? 'grid-cols-6' : 'grid-cols-4'}`}>
                 <div className="bg-white rounded-lg border border-border p-4">
                     <div className="text-xs text-sage mb-1">Tasks</div>

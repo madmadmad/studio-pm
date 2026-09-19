@@ -32,6 +32,7 @@ class ProjectController extends Controller
     {
         $data = $request->validate([
             'name' => ['sometimes', 'string', 'max:255'],
+            'po_number' => ['nullable', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'status' => ['sometimes', 'in:active,on_hold,completed'],
             'team_names' => ['sometimes', 'array'],
