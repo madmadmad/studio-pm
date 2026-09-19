@@ -12,12 +12,20 @@ function emptyDraft() {
     return { company_id: '', contact_id: '', items: [{ description: '', amount: '' }], surcharge: false };
 }
 
-export default function InvoicesIndex({ invoices, companies }) {
+export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
+    const [invoices, setInvoices] = useState(invoicesProp);
     const [showForm, setShowForm] = useState(false);
     const [draft, setDraft] = useState(emptyDraft());
     const [error, setError] = useState('');
     const [saving, setSaving] = useState(false);
     const [copiedId, setCopiedId] = useState(null);
+    const [deletingId, setDeletingId] = useState(null);
+
+    // Keeps local state in sync whenever a router.reload() elsewhere in this
+    // component brings in a fresh copy of the prop.
+    useEffect(() => {
+        setInvoices(invoicesProp);
+    }, [invoicesProp]);
 
     function copyLink(invoice) {
         navigator.clipboard.writeText(`${window.location.origin}/i/${invoice.public_token}`);
@@ -127,14 +135,20 @@ export default function InvoicesIndex({ invoices, companies }) {
     }
 
     async function deleteInvoice(invoice) {
+        if (deletingId === invoice.id) return; // already in flight -- ignore a repeat click
         const amount = formatCurrency(invoiceTotal(invoice.items, invoice.surcharge));
         const warning = `Delete this ${amount} invoice to ${invoice.company?.name}? This can't be undone.`;
         if (!confirm(warning)) return;
+        setDeletingId(invoice.id);
         try {
             await api.delete(`/api/invoices/${invoice.id}`);
-            router.reload({ only: ['invoices'] });
+            // Remove it from local state directly rather than waiting on a
+            // router.reload() round-trip to reflect the change.
+            setInvoices((current) => current.filter((i) => i.id !== invoice.id));
         } catch (err) {
             alert(err.message || 'Could not delete this invoice.');
+        } finally {
+            setDeletingId(null);
         }
     }
 
@@ -295,7 +309,12 @@ export default function InvoicesIndex({ invoices, companies }) {
                                                 </button>
                                             )}
                                             {invoice.status !== 'paid' && (
-                                                <button onClick={() => deleteInvoice(invoice)} title="Delete" className="text-sage hover:text-brick">
+                                                <button
+                                                    onClick={() => deleteInvoice(invoice)}
+                                                    disabled={deletingId === invoice.id}
+                                                    title="Delete"
+                                                    className="text-sage hover:text-brick disabled:opacity-50"
+                                                >
                                                     <Trash size={16} />
                                                 </button>
                                             )}
