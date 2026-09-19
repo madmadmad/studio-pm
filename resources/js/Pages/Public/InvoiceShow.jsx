@@ -77,6 +77,7 @@ export default function InvoiceShow({ invoice, studio }) {
                         <div className="text-xs font-semibold text-sage mb-2">Client</div>
                         <div className="font-medium text-ink">{invoice.company.name}</div>
                         {invoice.project && <div className="text-sage">{invoice.project.name}</div>}
+                        {invoice.project?.po_number && <div className="text-sage">PO #{invoice.project.po_number}</div>}
                     </div>
                 </div>
 
@@ -87,7 +88,6 @@ export default function InvoiceShow({ invoice, studio }) {
                 <div className="text-sm text-sage pb-8 mb-8 border-b border-border">
                     Issued {formatDate(invoice.issued_on)} &middot; Due {formatDate(invoice.due_on)}
                     {invoice.contact && <> &middot; Billed to {invoice.contact.name}</>}
-                    {invoice.project?.po_number && <> &middot; PO #{invoice.project.po_number}</>}
                 </div>
 
                 <InvoiceItems invoice={invoice} />
