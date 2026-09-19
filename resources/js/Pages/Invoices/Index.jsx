@@ -1,6 +1,6 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
-import { Check, CheckCircle, Copy, Eye, PaperPlaneTilt, PencilSimple } from '@phosphor-icons/react';
+import { Check, CheckCircle, Copy, Eye, PaperPlaneTilt, PencilSimple, Trash } from '@phosphor-icons/react';
 import AppLayout from '../../Layouts/AppLayout';
 import EmptyState from '../../Components/EmptyState';
 import { InvoiceStatusBadge } from '../../Components/StatusBadges';
@@ -123,6 +123,14 @@ export default function InvoicesIndex({ invoices, companies }) {
 
     async function markPaid(invoice) {
         await api.post(`/api/invoices/${invoice.id}/mark-paid`);
+        router.reload({ only: ['invoices'] });
+    }
+
+    async function deleteInvoice(invoice) {
+        const amount = formatCurrency(invoiceTotal(invoice.items, invoice.surcharge));
+        const warning = `Delete this ${amount} invoice to ${invoice.company?.name}? This can't be undone.`;
+        if (!confirm(warning)) return;
+        await api.delete(`/api/invoices/${invoice.id}`);
         router.reload({ only: ['invoices'] });
     }
 
@@ -280,6 +288,11 @@ export default function InvoicesIndex({ invoices, companies }) {
                                             {invoice.status === 'sent' && (
                                                 <button onClick={() => markPaid(invoice)} title="Mark paid" className="text-pine hover:text-pine/70">
                                                     <CheckCircle size={16} />
+                                                </button>
+                                            )}
+                                            {invoice.status !== 'paid' && (
+                                                <button onClick={() => deleteInvoice(invoice)} title="Delete" className="text-sage hover:text-brick">
+                                                    <Trash size={16} />
                                                 </button>
                                             )}
                                         </div>

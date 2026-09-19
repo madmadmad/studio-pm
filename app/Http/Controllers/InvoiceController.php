@@ -114,6 +114,22 @@ class InvoiceController extends Controller
         return $invoice->load('items', 'payments');
     }
 
+    public function destroy(Invoice $invoice)
+    {
+        abort_if($invoice->status === 'paid', 422, 'Paid invoices cannot be deleted.');
+
+        DB::transaction(function () use ($invoice) {
+            // Same reasoning as update(): don't leave time entries stuck
+            // "billed" with nothing to point at once the invoice is gone.
+            $itemIds = $invoice->items()->pluck('id');
+            TimeEntry::whereIn('invoice_item_id', $itemIds)->update(['billed' => false, 'invoice_item_id' => null]);
+
+            $invoice->delete();
+        });
+
+        return response()->noContent();
+    }
+
     // Public, unauthenticated -- the "Pay Now" button on the client-facing
     // invoice page. Creates a Stripe Checkout Session and hands back its
     // URL for the browser to redirect to; MarkInvoicePaidFromStripeWebhook
