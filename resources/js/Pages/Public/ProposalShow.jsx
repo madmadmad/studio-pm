@@ -9,10 +9,10 @@ function FeeSummary({ proposal }) {
     return (
         <div className="mb-6">
             <div className="pb-4">
-                <h2 className="text-lg font-semibold">Fee Summary</h2>
+                <h2 className="font-display text-lg font-semibold">Fee Summary</h2>
             </div>
             <div className="pb-4 flex items-center justify-between">
-                <div className="font-semibold">Estimate</div>
+                <div className="font-display text-lg font-semibold">Estimate</div>
                 <div className="tabular-nums text-lg font-semibold">{formatCurrency(total)}</div>
             </div>
 
@@ -42,7 +42,7 @@ function FeeSummary({ proposal }) {
             ))}
 
             <div className="pt-4 flex items-center justify-between border-t border-border">
-                <div className="font-semibold">Total</div>
+                <div className="font-display text-lg font-semibold">Total</div>
                 <div className="tabular-nums text-lg font-semibold">{formatCurrency(total)}</div>
             </div>
         </div>
