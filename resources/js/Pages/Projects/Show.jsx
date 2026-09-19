@@ -1,6 +1,6 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
-import { ArrowLeft, CaretRight, Check, DotsSixVertical, DownloadSimple, Paperclip, Trash, X } from '@phosphor-icons/react';
+import { ArrowLeft, CaretRight, Check, CheckCircle, DotsSixVertical, DownloadSimple, Paperclip, PaperPlaneTilt, PencilSimple, Trash, X } from '@phosphor-icons/react';
 import AppLayout from '../../Layouts/AppLayout';
 import EmptyState from '../../Components/EmptyState';
 import Badge from '../../Components/Badge';
@@ -1060,6 +1060,16 @@ function BillingTab({ project }) {
         }
     }
 
+    async function sendInvoice(invoice) {
+        await api.post(`/api/invoices/${invoice.id}/send`);
+        reload();
+    }
+
+    async function markInvoicePaid(invoice) {
+        await api.post(`/api/invoices/${invoice.id}/mark-paid`);
+        reload();
+    }
+
     return (
         <div>
             <div className="flex items-center justify-between mb-4">
@@ -1137,6 +1147,7 @@ function BillingTab({ project }) {
                                 <th className="px-4 py-2 font-medium">Issued</th>
                                 <th className="px-4 py-2 font-medium">Total</th>
                                 <th className="px-4 py-2 font-medium">Status</th>
+                                <th className="px-4 py-2 font-medium"></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -1149,6 +1160,25 @@ function BillingTab({ project }) {
                                     </td>
                                     <td className="px-4 py-2 tabular-nums">{formatCurrency(invoiceTotal(invoice.items, invoice.surcharge))}</td>
                                     <td className="px-4 py-2"><InvoiceStatusBadge invoice={invoice} /></td>
+                                    <td className="px-4 py-2 text-right">
+                                        <div className="flex items-center justify-end gap-3">
+                                            {invoice.status === 'draft' && (
+                                                <Link href={`/invoices/${invoice.id}`} title="Edit" className="text-pine hover:text-pine/70">
+                                                    <PencilSimple size={16} />
+                                                </Link>
+                                            )}
+                                            {invoice.status === 'draft' && (
+                                                <button onClick={() => sendInvoice(invoice)} title="Send" className="text-brass hover:text-brass/70">
+                                                    <PaperPlaneTilt size={16} />
+                                                </button>
+                                            )}
+                                            {invoice.status === 'sent' && (
+                                                <button onClick={() => markInvoicePaid(invoice)} title="Mark paid" className="text-pine hover:text-pine/70">
+                                                    <CheckCircle size={16} />
+                                                </button>
+                                            )}
+                                        </div>
+                                    </td>
                                 </tr>
                             ))}
                         </tbody>

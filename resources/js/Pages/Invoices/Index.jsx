@@ -1,5 +1,6 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
+import { CheckCircle, PaperPlaneTilt, PencilSimple } from '@phosphor-icons/react';
 import AppLayout from '../../Layouts/AppLayout';
 import EmptyState from '../../Components/EmptyState';
 import { InvoiceStatusBadge } from '../../Components/StatusBadges';
@@ -252,13 +253,19 @@ export default function InvoicesIndex({ invoices, companies }) {
                                     <td className="px-4 py-3 text-right">
                                         <div className="flex items-center justify-end gap-3">
                                             {invoice.status === 'draft' && (
-                                                <Link href={`/invoices/${invoice.id}`} className="text-sm font-medium text-pine hover:underline">Edit</Link>
+                                                <Link href={`/invoices/${invoice.id}`} title="Edit" className="text-pine hover:text-pine/70">
+                                                    <PencilSimple size={16} />
+                                                </Link>
                                             )}
                                             {invoice.status === 'draft' && (
-                                                <button onClick={() => sendInvoice(invoice)} className="text-sm font-medium text-brass">Send</button>
+                                                <button onClick={() => sendInvoice(invoice)} title="Send" className="text-brass hover:text-brass/70">
+                                                    <PaperPlaneTilt size={16} />
+                                                </button>
                                             )}
                                             {invoice.status === 'sent' && (
-                                                <button onClick={() => markPaid(invoice)} className="text-sm font-medium text-pine">Mark paid</button>
+                                                <button onClick={() => markPaid(invoice)} title="Mark paid" className="text-pine hover:text-pine/70">
+                                                    <CheckCircle size={16} />
+                                                </button>
                                             )}
                                         </div>
                                     </td>
