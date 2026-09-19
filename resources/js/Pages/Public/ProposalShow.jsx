@@ -72,7 +72,10 @@ export default function ProposalShow({ proposal, token, studio }) {
                     </div>
                 </div>
 
-                <h1 className="font-display text-2xl font-semibold mb-1">{proposal.title}</h1>
+                <h1 className="font-display text-2xl font-semibold mb-1">
+                    <span className="font-sans font-normal text-sage">Proposal: </span>
+                    {proposal.title}
+                </h1>
                 {proposal.items.length === 0 && proposal.estimate_amount && (
                     <div className="tabular-nums text-sage mb-6">Estimate: {formatCurrency(proposal.estimate_amount)}</div>
                 )}
