@@ -243,7 +243,7 @@ function SubtasksSection({ task, teamNames, onChange }) {
 
     return (
         <div className="mb-6">
-            <div className="text-xs font-semibold text-sage uppercase tracking-wide mb-2">Subtasks</div>
+            <div className="text-xs font-semibold text-sage mb-2">Subtasks</div>
             {subtasks.length > 0 && (
                 <div className="mb-1">
                     {subtasks.map((subtask, idx) => (
@@ -345,7 +345,7 @@ function TaskDrawer({ task, teamNames, companyName, onClose, onChange }) {
                     </div>
 
                     <div className="mb-6">
-                        <div className="text-xs font-semibold text-sage uppercase tracking-wide mb-2">Description</div>
+                        <div className="text-xs font-semibold text-sage mb-2">Description</div>
                         <textarea
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
@@ -359,7 +359,7 @@ function TaskDrawer({ task, teamNames, companyName, onClose, onChange }) {
                     <SubtasksSection task={task} teamNames={teamNames} onChange={onChange} />
 
                     <div className="mb-6">
-                        <div className="text-xs font-semibold text-sage uppercase tracking-wide mb-2">Due date</div>
+                        <div className="text-xs font-semibold text-sage mb-2">Due date</div>
                         <input
                             type="date"
                             value={task.due_date ? task.due_date.slice(0, 10) : ''}
@@ -405,7 +405,7 @@ function TasksTab({ project }) {
                     <EmptyState text="No tasks yet." />
                 ) : (
                     <>
-                        <div className="grid grid-cols-12 gap-2 px-4 py-2 border-b border-border text-xs font-medium text-sage uppercase tracking-wide">
+                        <div className="grid grid-cols-12 gap-2 px-4 py-2 border-b border-border text-xs font-medium text-sage">
                             <div className="col-span-5">Task</div>
                             <div className="col-span-3">Assignee</div>
                             <div className="col-span-2">Due date</div>
@@ -841,7 +841,7 @@ export default function ProjectsShow({ project }) {
                 <Link href="/projects" className="text-sm text-sage hover:underline">&larr; Projects</Link>
             </div>
             <div className="flex items-center justify-between mb-1">
-                <h1 className="text-2xl font-semibold">{project.name}</h1>
+                <h1 className="font-display text-2xl font-semibold">{project.name}</h1>
                 <ProjectStatusBadge project={project} />
             </div>
             <p className="text-sm text-sage mb-6">

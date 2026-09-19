@@ -49,7 +49,7 @@ export default function TimeWeekly({ weekStart, weekEnd, entries, companies }) {
         <AppLayout>
             <Head title="Timesheets" />
             <div className="flex items-center justify-between mb-1">
-                <h1 className="text-2xl font-semibold">Timesheets</h1>
+                <h1 className="font-display text-2xl font-semibold">Timesheets</h1>
                 <div className="flex items-center gap-2 text-sm">
                     <button onClick={() => goToWeek(addDays(weekStart, -7))} className="px-2 py-1 rounded border border-border">&larr;</button>
                     <span className="text-sage">{formatDate(weekStart)} &ndash; {formatDate(weekEnd)}</span>

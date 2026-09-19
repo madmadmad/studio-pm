@@ -120,7 +120,7 @@ export default function ProposalsForm({ proposal, companies, services }) {
             <div className="mb-1">
                 <Link href="/proposals" className="text-sm text-sage hover:underline">&larr; Proposals</Link>
             </div>
-            <h1 className="text-2xl font-semibold mb-6">{isEditing ? 'Edit proposal' : 'New proposal'}</h1>
+            <h1 className="font-display text-2xl font-semibold mb-6">{isEditing ? 'Edit proposal' : 'New proposal'}</h1>
 
             <div className="bg-white rounded-lg border border-border p-4">
                 <div className="grid grid-cols-2 gap-3 mb-3">
@@ -176,7 +176,7 @@ export default function ProposalsForm({ proposal, companies, services }) {
                 </div>
 
                 <div className="mb-4">
-                    <div className="text-xs font-semibold text-sage mb-2 uppercase tracking-wide">Services</div>
+                    <div className="text-xs font-semibold text-sage mb-2">Services</div>
                     {form.items.map((item, idx) => (
                         <div
                             key={idx}

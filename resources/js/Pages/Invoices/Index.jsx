@@ -122,7 +122,7 @@ export default function InvoicesIndex({ invoices, companies }) {
         <AppLayout>
             <Head title="Invoices" />
             <div className="flex items-center justify-between mb-1">
-                <h1 className="text-2xl font-semibold">Invoices</h1>
+                <h1 className="font-display text-2xl font-semibold">Invoices</h1>
                 <button onClick={openNewInvoice} className="bg-ink text-white text-sm font-medium px-3 py-1.5 rounded">
                     New invoice
                 </button>

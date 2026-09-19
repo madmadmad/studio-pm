@@ -9,7 +9,7 @@ export default function DashboardIndex({ metrics, recentInvoices }) {
     return (
         <AppLayout>
             <Head title="Overview" />
-            <h1 className="text-2xl font-semibold mb-1">Overview</h1>
+            <h1 className="font-display text-2xl font-semibold mb-1">Overview</h1>
             <p className="text-sm text-sage mb-6">Snapshot of billing and client activity.</p>
 
             <div className="grid grid-cols-3 gap-4 mb-8">

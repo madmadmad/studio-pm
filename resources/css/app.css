@@ -6,43 +6,56 @@
 /*
  * Self-hosted, served from /public/webfonts (NOT /public/build) so it
  * survives `npm run build` -- Vite empties its whole outDir every build.
+ * Inter for all body/UI text; Inter Display (a distinct cut tuned for
+ * larger sizes) for headlines.
  */
 @font-face {
-    font-family: 'Neue Haas Grotesk Display';
-    src: url('/webfonts/NeueHaasGroteskDisplay45Light/font.woff2') format('woff2'),
-        url('/webfonts/NeueHaasGroteskDisplay45Light/font.woff') format('woff');
-    font-weight: 300;
-    font-style: normal;
-    font-display: swap;
-}
-@font-face {
-    font-family: 'Neue Haas Grotesk Display';
-    src: url('/webfonts/NeueHaasGroteskDisplay55Roman/font.woff2') format('woff2'),
-        url('/webfonts/NeueHaasGroteskDisplay55Roman/font.woff') format('woff');
+    font-family: 'Inter';
+    src: url('/webfonts/Inter/Inter-Regular.woff2') format('woff2');
     font-weight: 400;
     font-style: normal;
     font-display: swap;
 }
 @font-face {
-    font-family: 'Neue Haas Grotesk Display';
-    src: url('/webfonts/NeueHaasGroteskDisplay65Medium/font.woff2') format('woff2'),
-        url('/webfonts/NeueHaasGroteskDisplay65Medium/font.woff') format('woff');
+    font-family: 'Inter';
+    src: url('/webfonts/Inter/Inter-Medium.woff2') format('woff2');
     font-weight: 500;
     font-style: normal;
     font-display: swap;
 }
 @font-face {
-    font-family: 'Neue Haas Grotesk Display';
-    src: url('/webfonts/NeueHaasGroteskDisplay75Bold/font.woff2') format('woff2'),
-        url('/webfonts/NeueHaasGroteskDisplay75Bold/font.woff') format('woff');
+    font-family: 'Inter';
+    src: url('/webfonts/Inter/Inter-SemiBold.woff2') format('woff2');
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: 'Inter Display';
+    src: url('/webfonts/InterDisplay/InterDisplay-Medium.woff2') format('woff2');
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: 'Inter Display';
+    src: url('/webfonts/InterDisplay/InterDisplay-SemiBold.woff2') format('woff2');
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: 'Inter Display';
+    src: url('/webfonts/InterDisplay/InterDisplay-Bold.woff2') format('woff2');
     font-weight: 700;
     font-style: normal;
     font-display: swap;
 }
 
 @theme {
-    --font-sans: 'Neue Haas Grotesk Display', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
-        'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+        'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-display: 'Inter Display', 'Inter', ui-sans-serif, system-ui, sans-serif;
     --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, monospace;
 
     /*
@@ -66,6 +79,9 @@
 body {
     background-color: var(--color-paper);
     color: var(--color-ink);
+    /* One consistent tracking value everywhere -- headlines included --
+       rather than varying it (or widening it) per element. */
+    letter-spacing: -0.011em;
 }
 
 .proposal-body {
@@ -88,6 +104,7 @@ body {
 .proposal-body h2,
 .proposal-body h3,
 .proposal-body h4 {
+    font-family: var(--font-display);
     font-weight: 600;
     margin: 0.75em 0 0.4em;
 }

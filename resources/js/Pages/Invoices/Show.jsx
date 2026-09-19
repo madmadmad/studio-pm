@@ -26,7 +26,7 @@ export default function InvoicesShow({ invoice }) {
                 <Link href="/invoices" className="text-sm text-sage hover:underline">&larr; Invoices</Link>
             </div>
             <div className="flex items-center justify-between mb-1">
-                <h1 className="text-2xl font-semibold">{invoice.company.name}</h1>
+                <h1 className="font-display text-2xl font-semibold">{invoice.company.name}</h1>
                 <InvoiceStatusBadge invoice={invoice} />
             </div>
             <p className="text-sm text-sage mb-6">

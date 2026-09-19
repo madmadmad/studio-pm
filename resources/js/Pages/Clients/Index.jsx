@@ -33,7 +33,7 @@ export default function ClientsIndex({ companies }) {
         <AppLayout>
             <Head title="Clients" />
             <div className="flex items-center justify-between mb-1">
-                <h1 className="text-2xl font-semibold">Clients</h1>
+                <h1 className="font-display text-2xl font-semibold">Clients</h1>
                 <button
                     onClick={() => setShowForm(true)}
                     className="bg-ink text-white text-sm font-medium px-3 py-1.5 rounded"

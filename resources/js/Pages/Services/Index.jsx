@@ -36,7 +36,7 @@ export default function ServicesIndex({ services }) {
         <AppLayout>
             <Head title="Services" />
             <div className="flex items-center justify-between mb-1">
-                <h1 className="text-2xl font-semibold">Services</h1>
+                <h1 className="font-display text-2xl font-semibold">Services</h1>
                 <button onClick={() => setShowForm(true)} className="bg-ink text-white text-sm font-medium px-3 py-1.5 rounded">
                     Add service
                 </button>

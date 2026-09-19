@@ -19,7 +19,7 @@ export default function ProposalsIndex({ proposals }) {
         <AppLayout>
             <Head title="Proposals" />
             <div className="flex items-center justify-between mb-1">
-                <h1 className="text-2xl font-semibold">Proposals</h1>
+                <h1 className="font-display text-2xl font-semibold">Proposals</h1>
                 <Link href="/proposals/create" className="bg-ink text-white text-sm font-medium px-3 py-1.5 rounded">
                     New proposal
                 </Link>

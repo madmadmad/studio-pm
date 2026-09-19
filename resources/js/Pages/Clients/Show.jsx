@@ -39,7 +39,7 @@ function DetailsCard({ company }) {
         return (
             <div className="mb-6">
                 <div className="flex items-center justify-between mb-1">
-                    <h1 className="text-2xl font-semibold">{company.name}</h1>
+                    <h1 className="font-display text-2xl font-semibold">{company.name}</h1>
                     <div className="flex items-center gap-3">
                         <CompanyStatusBadge company={company} />
                         <button onClick={() => setEditing(true)} className="text-sm font-medium text-pine hover:underline">
