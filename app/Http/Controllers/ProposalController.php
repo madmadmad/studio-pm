@@ -113,7 +113,13 @@ class ProposalController extends Controller
     // to sent, so the client's link still works and they can accept again.
     public function unaccept(Proposal $proposal)
     {
-        $proposal->update(['status' => 'sent', 'accepted_at' => null]);
+        DB::transaction(function () use ($proposal) {
+            if ($proposal->status === 'accepted' && $proposal->project_id) {
+                $proposal->project()->decrement('budget', $proposal->estimate_amount ?? 0);
+            }
+
+            $proposal->update(['status' => 'sent', 'accepted_at' => null]);
+        });
 
         return $proposal;
     }
@@ -130,7 +136,15 @@ class ProposalController extends Controller
         $proposal = Proposal::where('accept_token', $token)->firstOrFail();
 
         if ($proposal->status !== 'accepted') {
-            $proposal->update(['status' => 'accepted', 'accepted_at' => now()]);
+            DB::transaction(function () use ($proposal) {
+                $proposal->update(['status' => 'accepted', 'accepted_at' => now()]);
+
+                // Adds to (not replaces) the project's budget -- a project can
+                // be built from multiple accepted proposals (e.g. phased work).
+                if ($proposal->project_id) {
+                    $proposal->project()->increment('budget', $proposal->estimate_amount ?? 0);
+                }
+            });
 
             // Notifies you -- swap the destination for wherever you want to be reached.
             Notification::route('mail', config('mail.from.address'))

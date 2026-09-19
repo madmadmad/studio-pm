@@ -39,11 +39,13 @@ function OverviewTab({ project }) {
     const unbilledHours = project.time_entries.filter((e) => !e.billed).reduce((s, e) => s + parseFloat(e.hours), 0);
     const doneTasks = project.tasks.filter((t) => t.status === 'done').length;
     const totalInvoiced = project.invoices.reduce((s, inv) => s + invoiceTotal(inv.items, inv.surcharge), 0);
+    const budget = parseFloat(project.budget) || 0;
+    const remaining = budget - totalInvoiced;
 
     return (
         <div>
             {project.description && <p className="text-sm text-sage mb-6">{project.description}</p>}
-            <div className="grid grid-cols-4 gap-4 mb-6">
+            <div className={`grid gap-4 mb-6 ${budget > 0 ? 'grid-cols-6' : 'grid-cols-4'}`}>
                 <div className="bg-white rounded-lg border border-border p-4">
                     <div className="text-xs text-sage mb-1">Tasks</div>
                     <div className="tabular-nums text-xl">{doneTasks}/{project.tasks.length}</div>
@@ -60,6 +62,18 @@ function OverviewTab({ project }) {
                     <div className="text-xs text-sage mb-1">Total invoiced</div>
                     <div className="tabular-nums text-xl">{formatCurrency(totalInvoiced)}</div>
                 </div>
+                {budget > 0 && (
+                    <>
+                        <div className="bg-white rounded-lg border border-border p-4">
+                            <div className="text-xs text-sage mb-1">Budget</div>
+                            <div className="tabular-nums text-xl">{formatCurrency(budget)}</div>
+                        </div>
+                        <div className="bg-white rounded-lg border border-border p-4">
+                            <div className="text-xs text-sage mb-1">Remaining</div>
+                            <div className={`tabular-nums text-xl ${remaining < 0 ? 'text-brick' : ''}`}>{formatCurrency(remaining)}</div>
+                        </div>
+                    </>
+                )}
             </div>
             {project.team_names?.length > 0 && (
                 <div>
@@ -971,6 +985,9 @@ function BillingTab({ project }) {
     const [form, setForm] = useState({ description: '', amount: '', surcharge: false });
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
+    const budget = parseFloat(project.budget) || 0;
+    const totalInvoiced = project.invoices.reduce((s, inv) => s + invoiceTotal(inv.items, inv.surcharge), 0);
+    const remaining = budget - totalInvoiced;
 
     async function createInvoice(e) {
         e.preventDefault();
@@ -998,7 +1015,14 @@ function BillingTab({ project }) {
 
     return (
         <div>
-            <div className="flex justify-end mb-4">
+            <div className="flex items-center justify-between mb-4">
+                {budget > 0 ? (
+                    <div className="text-sm text-sage">
+                        Budget <span className="tabular-nums font-medium text-ink">{formatCurrency(budget)}</span>
+                        {' · '}
+                        Remaining <span className={`tabular-nums font-medium ${remaining < 0 ? 'text-brick' : 'text-ink'}`}>{formatCurrency(remaining)}</span>
+                    </div>
+                ) : <div />}
                 <button onClick={() => setShowForm(!showForm)} className="bg-ink text-white text-sm font-medium px-3 py-1.5 rounded">
                     {showForm ? 'Cancel' : 'New invoice'}
                 </button>
