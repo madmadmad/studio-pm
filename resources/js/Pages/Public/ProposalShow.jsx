@@ -8,34 +8,25 @@ function FeeSummary({ proposal }) {
 
     return (
         <div className="mb-6">
-            <div className="pb-4">
-                <h2 className="font-display text-lg font-semibold">Fee Summary</h2>
-            </div>
             <div className="pb-4 flex items-center justify-between">
                 <div className="font-display text-lg font-semibold">Estimate</div>
                 <div className="tabular-nums text-lg font-semibold">{formatCurrency(total)}</div>
             </div>
 
             <div className="py-3 grid grid-cols-12 text-xs font-medium text-sage border-b border-border">
-                <div className="col-span-6">Items</div>
-                <div className="col-span-2 text-right">Qty</div>
-                <div className="col-span-2 text-right">Price</div>
-                <div className="col-span-2 text-right">Total</div>
+                <div className="col-span-8">Items</div>
+                <div className="col-span-4 text-right">Total</div>
             </div>
 
             {proposal.items.map((item) => (
                 <div key={item.id} className="py-4 grid grid-cols-12 text-sm">
-                    <div className="col-span-6">
+                    <div className="col-span-8">
                         <div className="font-medium">{item.description}</div>
                         {item.details && item.details !== item.description && (
                             <div className="text-xs text-sage mt-2 whitespace-pre-wrap">{item.details}</div>
                         )}
                     </div>
-                    <div className="col-span-2 text-right tabular-nums">{parseFloat(item.quantity)}</div>
-                    <div className="col-span-2 text-right tabular-nums">
-                        {formatCurrency(item.rate)}{item.service?.unit === 'hourly' ? ' / hour' : ''}
-                    </div>
-                    <div className="col-span-2 text-right tabular-nums">
+                    <div className="col-span-4 text-right tabular-nums">
                         {formatCurrency(parseFloat(item.quantity) * parseFloat(item.rate))}
                     </div>
                 </div>
