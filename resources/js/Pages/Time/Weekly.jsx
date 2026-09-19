@@ -1,5 +1,6 @@
 import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
+import { CaretLeft, CaretRight } from '@phosphor-icons/react';
 import AppLayout from '../../Layouts/AppLayout';
 import EmptyState from '../../Components/EmptyState';
 import { formatDate } from '../../lib/format';
@@ -51,9 +52,13 @@ export default function TimeWeekly({ weekStart, weekEnd, entries, companies }) {
             <div className="flex items-center justify-between mb-1">
                 <h1 className="font-display text-2xl font-semibold">Timesheets</h1>
                 <div className="flex items-center gap-2 text-sm">
-                    <button onClick={() => goToWeek(addDays(weekStart, -7))} className="px-2 py-1 rounded border border-border">&larr;</button>
+                    <button onClick={() => goToWeek(addDays(weekStart, -7))} className="px-2 py-1.5 rounded border border-border flex items-center">
+                        <CaretLeft size={14} />
+                    </button>
                     <span className="text-sage">{formatDate(weekStart)} &ndash; {formatDate(weekEnd)}</span>
-                    <button onClick={() => goToWeek(addDays(weekStart, 7))} className="px-2 py-1 rounded border border-border">&rarr;</button>
+                    <button onClick={() => goToWeek(addDays(weekStart, 7))} className="px-2 py-1.5 rounded border border-border flex items-center">
+                        <CaretRight size={14} />
+                    </button>
                 </div>
             </div>
             <p className="text-sm text-sage mb-6">

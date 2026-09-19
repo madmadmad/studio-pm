@@ -1,5 +1,6 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
+import { ArrowLeft, DotsSixVertical } from '@phosphor-icons/react';
 import AppLayout from '../../Layouts/AppLayout';
 import RichTextEditor from '../../Components/RichTextEditor';
 import { formatCurrency } from '../../lib/format';
@@ -118,7 +119,9 @@ export default function ProposalsForm({ proposal, companies, services }) {
         <AppLayout>
             <Head title={isEditing ? `Edit — ${proposal.title}` : 'New proposal'} />
             <div className="mb-1">
-                <Link href="/proposals" className="text-sm text-sage hover:underline">&larr; Proposals</Link>
+                <Link href="/proposals" className="text-sm text-sage hover:underline inline-flex items-center gap-1">
+                    <ArrowLeft size={14} /> Proposals
+                </Link>
             </div>
             <h1 className="font-display text-2xl font-semibold mb-6">{isEditing ? 'Edit proposal' : 'New proposal'}</h1>
 
@@ -193,10 +196,10 @@ export default function ProposalsForm({ proposal, companies, services }) {
                             }`}
                         >
                             <div
-                                className="pt-2 text-sage cursor-grab select-none leading-none"
+                                className="pt-3 text-sage cursor-grab"
                                 title="Drag to reorder"
                             >
-                                ⠿
+                                <DotsSixVertical size={14} weight="bold" />
                             </div>
                             <div className="flex-1 min-w-0">
                                 <div className="grid grid-cols-12 gap-2 mb-2">

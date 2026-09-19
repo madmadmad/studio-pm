@@ -1,4 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react';
+import { ArrowLeft } from '@phosphor-icons/react';
 import AppLayout from '../../Layouts/AppLayout';
 import { InvoiceStatusBadge } from '../../Components/StatusBadges';
 import { formatCurrency, formatDate, invoiceSubtotal, invoiceSurchargeAmount, invoiceTotal } from '../../lib/format';
@@ -23,7 +24,9 @@ export default function InvoicesShow({ invoice }) {
         <AppLayout>
             <Head title={`Invoice — ${invoice.company.name}`} />
             <div className="mb-1">
-                <Link href="/invoices" className="text-sm text-sage hover:underline">&larr; Invoices</Link>
+                <Link href="/invoices" className="text-sm text-sage hover:underline inline-flex items-center gap-1">
+                    <ArrowLeft size={14} /> Invoices
+                </Link>
             </div>
             <div className="flex items-center justify-between mb-1">
                 <h1 className="font-display text-2xl font-semibold">{invoice.company.name}</h1>

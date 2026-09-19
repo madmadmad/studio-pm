@@ -18,6 +18,7 @@
     },
     "dependencies": {
         "@inertiajs/react": "^3.7.1",
+        "@phosphor-icons/react": "^2.1.10",
         "@tiptap/pm": "^3.31.3",
         "@tiptap/react": "^3.31.3",
         "@tiptap/starter-kit": "^3.31.3",

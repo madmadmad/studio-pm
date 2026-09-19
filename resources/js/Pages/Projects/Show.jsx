@@ -1,5 +1,6 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
+import { ArrowLeft, CaretRight, Check, DotsSixVertical, X } from '@phosphor-icons/react';
 import AppLayout from '../../Layouts/AppLayout';
 import EmptyState from '../../Components/EmptyState';
 import Badge from '../../Components/Badge';
@@ -94,9 +95,9 @@ function TaskRow({ task, teamNames, onChange, onOpen }) {
                 <button
                     onClick={() => onOpen(task.id)}
                     title="Open task"
-                    className="flex-shrink-0 w-7 h-7 flex items-center justify-center rounded border border-border text-sage font-semibold opacity-0 group-hover:opacity-100 hover:text-ink hover:border-ink transition-opacity"
+                    className="flex-shrink-0 w-7 h-7 flex items-center justify-center rounded border border-border text-sage opacity-0 group-hover:opacity-100 hover:text-ink hover:border-ink transition-opacity"
                 >
-                    &gt;
+                    <CaretRight size={14} weight="bold" />
                 </button>
             </div>
             <div className="col-span-3" onClick={(e) => e.stopPropagation()}>
@@ -183,14 +184,16 @@ function SubtaskRow({ subtask, teamNames, onChange, isDragging, onDragStart, onD
             onDragEnd={onDragEnd}
             className={`flex items-center gap-2 py-2 border-b border-border last:border-b-0 group ${isDragging ? 'opacity-40' : ''}`}
         >
-            <span className="text-sage cursor-grab select-none text-xs opacity-0 group-hover:opacity-100 flex-shrink-0">⠿</span>
+            <span className="text-sage cursor-grab opacity-0 group-hover:opacity-100 flex-shrink-0">
+                <DotsSixVertical size={14} weight="bold" />
+            </span>
             <button
                 onClick={toggleDone}
                 className={`w-5 h-5 rounded flex items-center justify-center flex-shrink-0 text-xs ${
                     subtask.status === 'done' ? 'bg-pine text-white' : 'border border-border'
                 }`}
             >
-                {subtask.status === 'done' && '✓'}
+                {subtask.status === 'done' && <Check size={12} weight="bold" />}
             </button>
             <input
                 value={title}
@@ -212,8 +215,8 @@ function SubtaskRow({ subtask, teamNames, onChange, isDragging, onDragStart, onD
                 title={subtask.status}
                 className={`w-3 h-3 rounded-full flex-shrink-0 ${SUBTASK_STATUS_DOT[subtask.status]}`}
             />
-            <button onClick={remove} className="text-sage hover:text-brick opacity-0 group-hover:opacity-100 text-xs flex-shrink-0 px-1">
-                &times;
+            <button onClick={remove} className="text-sage hover:text-brick opacity-0 group-hover:opacity-100 flex-shrink-0 px-1">
+                <X size={12} />
             </button>
         </div>
     );
@@ -313,8 +316,8 @@ function TaskDrawer({ task, teamNames, companyName, onClose, onChange }) {
                     >
                         {TASK_STATUS_OPTIONS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
                     </select>
-                    <button onClick={onClose} className="text-sage hover:text-ink text-xl leading-none px-1">
-                        &times;
+                    <button onClick={onClose} className="text-sage hover:text-ink px-1">
+                        <X size={20} />
                     </button>
                 </div>
 
@@ -822,7 +825,9 @@ function TeamTab({ project }) {
                     {names.map((name) => (
                         <span key={name} className="inline-flex items-center gap-2 bg-white border border-border rounded-full px-3 py-1 text-sm">
                             {name}
-                            <button onClick={() => remove(name)} className="text-sage hover:text-brick">&times;</button>
+                            <button onClick={() => remove(name)} className="text-sage hover:text-brick">
+                                <X size={14} />
+                            </button>
                         </span>
                     ))}
                 </div>
@@ -838,7 +843,9 @@ export default function ProjectsShow({ project }) {
         <AppLayout>
             <Head title={project.name} />
             <div className="mb-1">
-                <Link href="/projects" className="text-sm text-sage hover:underline">&larr; Projects</Link>
+                <Link href="/projects" className="text-sm text-sage hover:underline inline-flex items-center gap-1">
+                    <ArrowLeft size={14} /> Projects
+                </Link>
             </div>
             <div className="flex items-center justify-between mb-1">
                 <h1 className="font-display text-2xl font-semibold">{project.name}</h1>

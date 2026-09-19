@@ -1,5 +1,6 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
+import { ArrowLeft } from '@phosphor-icons/react';
 import AppLayout from '../../Layouts/AppLayout';
 import EmptyState from '../../Components/EmptyState';
 import Badge from '../../Components/Badge';
@@ -304,7 +305,9 @@ export default function ClientsShow({ company }) {
         <AppLayout>
             <Head title={company.name} />
             <div className="mb-1">
-                <Link href="/clients" className="text-sm text-sage hover:underline">&larr; Clients</Link>
+                <Link href="/clients" className="text-sm text-sage hover:underline inline-flex items-center gap-1">
+                    <ArrowLeft size={14} /> Clients
+                </Link>
             </div>
             <DetailsCard company={company} />
 
