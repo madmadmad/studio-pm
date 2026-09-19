@@ -400,7 +400,7 @@ function TaskDrawer({ task, teamNames, onClose, onChange }) {
                     />
 
                     <div className="text-sm mb-6 pb-4 border-b border-border">
-                        <div className="text-xs text-sage mb-1">Assignee</div>
+                        <div className="text-xs font-semibold text-sage mb-1">Assignee</div>
                         <select
                             value={task.assignee ?? ''}
                             onChange={(e) => updateField('assignee', e.target.value)}
