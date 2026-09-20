@@ -5,8 +5,9 @@ import AppLayout from '../../Layouts/AppLayout';
 import EmptyState from '../../Components/EmptyState';
 import Badge from '../../Components/Badge';
 import RichTextEditor from '../../Components/RichTextEditor';
+import Toggle from '../../Components/Toggle';
 import { ProjectStatusBadge, TaskStatusBadge, InvoiceStatusBadge, ProposalStatusBadge } from '../../Components/StatusBadges';
-import { formatCurrency, formatDate, invoiceTotal } from '../../lib/format';
+import { formatCurrency, formatDate, invoiceSubtotal, invoiceSurchargeAmount, invoiceTotal } from '../../lib/format';
 import { api } from '../../lib/api';
 import { copyToClipboard } from '../../lib/clipboard';
 
@@ -1044,7 +1045,7 @@ function proposalToInvoiceItems(proposal, remaining) {
 }
 
 function emptyInvoiceForm() {
-    return { proposal_id: '', items: [{ description: '', amount: '' }], surcharge: false };
+    return { proposal_id: '', items: [{ description: '', amount: '' }], surcharge: true };
 }
 
 function BillingTab({ project }) {
@@ -1063,13 +1064,16 @@ function BillingTab({ project }) {
         ? selectedProposal.items.reduce((s, i) => s + parseFloat(i.quantity) * parseFloat(i.rate), 0)
         : 0;
     const wasScaledToRemaining = selectedProposal && remaining < selectedProposalTotal;
+    const formSubtotal = invoiceSubtotal(form.items);
+    const formSurchargeAmount = invoiceSurchargeAmount(form.items, form.surcharge);
+    const formTotal = invoiceTotal(form.items, form.surcharge);
 
     function openForm() {
         // Start from the most recently accepted proposal's line items when
         // there's exactly one to choose from -- otherwise let the user pick.
         const accepted = proposalsWithItems.filter((p) => p.status === 'accepted');
         if (accepted.length === 1) {
-            setForm({ proposal_id: String(accepted[0].id), items: proposalToInvoiceItems(accepted[0], remaining), surcharge: false });
+            setForm({ proposal_id: String(accepted[0].id), items: proposalToInvoiceItems(accepted[0], remaining), surcharge: true });
         } else {
             setForm(emptyInvoiceForm());
         }
@@ -1229,10 +1233,30 @@ function BillingTab({ project }) {
                         <button type="button" onClick={addItemRow} className="text-sm font-medium text-brass">+ Add line item</button>
                     </div>
 
-                    <label className="flex items-center gap-2 text-sm mb-2">
-                        <input type="checkbox" checked={form.surcharge} onChange={(e) => setForm({ ...form, surcharge: e.target.checked })} />
-                        Client covers card processing fee (3%)
-                    </label>
+                    <div className="text-sm mb-3 space-y-1">
+                        <div className="flex justify-between text-sage">
+                            <span>Subtotal</span>
+                            <span className="tabular-nums">{formatCurrency(formSubtotal)}</span>
+                        </div>
+                        {form.surcharge && (
+                            <div className="flex justify-between text-sage">
+                                <span>Card fee (3%)</span>
+                                <span className="tabular-nums">{formatCurrency(formSurchargeAmount)}</span>
+                            </div>
+                        )}
+                        <div className="flex justify-between font-semibold">
+                            <span>Total</span>
+                            <span className="tabular-nums">{formatCurrency(formTotal)}</span>
+                        </div>
+                    </div>
+
+                    <div className="mb-2">
+                        <Toggle
+                            checked={form.surcharge}
+                            onChange={(value) => setForm({ ...form, surcharge: value })}
+                            label="Client covers card processing fee (3%)"
+                        />
+                    </div>
                     {error && <div className="text-sm text-brick mb-2">{error}</div>}
                     <div className="flex justify-end">
                         <button type="submit" disabled={saving} className="bg-pine text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50">Create draft invoice</button>

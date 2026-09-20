@@ -2,6 +2,7 @@ import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
 import { ArrowLeft, DownloadSimple } from '@phosphor-icons/react';
 import AppLayout from '../../Layouts/AppLayout';
+import Toggle from '../../Components/Toggle';
 import { InvoiceStatusBadge } from '../../Components/StatusBadges';
 import { formatCurrency, formatDate, invoiceSubtotal, invoiceSurchargeAmount, invoiceTotal } from '../../lib/format';
 import { api } from '../../lib/api';
@@ -26,6 +27,10 @@ export default function InvoicesShow({ invoice }) {
     const subtotal = invoiceSubtotal(invoice.items);
     const surchargeAmount = invoiceSurchargeAmount(invoice.items, invoice.surcharge);
     const total = invoiceTotal(invoice.items, invoice.surcharge);
+
+    const formSubtotal = invoiceSubtotal(form.items);
+    const formSurchargeAmount = invoiceSurchargeAmount(form.items, form.surcharge);
+    const formTotal = invoiceTotal(form.items, form.surcharge);
 
     async function sendInvoice() {
         await api.post(`/api/invoices/${invoice.id}/send`);
@@ -181,10 +186,30 @@ export default function InvoicesShow({ invoice }) {
                         <button type="button" onClick={addItemRow} className="text-sm font-medium text-brass">+ Add line item</button>
                     </div>
 
-                    <label className="flex items-center gap-2 text-sm mb-4">
-                        <input type="checkbox" checked={form.surcharge} onChange={(e) => setForm({ ...form, surcharge: e.target.checked })} />
-                        Client covers card processing fee (3%)
-                    </label>
+                    <div className="text-sm mb-4 space-y-1">
+                        <div className="flex justify-between text-sage">
+                            <span>Subtotal</span>
+                            <span className="tabular-nums">{formatCurrency(formSubtotal)}</span>
+                        </div>
+                        {form.surcharge && (
+                            <div className="flex justify-between text-sage">
+                                <span>Card fee (3%)</span>
+                                <span className="tabular-nums">{formatCurrency(formSurchargeAmount)}</span>
+                            </div>
+                        )}
+                        <div className="flex justify-between font-semibold">
+                            <span>Total</span>
+                            <span className="tabular-nums">{formatCurrency(formTotal)}</span>
+                        </div>
+                    </div>
+
+                    <div className="mb-4">
+                        <Toggle
+                            checked={form.surcharge}
+                            onChange={(value) => setForm({ ...form, surcharge: value })}
+                            label="Client covers card processing fee (3%)"
+                        />
+                    </div>
 
                     {error && <div className="text-sm text-brick mb-3">{error}</div>}
 

@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { Check, CheckCircle, Copy, DownloadSimple, Eye, PaperPlaneTilt, PencilSimple, Trash } from '@phosphor-icons/react';
 import AppLayout from '../../Layouts/AppLayout';
 import EmptyState from '../../Components/EmptyState';
+import Toggle from '../../Components/Toggle';
 import { InvoiceStatusBadge } from '../../Components/StatusBadges';
 import { formatCurrency, formatDate, invoiceSubtotal, invoiceSurchargeAmount, invoiceTotal } from '../../lib/format';
 import { api } from '../../lib/api';
@@ -10,7 +11,7 @@ import { getTray, clearTray } from '../../lib/tray';
 import { copyToClipboard } from '../../lib/clipboard';
 
 function emptyDraft() {
-    return { company_id: '', contact_id: '', items: [{ description: '', amount: '' }], surcharge: false };
+    return { company_id: '', contact_id: '', items: [{ description: '', amount: '' }], surcharge: true };
 }
 
 export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
@@ -64,7 +65,7 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
                         amount: String(t.amount.toFixed(2)),
                         time_entry_ids: [t.time_entry_id],
                     })),
-                    surcharge: false,
+                    surcharge: true,
                 });
                 setShowForm(true);
             }
@@ -234,15 +235,6 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
                         <button type="button" onClick={addItemRow} className="text-sm font-medium text-brass">+ Add line item</button>
                     </div>
 
-                    <label className="flex items-center gap-2 text-sm mb-4">
-                        <input
-                            type="checkbox"
-                            checked={draft.surcharge}
-                            onChange={(e) => setDraft({ ...draft, surcharge: e.target.checked })}
-                        />
-                        Client covers card processing fee (3%)
-                    </label>
-
                     <div className="text-sm mb-4 space-y-1">
                         <div className="flex justify-between text-sage">
                             <span>Subtotal</span>
@@ -258,6 +250,14 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
                             <span>Total</span>
                             <span className="tabular-nums">{formatCurrency(total)}</span>
                         </div>
+                    </div>
+
+                    <div className="mb-4">
+                        <Toggle
+                            checked={draft.surcharge}
+                            onChange={(value) => setDraft({ ...draft, surcharge: value })}
+                            label="Client covers card processing fee (3%)"
+                        />
                     </div>
 
                     {error && <div className="text-sm mb-3 text-brick">{error}</div>}
