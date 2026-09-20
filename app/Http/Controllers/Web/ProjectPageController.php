@@ -49,7 +49,11 @@ class ProjectPageController extends Controller
             'tasks.subtasks',
             'tasks.files',
             'notes',
-            'messages',
+            'messages' => fn ($q) => $q->with([
+                'senderUser', 'senderContact',
+                'participants.user', 'participants.contact',
+                'replies.senderUser', 'replies.senderContact',
+            ]),
             'timeEntries.task',
             'activeUsers:id,name,email',
         ]);

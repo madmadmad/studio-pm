@@ -9,7 +9,6 @@ use App\Services\MagicLinkBroker;
 use App\Services\MagicLinkResult;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\URL;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -29,11 +28,7 @@ class PortalAuthController extends Controller
         $contact = Contact::where('email', $data['email'])->whereNotNull('portal_invited_at')->first();
 
         if ($contact) {
-            $rawToken = $this->links->issue($contact);
-            $url = URL::temporarySignedRoute('portal.verify', now()->addMinutes(MagicLinkBroker::TTL_MINUTES), [
-                'contactId' => $contact->id,
-                'token' => $rawToken,
-            ]);
+            $url = $this->links->issueSignedUrl($contact);
             $contact->notify(new ClientMagicLink($url, firstInvite: $contact->last_login_at === null));
         }
 
@@ -73,6 +68,15 @@ class PortalAuthController extends Controller
 
         Auth::guard('client')->login($contact, remember: true);
         $request->session()->regenerate();
+
+        // The redirect target rides in the signed URL (e.g. straight to a
+        // message thread from an email notification), so it's already
+        // tamper-proof -- still constrain it to the portal itself as
+        // defense in depth against ever becoming an open redirect.
+        $redirect = $request->query('redirect');
+        if ($redirect && str_starts_with($redirect, '/portal/')) {
+            return redirect($redirect);
+        }
 
         return redirect('/portal');
     }

@@ -98,24 +98,23 @@ class ClientHubAccessTest extends TestCase
             ->assertStatus(405);
     }
 
-    public function test_a_client_can_send_and_reply_to_messages_on_their_project(): void
+    // Full thread create/reply/notify coverage lives in MessageThreadTest --
+    // this file just confirms a client can reach the endpoint at all.
+    public function test_a_client_can_start_a_thread_on_their_project(): void
     {
         $contact = $this->portalContact();
         $project = $contact->company->projects()->create(['name' => 'Brand refresh']);
+        $teammate = $contact->company->contacts()->create(['name' => 'Other Contact', 'email' => 'other@example.com']);
+        $teammate->forceFill(['portal_invited_at' => now()])->save();
 
         $response = $this->actingAs($contact, 'client')->postJson("/api/portal/projects/{$project->id}/messages", [
             'subject' => 'Question about timeline',
             'body' => 'When will the first draft be ready?',
+            'recipients' => ["contact:{$teammate->id}"],
         ]);
+
         $response->assertCreated();
-
-        $reply = $this->actingAs($contact, 'client')->postJson("/api/portal/projects/{$project->id}/messages", [
-            'parent_id' => $response->json('id'),
-            'body' => 'Following up on this',
-        ]);
-        $reply->assertCreated();
-
-        $this->assertDatabaseHas('messages', ['id' => $response->json('id'), 'direction' => 'inbound', 'sender_contact_id' => $contact->id]);
+        $this->assertDatabaseHas('messages', ['id' => $response->json('id'), 'sender_contact_id' => $contact->id]);
     }
 
     public function test_only_accepted_proposals_are_visible_to_a_client(): void

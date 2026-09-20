@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Contact;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 
 class MagicLinkBroker
@@ -26,6 +27,24 @@ class MagicLinkBroker
         ]);
 
         return $rawToken;
+    }
+
+    /**
+     * Issue a token and build the full signed sign-in URL in one step --
+     * every notification that needs to get a contact into the portal
+     * (invite, "sign in" request, or straight to a specific page like a
+     * message thread) goes through this rather than re-deriving the same
+     * temporarySignedRoute call.
+     */
+    public function issueSignedUrl(Contact $contact, ?string $redirect = null): string
+    {
+        $rawToken = $this->issue($contact);
+
+        return URL::temporarySignedRoute('portal.verify', now()->addMinutes(self::TTL_MINUTES), array_filter([
+            'contactId' => $contact->id,
+            'token' => $rawToken,
+            'redirect' => $redirect,
+        ]));
     }
 
     /**

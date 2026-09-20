@@ -6,7 +6,6 @@ use App\Models\Contact;
 use App\Notifications\ClientMagicLink;
 use App\Services\MagicLinkBroker;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\URL;
 
 class PortalInviteController extends Controller
 {
@@ -22,11 +21,7 @@ class PortalInviteController extends Controller
             'portal_invited_by' => $request->user()->id,
         ])->save();
 
-        $rawToken = $this->links->issue($contact);
-        $url = URL::temporarySignedRoute('portal.verify', now()->addMinutes(MagicLinkBroker::TTL_MINUTES), [
-            'contactId' => $contact->id,
-            'token' => $rawToken,
-        ]);
+        $url = $this->links->issueSignedUrl($contact);
 
         $contact->notify(new ClientMagicLink($url, firstInvite: true));
 

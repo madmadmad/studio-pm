@@ -2,11 +2,9 @@
 
 namespace Tests\Feature;
 
-use App\Mail\ProjectMessageMail;
 use App\Models\Company;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
 class ProjectDetailTest extends TestCase
@@ -57,65 +55,6 @@ class ProjectDetailTest extends TestCase
         ])->assertCreated();
 
         $this->assertSame(1, $project->fresh('transactions')->transactions->count());
-    }
-
-    public function test_sending_a_project_message_emails_the_client_and_records_the_thread(): void
-    {
-        Mail::fake();
-
-        $user = User::factory()->create();
-        $company = Company::create(['name' => 'Alder & Finch Design']);
-        $company->contacts()->create(['name' => 'Rosa Alder', 'email' => 'client@example.com', 'is_primary' => true]);
-        $project = $company->projects()->create(['name' => 'Brand refresh']);
-
-        $response = $this->actingAs($user)->postJson("/api/projects/{$project->id}/messages", [
-            'subject' => 'Kickoff',
-            'body' => 'Excited to get started!',
-        ]);
-
-        $response->assertCreated();
-        $this->assertDatabaseHas('messages', [
-            'project_id' => $project->id,
-            'to_email' => 'client@example.com',
-            'subject' => 'Kickoff',
-        ]);
-        Mail::assertSent(ProjectMessageMail::class, fn ($mail) => $mail->hasTo('client@example.com'));
-    }
-
-    public function test_sending_a_message_without_a_client_email_on_file_fails(): void
-    {
-        Mail::fake();
-
-        $user = User::factory()->create();
-        $company = Company::create(['name' => 'Alder & Finch Design']);
-        $project = $company->projects()->create(['name' => 'Brand refresh']);
-
-        $response = $this->actingAs($user)->postJson("/api/projects/{$project->id}/messages", [
-            'subject' => 'Kickoff',
-            'body' => 'Excited to get started!',
-        ]);
-
-        $response->assertStatus(422);
-        $this->assertDatabaseCount('messages', 0);
-        Mail::assertNothingSent();
-    }
-
-    public function test_sending_a_message_falls_back_to_any_contact_with_an_email_when_none_is_primary(): void
-    {
-        Mail::fake();
-
-        $user = User::factory()->create();
-        $company = Company::create(['name' => 'Alder & Finch Design']);
-        $company->contacts()->create(['name' => 'Rosa Alder', 'email' => 'rosa@alderfinch.co']);
-        $project = $company->projects()->create(['name' => 'Brand refresh']);
-
-        $response = $this->actingAs($user)->postJson("/api/projects/{$project->id}/messages", [
-            'subject' => 'Kickoff',
-            'body' => 'Excited to get started!',
-        ]);
-
-        $response->assertCreated();
-        Mail::assertSent(ProjectMessageMail::class, fn ($mail) => $mail->hasTo('rosa@alderfinch.co'));
     }
 
     public function test_notes_can_be_added_and_listed_for_a_project(): void

@@ -1,8 +1,9 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import { ArrowLeft } from '@phosphor-icons/react';
 import PortalLayout from '../../../Layouts/PortalLayout';
 import EmptyState from '../../../Components/EmptyState';
+import MessagesPanel from '../../../Components/MessagesPanel';
 import { ProjectStatusBadge, TaskStatusBadge, InvoiceStatusBadge, ProposalStatusBadge } from '../../../Components/StatusBadges';
 import { formatCurrency, formatDate, invoiceTotal } from '../../../lib/format';
 import { api } from '../../../lib/api';
@@ -111,122 +112,30 @@ function TasksTab({ project }) {
     );
 }
 
-function MessageThread({ message }) {
-    const [replying, setReplying] = useState(false);
-    const [body, setBody] = useState('');
-    const [saving, setSaving] = useState(false);
-    const senderName = message.sender_contact?.name ?? message.sender_user?.name ?? 'Studio';
-
-    async function submitReply(e) {
-        e.preventDefault();
-        if (!body.trim()) return;
-        setSaving(true);
-        try {
-            await api.post(`/api/portal/projects/${message.project_id}/messages`, {
-                parent_id: message.id,
-                body,
-            });
-            setBody('');
-            setReplying(false);
-            reload();
-        } finally {
-            setSaving(false);
-        }
-    }
-
-    return (
-        <div className="border-b border-border last:border-b-0 p-4">
-            <div className="flex items-center justify-between mb-1">
-                <div className="text-sm font-medium">{message.subject ?? '(no subject)'}</div>
-                <div className="text-xs text-shadow-grey">{formatDate(message.sent_at)}</div>
-            </div>
-            <div className="text-xs text-shadow-grey mb-2">{senderName}</div>
-            <p className="text-sm whitespace-pre-wrap mb-2">{message.body}</p>
-
-            {(message.replies || []).map((reply) => (
-                <div key={reply.id} className="ml-4 pl-3 border-l-2 border-border mt-3">
-                    <div className="text-xs text-shadow-grey mb-1">
-                        {reply.sender_contact?.name ?? reply.sender_user?.name ?? 'Studio'} &middot; {formatDate(reply.sent_at)}
-                    </div>
-                    <p className="text-sm whitespace-pre-wrap">{reply.body}</p>
-                </div>
-            ))}
-
-            {replying ? (
-                <form onSubmit={submitReply} className="mt-3 ml-4 flex flex-col gap-2">
-                    <textarea
-                        autoFocus
-                        rows={3}
-                        value={body}
-                        onChange={(e) => setBody(e.target.value)}
-                        className="border border-border rounded px-3 py-2 text-sm"
-                        placeholder="Write a reply..."
-                    />
-                    <div className="flex gap-2 justify-end">
-                        <button type="button" onClick={() => setReplying(false)} className="text-sm px-3 py-1.5 rounded text-shadow-grey">Cancel</button>
-                        <button type="submit" disabled={saving} className="bg-fern text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50">Reply</button>
-                    </div>
-                </form>
-            ) : (
-                <button onClick={() => setReplying(true)} className="text-xs text-watermelon hover:underline mt-2 ml-4">Reply</button>
-            )}
-        </div>
-    );
-}
-
-function NewMessageForm({ project }) {
-    const [showForm, setShowForm] = useState(false);
-    const [subject, setSubject] = useState('');
-    const [body, setBody] = useState('');
-    const [saving, setSaving] = useState(false);
-
-    async function submit(e) {
-        e.preventDefault();
-        if (!subject.trim() || !body.trim()) return;
-        setSaving(true);
-        try {
-            await api.post(`/api/portal/projects/${project.id}/messages`, { subject, body });
-            setSubject('');
-            setBody('');
-            setShowForm(false);
-            reload();
-        } finally {
-            setSaving(false);
-        }
-    }
-
-    if (!showForm) {
-        return (
-            <button onClick={() => setShowForm(true)} className="bg-gunmetal text-white text-sm font-medium px-3 py-1.5 rounded mb-4">
-                New message
-            </button>
-        );
-    }
-
-    return (
-        <form onSubmit={submit} className="bg-white rounded-lg border border-border p-4 mb-4 flex flex-col gap-2">
-            <input required placeholder="Subject" value={subject} onChange={(e) => setSubject(e.target.value)} className="border border-border rounded px-3 py-2 text-sm" />
-            <textarea required rows={4} placeholder="Message" value={body} onChange={(e) => setBody(e.target.value)} className="border border-border rounded px-3 py-2 text-sm" />
-            <div className="flex gap-2 justify-end">
-                <button type="button" onClick={() => setShowForm(false)} className="text-sm px-3 py-1.5 rounded text-shadow-grey">Cancel</button>
-                <button type="submit" disabled={saving} className="bg-fern text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50">Send</button>
-            </div>
-        </form>
-    );
-}
-
 function MessagesTab({ project }) {
+    const { props } = usePage();
+    const currentContact = props.auth?.user;
+
+    const recipientOptions = [
+        ...(project.active_users || []).map((u) => ({ token: `user:${u.id}`, name: u.name, sublabel: 'Team' })),
+        ...(project.company.contacts || [])
+            .filter((c) => c.has_portal_access && c.id !== currentContact?.id)
+            .map((c) => ({ token: `contact:${c.id}`, name: c.name, sublabel: 'Client' })),
+    ];
+
     return (
-        <div>
-            <NewMessageForm project={project} />
-            <div className="bg-white rounded-lg border border-border overflow-hidden">
-                {project.messages.length === 0 ? (
-                    <EmptyState text="No messages yet." />
-                ) : (
-                    project.messages.map((message) => <MessageThread key={message.id} message={message} />)
-                )}
-            </div>
-        </div>
+        <MessagesPanel
+            project={project}
+            currentActorType="contact"
+            currentActorId={currentContact?.id}
+            recipientOptions={recipientOptions}
+            endpoints={{
+                create: `/api/portal/projects/${project.id}/messages`,
+                reply: (id) => `/api/portal/messages/${id}/replies`,
+                join: (id) => `/api/portal/messages/${id}/join`,
+            }}
+            onChange={reload}
+        />
     );
 }
 

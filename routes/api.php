@@ -30,6 +30,8 @@ Route::middleware('auth:sanctum')->name('api.')->group(function () {
     Route::apiResource('tasks.files', TaskFileController::class)->shallow()->only(['store', 'destroy']);
     Route::apiResource('projects.notes', NoteController::class)->shallow()->only(['index', 'store', 'update', 'destroy']);
     Route::apiResource('projects.messages', MessageController::class)->shallow()->only(['index', 'store']);
+    Route::post('messages/{message}/replies', [MessageController::class, 'reply']);
+    Route::post('messages/{message}/join', [MessageController::class, 'join']);
 
     Route::get('time-entries', [TimeEntryController::class, 'index']);
     Route::post('time-entries', [TimeEntryController::class, 'store']);
@@ -74,6 +76,8 @@ Route::middleware('auth:client')->prefix('portal')->name('api.portal.')->group(f
 
     Route::get('projects/{project}/messages', [PortalMessageController::class, 'index']);
     Route::post('projects/{project}/messages', [PortalMessageController::class, 'store']);
+    Route::post('messages/{message}/replies', [PortalMessageController::class, 'reply']);
+    Route::post('messages/{message}/join', [PortalMessageController::class, 'join']);
 });
 
 // Public, no auth -- the client-facing surface for proposals. Much smaller

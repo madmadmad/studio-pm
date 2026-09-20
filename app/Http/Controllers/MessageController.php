@@ -2,20 +2,31 @@
 
 namespace App\Http\Controllers;
 
-use App\Mail\ProjectMessageMail;
 use App\Models\Message;
 use App\Models\Project;
+use App\Services\MessageThreadService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Validation\Rule;
 
 class MessageController extends Controller
 {
+    public function __construct(protected MessageThreadService $threads) {}
+
+    // Every thread on the project, visible to anyone with project access
+    // regardless of whether they're a participant -- discoverability is the
+    // point (see Project::messages()/Message::participants()): a project
+    // member can browse in and join a thread they weren't originally
+    // tagged on.
     public function index(Project $project)
     {
         $this->authorize('view', $project);
 
-        return $project->messages()->with(['replies.senderUser', 'replies.senderContact', 'senderUser', 'senderContact'])->get();
+        return $project->messages()
+            ->with([
+                'senderUser', 'senderContact',
+                'participants.user', 'participants.contact',
+                'replies.senderUser', 'replies.senderContact',
+            ])
+            ->get();
     }
 
     public function store(Request $request, Project $project)
@@ -23,40 +34,40 @@ class MessageController extends Controller
         $this->authorize('update', $project);
 
         $data = $request->validate([
-            // Only one level of nesting -- a reply must target a root message.
-            'parent_id' => ['nullable', Rule::exists('messages', 'id')->where('project_id', $project->id)->whereNull('parent_id')],
-            'subject' => ['required_without:parent_id', 'nullable', 'string', 'max:255'],
+            'subject' => ['required', 'string', 'max:255'],
             'body' => ['required', 'string'],
+            'recipients' => ['required', 'array', 'min:1'],
+            'recipients.*' => ['required', 'string', 'regex:/^(user|contact):\d+$/'],
         ]);
 
-        $subject = $data['subject'] ?? null;
-        if (! empty($data['parent_id']) && ! $subject) {
-            $parentSubject = Message::find($data['parent_id'])->subject;
-            $subject = $parentSubject ? "Re: {$parentSubject}" : null;
-        }
+        $recipients = $this->threads->resolveRecipients($project, $data['recipients']);
 
-        // Prefer the client's Primary contact; fall back to any contact
-        // with an email on file. Companies no longer carry their own email
-        // -- that lives on Contacts now.
-        $contact = $project->company->contacts()->where('is_primary', true)->whereNotNull('email')->first()
-            ?? $project->company->contacts()->whereNotNull('email')->first();
-        $toEmail = $contact?->email;
+        $thread = $this->threads->createThread($project, $request->user(), $data['subject'], $data['body'], $recipients);
 
-        abort_if(! $toEmail, 422, 'This client has no contact with an email address on file to message.');
+        return $thread->load('senderUser', 'senderContact', 'participants.user', 'participants.contact');
+    }
 
-        $message = $project->messages()->create([
-            'parent_id' => $data['parent_id'] ?? null,
-            'direction' => 'outbound',
-            'sender_user_id' => $request->user()->id,
-            'to_email' => $toEmail,
-            'from_email' => config('mail.from.address'),
-            'subject' => $subject,
-            'body' => $data['body'],
-            'sent_at' => now(),
-        ]);
+    public function reply(Request $request, Message $message)
+    {
+        abort_if($message->parent_id, 404); // replies only ever target a root thread
 
-        Mail::to($toEmail)->send(new ProjectMessageMail($message));
+        $this->authorize('update', $message->project);
 
-        return $message->load('senderUser', 'senderContact');
+        $data = $request->validate(['body' => ['required', 'string']]);
+
+        $reply = $this->threads->reply($message, $request->user(), $data['body']);
+
+        return $reply->load('senderUser', 'senderContact');
+    }
+
+    public function join(Request $request, Message $message)
+    {
+        abort_if($message->parent_id, 404);
+
+        $this->authorize('update', $message->project);
+
+        $this->threads->join($message, $request->user());
+
+        return $message->load('participants.user', 'participants.contact');
     }
 }

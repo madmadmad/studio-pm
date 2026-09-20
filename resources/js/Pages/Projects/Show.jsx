@@ -1,4 +1,4 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
 import { ArrowLeft, CaretRight, Check, CheckCircle, Copy, DotsSixVertical, DownloadSimple, Eye, Paperclip, PaperPlaneTilt, PencilSimple, Trash, X } from '@phosphor-icons/react';
 import AppLayout from '../../Layouts/AppLayout';
@@ -6,6 +6,7 @@ import EmptyState from '../../Components/EmptyState';
 import Badge from '../../Components/Badge';
 import RichTextEditor from '../../Components/RichTextEditor';
 import Toggle from '../../Components/Toggle';
+import MessagesPanel from '../../Components/MessagesPanel';
 import { ProjectStatusBadge, TaskStatusBadge, InvoiceStatusBadge, ProposalStatusBadge } from '../../Components/StatusBadges';
 import { formatCurrency, formatDate, invoiceSubtotal, invoiceTotal } from '../../lib/format';
 import { api } from '../../lib/api';
@@ -765,74 +766,31 @@ function NotesTab({ project }) {
 }
 
 function MessagesTab({ project }) {
-    const [form, setForm] = useState({ subject: '', body: '' });
-    const [saving, setSaving] = useState(false);
-    const [error, setError] = useState('');
-    const clientEmail = project.company.email;
+    const { props } = usePage();
+    const currentUser = props.auth?.user;
 
-    async function send(e) {
-        e.preventDefault();
-        if (!form.subject || !form.body) return;
-        setSaving(true);
-        setError('');
-        try {
-            await api.post(`/api/projects/${project.id}/messages`, form);
-            setForm({ subject: '', body: '' });
-            reload();
-        } catch (err) {
-            setError(err.message);
-        } finally {
-            setSaving(false);
-        }
-    }
+    const recipientOptions = [
+        ...(project.active_users || [])
+            .filter((u) => u.id !== currentUser?.id)
+            .map((u) => ({ token: `user:${u.id}`, name: u.name, sublabel: 'Team' })),
+        ...(project.company.contacts || [])
+            .filter((c) => c.has_portal_access)
+            .map((c) => ({ token: `contact:${c.id}`, name: c.name, sublabel: 'Client' })),
+    ];
 
     return (
-        <div>
-            <form onSubmit={send} className="bg-white rounded-lg border border-border p-4 mb-4">
-                {!clientEmail && (
-                    <div className="text-sm text-fuchsia mb-2">
-                        This client has no email on file — add one on the client page before sending.
-                    </div>
-                )}
-                <div className="text-xs text-shadow-grey mb-2">To: {clientEmail ?? '—'}</div>
-                <input
-                    placeholder="Subject"
-                    value={form.subject}
-                    onChange={(e) => setForm({ ...form, subject: e.target.value })}
-                    className="border border-border rounded px-3 py-2 text-sm w-full mb-2"
-                />
-                <textarea
-                    placeholder="Message…"
-                    value={form.body}
-                    onChange={(e) => setForm({ ...form, body: e.target.value })}
-                    rows={4}
-                    className="border border-border rounded px-3 py-2 text-sm w-full mb-2"
-                />
-                {error && <div className="text-sm text-fuchsia mb-2">{error}</div>}
-                <div className="flex justify-end">
-                    <button type="submit" disabled={saving || !clientEmail} className="bg-gunmetal text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50">
-                        Send email
-                    </button>
-                </div>
-            </form>
-
-            {project.messages.length === 0 ? (
-                <EmptyState text="No messages yet." />
-            ) : (
-                <div className="space-y-3">
-                    {project.messages.map((message) => (
-                        <div key={message.id} className="bg-white rounded-lg border border-border p-4">
-                            <div className="flex items-center justify-between mb-1">
-                                <span className="text-sm font-medium">{message.subject}</span>
-                                <span className="text-xs text-shadow-grey">{formatDate(message.sent_at)}</span>
-                            </div>
-                            <div className="text-xs text-shadow-grey mb-2">To: {message.to_email}</div>
-                            <div className="text-sm whitespace-pre-wrap">{message.body}</div>
-                        </div>
-                    ))}
-                </div>
-            )}
-        </div>
+        <MessagesPanel
+            project={project}
+            currentActorType="user"
+            currentActorId={currentUser?.id}
+            recipientOptions={recipientOptions}
+            endpoints={{
+                create: `/api/projects/${project.id}/messages`,
+                reply: (id) => `/api/messages/${id}/replies`,
+                join: (id) => `/api/messages/${id}/join`,
+            }}
+            onChange={reload}
+        />
     );
 }
 

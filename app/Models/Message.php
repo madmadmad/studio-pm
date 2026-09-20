@@ -9,8 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Message extends Model
 {
     protected $fillable = [
-        'project_id', 'parent_id', 'direction', 'sender_user_id', 'sender_contact_id',
-        'to_email', 'from_email', 'subject', 'body', 'sent_at',
+        'project_id', 'parent_id', 'sender_user_id', 'sender_contact_id', 'subject', 'body', 'sent_at',
     ];
 
     protected $casts = [
@@ -40,5 +39,34 @@ class Message extends Model
     public function senderContact(): BelongsTo
     {
         return $this->belongsTo(Contact::class, 'sender_contact_id');
+    }
+
+    // Only meaningful on a root/thread message -- a reply doesn't carry its
+    // own participant list, it belongs to its thread's.
+    public function participants(): HasMany
+    {
+        return $this->hasMany(MessageParticipant::class);
+    }
+
+    public function sender(): User|Contact|null
+    {
+        return $this->senderUser ?? $this->senderContact;
+    }
+
+    public function senderName(): ?string
+    {
+        return $this->sender()?->name;
+    }
+
+    public function isSender(User|Contact $actor): bool
+    {
+        return $actor instanceof User
+            ? $this->sender_user_id === $actor->id
+            : $this->sender_contact_id === $actor->id;
+    }
+
+    public function isParticipant(User|Contact $actor): bool
+    {
+        return $this->participants->contains(fn (MessageParticipant $p) => $p->isActor($actor));
     }
 }

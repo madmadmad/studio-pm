@@ -25,10 +25,14 @@ class PortalPageController extends Controller
         abort_unless($this->policy->view($request->user(), $project), 403);
 
         $project->load([
-            'company',
+            'company.contacts',
             'tasks.subtasks',
             'tasks.files',
-            'messages' => fn ($q) => $q->with(['replies.senderUser', 'replies.senderContact', 'senderUser', 'senderContact']),
+            'messages' => fn ($q) => $q->with([
+                'senderUser', 'senderContact',
+                'participants.user', 'participants.contact',
+                'replies.senderUser', 'replies.senderContact',
+            ]),
             'activeUsers:id,name,role',
             'proposals' => fn ($q) => $q->where('status', 'accepted')->with('items'),
             'invoices' => fn ($q) => $q->whereIn('status', ['sent', 'paid'])->with('items'),
