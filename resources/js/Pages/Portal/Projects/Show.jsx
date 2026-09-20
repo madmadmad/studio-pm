@@ -245,6 +245,14 @@ function ProposalsTab({ project }) {
                         <div className="flex items-center gap-3">
                             <span className="tabular-nums text-sm">{formatCurrency(proposal.estimate_amount)}</span>
                             <ProposalStatusBadge proposal={proposal} />
+                            <a
+                                href={`/p/${proposal.accept_token}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="bg-pine text-white text-xs font-bold px-3 py-1.5 rounded hover:bg-pine/90"
+                            >
+                                Client view
+                            </a>
                         </div>
                     </div>
                 ))
@@ -268,6 +276,14 @@ function InvoicesTab({ project }) {
                         <div className="flex items-center gap-3">
                             <span className="tabular-nums text-sm">{formatCurrency(invoiceTotal(invoice.items, invoice.surcharge))}</span>
                             <InvoiceStatusBadge invoice={invoice} />
+                            <a
+                                href={`/i/${invoice.public_token}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="bg-pine text-white text-xs font-bold px-3 py-1.5 rounded hover:bg-pine/90"
+                            >
+                                Client view
+                            </a>
                         </div>
                     </div>
                 ))

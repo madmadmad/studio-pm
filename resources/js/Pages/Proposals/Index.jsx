@@ -104,16 +104,6 @@ export default function ProposalsIndex({ proposals: proposalsProp }) {
                                     <td className="px-4 py-3"><ProposalStatusBadge proposal={proposal} /></td>
                                     <td className="px-4 py-3 text-right">
                                         <div className="flex items-center justify-end gap-3">
-                                            {proposal.status !== 'draft' && (
-                                                <a
-                                                    href={`/p/${proposal.accept_token}`}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="bg-pine text-white text-xs font-bold px-3 py-1.5 rounded hover:bg-pine/90"
-                                                >
-                                                    Client view
-                                                </a>
-                                            )}
                                             <a href={`/p/${proposal.accept_token}`} target="_blank" rel="noopener noreferrer" title="Preview" className="text-sage hover:text-ink">
                                                 <Eye size={16} />
                                             </a>
