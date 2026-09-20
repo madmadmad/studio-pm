@@ -64,7 +64,8 @@ class ProjectDetailTest extends TestCase
         Mail::fake();
 
         $user = User::factory()->create();
-        $company = Company::create(['name' => 'Alder & Finch Design', 'email' => 'client@example.com']);
+        $company = Company::create(['name' => 'Alder & Finch Design']);
+        $company->contacts()->create(['name' => 'Rosa Alder', 'email' => 'client@example.com', 'is_primary' => true]);
         $project = $company->projects()->create(['name' => 'Brand refresh']);
 
         $response = $this->actingAs($user)->postJson("/api/projects/{$project->id}/messages", [
@@ -97,6 +98,24 @@ class ProjectDetailTest extends TestCase
         $response->assertStatus(422);
         $this->assertDatabaseCount('messages', 0);
         Mail::assertNothingSent();
+    }
+
+    public function test_sending_a_message_falls_back_to_any_contact_with_an_email_when_none_is_primary(): void
+    {
+        Mail::fake();
+
+        $user = User::factory()->create();
+        $company = Company::create(['name' => 'Alder & Finch Design']);
+        $company->contacts()->create(['name' => 'Rosa Alder', 'email' => 'rosa@alderfinch.co']);
+        $project = $company->projects()->create(['name' => 'Brand refresh']);
+
+        $response = $this->actingAs($user)->postJson("/api/projects/{$project->id}/messages", [
+            'subject' => 'Kickoff',
+            'body' => 'Excited to get started!',
+        ]);
+
+        $response->assertCreated();
+        Mail::assertSent(ProjectMessageMail::class, fn ($mail) => $mail->hasTo('rosa@alderfinch.co'));
     }
 
     public function test_notes_can_be_added_and_listed_for_a_project(): void

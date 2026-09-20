@@ -16,7 +16,7 @@ class InvoiceMarkPaidTest extends TestCase
     public function test_billing_a_time_entry_into_an_invoice_marks_it_billed_and_links_it(): void
     {
         $user = User::factory()->create();
-        $company = Company::create(['name' => 'Marsh Grove Bakery', 'default_hourly_rate' => 95]);
+        $company = Company::create(['name' => 'Marsh Grove Bakery']);
         $timeEntry = TimeEntry::create([
             'company_id' => $company->id,
             'user_id' => $user->id,

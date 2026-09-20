@@ -16,10 +16,11 @@ class CompanyController extends Controller
     {
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['nullable', 'email'],
             'phone' => ['nullable', 'string'],
-            'address' => ['nullable', 'string'],
-            'default_hourly_rate' => ['nullable', 'numeric', 'min:0'],
+            'address_line1' => ['nullable', 'string', 'max:255'],
+            'city' => ['nullable', 'string', 'max:255'],
+            'state' => ['nullable', 'string', 'max:255'],
+            'postal_code' => ['nullable', 'string', 'max:20'],
         ]);
 
         return Company::create($data);
@@ -34,10 +35,11 @@ class CompanyController extends Controller
     {
         $data = $request->validate([
             'name' => ['sometimes', 'string', 'max:255'],
-            'email' => ['nullable', 'email'],
             'phone' => ['nullable', 'string'],
-            'address' => ['nullable', 'string'],
-            'default_hourly_rate' => ['nullable', 'numeric', 'min:0'],
+            'address_line1' => ['nullable', 'string', 'max:255'],
+            'city' => ['nullable', 'string', 'max:255'],
+            'state' => ['nullable', 'string', 'max:255'],
+            'postal_code' => ['nullable', 'string', 'max:20'],
             'status' => ['sometimes', 'in:active,inactive'],
         ]);
 

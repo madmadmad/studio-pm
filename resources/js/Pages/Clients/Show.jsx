@@ -12,15 +12,23 @@ function reload() {
     router.reload({ only: ['company'] });
 }
 
+function formatAddress(company) {
+    const cityStateZip = [company.city, [company.state, company.postal_code].filter(Boolean).join(' ')]
+        .filter(Boolean)
+        .join(', ');
+    return [company.address_line1, cityStateZip].filter(Boolean).join(', ');
+}
+
 function DetailsCard({ company }) {
     const [editing, setEditing] = useState(false);
     const [saving, setSaving] = useState(false);
     const [form, setForm] = useState({
         name: company.name,
-        email: company.email ?? '',
         phone: company.phone ?? '',
-        address: company.address ?? '',
-        default_hourly_rate: company.default_hourly_rate ?? '',
+        address_line1: company.address_line1 ?? '',
+        city: company.city ?? '',
+        state: company.state ?? '',
+        postal_code: company.postal_code ?? '',
         status: company.status,
     });
 
@@ -37,6 +45,7 @@ function DetailsCard({ company }) {
     }
 
     if (!editing) {
+        const address = formatAddress(company);
         return (
             <div className="mb-6">
                 <div className="flex items-center justify-between mb-1">
@@ -49,8 +58,7 @@ function DetailsCard({ company }) {
                     </div>
                 </div>
                 <p className="text-sm text-sage">
-                    {company.email}{company.phone ? ` · ${company.phone}` : ''}
-                    {company.default_hourly_rate ? ` · ${formatCurrency(company.default_hourly_rate)}/hr` : ''}
+                    {company.phone}{address ? `${company.phone ? ' · ' : ''}${address}` : ''}
                 </p>
             </div>
         );
@@ -59,14 +67,17 @@ function DetailsCard({ company }) {
     return (
         <form onSubmit={submit} className="bg-white rounded-lg border border-border p-4 mb-6 grid grid-cols-2 gap-3">
             <input required placeholder="Client or company name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="border border-border rounded px-3 py-2 text-sm col-span-2" />
-            <input type="email" placeholder="Email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="border border-border rounded px-3 py-2 text-sm" />
             <input placeholder="Phone" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className="border border-border rounded px-3 py-2 text-sm" />
-            <input placeholder="Address" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} className="border border-border rounded px-3 py-2 text-sm col-span-2" />
-            <input type="number" min="0" placeholder="Default hourly rate ($)" value={form.default_hourly_rate} onChange={(e) => setForm({ ...form, default_hourly_rate: e.target.value })} className="border border-border rounded px-3 py-2 text-sm" />
             <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })} className="border border-border rounded px-3 py-2 text-sm">
                 <option value="active">Active</option>
                 <option value="inactive">Inactive</option>
             </select>
+            <input placeholder="Street address" value={form.address_line1} onChange={(e) => setForm({ ...form, address_line1: e.target.value })} className="border border-border rounded px-3 py-2 text-sm col-span-2" />
+            <div className="col-span-2 grid grid-cols-[2fr_1fr_1fr] gap-3">
+                <input placeholder="City" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} className="border border-border rounded px-3 py-2 text-sm" />
+                <input placeholder="State" value={form.state} onChange={(e) => setForm({ ...form, state: e.target.value })} className="border border-border rounded px-3 py-2 text-sm" />
+                <input placeholder="Zip" value={form.postal_code} onChange={(e) => setForm({ ...form, postal_code: e.target.value })} className="border border-border rounded px-3 py-2 text-sm" />
+            </div>
             <div className="flex gap-2 col-span-2 justify-end">
                 <button type="button" onClick={() => setEditing(false)} className="text-sm px-3 py-1.5 rounded text-sage">Cancel</button>
                 <button type="submit" disabled={saving} className="bg-pine text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50">Save</button>

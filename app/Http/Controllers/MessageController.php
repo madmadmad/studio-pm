@@ -21,9 +21,14 @@ class MessageController extends Controller
             'body' => ['required', 'string'],
         ]);
 
-        $toEmail = $project->company->email;
+        // Prefer the client's Primary contact; fall back to any contact
+        // with an email on file. Companies no longer carry their own email
+        // -- that lives on Contacts now.
+        $contact = $project->company->contacts()->where('is_primary', true)->whereNotNull('email')->first()
+            ?? $project->company->contacts()->whereNotNull('email')->first();
+        $toEmail = $contact?->email;
 
-        abort_if(! $toEmail, 422, 'This client has no email address on file to message.');
+        abort_if(! $toEmail, 422, 'This client has no contact with an email address on file to message.');
 
         $message = $project->messages()->create([
             'direction' => 'outbound',

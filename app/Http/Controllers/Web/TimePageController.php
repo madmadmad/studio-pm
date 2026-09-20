@@ -19,7 +19,7 @@ class TimePageController extends Controller
             'timeEntries' => TimeEntry::with(['company', 'project', 'task'])
                 ->orderByDesc('date')
                 ->get(),
-            'companies' => Company::orderBy('name')->get(['id', 'name', 'default_hourly_rate']),
+            'companies' => Company::orderBy('name')->get(['id', 'name']),
             'projects' => Project::orderBy('name')->get(['id', 'company_id', 'name']),
         ]);
     }

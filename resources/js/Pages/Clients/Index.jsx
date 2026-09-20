@@ -3,14 +3,13 @@ import { useState } from 'react';
 import AppLayout from '../../Layouts/AppLayout';
 import EmptyState from '../../Components/EmptyState';
 import { CompanyStatusBadge } from '../../Components/StatusBadges';
-import { formatCurrency } from '../../lib/format';
 import { api } from '../../lib/api';
 
 export default function ClientsIndex({ companies }) {
     const [showForm, setShowForm] = useState(false);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
-    const [form, setForm] = useState({ name: '', email: '', phone: '', default_hourly_rate: '' });
+    const [form, setForm] = useState({ name: '', phone: '' });
 
     async function handleSubmit(e) {
         e.preventDefault();
@@ -19,7 +18,7 @@ export default function ClientsIndex({ companies }) {
         setError('');
         try {
             await api.post('/api/companies', form);
-            setForm({ name: '', email: '', phone: '', default_hourly_rate: '' });
+            setForm({ name: '', phone: '' });
             setShowForm(false);
             router.reload({ only: ['companies'] });
         } catch (err) {
@@ -55,24 +54,9 @@ export default function ClientsIndex({ companies }) {
                         className="border border-border rounded px-3 py-2 text-sm col-span-2"
                     />
                     <input
-                        type="email"
-                        placeholder="Email"
-                        value={form.email}
-                        onChange={(e) => setForm({ ...form, email: e.target.value })}
-                        className="border border-border rounded px-3 py-2 text-sm"
-                    />
-                    <input
                         placeholder="Phone"
                         value={form.phone}
                         onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                        className="border border-border rounded px-3 py-2 text-sm"
-                    />
-                    <input
-                        type="number"
-                        min="0"
-                        placeholder="Default hourly rate ($)"
-                        value={form.default_hourly_rate}
-                        onChange={(e) => setForm({ ...form, default_hourly_rate: e.target.value })}
                         className="border border-border rounded px-3 py-2 text-sm col-span-2"
                     />
                     {error && <div className="text-sm text-brick col-span-2">{error}</div>}
@@ -96,7 +80,6 @@ export default function ClientsIndex({ companies }) {
                             <tr className="text-left border-b border-border text-sage">
                                 <th className="px-4 py-2 font-medium">Client</th>
                                 <th className="px-4 py-2 font-medium">Contact</th>
-                                <th className="px-4 py-2 font-medium">Rate</th>
                                 <th className="px-4 py-2 font-medium">Status</th>
                                 <th className="px-4 py-2 font-medium"></th>
                             </tr>
@@ -111,9 +94,6 @@ export default function ClientsIndex({ companies }) {
                                     </td>
                                     <td className="px-4 py-3 text-sage">
                                         {c.contacts?.[0] ? `${c.contacts[0].name} · ${c.contacts[0].email ?? ''}` : '—'}
-                                    </td>
-                                    <td className="px-4 py-3 tabular-nums">
-                                        {c.default_hourly_rate ? `${formatCurrency(c.default_hourly_rate)}/hr` : '—'}
                                     </td>
                                     <td className="px-4 py-3">
                                         <CompanyStatusBadge company={c} />

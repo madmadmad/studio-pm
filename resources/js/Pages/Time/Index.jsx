@@ -40,14 +40,14 @@ export default function TimeIndex({ timeEntries, companies, projects }) {
     }
 
     function billEntry(entry) {
+        // No client-level rate to calculate from -- rates live on Services
+        // now. Starts at $0 and gets filled in on the invoice form.
         const company = companies.find((c) => c.id === entry.company_id);
-        const rate = company?.default_hourly_rate || 0;
-        const amount = parseFloat(entry.hours) * parseFloat(rate);
         const next = addToTray({
             time_entry_id: entry.id,
             company_id: entry.company_id,
             description: `${entry.company?.name ?? company?.name ?? 'Client'} — ${entry.note || 'Time'}`,
-            amount,
+            amount: 0,
         });
         setTrayState(next);
     }
