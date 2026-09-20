@@ -1,5 +1,6 @@
-import { Head, router } from '@inertiajs/react';
-import { useState } from 'react';
+import { Head } from '@inertiajs/react';
+import { useEffect, useState } from 'react';
+import { PencilSimple, Trash } from '@phosphor-icons/react';
 import AppLayout from '../../Layouts/AppLayout';
 import EmptyState from '../../Components/EmptyState';
 import { formatCurrency } from '../../lib/format';
@@ -9,27 +10,70 @@ function emptyForm() {
     return { name: '', description: '', default_rate: '', unit: 'hourly' };
 }
 
-export default function ServicesIndex({ services }) {
+export default function ServicesIndex({ services: servicesProp }) {
+    const [services, setServices] = useState(servicesProp);
     const [showForm, setShowForm] = useState(false);
+    const [editingId, setEditingId] = useState(null);
     const [form, setForm] = useState(emptyForm());
     const [saving, setSaving] = useState(false);
+    const [deletingId, setDeletingId] = useState(null);
+
+    useEffect(() => {
+        setServices(servicesProp);
+    }, [servicesProp]);
+
+    function startCreate() {
+        setEditingId(null);
+        setForm(emptyForm());
+        setShowForm(true);
+    }
+
+    function startEdit(service) {
+        setEditingId(service.id);
+        setForm({
+            name: service.name,
+            description: service.description ?? '',
+            default_rate: service.default_rate,
+            unit: service.unit,
+        });
+        setShowForm(true);
+    }
+
+    function cancel() {
+        setShowForm(false);
+        setEditingId(null);
+        setForm(emptyForm());
+    }
 
     async function submit(e) {
         e.preventDefault();
         setSaving(true);
         try {
-            await api.post('/api/services', form);
-            setForm(emptyForm());
-            setShowForm(false);
-            router.reload({ only: ['services'] });
+            if (editingId) {
+                const updated = await api.patch(`/api/services/${editingId}`, form);
+                setServices((current) => current.map((s) => (s.id === editingId ? updated : s)));
+            } else {
+                const created = await api.post('/api/services', form);
+                setServices((current) => [...current, created].sort((a, b) => a.name.localeCompare(b.name)));
+            }
+            cancel();
         } finally {
             setSaving(false);
         }
     }
 
     async function remove(service) {
-        await api.delete(`/api/services/${service.id}`);
-        router.reload({ only: ['services'] });
+        if (deletingId === service.id) return;
+        if (!confirm(`Delete the "${service.name}" service? This can't be undone.`)) return;
+        setDeletingId(service.id);
+        try {
+            await api.delete(`/api/services/${service.id}`);
+            setServices((current) => current.filter((s) => s.id !== service.id));
+        } catch (err) {
+            alert(err.message || 'Could not delete this service.');
+        } finally {
+            setDeletingId(null);
+        }
     }
 
     return (
@@ -37,7 +81,7 @@ export default function ServicesIndex({ services }) {
             <Head title="Services" />
             <div className="flex items-center justify-between mb-1">
                 <h1 className="font-display text-2xl font-semibold">Services</h1>
-                <button onClick={() => setShowForm(true)} className="bg-ink text-white text-sm font-medium px-3 py-1.5 rounded">
+                <button onClick={startCreate} className="bg-ink text-white text-sm font-medium px-3 py-1.5 rounded">
                     Add service
                 </button>
             </div>
@@ -53,7 +97,7 @@ export default function ServicesIndex({ services }) {
                     </select>
                     <input placeholder="Description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="border border-border rounded px-3 py-2 text-sm col-span-2" />
                     <div className="flex gap-2 col-span-2 justify-end">
-                        <button type="button" onClick={() => setShowForm(false)} className="text-sm px-3 py-1.5 rounded text-sage">Cancel</button>
+                        <button type="button" onClick={cancel} className="text-sm px-3 py-1.5 rounded text-sage">Cancel</button>
                         <button type="submit" disabled={saving} className="bg-pine text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50">Save</button>
                     </div>
                 </form>
@@ -79,7 +123,19 @@ export default function ServicesIndex({ services }) {
                                     <td className="px-4 py-3 tabular-nums">{formatCurrency(service.default_rate)}</td>
                                     <td className="px-4 py-3 text-sage capitalize">{service.unit}</td>
                                     <td className="px-4 py-3 text-right">
-                                        <button onClick={() => remove(service)} className="text-xs text-sage hover:text-brick">Remove</button>
+                                        <div className="flex items-center justify-end gap-3">
+                                            <button onClick={() => startEdit(service)} title="Edit" className="text-pine hover:text-pine/70">
+                                                <PencilSimple size={16} />
+                                            </button>
+                                            <button
+                                                onClick={() => remove(service)}
+                                                disabled={deletingId === service.id}
+                                                title="Delete"
+                                                className="text-sage hover:text-brick disabled:opacity-50"
+                                            >
+                                                <Trash size={16} />
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                             ))}
