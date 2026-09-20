@@ -5,6 +5,9 @@ use App\Http\Controllers\ContactController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\NoteController;
+use App\Http\Controllers\Portal\MessageController as PortalMessageController;
+use App\Http\Controllers\Portal\TaskController as PortalTaskController;
+use App\Http\Controllers\PortalInviteController;
 use App\Http\Controllers\ProjectAssignmentController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProposalController;
@@ -41,6 +44,7 @@ Route::middleware('auth:sanctum')->name('api.')->group(function () {
     Route::middleware('role:manager')->group(function () {
         Route::apiResource('companies', CompanyController::class);
         Route::apiResource('companies.contacts', ContactController::class)->shallow();
+        Route::post('contacts/{contact}/portal-invite', [PortalInviteController::class, 'store']);
         Route::apiResource('services', ServiceController::class);
 
         Route::apiResource('companies.invoices', InvoiceController::class)->shallow()->only(['index', 'store', 'update', 'destroy']);
@@ -60,6 +64,16 @@ Route::middleware('auth:sanctum')->name('api.')->group(function () {
         Route::post('users/{user}/resend-invite', [UserController::class, 'resendInvite']);
         Route::post('users/{user}/reactivate', [UserController::class, 'reactivate']);
     });
+});
+
+// Client Hub mutations -- separate guard, separate controllers, since Gate
+// policies are keyed to the staff User model (see Policies\Portal\*).
+Route::middleware('auth:client')->prefix('portal')->name('api.portal.')->group(function () {
+    Route::post('projects/{project}/tasks', [PortalTaskController::class, 'store']);
+    Route::patch('tasks/{task}', [PortalTaskController::class, 'update']);
+
+    Route::get('projects/{project}/messages', [PortalMessageController::class, 'index']);
+    Route::post('projects/{project}/messages', [PortalMessageController::class, 'store']);
 });
 
 // Public, no auth -- the client-facing surface for proposals. Much smaller

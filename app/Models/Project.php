@@ -87,8 +87,10 @@ class Project extends Model
         return $this->hasMany(Note::class)->latest();
     }
 
+    // Root messages only (threads) -- replies are nested under each via
+    // Message::replies(). Oldest first so a thread reads top-to-bottom.
     public function messages(): HasMany
     {
-        return $this->hasMany(Message::class)->latest('sent_at');
+        return $this->hasMany(Message::class)->whereNull('parent_id')->oldest('sent_at');
     }
 }

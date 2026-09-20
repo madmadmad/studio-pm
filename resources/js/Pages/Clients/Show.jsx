@@ -113,6 +113,20 @@ function ContactsCard({ company }) {
         reload();
     }
 
+    async function inviteToPortal(contact) {
+        if (!contact.email) {
+            alert('Add an email address for this contact before inviting them to the portal.');
+            return;
+        }
+        if (!confirm(`Invite ${contact.name} to the client portal? They'll get an email with a sign-in link.`)) return;
+        try {
+            await api.post(`/api/contacts/${contact.id}/portal-invite`);
+            reload();
+        } catch (err) {
+            alert(err.message || 'Could not send this invite.');
+        }
+    }
+
     return (
         <div className="bg-white rounded-lg border border-border p-4 mb-6">
             <div className="flex items-center justify-between mb-3">
@@ -160,6 +174,13 @@ function ContactsCard({ company }) {
                                 <button onClick={() => toggleFlag(contact, 'is_billing')} className="text-xs text-sage hover:text-ink">
                                     {contact.is_billing ? 'Unset billing' : 'Make billing'}
                                 </button>
+                                {contact.has_portal_access ? (
+                                    <Badge tone="sage" label="Portal access" />
+                                ) : (
+                                    <button onClick={() => inviteToPortal(contact)} className="text-xs text-brass hover:underline">
+                                        Invite to portal
+                                    </button>
+                                )}
                             </div>
                         </li>
                     ))}

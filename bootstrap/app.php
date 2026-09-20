@@ -24,6 +24,12 @@ return Application::configure(basePath: dirname(__DIR__))
         // Global, not just the web group -- a deactivated user's existing
         // session cookie could otherwise still hit the API guard directly.
         $middleware->append(EnsureUserIsActive::class);
+
+        // Laravel's default guest-redirect always points at route('login'),
+        // regardless of which guard failed -- override so an unauthenticated
+        // Client Hub request lands on the portal's own sign-in page instead
+        // of the staff login screen.
+        $middleware->redirectGuestsTo(fn (Request $request) => $request->is('portal*') ? route('portal.login') : route('login'));
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

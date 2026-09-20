@@ -5,6 +5,8 @@ use App\Http\Controllers\Web\BookkeepingPageController;
 use App\Http\Controllers\Web\ClientPageController;
 use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\InvoicePageController;
+use App\Http\Controllers\Web\PortalAuthController;
+use App\Http\Controllers\Web\PortalPageController;
 use App\Http\Controllers\Web\ProjectPageController;
 use App\Http\Controllers\Web\ProposalPageController;
 use App\Http\Controllers\Web\PublicInvoiceController;
@@ -59,5 +61,23 @@ Route::middleware('auth')->group(function () {
         Route::get('/settings', [SettingsPageController::class, 'index'])->name('settings.index');
 
         Route::get('/users', [UserPageController::class, 'index'])->name('users.index');
+    });
+});
+
+// Client Hub -- entirely separate guard/session from staff auth above.
+Route::prefix('portal')->name('portal.')->group(function () {
+    Route::middleware('guest:client')->group(function () {
+        Route::get('/login', [PortalAuthController::class, 'showRequest'])->name('login');
+        Route::post('/login', [PortalAuthController::class, 'sendLink'])->middleware('throttle:magic-link')->name('login.send');
+    });
+
+    // Signed, not guest-gated -- a client may click a fresh link while an
+    // older session/tab is still open, and the signature is the real gate.
+    Route::get('/login/verify/{contactId}/{token}', [PortalAuthController::class, 'verify'])->name('verify');
+
+    Route::middleware('auth:client')->group(function () {
+        Route::post('/logout', [PortalAuthController::class, 'logout'])->name('logout');
+        Route::get('/', [PortalPageController::class, 'index'])->name('dashboard');
+        Route::get('/projects/{project}', [PortalPageController::class, 'show'])->name('projects.show');
     });
 });

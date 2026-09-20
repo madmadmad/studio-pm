@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Contact;
 use App\Models\User;
 
 return [
@@ -42,6 +43,13 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+
+        // Client Hub -- entirely separate from staff auth (passwordless,
+        // backed by Contact rather than User). See PortalAuthController.
+        'client' => [
+            'driver' => 'session',
+            'provider' => 'contacts',
+        ],
     ],
 
     /*
@@ -65,6 +73,11 @@ return [
         'users' => [
             'driver' => 'eloquent',
             'model' => env('AUTH_MODEL', User::class),
+        ],
+
+        'contacts' => [
+            'driver' => 'eloquent',
+            'model' => Contact::class,
         ],
 
         // 'users' => [
