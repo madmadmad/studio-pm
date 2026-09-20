@@ -115,7 +115,7 @@ export default function InvoiceShow({ invoice, studio }) {
 
                         {studio.payment_instructions && (
                             <div className="mt-6 pt-6 border-t border-border">
-                                <div className="mb-1 text-sm text-ink">Prefer to pay by ACH or check?</div>
+                                <div className="mb-1 text-sm font-semibold text-ink">Prefer to pay by ACH or check?</div>
                                 <div className="text-sm text-sage whitespace-pre-wrap">{studio.payment_instructions}</div>
                             </div>
                         )}
