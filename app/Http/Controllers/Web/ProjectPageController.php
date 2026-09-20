@@ -71,8 +71,11 @@ class ProjectPageController extends Controller
         return Inertia::render('Projects/Show', [
             'project' => $project,
             'canManageTeam' => $request->user()->isManager(),
-            'teamMembers' => $request->user()->isManager()
-                ? User::where('role', User::ROLE_TEAM_MEMBER)->whereNull('deactivated_at')->orderBy('name')->get(['id', 'name'])
+            // Every active staff account is assignable, regardless of role --
+            // a manager can be put on a project's roster too (for messaging,
+            // visibility, etc.), not just team members.
+            'assignableStaff' => $request->user()->isManager()
+                ? User::whereNull('deactivated_at')->orderBy('name')->get(['id', 'name'])
                 : [],
         ]);
     }

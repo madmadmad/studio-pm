@@ -17,7 +17,9 @@ class ProjectAssignmentController extends Controller
         abort_unless($request->user()->isManager(), 403);
 
         $data = $request->validate([
-            'user_id' => ['required', Rule::exists('users', 'id')->where('role', User::ROLE_TEAM_MEMBER)],
+            // Any active staff account is assignable -- managers included,
+            // not just team members.
+            'user_id' => ['required', Rule::exists('users', 'id')->whereNull('deactivated_at')],
         ]);
 
         $project->users()->syncWithoutDetaching([

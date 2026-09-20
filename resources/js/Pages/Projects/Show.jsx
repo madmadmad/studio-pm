@@ -1407,12 +1407,12 @@ function ExpensesTab({ project }) {
     );
 }
 
-function AssignedStaff({ project, canManageTeam, teamMembers }) {
+function AssignedStaff({ project, canManageTeam, assignableStaff }) {
     const [assigned, setAssigned] = useState(project.active_users || []);
     const [pickId, setPickId] = useState('');
     const [busy, setBusy] = useState(false);
 
-    const available = (teamMembers || []).filter((tm) => !assigned.some((a) => a.id === tm.id));
+    const available = (assignableStaff || []).filter((tm) => !assigned.some((a) => a.id === tm.id));
 
     async function assign(e) {
         e.preventDefault();
@@ -1448,9 +1448,9 @@ function AssignedStaff({ project, canManageTeam, teamMembers }) {
                         onChange={(e) => setPickId(e.target.value)}
                         className="border border-border rounded px-3 py-2 text-sm flex-1"
                     >
-                        <option value="">Assign a team member&hellip;</option>
-                        {available.map((tm) => (
-                            <option key={tm.id} value={tm.id}>{tm.name}</option>
+                        <option value="">Assign staff&hellip;</option>
+                        {available.map((staffer) => (
+                            <option key={staffer.id} value={staffer.id}>{staffer.name}</option>
                         ))}
                     </select>
                     <button type="submit" disabled={busy || !pickId} className="bg-fern text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50">Assign</button>
@@ -1476,7 +1476,7 @@ function AssignedStaff({ project, canManageTeam, teamMembers }) {
     );
 }
 
-function TeamTab({ project, canManageTeam, teamMembers }) {
+function TeamTab({ project, canManageTeam, assignableStaff }) {
     const [names, setNames] = useState(project.team_names || []);
     const [input, setInput] = useState('');
     const [saving, setSaving] = useState(false);
@@ -1505,7 +1505,7 @@ function TeamTab({ project, canManageTeam, teamMembers }) {
 
     return (
         <div>
-            <AssignedStaff project={project} canManageTeam={canManageTeam} teamMembers={teamMembers} />
+            <AssignedStaff project={project} canManageTeam={canManageTeam} assignableStaff={assignableStaff} />
 
             <h2 className="text-sm font-semibold mb-3 text-shadow-grey">Other names (not linked to a login)</h2>
             <form onSubmit={add} className="flex gap-2 mb-4">
@@ -1535,7 +1535,7 @@ function TeamTab({ project, canManageTeam, teamMembers }) {
     );
 }
 
-export default function ProjectsShow({ project, canManageTeam, teamMembers }) {
+export default function ProjectsShow({ project, canManageTeam, assignableStaff }) {
     const tabs = canManageTeam ? ALL_TABS : ALL_TABS.filter((t) => !MANAGER_ONLY_TABS.includes(t));
     const [tab, setTab] = useState('Overview');
 
@@ -1565,7 +1565,7 @@ export default function ProjectsShow({ project, canManageTeam, teamMembers }) {
             {tab === 'Proposals' && <ProposalsTab project={project} />}
             {tab === 'Billing' && <BillingTab project={project} />}
             {tab === 'Expenses' && <ExpensesTab project={project} />}
-            {tab === 'Team' && <TeamTab project={project} canManageTeam={canManageTeam} teamMembers={teamMembers} />}
+            {tab === 'Team' && <TeamTab project={project} canManageTeam={canManageTeam} assignableStaff={assignableStaff} />}
         </AppLayout>
     );
 }
