@@ -4,32 +4,50 @@
     <meta charset="utf-8">
     <title>Invoice #{{ $invoice->invoice_number }}</title>
     <style>
-        @page { margin: 50px; }
-        body { font-family: 'DejaVu Sans', sans-serif; font-size: 11px; color: #23262e; }
-        .studio-name { font-size: 16px; font-weight: bold; margin-bottom: 4px; }
-        .muted { color: #373b45; }
+        {{-- Self-hosted TTFs under resources/fonts/pdf -- dompdf's font
+             loader can't decode WOFF2 (no brotli support in this stack) and
+             its default chroot only allows paths under the app root, so
+             these are separate copies from the browser's /public/webfonts
+             set rather than the same files. See resources/fonts/pdf/README
+             if these ever need regenerating. --}}
+        @font-face { font-family: 'Inter'; src: url('{{ resource_path('fonts/pdf/Inter-Regular.ttf') }}') format('truetype'); font-weight: 400; }
+        @font-face { font-family: 'Inter'; src: url('{{ resource_path('fonts/pdf/Inter-Medium.ttf') }}') format('truetype'); font-weight: 500; }
+        @font-face { font-family: 'Inter'; src: url('{{ resource_path('fonts/pdf/Inter-SemiBold.ttf') }}') format('truetype'); font-weight: 600; }
+        @font-face { font-family: 'Inter'; src: url('{{ resource_path('fonts/pdf/Inter-Bold.ttf') }}') format('truetype'); font-weight: 700; }
+        @font-face { font-family: 'Inter Display'; src: url('{{ resource_path('fonts/pdf/InterDisplay-Medium.ttf') }}') format('truetype'); font-weight: 500; }
+        @font-face { font-family: 'Inter Display'; src: url('{{ resource_path('fonts/pdf/InterDisplay-SemiBold.ttf') }}') format('truetype'); font-weight: 600; }
+        @font-face { font-family: 'Inter Display'; src: url('{{ resource_path('fonts/pdf/InterDisplay-Bold.ttf') }}') format('truetype'); font-weight: 700; }
+        @font-face { font-family: 'Inter Display'; src: url('{{ resource_path('fonts/pdf/InterDisplay-ExtraBold.ttf') }}') format('truetype'); font-weight: 800; }
+
+        @page { margin: 1in; }
+        body { font-family: 'Inter', sans-serif; font-size: 11px; color: #23262e; }
+        .logo { width: 130px; height: auto; margin-bottom: 20px; }
+        .studio-name { font-size: 15px; font-weight: 500; margin-bottom: 4px; }
+        .muted { color: #595F64; }
         .header-table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
         .header-table td { vertical-align: top; width: 50%; padding-bottom: 24px; border-bottom: 1px solid #e7e7e9; }
         .header-table td.client { border-left: 1px solid #e7e7e9; padding-left: 16px; }
-        .label { font-size: 9px; font-weight: bold; text-transform: uppercase; color: #373b45; margin-bottom: 6px; }
-        h1 { font-size: 20px; margin: 0 0 6px; }
-        .meta { color: #373b45; margin-bottom: 24px; }
+        .label { font-size: 9px; font-weight: 600; text-transform: uppercase; color: #595F64; margin-bottom: 6px; }
+        h1 { font-family: 'Inter Display', sans-serif; font-weight: 800; letter-spacing: -0.02em; font-size: 22px; margin: 0 0 6px; }
+        .meta { color: #595F64; margin-bottom: 24px; }
         table.items { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
-        table.items th { text-align: left; font-size: 9px; text-transform: uppercase; color: #373b45; border-bottom: 1px solid #e7e7e9; padding: 6px 0; }
+        table.items th { text-align: left; font-size: 9px; font-weight: 600; text-transform: uppercase; color: #595F64; border-bottom: 1px solid #e7e7e9; padding: 6px 0; }
         table.items th.amount, table.items td.amount { text-align: right; }
         table.items td { padding: 10px 0; border-bottom: 1px solid #e7e7e9; vertical-align: top; }
-        .item-details { font-size: 9px; color: #373b45; margin-top: 4px; }
+        .item-details { font-size: 9px; color: #595F64; margin-top: 4px; }
         table.totals { width: 100%; border-collapse: collapse; margin-top: 8px; }
         table.totals td { padding: 4px 0; }
         table.totals td.amount { text-align: right; }
-        table.totals tr.total td { font-weight: bold; font-size: 13px; border-top: 1px solid #23262e; padding-top: 8px; }
-        .status { display: inline-block; padding: 2px 8px; border-radius: 3px; font-size: 9px; font-weight: bold; text-transform: uppercase; }
-        .status-draft { background: #e7e7e9; color: #373b45; }
+        table.totals tr.total td { font-weight: 700; font-size: 13px; border-top: 1px solid #23262e; padding-top: 8px; }
+        .status { display: inline-block; padding: 2px 8px; border-radius: 3px; font-size: 9px; font-weight: 700; text-transform: uppercase; }
+        .status-draft { background: #e7e7e9; color: #595F64; }
         .status-sent { background: #ffe3e9; color: #ff365b; }
-        .status-paid { background: #e7efe3; color: #507e40; }
+        .status-paid { background: #e7efe3; color: #5AA329; }
     </style>
 </head>
 <body>
+    <img class="logo" src="{{ public_path('images/studio-lockup.png') }}" alt="{{ $studio->name }}">
+
     <div class="studio-name">{{ $studio->name }}</div>
     @if ($studio->address)
         <div class="muted">{!! nl2br(e($studio->address)) !!}</div>

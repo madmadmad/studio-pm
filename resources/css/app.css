@@ -101,7 +101,7 @@
      */
     --color-gunmetal: #23262e;
     --color-porcelain: #f7f7f7;
-    --color-border: #e7e7e9;
+    --color-border: #eeeeee;
     --color-shadow-grey: #595F64;
     --color-watermelon: #f41347;
     --color-watermelon-soft: #fce2e8;
@@ -116,7 +116,7 @@
      * is intentionally untouched: it's a pill/circle shape, not a radius
      * amount, so tying it to this would distort badges and avatars.)
      */
-    --radius-app: 0.5rem;
+    --radius-app: 0.22rem;
     --radius: var(--radius-app);
     --radius-sm: var(--radius-app);
     --radius-md: var(--radius-app);

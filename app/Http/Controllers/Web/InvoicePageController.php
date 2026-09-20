@@ -41,7 +41,7 @@ class InvoicePageController extends Controller
         $pdf = Pdf::loadView('pdfs.invoice', [
             'invoice' => $invoice,
             'studio' => StudioProfile::current(),
-        ]);
+        ])->setPaper('letter'); // US business -- dompdf defaults to A4
 
         return $pdf->download("invoice-{$invoice->invoice_number}.pdf");
     }
