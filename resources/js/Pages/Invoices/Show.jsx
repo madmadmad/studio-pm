@@ -1,6 +1,6 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
-import { ArrowLeft, DownloadSimple } from '@phosphor-icons/react';
+import { ArrowLeft, Check, Copy, DownloadSimple, Eye } from '@phosphor-icons/react';
 import AppLayout from '../../Layouts/AppLayout';
 import Toggle from '../../Components/Toggle';
 import { InvoiceStatusBadge } from '../../Components/StatusBadges';
@@ -106,15 +106,15 @@ export default function InvoicesShow({ invoice }) {
                 <h1 className="font-display text-2xl font-semibold">{invoice.company.name}</h1>
                 <div className="flex items-center gap-3">
                     <InvoiceStatusBadge invoice={invoice} />
-                    <a href={`/i/${invoice.public_token}`} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-shadow-grey hover:underline">
-                        Preview
+                    <a href={`/i/${invoice.public_token}`} target="_blank" rel="noopener noreferrer" title="Preview" className="text-shadow-grey hover:text-gunmetal">
+                        <Eye size={16} />
                     </a>
-                    <button onClick={copyLink} className="text-sm font-medium text-shadow-grey">
-                        {copied ? 'Copied!' : 'Copy link'}
+                    <button onClick={copyLink} title={copied ? 'Copied!' : 'Copy link'} className="text-shadow-grey hover:text-gunmetal">
+                        {copied ? <Check size={16} /> : <Copy size={16} />}
                     </button>
                     {invoice.status !== 'draft' && (
-                        <a href={`/invoices/${invoice.id}/pdf`} className="text-sm font-medium text-shadow-grey inline-flex items-center gap-1">
-                            <DownloadSimple size={14} /> PDF
+                        <a href={`/invoices/${invoice.id}/pdf`} title="Download PDF" className="text-shadow-grey hover:text-gunmetal">
+                            <DownloadSimple size={16} />
                         </a>
                     )}
                     {invoice.status === 'draft' && !editing && (

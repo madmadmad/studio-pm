@@ -1,6 +1,6 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
-import { ArrowLeft, DotsSixVertical } from '@phosphor-icons/react';
+import { ArrowLeft, Check, Copy, DotsSixVertical, Eye } from '@phosphor-icons/react';
 import AppLayout from '../../Layouts/AppLayout';
 import RichTextEditor from '../../Components/RichTextEditor';
 import { ProposalStatusBadge } from '../../Components/StatusBadges';
@@ -209,16 +209,16 @@ export default function ProposalsForm({ proposal, companies, services, presetCom
                 {isEditing && (
                     <div className="flex items-center gap-3">
                         <ProposalStatusBadge proposal={proposal} />
-                        <a href={`/p/${proposal.accept_token}`} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-shadow-grey hover:underline">
-                            Preview
+                        <a href={`/p/${proposal.accept_token}`} target="_blank" rel="noopener noreferrer" title="Preview" className="text-shadow-grey hover:text-gunmetal">
+                            <Eye size={16} />
                         </a>
                         {proposal.status === 'draft' ? (
                             <button type="button" disabled={sending} onClick={sendProposal} className="text-sm font-medium text-watermelon disabled:opacity-50">
                                 {sending ? 'Sending…' : 'Send'}
                             </button>
                         ) : (
-                            <button type="button" onClick={copyLink} className="text-sm font-medium text-shadow-grey">
-                                {copied ? 'Copied!' : 'Copy link'}
+                            <button type="button" onClick={copyLink} title={copied ? 'Copied!' : 'Copy link'} className="text-shadow-grey hover:text-gunmetal">
+                                {copied ? <Check size={16} /> : <Copy size={16} />}
                             </button>
                         )}
                         {proposal.status === 'accepted' && (
