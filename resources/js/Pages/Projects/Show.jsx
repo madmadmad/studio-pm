@@ -1057,6 +1057,7 @@ function ProposalsTab({ project }) {
                                 <th className="px-4 py-2 font-medium">Title</th>
                                 <th className="px-4 py-2 font-medium">Estimate</th>
                                 <th className="px-4 py-2 font-medium">Status</th>
+                                <th className="px-4 py-2 font-medium"></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -1071,6 +1072,18 @@ function ProposalsTab({ project }) {
                                         {proposal.estimate_amount ? formatCurrency(proposal.estimate_amount) : '—'}
                                     </td>
                                     <td className="px-4 py-3"><ProposalStatusBadge proposal={proposal} /></td>
+                                    <td className="px-4 py-3 text-right">
+                                        {proposal.status !== 'draft' && (
+                                            <a
+                                                href={`/p/${proposal.accept_token}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="bg-pine text-white text-xs font-bold px-3 py-1.5 rounded hover:bg-pine/90"
+                                            >
+                                                Client view
+                                            </a>
+                                        )}
+                                    </td>
                                 </tr>
                             ))}
                         </tbody>
@@ -1344,6 +1357,16 @@ function BillingTab({ project }) {
                                     <td className="px-4 py-2"><InvoiceStatusBadge invoice={invoice} /></td>
                                     <td className="px-4 py-2 text-right">
                                         <div className="flex items-center justify-end gap-3">
+                                            {invoice.status !== 'draft' && (
+                                                <a
+                                                    href={`/i/${invoice.public_token}`}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="bg-pine text-white text-xs font-bold px-3 py-1.5 rounded hover:bg-pine/90"
+                                                >
+                                                    Client view
+                                                </a>
+                                            )}
                                             <a href={`/i/${invoice.public_token}`} target="_blank" rel="noopener noreferrer" title="Preview" className="text-sage hover:text-ink">
                                                 <Eye size={16} />
                                             </a>
