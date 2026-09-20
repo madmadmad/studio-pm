@@ -46,7 +46,10 @@ class ProposalController extends Controller
             $projectId = $data['project_id'] ?? null;
 
             if (! $projectId && ! empty($data['new_project_name'])) {
-                $projectId = $company->projects()->create(['name' => $data['new_project_name']])->id;
+                $projectId = $company->projects()->create([
+                    'name' => $data['new_project_name'],
+                    'contact_id' => $data['contact_id'] ?? null,
+                ])->id;
             }
 
             $proposal = $company->proposals()->create([

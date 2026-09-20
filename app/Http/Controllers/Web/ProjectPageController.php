@@ -14,7 +14,7 @@ class ProjectPageController extends Controller
     {
         return Inertia::render('Projects/Index', [
             'projects' => Project::where('status', '!=', 'archived')->with(['company', 'tasks'])->orderBy('name')->get(),
-            'companies' => Company::orderBy('name')->get(['id', 'name']),
+            'companies' => Company::with('contacts')->orderBy('name')->get(['id', 'name']),
         ]);
     }
 
@@ -24,7 +24,7 @@ class ProjectPageController extends Controller
     {
         return Inertia::render('Projects/Index', [
             'projects' => Project::where('status', 'archived')->with(['company', 'tasks'])->orderBy('name')->get(),
-            'companies' => Company::orderBy('name')->get(['id', 'name']),
+            'companies' => Company::with('contacts')->orderBy('name')->get(['id', 'name']),
             'archivedView' => true,
         ]);
     }
@@ -32,7 +32,8 @@ class ProjectPageController extends Controller
     public function show(Project $project): Response
     {
         $project->load([
-            'company',
+            'company.contacts',
+            'contact',
             'tasks.subtasks',
             'tasks.files',
             'notes',

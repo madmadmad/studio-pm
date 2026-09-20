@@ -80,6 +80,58 @@ function PoNumberField({ project }) {
     );
 }
 
+function ContactField({ project }) {
+    const [editing, setEditing] = useState(false);
+    const [value, setValue] = useState(project.contact_id ? String(project.contact_id) : '');
+    const [saving, setSaving] = useState(false);
+    const contacts = project.company.contacts || [];
+
+    async function save() {
+        setSaving(true);
+        try {
+            await api.patch(`/api/projects/${project.id}`, { contact_id: value || null });
+            setEditing(false);
+            reload();
+        } finally {
+            setSaving(false);
+        }
+    }
+
+    if (editing) {
+        return (
+            <div className="flex items-center gap-2 mb-6">
+                <select
+                    autoFocus
+                    value={value}
+                    onChange={(e) => setValue(e.target.value)}
+                    className="border border-border rounded px-3 py-1.5 text-sm"
+                >
+                    <option value="">No contact</option>
+                    {contacts.map((contact) => (
+                        <option key={contact.id} value={contact.id}>
+                            {contact.name}{contact.email ? ` (${contact.email})` : ''}
+                        </option>
+                    ))}
+                </select>
+                <button onClick={save} disabled={saving} className="text-sm font-medium text-pine disabled:opacity-50">Save</button>
+                <button onClick={() => setEditing(false)} className="text-sm text-sage">Cancel</button>
+            </div>
+        );
+    }
+
+    return (
+        <div className="flex items-center gap-2 text-sm text-sage mb-6">
+            <span>Contact: {project.contact?.name || '—'}</span>
+            <button
+                onClick={() => { setValue(project.contact_id ? String(project.contact_id) : ''); setEditing(true); }}
+                className="text-sm font-medium text-pine"
+            >
+                Edit
+            </button>
+        </div>
+    );
+}
+
 function OverviewTab({ project }) {
     const totalHours = project.time_entries.reduce((s, e) => s + parseFloat(e.hours), 0);
     const unbilledHours = project.time_entries.filter((e) => !e.billed).reduce((s, e) => s + parseFloat(e.hours), 0);
@@ -91,6 +143,7 @@ function OverviewTab({ project }) {
     return (
         <div>
             {project.description && <p className="text-sm text-sage mb-6">{project.description}</p>}
+            <ContactField project={project} />
             <PoNumberField project={project} />
             <div className={`grid gap-4 mb-6 ${budget > 0 ? 'grid-cols-6' : 'grid-cols-4'}`}>
                 <div className="bg-white rounded-lg border border-border p-4">

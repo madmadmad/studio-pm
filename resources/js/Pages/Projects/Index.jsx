@@ -24,7 +24,7 @@ const STATUS_OPTIONS = [
 ];
 
 function emptyForm() {
-    return { company_id: '', name: '', description: '' };
+    return { company_id: '', contact_id: '', name: '', description: '' };
 }
 
 export default function ProjectsIndex({ projects, companies, archivedView = false }) {
@@ -36,6 +36,13 @@ export default function ProjectsIndex({ projects, companies, archivedView = fals
     const [pendingStatus, setPendingStatus] = useState({});
 
     const visibleProjects = filter === 'all' ? projects : projects.filter((p) => p.status === filter);
+    const contactsForCompany = companies.find((c) => String(c.id) === String(form.company_id))?.contacts || [];
+
+    function handleCompanyChange(value) {
+        const company = companies.find((c) => String(c.id) === String(value));
+        const primaryContact = company?.contacts?.find((c) => c.is_primary);
+        setForm({ ...form, company_id: value, contact_id: primaryContact ? String(primaryContact.id) : '' });
+    }
 
     async function submit(e) {
         e.preventDefault();
@@ -49,6 +56,7 @@ export default function ProjectsIndex({ projects, companies, archivedView = fals
             await api.post(`/api/companies/${form.company_id}/projects`, {
                 name: form.name,
                 description: form.description,
+                contact_id: form.contact_id || null,
             });
             setForm(emptyForm());
             setShowForm(false);
@@ -124,11 +132,26 @@ export default function ProjectsIndex({ projects, companies, archivedView = fals
                     <select
                         required
                         value={form.company_id}
-                        onChange={(e) => setForm({ ...form, company_id: e.target.value })}
-                        className="border border-border rounded px-3 py-2 text-sm col-span-2"
+                        onChange={(e) => handleCompanyChange(e.target.value)}
+                        className="border border-border rounded px-3 py-2 text-sm"
                     >
                         <option value="">Select client</option>
                         {companies.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    </select>
+                    <select
+                        value={form.contact_id}
+                        disabled={!form.company_id}
+                        onChange={(e) => setForm({ ...form, contact_id: e.target.value })}
+                        className="border border-border rounded px-3 py-2 text-sm disabled:bg-paper disabled:text-sage"
+                    >
+                        <option value="">
+                            {form.company_id ? 'No contact' : 'Select a client first'}
+                        </option>
+                        {contactsForCompany.map((contact) => (
+                            <option key={contact.id} value={contact.id}>
+                                {contact.name}{contact.email ? ` (${contact.email})` : ''}
+                            </option>
+                        ))}
                     </select>
                     <input
                         required

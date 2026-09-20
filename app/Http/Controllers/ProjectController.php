@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Company;
 use App\Models\Project;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class ProjectController extends Controller
 {
@@ -18,6 +19,7 @@ class ProjectController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
+            'contact_id' => ['nullable', Rule::exists('contacts', 'id')->where('company_id', $company->id)],
         ]);
 
         return $company->projects()->create($data);
@@ -25,7 +27,7 @@ class ProjectController extends Controller
 
     public function show(Project $project)
     {
-        return $project->load('tasks', 'notes', 'messages', 'invoices', 'transactions', 'company');
+        return $project->load('tasks', 'notes', 'messages', 'invoices', 'transactions', 'company', 'contact');
     }
 
     public function update(Request $request, Project $project)
@@ -35,6 +37,7 @@ class ProjectController extends Controller
             'po_number' => ['nullable', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'status' => ['sometimes', 'in:leads,estimated,active,inactive,completed,archived'],
+            'contact_id' => ['nullable', Rule::exists('contacts', 'id')->where('company_id', $project->company_id)],
             'team_names' => ['sometimes', 'array'],
             'team_names.*' => ['string', 'max:255'],
         ]);
