@@ -22,12 +22,11 @@
         @page { margin: 1in; }
         body { font-family: 'Inter', sans-serif; font-size: 11px; color: #23262e; }
         .logo { width: 130px; height: auto; margin-bottom: 20px; }
-        .studio-name { font-size: 15px; font-weight: 500; margin-bottom: 4px; }
+        .studio-name { font-weight: 500; margin-bottom: 4px; }
         .muted { color: #595F64; }
         .header-table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
         .header-table td { vertical-align: top; width: 50%; padding-bottom: 24px; border-bottom: 1px solid #e7e7e9; }
         .header-table td.client { border-left: 1px solid #e7e7e9; padding-left: 16px; }
-        .label { font-size: 9px; font-weight: 600; text-transform: uppercase; color: #595F64; margin-bottom: 6px; }
         h1 { font-family: 'Inter Display', sans-serif; font-weight: 800; letter-spacing: -0.02em; font-size: 22px; margin: 0 0 6px; }
         .meta { color: #595F64; margin-bottom: 24px; }
         table.items { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
@@ -48,20 +47,19 @@
 <body>
     <img class="logo" src="{{ public_path('images/studio-lockup.png') }}" alt="{{ $studio->name }}">
 
-    <div class="studio-name">{{ $studio->name }}</div>
-    @if ($studio->address)
-        <div class="muted">{!! nl2br(e($studio->address)) !!}</div>
-    @endif
-    @if ($studio->email)<div class="muted">{{ $studio->email }}</div>@endif
-    @if ($studio->phone)<div class="muted">{{ $studio->phone }}</div>@endif
-    @if ($studio->website)<div class="muted">{{ $studio->website }}</div>@endif
-
     <table class="header-table">
         <tr>
-            <td>&nbsp;</td>
+            <td>
+                <div class="studio-name"><strong>{{ $studio->name }}</strong></div>
+                @if ($studio->address)
+                    <div class="muted">{!! nl2br(e($studio->address)) !!}</div>
+                @endif
+                @if ($studio->email)<div class="muted">{{ $studio->email }}</div>@endif
+                @if ($studio->phone)<div class="muted">{{ $studio->phone }}</div>@endif
+                @if ($studio->website)<div class="muted">{{ $studio->website }}</div>@endif
+            </td>
             <td class="client">
-                <div class="label">Client</div>
-                <div><strong>{{ $invoice->company->name }}</strong></div>
+                <div class="studio-name"><strong>{{ $invoice->company->name }}</strong></div>
                 @if ($invoice->project)
                     <div class="muted">{{ $invoice->project->name }}</div>
                 @endif
