@@ -99,15 +99,27 @@
      * Fern -> edit/save actions and "done" states. Hot Fuchsia -> danger/overdue.
      */
     --color-ink: #23262e;
-    --color-paper: #f4f4ef;
+    --color-paper: #f7f7f7;
     --color-border: #e7e7e9;
-    --color-sage: #373b45;
-    --color-brass: #f41347;
+    --color-sage: #595F64;
+    --color-brass: #ffffff;
     --color-brass-soft: #fce2e8;
-    --color-pine: #507e40;
+    --color-pine: #5AA329;
     --color-pine-soft: #e7efe3;
     --color-brick: #ff365b;
     --color-brick-soft: #ffe3e9;
+
+    /*
+     * Single knob for corner rounding app-wide -- change this one value to
+     * adjust every `rounded`/`rounded-lg` element at once. (`rounded-full`
+     * is intentionally untouched: it's a pill/circle shape, not a radius
+     * amount, so tying it to this would distort badges and avatars.)
+     */
+    --radius-app: 0.5rem;
+    --radius: var(--radius-app);
+    --radius-sm: var(--radius-app);
+    --radius-md: var(--radius-app);
+    --radius-lg: var(--radius-app);
 }
 
 body {
