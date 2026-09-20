@@ -16,7 +16,7 @@ class PortalPageController extends Controller
     public function index(Request $request): Response
     {
         return Inertia::render('Portal/Projects/Index', [
-            'projects' => $request->user()->visibleProjects()->where('status', '!=', 'archived')->orderBy('name')->get(),
+            'projects' => $request->user()->visibleProjects()->where('status', 'active')->orderBy('name')->get(),
         ]);
     }
 

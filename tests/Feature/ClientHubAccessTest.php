@@ -27,9 +27,9 @@ class ClientHubAccessTest extends TestCase
     public function test_a_client_sees_only_their_own_companys_projects(): void
     {
         $contact = $this->portalContact();
-        $mine = $contact->company->projects()->create(['name' => 'Brand refresh']);
+        $mine = $contact->company->projects()->create(['name' => 'Brand refresh', 'status' => 'active']);
         $otherCompany = Company::create(['name' => 'Marsh Grove Bakery']);
-        $notMine = $otherCompany->projects()->create(['name' => 'Not yours']);
+        $notMine = $otherCompany->projects()->create(['name' => 'Not yours', 'status' => 'active']);
 
         $response = $this->actingAs($contact, 'client')->get('/portal');
 
@@ -37,6 +37,20 @@ class ClientHubAccessTest extends TestCase
         $ids = collect($response->viewData('page')['props']['projects'])->pluck('id');
         $this->assertTrue($ids->contains($mine->id));
         $this->assertFalse($ids->contains($notMine->id));
+    }
+
+    public function test_the_project_list_only_shows_active_projects(): void
+    {
+        $contact = $this->portalContact();
+        $active = $contact->company->projects()->create(['name' => 'Active one', 'status' => 'active']);
+        foreach (['leads', 'estimated', 'inactive', 'completed', 'archived'] as $status) {
+            $contact->company->projects()->create(['name' => "A {$status} project", 'status' => $status]);
+        }
+
+        $response = $this->actingAs($contact, 'client')->get('/portal');
+
+        $ids = collect($response->viewData('page')['props']['projects'])->pluck('id');
+        $this->assertEquals([$active->id], $ids->all());
     }
 
     public function test_a_client_cannot_view_a_project_outside_their_company(): void
