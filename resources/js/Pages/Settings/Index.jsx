@@ -10,6 +10,7 @@ export default function SettingsIndex({ studioProfile }) {
         email: studioProfile.email ?? '',
         phone: studioProfile.phone ?? '',
         website: studioProfile.website ?? '',
+        payment_instructions: studioProfile.payment_instructions ?? '',
     });
     const [saving, setSaving] = useState(false);
     const [saved, setSaved] = useState(false);
@@ -66,6 +67,18 @@ export default function SettingsIndex({ studioProfile }) {
                     placeholder="Website"
                     value={form.website}
                     onChange={(e) => setForm({ ...form, website: e.target.value })}
+                    className="border border-border rounded px-3 py-2 text-sm w-full mb-4"
+                />
+
+                <div className="text-xs font-semibold text-sage mb-2">Payment instructions</div>
+                <p className="text-xs text-sage mb-2">
+                    Shown on sent invoices alongside the Pay Now button, for clients who'd rather pay by ACH or check.
+                </p>
+                <textarea
+                    placeholder={'e.g. To pay by ACH or check, contact us at hello@studio.com for our routing and account details, or mail a check to the address above.'}
+                    value={form.payment_instructions}
+                    onChange={(e) => setForm({ ...form, payment_instructions: e.target.value })}
+                    rows={3}
                     className="border border-border rounded px-3 py-2 text-sm w-full mb-3"
                 />
                 <div className="flex items-center justify-end gap-3">

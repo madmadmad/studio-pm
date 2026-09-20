@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Company;
 use App\Models\Invoice;
+use App\Models\StudioProfile;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -55,5 +56,22 @@ class PublicInvoiceTest extends TestCase
     public function test_an_unknown_token_returns_not_found(): void
     {
         $this->get('/i/does-not-exist')->assertNotFound();
+    }
+
+    public function test_payment_instructions_are_included_in_the_studio_prop(): void
+    {
+        StudioProfile::current()->update(['payment_instructions' => 'Mail a check to our office, or email us for ACH details.']);
+        $company = Company::create(['name' => 'Alder & Finch Design']);
+        $invoice = $company->invoices()->create([
+            'status' => 'sent', 'surcharge' => false, 'issued_on' => now(), 'due_on' => now()->addDays(30),
+        ]);
+        $invoice->items()->create(['description' => 'Design work', 'amount' => 1000]);
+
+        $response = $this->get("/i/{$invoice->public_token}");
+
+        $response->assertOk();
+        $response->assertInertia(fn ($page) => $page
+            ->where('studio.payment_instructions', 'Mail a check to our office, or email us for ACH details.')
+        );
     }
 }

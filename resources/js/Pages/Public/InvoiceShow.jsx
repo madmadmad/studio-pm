@@ -103,6 +103,9 @@ export default function InvoiceShow({ invoice, studio }) {
                     </div>
                 ) : invoice.status === 'sent' ? (
                     <div>
+                        <div className="font-display text-lg font-semibold mb-3">Ways to pay</div>
+
+                        <div className="mb-1 text-sm text-ink">Pay online by credit card</div>
                         <button
                             onClick={payNow}
                             disabled={paying}
@@ -110,8 +113,16 @@ export default function InvoiceShow({ invoice, studio }) {
                         >
                             {paying ? 'Redirecting…' : 'Pay Now'}
                         </button>
-                        <div className="text-xs text-sage mt-2">Due {formatDate(invoice.due_on)}</div>
                         {error && <div className="text-sm text-brick mt-2">{error}</div>}
+
+                        {studio.payment_instructions && (
+                            <div className="mt-6 pt-6 border-t border-border">
+                                <div className="mb-1 text-sm text-ink">Prefer to pay by ACH or check?</div>
+                                <div className="text-sm text-sage whitespace-pre-wrap">{studio.payment_instructions}</div>
+                            </div>
+                        )}
+
+                        <div className="text-xs text-sage mt-4">Due {formatDate(invoice.due_on)}</div>
                     </div>
                 ) : (
                     <div className="text-sm text-sage">Due {formatDate(invoice.due_on)}.</div>

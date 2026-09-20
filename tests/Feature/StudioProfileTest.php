@@ -48,4 +48,20 @@ class StudioProfileTest extends TestCase
         $this->actingAs($user)->patchJson('/api/studio-profile', ['name' => ''])
             ->assertUnprocessable();
     }
+
+    public function test_payment_instructions_can_be_set(): void
+    {
+        $user = User::factory()->create();
+        StudioProfile::current();
+
+        $response = $this->actingAs($user)->patchJson('/api/studio-profile', [
+            'name' => 'Madhouse Studio',
+            'payment_instructions' => 'For ACH or check, email hello@madhouse.studio for details.',
+        ]);
+
+        $response->assertOk();
+        $this->assertDatabaseHas('studio_profiles', [
+            'payment_instructions' => 'For ACH or check, email hello@madhouse.studio for details.',
+        ]);
+    }
 }
