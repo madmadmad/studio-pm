@@ -2,20 +2,23 @@ import { Link, router, usePage } from '@inertiajs/react';
 
 const NAV_ITEMS = [
     { href: '/', label: 'Overview' },
-    { href: '/clients', label: 'Clients' },
+    { href: '/clients', label: 'Clients', managerOnly: true },
     { href: '/projects', label: 'Projects' },
     { href: '/time-entries', label: 'Time' },
     { href: '/timesheets', label: 'Timesheets' },
-    { href: '/invoices', label: 'Invoices' },
-    { href: '/proposals', label: 'Proposals' },
-    { href: '/bookkeeping', label: 'Bookkeeping' },
-    { href: '/services', label: 'Services' },
-    { href: '/settings', label: 'Settings' },
+    { href: '/invoices', label: 'Invoices', managerOnly: true },
+    { href: '/proposals', label: 'Proposals', managerOnly: true },
+    { href: '/bookkeeping', label: 'Bookkeeping', managerOnly: true },
+    { href: '/services', label: 'Services', managerOnly: true },
+    { href: '/users', label: 'Team', managerOnly: true },
+    { href: '/settings', label: 'Settings', managerOnly: true },
 ];
 
 export default function AppLayout({ children }) {
     const { url, props } = usePage();
     const user = props.auth?.user;
+    const isManager = user?.role === 'manager';
+    const navItems = NAV_ITEMS.filter((item) => !item.managerOnly || isManager);
 
     function isActive(href) {
         if (href === '/') return url === '/';
@@ -34,7 +37,7 @@ export default function AppLayout({ children }) {
                     <div className="text-lg font-semibold text-paper">Studio PM</div>
                     <div className="text-xs text-paper/50">Client and billing workspace</div>
                 </div>
-                {NAV_ITEMS.map((item) => (
+                {navItems.map((item) => (
                     <Link
                         key={item.href}
                         href={item.href}

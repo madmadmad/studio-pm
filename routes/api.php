@@ -5,6 +5,7 @@ use App\Http\Controllers\ContactController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\NoteController;
+use App\Http\Controllers\ProjectAssignmentController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProposalController;
 use App\Http\Controllers\ServiceController;
@@ -14,18 +15,18 @@ use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TaskFileController;
 use App\Http\Controllers\TimeEntryController;
 use App\Http\Controllers\TransactionController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth:sanctum')->name('api.')->group(function () {
-    Route::apiResource('companies', CompanyController::class);
-    Route::apiResource('companies.contacts', ContactController::class)->shallow();
+    // Projects/tasks/time entries are open to both roles -- each controller
+    // scopes what a Team Member actually sees/touches via the Policies.
     Route::apiResource('companies.projects', ProjectController::class)->shallow();
     Route::apiResource('projects.tasks', TaskController::class)->shallow();
     Route::apiResource('tasks.subtasks', SubtaskController::class)->shallow()->only(['store', 'update', 'destroy']);
     Route::apiResource('tasks.files', TaskFileController::class)->shallow()->only(['store', 'destroy']);
     Route::apiResource('projects.notes', NoteController::class)->shallow()->only(['index', 'store', 'update', 'destroy']);
     Route::apiResource('projects.messages', MessageController::class)->shallow()->only(['index', 'store']);
-    Route::apiResource('services', ServiceController::class);
 
     Route::get('time-entries', [TimeEntryController::class, 'index']);
     Route::post('time-entries', [TimeEntryController::class, 'store']);
@@ -33,18 +34,32 @@ Route::middleware('auth:sanctum')->name('api.')->group(function () {
     Route::delete('time-entries/{timeEntry}', [TimeEntryController::class, 'destroy']);
     Route::get('timesheets/weekly', [TimeEntryController::class, 'weekly']);
 
-    Route::apiResource('companies.invoices', InvoiceController::class)->shallow()->only(['index', 'store', 'update', 'destroy']);
-    Route::post('invoices/{invoice}/send', [InvoiceController::class, 'send']);
-    Route::post('invoices/{invoice}/mark-paid', [InvoiceController::class, 'markPaid']);
+    Route::post('projects/{project}/assignments', [ProjectAssignmentController::class, 'store']);
+    Route::delete('projects/{project}/assignments/{user}', [ProjectAssignmentController::class, 'destroy']);
 
-    Route::apiResource('companies.proposals', ProposalController::class)->shallow()->only(['index', 'store', 'update', 'destroy']);
-    Route::post('proposals/{proposal}/send', [ProposalController::class, 'send']);
-    Route::post('proposals/{proposal}/unaccept', [ProposalController::class, 'unaccept']);
+    // Firm-wide financials and the client directory -- Managers only, full stop.
+    Route::middleware('role:manager')->group(function () {
+        Route::apiResource('companies', CompanyController::class);
+        Route::apiResource('companies.contacts', ContactController::class)->shallow();
+        Route::apiResource('services', ServiceController::class);
 
-    Route::apiResource('transactions', TransactionController::class)->only(['index', 'store', 'destroy']);
-    Route::get('bookkeeping/summary', [TransactionController::class, 'summary']);
+        Route::apiResource('companies.invoices', InvoiceController::class)->shallow()->only(['index', 'store', 'update', 'destroy']);
+        Route::post('invoices/{invoice}/send', [InvoiceController::class, 'send']);
+        Route::post('invoices/{invoice}/mark-paid', [InvoiceController::class, 'markPaid']);
 
-    Route::patch('studio-profile', [StudioProfileController::class, 'update']);
+        Route::apiResource('companies.proposals', ProposalController::class)->shallow()->only(['index', 'store', 'update', 'destroy']);
+        Route::post('proposals/{proposal}/send', [ProposalController::class, 'send']);
+        Route::post('proposals/{proposal}/unaccept', [ProposalController::class, 'unaccept']);
+
+        Route::apiResource('transactions', TransactionController::class)->only(['index', 'store', 'destroy']);
+        Route::get('bookkeeping/summary', [TransactionController::class, 'summary']);
+
+        Route::patch('studio-profile', [StudioProfileController::class, 'update']);
+
+        Route::apiResource('users', UserController::class)->only(['index', 'store', 'update', 'destroy']);
+        Route::post('users/{user}/resend-invite', [UserController::class, 'resendInvite']);
+        Route::post('users/{user}/reactivate', [UserController::class, 'reactivate']);
+    });
 });
 
 // Public, no auth -- the client-facing surface for proposals. Much smaller

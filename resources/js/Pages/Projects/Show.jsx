@@ -11,16 +11,17 @@ import { formatCurrency, formatDate, invoiceSubtotal, invoiceSurchargeAmount, in
 import { api } from '../../lib/api';
 import { copyToClipboard } from '../../lib/clipboard';
 
-const TABS = ['Overview', 'Tasks', 'Notes', 'Messages', 'Time', 'Proposals', 'Billing', 'Expenses', 'Team'];
+const ALL_TABS = ['Overview', 'Tasks', 'Notes', 'Messages', 'Time', 'Proposals', 'Billing', 'Expenses', 'Team'];
+const MANAGER_ONLY_TABS = ['Proposals', 'Billing', 'Expenses'];
 
 function reload() {
     router.reload({ only: ['project'] });
 }
 
-function TabBar({ tab, setTab }) {
+function TabBar({ tab, setTab, tabs }) {
     return (
         <div className="flex gap-1 border-b border-border mb-6 overflow-x-auto">
-            {TABS.map((t) => (
+            {tabs.map((t) => (
                 <button
                     key={t}
                     onClick={() => setTab(t)}
@@ -1453,7 +1454,76 @@ function ExpensesTab({ project }) {
     );
 }
 
-function TeamTab({ project }) {
+function AssignedStaff({ project, canManageTeam, teamMembers }) {
+    const [assigned, setAssigned] = useState(project.active_users || []);
+    const [pickId, setPickId] = useState('');
+    const [busy, setBusy] = useState(false);
+
+    const available = (teamMembers || []).filter((tm) => !assigned.some((a) => a.id === tm.id));
+
+    async function assign(e) {
+        e.preventDefault();
+        if (!pickId) return;
+        setBusy(true);
+        try {
+            const updated = await api.post(`/api/projects/${project.id}/assignments`, { user_id: pickId });
+            setAssigned(updated);
+            setPickId('');
+        } finally {
+            setBusy(false);
+        }
+    }
+
+    async function unassign(user) {
+        if (!confirm(`Remove ${user.name} from this project? They'll keep read-only access to their past work here.`)) return;
+        setBusy(true);
+        try {
+            await api.delete(`/api/projects/${project.id}/assignments/${user.id}`);
+            setAssigned((current) => current.filter((u) => u.id !== user.id));
+        } finally {
+            setBusy(false);
+        }
+    }
+
+    return (
+        <div className="mb-8">
+            <h2 className="text-sm font-semibold mb-3 text-sage">Assigned staff</h2>
+            {canManageTeam && (
+                <form onSubmit={assign} className="flex gap-2 mb-4">
+                    <select
+                        value={pickId}
+                        onChange={(e) => setPickId(e.target.value)}
+                        className="border border-border rounded px-3 py-2 text-sm flex-1"
+                    >
+                        <option value="">Assign a team member&hellip;</option>
+                        {available.map((tm) => (
+                            <option key={tm.id} value={tm.id}>{tm.name}</option>
+                        ))}
+                    </select>
+                    <button type="submit" disabled={busy || !pickId} className="bg-pine text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50">Assign</button>
+                </form>
+            )}
+            {assigned.length === 0 ? (
+                <EmptyState text="No staff assigned to this project yet." />
+            ) : (
+                <div className="flex flex-wrap gap-2">
+                    {assigned.map((user) => (
+                        <span key={user.id} className="inline-flex items-center gap-2 bg-white border border-border rounded-full px-3 py-1 text-sm">
+                            {user.name}
+                            {canManageTeam && (
+                                <button onClick={() => unassign(user)} className="text-sage hover:text-brick">
+                                    <X size={14} />
+                                </button>
+                            )}
+                        </span>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+}
+
+function TeamTab({ project, canManageTeam, teamMembers }) {
     const [names, setNames] = useState(project.team_names || []);
     const [input, setInput] = useState('');
     const [saving, setSaving] = useState(false);
@@ -1482,6 +1552,9 @@ function TeamTab({ project }) {
 
     return (
         <div>
+            <AssignedStaff project={project} canManageTeam={canManageTeam} teamMembers={teamMembers} />
+
+            <h2 className="text-sm font-semibold mb-3 text-sage">Other names (not linked to a login)</h2>
             <form onSubmit={add} className="flex gap-2 mb-4">
                 <input
                     placeholder="Add team member name"
@@ -1509,7 +1582,8 @@ function TeamTab({ project }) {
     );
 }
 
-export default function ProjectsShow({ project }) {
+export default function ProjectsShow({ project, canManageTeam, teamMembers }) {
+    const tabs = canManageTeam ? ALL_TABS : ALL_TABS.filter((t) => !MANAGER_ONLY_TABS.includes(t));
     const [tab, setTab] = useState('Overview');
 
     return (
@@ -1528,7 +1602,7 @@ export default function ProjectsShow({ project }) {
                 <Link href={`/clients/${project.company.id}`} className="hover:underline">{project.company.name}</Link>
             </p>
 
-            <TabBar tab={tab} setTab={setTab} />
+            <TabBar tab={tab} setTab={setTab} tabs={tabs} />
 
             {tab === 'Overview' && <OverviewTab project={project} />}
             {tab === 'Tasks' && <TasksTab project={project} />}
@@ -1538,7 +1612,7 @@ export default function ProjectsShow({ project }) {
             {tab === 'Proposals' && <ProposalsTab project={project} />}
             {tab === 'Billing' && <BillingTab project={project} />}
             {tab === 'Expenses' && <ExpensesTab project={project} />}
-            {tab === 'Team' && <TeamTab project={project} />}
+            {tab === 'Team' && <TeamTab project={project} canManageTeam={canManageTeam} teamMembers={teamMembers} />}
         </AppLayout>
     );
 }

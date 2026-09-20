@@ -9,9 +9,22 @@ use Illuminate\Validation\Rule;
 
 class ProjectController extends Controller
 {
-    public function index(Company $company)
+    public function __construct()
     {
-        return $company->projects()->with('tasks')->get();
+        $this->authorizeResource(Project::class, 'project');
+    }
+
+    public function index(Request $request, Company $company)
+    {
+        $projects = $company->projects()->with('tasks');
+
+        if ($request->user()->isTeamMember()) {
+            $projects->whereHas('users', fn ($q) => $q
+                ->where('users.id', $request->user()->id)
+                ->whereNull('project_user.unassigned_at'));
+        }
+
+        return $projects->get();
     }
 
     public function store(Request $request, Company $company)
@@ -27,7 +40,7 @@ class ProjectController extends Controller
 
     public function show(Project $project)
     {
-        return $project->load('tasks', 'notes', 'messages', 'invoices', 'transactions', 'company', 'contact');
+        return $project->load('tasks', 'notes', 'messages', 'invoices', 'transactions', 'company', 'contact', 'activeUsers');
     }
 
     public function update(Request $request, Project $project)

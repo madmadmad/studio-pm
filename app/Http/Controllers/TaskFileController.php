@@ -11,6 +11,8 @@ class TaskFileController extends Controller
 {
     public function store(Request $request, Task $task)
     {
+        $this->authorize('update', $task);
+
         $request->validate([
             'file' => ['required', 'file', 'max:20480'], // 20MB
         ]);
@@ -28,6 +30,8 @@ class TaskFileController extends Controller
 
     public function destroy(TaskFile $file)
     {
+        $this->authorize('update', $file->task);
+
         Storage::disk('public')->delete($file->path);
         $file->delete();
 

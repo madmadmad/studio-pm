@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Project extends Model
@@ -17,6 +18,38 @@ class Project extends Model
     public function company(): BelongsTo
     {
         return $this->belongsTo(Company::class);
+    }
+
+    /**
+     * Everyone ever assigned to this project. Filter by
+     * wherePivotNull('unassigned_at') for the current roster.
+     */
+    public function users(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class)
+            ->withPivot(['assigned_at', 'unassigned_at'])
+            ->withTimestamps();
+    }
+
+    public function activeUsers(): BelongsToMany
+    {
+        return $this->users()->wherePivotNull('unassigned_at');
+    }
+
+    /**
+     * True if the given user has ever been assigned here -- used to grant
+     * read-only access to past work after they're taken off the project.
+     */
+    public function everHadUser(User $user): bool
+    {
+        return $this->relationLoaded('users')
+            ? $this->users->contains('id', $user->id)
+            : $this->users()->whereKey($user->id)->exists();
+    }
+
+    public function currentlyHasUser(User $user): bool
+    {
+        return $this->activeUsers()->whereKey($user->id)->exists();
     }
 
     public function contact(): BelongsTo

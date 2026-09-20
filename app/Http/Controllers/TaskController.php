@@ -10,11 +10,15 @@ class TaskController extends Controller
 {
     public function index(Project $project)
     {
+        $this->authorize('view', $project);
+
         return $project->tasks;
     }
 
     public function store(Request $request, Project $project)
     {
+        $this->authorize('create', [Task::class, $project]);
+
         $data = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'assignee' => ['nullable', 'string', 'max:255'],
@@ -27,6 +31,8 @@ class TaskController extends Controller
 
     public function update(Request $request, Task $task)
     {
+        $this->authorize('update', $task);
+
         $data = $request->validate([
             'title' => ['sometimes', 'string', 'max:255'],
             'assignee' => ['nullable', 'string', 'max:255'],
@@ -42,6 +48,8 @@ class TaskController extends Controller
 
     public function destroy(Task $task)
     {
+        $this->authorize('delete', $task);
+
         $task->delete();
 
         return response()->noContent();

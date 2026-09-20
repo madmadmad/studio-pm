@@ -10,11 +10,15 @@ class NoteController extends Controller
 {
     public function index(Project $project)
     {
+        $this->authorize('view', $project);
+
         return $project->notes;
     }
 
     public function store(Request $request, Project $project)
     {
+        $this->authorize('update', $project);
+
         $data = $request->validate([
             'title' => ['nullable', 'string', 'max:255'],
             'body' => ['nullable', 'string'],
@@ -25,6 +29,8 @@ class NoteController extends Controller
 
     public function update(Request $request, Note $note)
     {
+        $this->authorize('update', $note->project);
+
         $data = $request->validate([
             'title' => ['nullable', 'string', 'max:255'],
             'body' => ['nullable', 'string'],
@@ -37,6 +43,8 @@ class NoteController extends Controller
 
     public function destroy(Note $note)
     {
+        $this->authorize('update', $note->project);
+
         $note->delete();
 
         return response()->noContent();

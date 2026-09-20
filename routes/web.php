@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Web\AcceptInvitationController;
 use App\Http\Controllers\Web\BookkeepingPageController;
 use App\Http\Controllers\Web\ClientPageController;
 use App\Http\Controllers\Web\DashboardController;
@@ -12,14 +12,18 @@ use App\Http\Controllers\Web\PublicProposalController;
 use App\Http\Controllers\Web\ServicePageController;
 use App\Http\Controllers\Web\SettingsPageController;
 use App\Http\Controllers\Web\TimePageController;
+use App\Http\Controllers\Web\UserPageController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware('guest')->group(function () {
-    Route::get('/login', [LoginController::class, 'create'])->name('login');
-    Route::post('/login', [LoginController::class, 'store']);
-});
+// Login, logout, and password reset are all registered by Fortify (see
+// FortifyServiceProvider) -- it owns /login, /logout, /forgot-password, and
+// /reset-password/{token}, pointed at our own Inertia pages via loginView()
+// etc. rather than its default Blade views.
 
-Route::post('/logout', [LoginController::class, 'destroy'])->middleware('auth')->name('logout');
+Route::middleware('guest')->group(function () {
+    Route::get('/invite/{token}', [AcceptInvitationController::class, 'show'])->name('invite.show');
+    Route::post('/invite/{token}', [AcceptInvitationController::class, 'store'])->name('invite.store');
+});
 
 Route::get('/p/{token}', [PublicProposalController::class, 'show'])->name('proposals.public');
 Route::get('/i/{token}', [PublicInvoiceController::class, 'show'])->name('invoices.public');
@@ -27,9 +31,7 @@ Route::get('/i/{token}', [PublicInvoiceController::class, 'show'])->name('invoic
 Route::middleware('auth')->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
-    Route::get('/clients', [ClientPageController::class, 'index'])->name('clients.index');
-    Route::get('/clients/{company}', [ClientPageController::class, 'show'])->name('clients.show');
-
+    // Open to both roles -- each page controller scopes its own data by role.
     Route::get('/projects', [ProjectPageController::class, 'index'])->name('projects.index');
     Route::get('/projects/archived', [ProjectPageController::class, 'archived'])->name('projects.archived');
     Route::get('/projects/{project}', [ProjectPageController::class, 'show'])->name('projects.show');
@@ -37,17 +39,25 @@ Route::middleware('auth')->group(function () {
     Route::get('/time-entries', [TimePageController::class, 'index'])->name('time.index');
     Route::get('/timesheets', [TimePageController::class, 'weekly'])->name('timesheets.index');
 
-    Route::get('/invoices', [InvoicePageController::class, 'index'])->name('invoices.index');
-    Route::get('/invoices/{invoice}/pdf', [InvoicePageController::class, 'pdf'])->name('invoices.pdf');
-    Route::get('/invoices/{invoice}', [InvoicePageController::class, 'show'])->name('invoices.show');
+    // Firm-wide financials and the client directory -- Managers only.
+    Route::middleware('role:manager')->group(function () {
+        Route::get('/clients', [ClientPageController::class, 'index'])->name('clients.index');
+        Route::get('/clients/{company}', [ClientPageController::class, 'show'])->name('clients.show');
 
-    Route::get('/proposals', [ProposalPageController::class, 'index'])->name('proposals.index');
-    Route::get('/proposals/create', [ProposalPageController::class, 'create'])->name('proposals.create');
-    Route::get('/proposals/{proposal}/edit', [ProposalPageController::class, 'edit'])->name('proposals.edit');
+        Route::get('/invoices', [InvoicePageController::class, 'index'])->name('invoices.index');
+        Route::get('/invoices/{invoice}/pdf', [InvoicePageController::class, 'pdf'])->name('invoices.pdf');
+        Route::get('/invoices/{invoice}', [InvoicePageController::class, 'show'])->name('invoices.show');
 
-    Route::get('/bookkeeping', [BookkeepingPageController::class, 'index'])->name('bookkeeping.index');
+        Route::get('/proposals', [ProposalPageController::class, 'index'])->name('proposals.index');
+        Route::get('/proposals/create', [ProposalPageController::class, 'create'])->name('proposals.create');
+        Route::get('/proposals/{proposal}/edit', [ProposalPageController::class, 'edit'])->name('proposals.edit');
 
-    Route::get('/services', [ServicePageController::class, 'index'])->name('services.index');
+        Route::get('/bookkeeping', [BookkeepingPageController::class, 'index'])->name('bookkeeping.index');
 
-    Route::get('/settings', [SettingsPageController::class, 'index'])->name('settings.index');
+        Route::get('/services', [ServicePageController::class, 'index'])->name('services.index');
+
+        Route::get('/settings', [SettingsPageController::class, 'index'])->name('settings.index');
+
+        Route::get('/users', [UserPageController::class, 'index'])->name('users.index');
+    });
 });

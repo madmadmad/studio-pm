@@ -11,11 +11,15 @@ class MessageController extends Controller
 {
     public function index(Project $project)
     {
+        $this->authorize('view', $project);
+
         return $project->messages;
     }
 
     public function store(Request $request, Project $project)
     {
+        $this->authorize('update', $project);
+
         $data = $request->validate([
             'subject' => ['required', 'string', 'max:255'],
             'body' => ['required', 'string'],

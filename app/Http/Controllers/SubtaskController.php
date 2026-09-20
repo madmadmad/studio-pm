@@ -10,6 +10,8 @@ class SubtaskController extends Controller
 {
     public function store(Request $request, Task $task)
     {
+        $this->authorize('update', $task);
+
         $data = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'assignee' => ['nullable', 'string', 'max:255'],
@@ -22,6 +24,8 @@ class SubtaskController extends Controller
 
     public function update(Request $request, Subtask $subtask)
     {
+        $this->authorize('update', $subtask->task);
+
         $data = $request->validate([
             'title' => ['sometimes', 'string', 'max:255'],
             'assignee' => ['nullable', 'string', 'max:255'],
@@ -36,6 +40,8 @@ class SubtaskController extends Controller
 
     public function destroy(Subtask $subtask)
     {
+        $this->authorize('update', $subtask->task);
+
         $subtask->delete();
 
         return response()->noContent();

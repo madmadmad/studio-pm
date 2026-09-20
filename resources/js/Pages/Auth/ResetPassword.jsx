@@ -1,15 +1,16 @@
-import { Link, useForm } from '@inertiajs/react';
+import { useForm } from '@inertiajs/react';
 
-export default function Login() {
+export default function ResetPassword({ email, token }) {
     const { data, setData, post, processing, errors } = useForm({
-        email: '',
+        token,
+        email: email ?? '',
         password: '',
-        remember: false,
+        password_confirmation: '',
     });
 
     function submit(e) {
         e.preventDefault();
-        post('/login');
+        post('/reset-password');
     }
 
     return (
@@ -17,7 +18,7 @@ export default function Login() {
             <div className="w-full max-w-sm">
                 <div className="mb-8 text-center">
                     <div className="text-xl font-semibold">Studio PM</div>
-                    <div className="text-sm text-sage">Sign in to your workspace</div>
+                    <div className="text-sm text-sage">Set a new password</div>
                 </div>
 
                 <form onSubmit={submit} className="bg-white rounded-lg border border-border p-6 flex flex-col gap-3">
@@ -25,7 +26,6 @@ export default function Login() {
                         <label className="block text-xs font-medium text-sage mb-1">Email</label>
                         <input
                             type="email"
-                            autoFocus
                             value={data.email}
                             onChange={(e) => setData('email', e.target.value)}
                             className="border border-border rounded px-3 py-2 text-sm w-full"
@@ -34,27 +34,25 @@ export default function Login() {
                     </div>
 
                     <div>
-                        <label className="block text-xs font-medium text-sage mb-1">Password</label>
+                        <label className="block text-xs font-medium text-sage mb-1">New password</label>
                         <input
                             type="password"
+                            autoFocus
                             value={data.password}
                             onChange={(e) => setData('password', e.target.value)}
                             className="border border-border rounded px-3 py-2 text-sm w-full"
                         />
+                        {errors.password && <div className="text-xs text-brick mt-1">{errors.password}</div>}
                     </div>
 
-                    <div className="flex items-center justify-between">
-                        <label className="flex items-center gap-2 text-sm text-sage">
-                            <input
-                                type="checkbox"
-                                checked={data.remember}
-                                onChange={(e) => setData('remember', e.target.checked)}
-                            />
-                            Remember me
-                        </label>
-                        <Link href="/forgot-password" className="text-sm text-sage hover:text-ink">
-                            Forgot password?
-                        </Link>
+                    <div>
+                        <label className="block text-xs font-medium text-sage mb-1">Confirm password</label>
+                        <input
+                            type="password"
+                            value={data.password_confirmation}
+                            onChange={(e) => setData('password_confirmation', e.target.value)}
+                            className="border border-border rounded px-3 py-2 text-sm w-full"
+                        />
                     </div>
 
                     <button
@@ -62,7 +60,7 @@ export default function Login() {
                         disabled={processing}
                         className="bg-ink text-white text-sm font-medium px-3 py-2 rounded mt-2 disabled:opacity-50"
                     >
-                        Sign in
+                        Reset password
                     </button>
                 </form>
             </div>

@@ -7,16 +7,26 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
-#[Fillable(['name', 'email', 'password'])]
-#[Hidden(['password', 'remember_token'])]
+#[Fillable(['name', 'email', 'password', 'role'])]
+#[Hidden(['password', 'remember_token', 'invite_token'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, Notifiable;
+
+    const ROLE_MANAGER = 'manager';
+
+    const ROLE_TEAM_MEMBER = 'team_member';
+
+    // The raw invite_token is hidden from JSON entirely -- this exposes just
+    // enough for the Team admin UI to show an "invite pending" state and
+    // offer a resend, without ever leaking the token value itself.
+    protected $appends = ['has_pending_invite'];
 
     /**
      * Get the attributes that should be cast.
@@ -27,7 +37,51 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'invited_at' => 'datetime',
+            'invite_expires_at' => 'datetime',
+            'deactivated_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    protected function getHasPendingInviteAttribute(): bool
+    {
+        return $this->hasPendingInvite();
+    }
+
+    public function isManager(): bool
+    {
+        return $this->role === self::ROLE_MANAGER;
+    }
+
+    public function isTeamMember(): bool
+    {
+        return $this->role === self::ROLE_TEAM_MEMBER;
+    }
+
+    public function isActive(): bool
+    {
+        return $this->deactivated_at === null;
+    }
+
+    public function hasPendingInvite(): bool
+    {
+        return $this->invite_token !== null;
+    }
+
+    /**
+     * Every project this user is or was ever assigned to. Filter by
+     * wherePivotNull('unassigned_at') for their currently active projects.
+     */
+    public function projects(): BelongsToMany
+    {
+        return $this->belongsToMany(Project::class)
+            ->withPivot(['assigned_at', 'unassigned_at'])
+            ->withTimestamps();
+    }
+
+    public function activeProjects(): BelongsToMany
+    {
+        return $this->projects()->wherePivotNull('unassigned_at');
     }
 }
