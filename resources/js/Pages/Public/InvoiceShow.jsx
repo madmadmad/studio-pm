@@ -1,11 +1,13 @@
 import { Head } from '@inertiajs/react';
 import { useState } from 'react';
-import { formatCurrency, formatDate, invoiceSubtotal, invoiceSurchargeAmount, invoiceTotal } from '../../lib/format';
+import { formatCurrency, formatDate, invoiceSubtotal, invoiceTotal } from '../../lib/format';
 import { api } from '../../lib/api';
 
+// No card-fee row here on purpose -- that fee only exists between the
+// client and Stripe if they choose to pay by card, broken out on Stripe's
+// own checkout page. This invoice's total is always just the sum of items.
 function InvoiceItems({ invoice }) {
     const subtotal = invoiceSubtotal(invoice.items);
-    const surchargeAmount = invoiceSurchargeAmount(invoice.items, invoice.surcharge);
     const total = invoiceTotal(invoice.items, invoice.surcharge);
 
     return (
@@ -32,12 +34,6 @@ function InvoiceItems({ invoice }) {
                     <div>Subtotal</div>
                     <div className="tabular-nums">{formatCurrency(subtotal)}</div>
                 </div>
-                {invoice.surcharge && (
-                    <div className="flex items-center justify-between text-sm text-shadow-grey">
-                        <div>Card processing fee (3%)</div>
-                        <div className="tabular-nums">{formatCurrency(surchargeAmount)}</div>
-                    </div>
-                )}
                 <div className="flex items-center justify-between pt-2">
                     <div className="font-display text-lg font-semibold">Total</div>
                     <div className="tabular-nums text-lg font-semibold">{formatCurrency(total)}</div>
@@ -49,18 +45,18 @@ function InvoiceItems({ invoice }) {
 
 export default function InvoiceShow({ invoice, studio }) {
     const paidAt = invoice.payments[0]?.paid_at;
-    const [paying, setPaying] = useState(false);
+    const [paying, setPaying] = useState(null); // null | 'card' | 'ach'
     const [error, setError] = useState('');
 
-    async function payNow() {
-        setPaying(true);
+    async function pay(method) {
+        setPaying(method);
         setError('');
         try {
-            const { url } = await api.post(`/api/invoices/${invoice.public_token}/checkout`);
+            const { url } = await api.post(`/api/invoices/${invoice.public_token}/checkout`, { method });
             window.location.href = url;
         } catch (err) {
             setError(err.message);
-            setPaying(false);
+            setPaying(null);
         }
     }
 
@@ -103,19 +99,30 @@ export default function InvoiceShow({ invoice, studio }) {
                     </div>
                 ) : invoice.status === 'sent' ? (
                     <div>
-                        <div className="mb-1 text-sm text-gunmetal">Pay online by credit card</div>
-                        <button
-                            onClick={payNow}
-                            disabled={paying}
-                            className="bg-watermelon text-white text-sm font-medium px-4 py-2 rounded hover:bg-watermelon/90 transition-colors disabled:opacity-50"
-                        >
-                            {paying ? 'Redirecting…' : 'Pay Now'}
-                        </button>
+                        <div className="mb-2 text-sm text-gunmetal">Pay online</div>
+                        <div className="flex flex-wrap gap-3">
+                            {invoice.surcharge && (
+                                <button
+                                    onClick={() => pay('card')}
+                                    disabled={paying !== null}
+                                    className="bg-watermelon text-white text-sm font-medium px-4 py-2 rounded hover:bg-watermelon/90 transition-colors disabled:opacity-50"
+                                >
+                                    {paying === 'card' ? 'Redirecting…' : 'Pay by card — 3% fee applies'}
+                                </button>
+                            )}
+                            <button
+                                onClick={() => pay('ach')}
+                                disabled={paying !== null}
+                                className="bg-gunmetal text-white text-sm font-medium px-4 py-2 rounded hover:bg-gunmetal/90 transition-colors disabled:opacity-50"
+                            >
+                                {paying === 'ach' ? 'Redirecting…' : 'Pay by ACH — no fee'}
+                            </button>
+                        </div>
                         {error && <div className="text-sm text-fuchsia mt-2">{error}</div>}
 
                         {studio.payment_instructions && (
                             <div className="mt-6 pt-6 border-t border-border">
-                                <div className="mb-1 text-sm font-semibold text-gunmetal">Prefer to pay by ACH or check?</div>
+                                <div className="mb-1 text-sm font-semibold text-gunmetal">Prefer to pay by check?</div>
                                 <div className="text-sm text-shadow-grey whitespace-pre-wrap">{studio.payment_instructions}</div>
                             </div>
                         )}

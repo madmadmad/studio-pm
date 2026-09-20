@@ -100,12 +100,6 @@
             <td class="muted">Subtotal</td>
             <td class="amount muted">${{ number_format($invoice->subtotal(), 2) }}</td>
         </tr>
-        @if ($invoice->surcharge)
-            <tr>
-                <td class="muted">Card processing fee (3%)</td>
-                <td class="amount muted">${{ number_format($invoice->surchargeAmount(), 2) }}</td>
-            </tr>
-        @endif
         <tr class="total">
             <td>Total</td>
             <td class="amount">${{ number_format($invoice->total(), 2) }}</td>

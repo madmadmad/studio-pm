@@ -7,7 +7,7 @@ import Badge from '../../Components/Badge';
 import RichTextEditor from '../../Components/RichTextEditor';
 import Toggle from '../../Components/Toggle';
 import { ProjectStatusBadge, TaskStatusBadge, InvoiceStatusBadge, ProposalStatusBadge } from '../../Components/StatusBadges';
-import { formatCurrency, formatDate, invoiceSubtotal, invoiceSurchargeAmount, invoiceTotal } from '../../lib/format';
+import { formatCurrency, formatDate, invoiceSubtotal, invoiceTotal } from '../../lib/format';
 import { api } from '../../lib/api';
 import { copyToClipboard } from '../../lib/clipboard';
 
@@ -1118,7 +1118,6 @@ function BillingTab({ project }) {
         : 0;
     const wasScaledToRemaining = selectedProposal && remaining < selectedProposalTotal;
     const formSubtotal = invoiceSubtotal(form.items);
-    const formSurchargeAmount = invoiceSurchargeAmount(form.items, form.surcharge);
     const formTotal = invoiceTotal(form.items, form.surcharge);
 
     function openForm() {
@@ -1184,8 +1183,10 @@ function BillingTab({ project }) {
         reload();
     }
 
+    // Quick action for the common case (a check came in) -- anything else
+    // (e.g. "other") is recorded from the invoice detail page instead.
     async function markInvoicePaid(invoice) {
-        await api.post(`/api/invoices/${invoice.id}/mark-paid`);
+        await api.post(`/api/invoices/${invoice.id}/mark-paid`, { method: 'check' });
         reload();
     }
 
@@ -1291,12 +1292,6 @@ function BillingTab({ project }) {
                             <span>Subtotal</span>
                             <span className="tabular-nums">{formatCurrency(formSubtotal)}</span>
                         </div>
-                        {form.surcharge && (
-                            <div className="flex justify-between text-shadow-grey">
-                                <span>Card fee (3%)</span>
-                                <span className="tabular-nums">{formatCurrency(formSurchargeAmount)}</span>
-                            </div>
-                        )}
                         <div className="flex justify-between font-semibold">
                             <span>Total</span>
                             <span className="tabular-nums">{formatCurrency(formTotal)}</span>
@@ -1307,7 +1302,7 @@ function BillingTab({ project }) {
                         <Toggle
                             checked={form.surcharge}
                             onChange={(value) => setForm({ ...form, surcharge: value })}
-                            label="Client covers card processing fee (3%)"
+                            label="Offer to pay by card (adds a 3% fee, shown only at checkout)"
                         />
                     </div>
                     {error && <div className="text-sm text-fuchsia mb-2">{error}</div>}
@@ -1368,7 +1363,7 @@ function BillingTab({ project }) {
                                                 </a>
                                             )}
                                             {invoice.status === 'sent' && (
-                                                <button onClick={() => markInvoicePaid(invoice)} title="Mark paid" className="text-fern hover:text-fern/70">
+                                                <button onClick={() => markInvoicePaid(invoice)} title="Mark paid (check)" className="text-fern hover:text-fern/70">
                                                     <CheckCircle size={16} />
                                                 </button>
                                             )}

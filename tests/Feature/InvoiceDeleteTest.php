@@ -53,7 +53,7 @@ class InvoiceDeleteTest extends TestCase
     {
         $user = User::factory()->create();
         $invoice = $this->makeInvoice('sent');
-        $invoice->recordPayment();
+        $invoice->recordPayment('check', $invoice->subtotal());
 
         $this->actingAs($user)->deleteJson("/api/invoices/{$invoice->id}")->assertStatus(422);
 

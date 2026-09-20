@@ -4,7 +4,7 @@ import { ArrowLeft, Check, Copy, DownloadSimple, Eye } from '@phosphor-icons/rea
 import AppLayout from '../../Layouts/AppLayout';
 import Toggle from '../../Components/Toggle';
 import { InvoiceStatusBadge } from '../../Components/StatusBadges';
-import { formatCurrency, formatDate, invoiceSubtotal, invoiceSurchargeAmount, invoiceTotal } from '../../lib/format';
+import { formatCurrency, formatDate, invoiceSubtotal, invoiceTotal } from '../../lib/format';
 import { api } from '../../lib/api';
 import { copyToClipboard } from '../../lib/clipboard';
 
@@ -23,13 +23,13 @@ export default function InvoicesShow({ invoice }) {
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
     const [copied, setCopied] = useState(false);
+    const [paymentMethod, setPaymentMethod] = useState('check');
+    const [recordingPayment, setRecordingPayment] = useState(false);
 
     const subtotal = invoiceSubtotal(invoice.items);
-    const surchargeAmount = invoiceSurchargeAmount(invoice.items, invoice.surcharge);
     const total = invoiceTotal(invoice.items, invoice.surcharge);
 
     const formSubtotal = invoiceSubtotal(form.items);
-    const formSurchargeAmount = invoiceSurchargeAmount(form.items, form.surcharge);
     const formTotal = invoiceTotal(form.items, form.surcharge);
 
     async function sendInvoice() {
@@ -37,9 +37,14 @@ export default function InvoicesShow({ invoice }) {
         router.reload();
     }
 
-    async function markPaid() {
-        await api.post(`/api/invoices/${invoice.id}/mark-paid`);
-        router.reload();
+    async function recordPayment() {
+        setRecordingPayment(true);
+        try {
+            await api.post(`/api/invoices/${invoice.id}/mark-paid`, { method: paymentMethod });
+            router.reload();
+        } finally {
+            setRecordingPayment(false);
+        }
     }
 
     async function copyLink() {
@@ -191,12 +196,6 @@ export default function InvoicesShow({ invoice }) {
                             <span>Subtotal</span>
                             <span className="tabular-nums">{formatCurrency(formSubtotal)}</span>
                         </div>
-                        {form.surcharge && (
-                            <div className="flex justify-between text-shadow-grey">
-                                <span>Card fee (3%)</span>
-                                <span className="tabular-nums">{formatCurrency(formSurchargeAmount)}</span>
-                            </div>
-                        )}
                         <div className="flex justify-between font-semibold">
                             <span>Total</span>
                             <span className="tabular-nums">{formatCurrency(formTotal)}</span>
@@ -207,7 +206,7 @@ export default function InvoicesShow({ invoice }) {
                         <Toggle
                             checked={form.surcharge}
                             onChange={(value) => setForm({ ...form, surcharge: value })}
-                            label="Client covers card processing fee (3%)"
+                            label="Offer to pay by card (adds a 3% fee, shown only at checkout)"
                         />
                     </div>
 
@@ -247,12 +246,6 @@ export default function InvoicesShow({ invoice }) {
                             <span>Subtotal</span>
                             <span className="tabular-nums">{formatCurrency(subtotal)}</span>
                         </div>
-                        {invoice.surcharge && (
-                            <div className="flex justify-between text-shadow-grey">
-                                <span>Card fee (3%)</span>
-                                <span className="tabular-nums">{formatCurrency(surchargeAmount)}</span>
-                            </div>
-                        )}
                         <div className="flex justify-between font-semibold">
                             <span>Total</span>
                             <span className="tabular-nums">{formatCurrency(total)}</span>
@@ -267,7 +260,7 @@ export default function InvoicesShow({ invoice }) {
                     <ul className="text-sm divide-y divide-border">
                         {invoice.payments.map((payment) => (
                             <li key={payment.id} className="py-2 flex justify-between">
-                                <span>{formatDate(payment.paid_at)}</span>
+                                <span>{formatDate(payment.paid_at)}{payment.method ? ` · ${payment.method}` : ''}</span>
                                 <span className="tabular-nums">{formatCurrency(parseFloat(payment.amount) + parseFloat(payment.surcharge_amount))}</span>
                             </li>
                         ))}
@@ -276,12 +269,24 @@ export default function InvoicesShow({ invoice }) {
             )}
 
             {!editing && (
-                <div className="flex gap-2">
+                <div className="flex items-center gap-2">
                     {invoice.status === 'draft' && (
                         <button onClick={sendInvoice} className="bg-gunmetal text-white text-sm font-medium px-3 py-1.5 rounded">Send invoice</button>
                     )}
                     {invoice.status === 'sent' && (
-                        <button onClick={markPaid} className="bg-fern text-white text-sm font-medium px-3 py-1.5 rounded">Mark paid</button>
+                        <>
+                            <select
+                                value={paymentMethod}
+                                onChange={(e) => setPaymentMethod(e.target.value)}
+                                className="border border-border rounded px-3 py-1.5 text-sm"
+                            >
+                                <option value="check">Check</option>
+                                <option value="other">Other</option>
+                            </select>
+                            <button onClick={recordPayment} disabled={recordingPayment} className="bg-fern text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50">
+                                Record payment
+                            </button>
+                        </>
                     )}
                 </div>
             )}

@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Payment extends Model
 {
-    protected $fillable = ['invoice_id', 'amount', 'surcharge_amount', 'stripe_payment_intent_id', 'paid_at'];
+    protected $fillable = ['invoice_id', 'method', 'amount', 'surcharge_amount', 'stripe_payment_intent_id', 'paid_at'];
 
     protected $casts = [
         'paid_at' => 'datetime',

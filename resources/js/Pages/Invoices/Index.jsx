@@ -5,7 +5,7 @@ import AppLayout from '../../Layouts/AppLayout';
 import EmptyState from '../../Components/EmptyState';
 import Toggle from '../../Components/Toggle';
 import { InvoiceStatusBadge } from '../../Components/StatusBadges';
-import { formatCurrency, formatDate, invoiceSubtotal, invoiceSurchargeAmount, invoiceTotal } from '../../lib/format';
+import { formatCurrency, formatDate, invoiceSubtotal, invoiceTotal } from '../../lib/format';
 import { api } from '../../lib/api';
 import { getTray, clearTray } from '../../lib/tray';
 import { copyToClipboard } from '../../lib/clipboard';
@@ -75,7 +75,6 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
     }, []);
 
     const subtotal = invoiceSubtotal(draft.items);
-    const surchargeAmount = invoiceSurchargeAmount(draft.items, draft.surcharge);
     const total = invoiceTotal(draft.items, draft.surcharge);
     const outstandingTotal = invoices
         .filter((i) => i.status === 'sent')
@@ -135,8 +134,10 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
         router.reload({ only: ['invoices'] });
     }
 
+    // Quick action for the common case (a check came in) -- anything else
+    // (e.g. "other") is recorded from the invoice detail page instead.
     async function markPaid(invoice) {
-        await api.post(`/api/invoices/${invoice.id}/mark-paid`);
+        await api.post(`/api/invoices/${invoice.id}/mark-paid`, { method: 'check' });
         router.reload({ only: ['invoices'] });
     }
 
@@ -240,12 +241,6 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
                             <span>Subtotal</span>
                             <span className="tabular-nums">{formatCurrency(subtotal)}</span>
                         </div>
-                        {draft.surcharge && (
-                            <div className="flex justify-between text-shadow-grey">
-                                <span>Card fee (3%)</span>
-                                <span className="tabular-nums">{formatCurrency(surchargeAmount)}</span>
-                            </div>
-                        )}
                         <div className="flex justify-between font-semibold">
                             <span>Total</span>
                             <span className="tabular-nums">{formatCurrency(total)}</span>
@@ -256,7 +251,7 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
                         <Toggle
                             checked={draft.surcharge}
                             onChange={(value) => setDraft({ ...draft, surcharge: value })}
-                            label="Client covers card processing fee (3%)"
+                            label="Offer to pay by card (adds a 3% fee, shown only at checkout)"
                         />
                     </div>
 
@@ -325,7 +320,7 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
                                                 </a>
                                             )}
                                             {invoice.status === 'sent' && (
-                                                <button onClick={() => markPaid(invoice)} title="Mark paid" className="text-fern hover:text-fern/70">
+                                                <button onClick={() => markPaid(invoice)} title="Mark paid (check)" className="text-fern hover:text-fern/70">
                                                     <CheckCircle size={16} />
                                                 </button>
                                             )}

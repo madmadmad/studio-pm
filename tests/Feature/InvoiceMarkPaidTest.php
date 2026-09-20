@@ -39,11 +39,13 @@ class InvoiceMarkPaidTest extends TestCase
         $this->assertSame($invoiceItemId, $timeEntry->invoice_item_id);
     }
 
-    public function test_marking_an_invoice_paid_creates_a_payment_and_a_matching_income_transaction(): void
+    public function test_marking_an_invoice_paid_by_check_creates_a_payment_and_a_matching_income_transaction(): void
     {
         $user = User::factory()->create();
         $company = Company::create(['name' => 'Alder & Finch Design']);
 
+        // Surcharge is true (card is offered), but a check payment must
+        // never carry a fee that was never actually collected.
         $invoice = $company->invoices()->create([
             'status' => 'sent',
             'surcharge' => true,
@@ -52,24 +54,25 @@ class InvoiceMarkPaidTest extends TestCase
         ]);
         $invoice->items()->create(['description' => 'Brand refresh', 'amount' => 507.50]);
 
-        $response = $this->actingAs($user)->postJson("/api/invoices/{$invoice->id}/mark-paid");
+        $response = $this->actingAs($user)->postJson("/api/invoices/{$invoice->id}/mark-paid", ['method' => 'check']);
 
         $response->assertOk();
         $response->assertJsonPath('status', 'paid');
 
         $this->assertDatabaseHas('payments', [
             'invoice_id' => $invoice->id,
+            'method' => 'check',
             'amount' => 507.5,
-            'surcharge_amount' => 15.23,
+            'surcharge_amount' => 0,
         ]);
 
         $transaction = Transaction::where('invoice_id', $invoice->id)->first();
         $this->assertNotNull($transaction);
         $this->assertSame('income', $transaction->type);
-        $this->assertEqualsWithDelta(522.73, (float) $transaction->amount, 0.001);
+        $this->assertEqualsWithDelta(507.50, (float) $transaction->amount, 0.001);
     }
 
-    public function test_marking_paid_without_surcharge_records_the_subtotal_only(): void
+    public function test_marking_paid_requires_a_method(): void
     {
         $user = User::factory()->create();
         $company = Company::create(['name' => 'Thistle & Rye Events']);
@@ -82,16 +85,7 @@ class InvoiceMarkPaidTest extends TestCase
         ]);
         $invoice->items()->create(['description' => 'Event coordination', 'amount' => 400]);
 
-        $this->actingAs($user)->postJson("/api/invoices/{$invoice->id}/mark-paid")->assertOk();
-
-        $this->assertDatabaseHas('payments', [
-            'invoice_id' => $invoice->id,
-            'amount' => 400,
-            'surcharge_amount' => 0,
-        ]);
-
-        $transaction = Transaction::where('invoice_id', $invoice->id)->first();
-        $this->assertEqualsWithDelta(400.0, (float) $transaction->amount, 0.001);
+        $this->actingAs($user)->postJson("/api/invoices/{$invoice->id}/mark-paid")->assertStatus(422);
     }
 
     public function test_an_invoice_can_be_addressed_to_a_specific_billing_contact(): void

@@ -55,31 +55,53 @@ class Invoice extends Model
         return (float) $this->items->sum('amount');
     }
 
-    public function surchargeAmount(): float
+    // A hypothetical 3% card-processing fee -- used only to build the Stripe
+    // Checkout line item for a card payment. It is never added to total():
+    // the fee is between the client and Stripe, shown only on Stripe's own
+    // page, and never affects what this invoice is worth in the app.
+    public function cardSurchargeAmount(): float
     {
-        return $this->surcharge ? round($this->subtotal() * 0.03, 2) : 0.0;
+        return round($this->subtotal() * 0.03, 2);
     }
 
+    // What the client owes, full stop. Equal to subtotal() -- kept as a
+    // separate method since callers throughout the app already read
+    // total() rather than subtotal(), not because the two can ever differ.
     public function total(): float
     {
-        return $this->subtotal() + $this->surchargeAmount();
+        return $this->subtotal();
     }
 
-    // Shared by the manual "Mark paid" action and the Stripe webhook, so
-    // both paths record the same payment + bookkeeping entry.
-    public function recordPayment(): void
+    // Whether a card payment (with its 3% fee, shown only at Stripe
+    // checkout) is offered for this invoice at all. ACH and check are
+    // always available regardless of this flag.
+    public function allowsCardPayment(): bool
+    {
+        return (bool) $this->surcharge;
+    }
+
+    // Shared by the manual "Record payment" action and the Stripe webhook,
+    // so both paths write the same payment + bookkeeping entry. $method is
+    // 'card' | 'ach' | 'check'; $surchargeAmount is whatever Stripe actually
+    // collected on top of the invoice (always 0 for ach/check) -- it's
+    // recorded on the Payment only, never folded into the invoice or the
+    // income Transaction, so bookkeeping can always tell "amount owed" from
+    // "amount Stripe actually processed."
+    public function recordPayment(string $method, float $baseAmount, float $surchargeAmount = 0.0, ?string $stripePaymentIntentId = null): void
     {
         $this->update(['status' => 'paid']);
 
         $this->payments()->create([
-            'amount' => $this->subtotal(),
-            'surcharge_amount' => $this->surchargeAmount(),
+            'method' => $method,
+            'amount' => $baseAmount,
+            'surcharge_amount' => $surchargeAmount,
+            'stripe_payment_intent_id' => $stripePaymentIntentId,
             'paid_at' => now(),
         ]);
 
         Transaction::create([
             'type' => 'income',
-            'amount' => $this->total(),
+            'amount' => $baseAmount,
             'category' => 'client invoice',
             'occurred_on' => now(),
             'invoice_id' => $this->id,

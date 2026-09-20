@@ -110,9 +110,18 @@ class InvoiceController extends Controller
         return $invoice->load('items');
     }
 
-    public function markPaid(Invoice $invoice)
+    // Manual, manager-only -- for payments that never touch Stripe (check,
+    // cash, or anything else recorded by hand). Never applies a surcharge,
+    // regardless of the invoice's own card-surcharge flag: that flag only
+    // ever governs whether the client is offered a card option, and a card
+    // fee that was never actually collected has no business in the books.
+    public function markPaid(Request $request, Invoice $invoice)
     {
-        $invoice->recordPayment();
+        $data = $request->validate([
+            'method' => ['required', 'in:check,other'],
+        ]);
+
+        $invoice->recordPayment($data['method'], $invoice->subtotal());
 
         return $invoice->load('items', 'payments');
     }
@@ -133,17 +142,27 @@ class InvoiceController extends Controller
         return response()->noContent();
     }
 
-    // Public, unauthenticated -- the "Pay Now" button on the client-facing
-    // invoice page. Creates a Stripe Checkout Session and hands back its
-    // URL for the browser to redirect to; MarkInvoicePaidFromStripeWebhook
-    // is what actually marks the invoice paid once Stripe confirms it.
-    public function checkout(string $token, StripeCheckoutService $checkout)
+    // Public, unauthenticated -- the "Pay by card" / "Pay by ACH" buttons on
+    // the client-facing invoice page. Creates a Stripe Checkout Session and
+    // hands back its URL for the browser to redirect to;
+    // MarkInvoicePaidFromStripeWebhook is what actually marks the invoice
+    // paid once Stripe confirms it.
+    public function checkout(Request $request, string $token, StripeCheckoutService $checkout)
     {
+        $data = $request->validate([
+            'method' => ['required', 'in:card,ach'],
+        ]);
+
         $invoice = Invoice::with('items')->where('public_token', $token)->firstOrFail();
 
         abort_unless($invoice->status === 'sent', 422, 'This invoice is not ready to be paid.');
 
-        $session = $checkout->createSessionFor($invoice);
+        if ($data['method'] === 'card') {
+            abort_unless($invoice->allowsCardPayment(), 422, 'Card payment is not available for this invoice.');
+            $session = $checkout->createCardSessionFor($invoice);
+        } else {
+            $session = $checkout->createAchSessionFor($invoice);
+        }
 
         $invoice->update(['stripe_checkout_session_id' => $session->id]);
 
