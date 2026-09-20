@@ -13,8 +13,19 @@ class ProjectPageController extends Controller
     public function index(): Response
     {
         return Inertia::render('Projects/Index', [
-            'projects' => Project::with(['company', 'tasks'])->orderBy('name')->get(),
+            'projects' => Project::where('status', '!=', 'archived')->with(['company', 'tasks'])->orderBy('name')->get(),
             'companies' => Company::orderBy('name')->get(['id', 'name']),
+        ]);
+    }
+
+    // A separate section, not just another filter tab on the main list --
+    // archived projects are deliberately kept out of the everyday view.
+    public function archived(): Response
+    {
+        return Inertia::render('Projects/Index', [
+            'projects' => Project::where('status', 'archived')->with(['company', 'tasks'])->orderBy('name')->get(),
+            'companies' => Company::orderBy('name')->get(['id', 'name']),
+            'archivedView' => true,
         ]);
     }
 

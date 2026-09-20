@@ -12,7 +12,6 @@ import { api } from '../../lib/api';
 import { copyToClipboard } from '../../lib/clipboard';
 
 const TABS = ['Overview', 'Tasks', 'Notes', 'Messages', 'Time', 'Proposals', 'Billing', 'Expenses', 'Team'];
-const STATUS_OPTIONS = ['active', 'on_hold', 'completed'];
 
 function reload() {
     router.reload({ only: ['project'] });

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Company;
+use App\Models\Project;
 use App\Models\Proposal;
 use App\Notifications\ProposalAccepted;
 use Illuminate\Http\Request;
@@ -106,7 +107,23 @@ class ProposalController extends Controller
         // Email the client a link built from $proposal->accept_token,
         // pointing at the public showPublic() route below.
 
+        if ($proposal->project_id) {
+            $this->moveProjectToStatus($proposal->project, 'estimated');
+        }
+
         return $proposal;
+    }
+
+    // Completed/archived are deliberate, manually-chosen end states --
+    // sending or accepting a proposal (possibly a follow-up one, on a
+    // project that's already well underway) shouldn't silently undo them.
+    protected function moveProjectToStatus(Project $project, string $status): void
+    {
+        if (in_array($project->status, ['completed', 'archived'], true)) {
+            return;
+        }
+
+        $project->update(['status' => $status]);
     }
 
     // Authenticated only -- reverts a mistaken or premature acceptance back
@@ -143,6 +160,7 @@ class ProposalController extends Controller
                 // be built from multiple accepted proposals (e.g. phased work).
                 if ($proposal->project_id) {
                     $proposal->project()->increment('budget', $proposal->estimate_amount ?? 0);
+                    $this->moveProjectToStatus($proposal->project()->first(), 'active');
                 }
             });
 

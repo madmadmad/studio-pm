@@ -31,6 +31,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/clients/{company}', [ClientPageController::class, 'show'])->name('clients.show');
 
     Route::get('/projects', [ProjectPageController::class, 'index'])->name('projects.index');
+    Route::get('/projects/archived', [ProjectPageController::class, 'archived'])->name('projects.archived');
     Route::get('/projects/{project}', [ProjectPageController::class, 'show'])->name('projects.show');
 
     Route::get('/time-entries', [TimePageController::class, 'index'])->name('time.index');

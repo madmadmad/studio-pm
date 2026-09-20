@@ -7,22 +7,25 @@ import { api } from '../../lib/api';
 
 const STATUS_FILTERS = [
     { value: 'all', label: 'All' },
+    { value: 'estimated', label: 'Estimated' },
     { value: 'active', label: 'Active' },
-    { value: 'on_hold', label: 'On hold' },
+    { value: 'inactive', label: 'Inactive' },
     { value: 'completed', label: 'Completed' },
 ];
 
 const STATUS_OPTIONS = [
+    { value: 'estimated', label: 'Estimated' },
     { value: 'active', label: 'Active' },
-    { value: 'on_hold', label: 'On hold' },
+    { value: 'inactive', label: 'Inactive' },
     { value: 'completed', label: 'Completed' },
+    { value: 'archived', label: 'Archived' },
 ];
 
 function emptyForm() {
     return { company_id: '', name: '', description: '' };
 }
 
-export default function ProjectsIndex({ projects, companies }) {
+export default function ProjectsIndex({ projects, companies, archivedView = false }) {
     const [filter, setFilter] = useState('all');
     const [showForm, setShowForm] = useState(false);
     const [form, setForm] = useState(emptyForm());
@@ -74,30 +77,45 @@ export default function ProjectsIndex({ projects, companies }) {
 
     return (
         <AppLayout>
-            <Head title="Projects" />
+            <Head title={archivedView ? 'Archived Projects' : 'Projects'} />
             <div className="flex items-center justify-between mb-1">
-                <h1 className="font-display text-2xl font-semibold">Projects</h1>
-                <button onClick={() => setShowForm(true)} className="bg-ink text-white text-sm font-medium px-3 py-1.5 rounded">
-                    New project
-                </button>
+                <h1 className="font-display text-2xl font-semibold">{archivedView ? 'Archived Projects' : 'Projects'}</h1>
+                {archivedView ? (
+                    <Link href="/projects" className="text-sm font-medium text-sage hover:underline">
+                        All Projects
+                    </Link>
+                ) : (
+                    <button onClick={() => setShowForm(true)} className="bg-ink text-white text-sm font-medium px-3 py-1.5 rounded">
+                        New project
+                    </button>
+                )}
             </div>
             <p className="text-sm text-sage mb-4">
-                {projects.length} project{projects.length !== 1 ? 's' : ''} across all clients.
+                {archivedView
+                    ? `${projects.length} archived project${projects.length !== 1 ? 's' : ''}.`
+                    : `${projects.length} project${projects.length !== 1 ? 's' : ''} across all clients.`}
             </p>
 
-            <div className="flex gap-1 mb-6">
-                {STATUS_FILTERS.map((s) => (
-                    <button
-                        key={s.value}
-                        onClick={() => setFilter(s.value)}
-                        className={`text-sm px-3 py-1.5 rounded ${
-                            filter === s.value ? 'bg-ink text-white' : 'text-sage border border-border'
-                        }`}
-                    >
-                        {s.label}
-                    </button>
-                ))}
-            </div>
+            {archivedView ? null : (
+                <div className="flex items-center justify-between mb-6">
+                    <div className="flex gap-1">
+                        {STATUS_FILTERS.map((s) => (
+                            <button
+                                key={s.value}
+                                onClick={() => setFilter(s.value)}
+                                className={`text-sm px-3 py-1.5 rounded ${
+                                    filter === s.value ? 'bg-ink text-white' : 'text-sage border border-border'
+                                }`}
+                            >
+                                {s.label}
+                            </button>
+                        ))}
+                    </div>
+                    <Link href="/projects/archived" className="text-sm text-sage hover:underline">
+                        Archived
+                    </Link>
+                </div>
+            )}
 
             {showForm && (
                 <form onSubmit={submit} className="bg-white rounded-lg border border-border p-4 mb-6 grid grid-cols-2 gap-3">

@@ -43,9 +43,11 @@ export function TaskStatusBadge({ task }) {
 }
 
 const PROJECT_STATUS = {
+    estimated: { tone: 'brass', label: 'Estimated' },
     active: { tone: 'pine', label: 'Active' },
-    on_hold: { tone: 'brass', label: 'On hold' },
+    inactive: { tone: 'neutral', label: 'Inactive' },
     completed: { tone: 'neutral', label: 'Completed' },
+    archived: { tone: 'neutral', label: 'Archived' },
 };
 
 export function ProjectStatusBadge({ project }) {

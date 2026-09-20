@@ -13,7 +13,7 @@ return new class extends Migration
             $table->foreignId('company_id')->constrained()->cascadeOnDelete();
             $table->string('name');
             $table->text('description')->nullable();
-            $table->string('status')->default('active'); // active, on_hold, completed
+            $table->string('status')->default('active'); // estimated, active, inactive, completed, archived
             $table->timestamps();
         });
     }
