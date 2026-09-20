@@ -103,8 +103,6 @@ export default function InvoiceShow({ invoice, studio }) {
                     </div>
                 ) : invoice.status === 'sent' ? (
                     <div>
-                        <div className="font-display text-lg font-semibold mb-3">Ways to pay</div>
-
                         <div className="mb-1 text-sm text-ink">Pay online by credit card</div>
                         <button
                             onClick={payNow}
