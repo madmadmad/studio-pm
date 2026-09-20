@@ -34,7 +34,7 @@ class ProjectController extends Controller
             'name' => ['sometimes', 'string', 'max:255'],
             'po_number' => ['nullable', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
-            'status' => ['sometimes', 'in:estimated,active,inactive,completed,archived'],
+            'status' => ['sometimes', 'in:leads,estimated,active,inactive,completed,archived'],
             'team_names' => ['sometimes', 'array'],
             'team_names.*' => ['string', 'max:255'],
         ]);

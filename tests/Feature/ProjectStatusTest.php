@@ -11,6 +11,29 @@ class ProjectStatusTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_a_new_project_defaults_to_leads(): void
+    {
+        $company = Company::create(['name' => 'Alder & Finch Design']);
+
+        $project = $company->projects()->create(['name' => 'Brand refresh']);
+
+        $this->assertSame('leads', $project->fresh()->status);
+    }
+
+    public function test_sending_a_proposal_moves_a_lead_project_to_estimated(): void
+    {
+        $user = User::factory()->create();
+        $company = Company::create(['name' => 'Alder & Finch Design']);
+        $project = $company->projects()->create(['name' => 'Brand refresh']);
+        $proposal = $company->proposals()->create([
+            'project_id' => $project->id, 'title' => 'Brand refresh', 'body' => '<p>Scope</p>', 'status' => 'draft',
+        ]);
+
+        $this->actingAs($user)->postJson("/api/proposals/{$proposal->id}/send")->assertOk();
+
+        $this->assertSame('estimated', $project->fresh()->status);
+    }
+
     public function test_sending_a_proposal_moves_its_project_to_estimated(): void
     {
         $user = User::factory()->create();
@@ -73,7 +96,7 @@ class ProjectStatusTest extends TestCase
         $company = Company::create(['name' => 'Alder & Finch Design']);
         $project = $company->projects()->create(['name' => 'Brand refresh']);
 
-        foreach (['estimated', 'active', 'inactive', 'completed', 'archived'] as $status) {
+        foreach (['leads', 'estimated', 'active', 'inactive', 'completed', 'archived'] as $status) {
             $this->actingAs($user)->patchJson("/api/projects/{$project->id}", ['status' => $status])
                 ->assertOk();
             $this->assertSame($status, $project->fresh()->status);

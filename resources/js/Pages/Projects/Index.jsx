@@ -7,6 +7,7 @@ import { api } from '../../lib/api';
 
 const STATUS_FILTERS = [
     { value: 'all', label: 'All' },
+    { value: 'leads', label: 'Leads' },
     { value: 'estimated', label: 'Estimated' },
     { value: 'active', label: 'Active' },
     { value: 'inactive', label: 'Inactive' },
@@ -14,6 +15,7 @@ const STATUS_FILTERS = [
 ];
 
 const STATUS_OPTIONS = [
+    { value: 'leads', label: 'Leads' },
     { value: 'estimated', label: 'Estimated' },
     { value: 'active', label: 'Active' },
     { value: 'inactive', label: 'Inactive' },

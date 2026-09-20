@@ -43,6 +43,7 @@ export function TaskStatusBadge({ task }) {
 }
 
 const PROJECT_STATUS = {
+    leads: { tone: 'neutral', label: 'Leads' },
     estimated: { tone: 'brass', label: 'Estimated' },
     active: { tone: 'pine', label: 'Active' },
     inactive: { tone: 'neutral', label: 'Inactive' },
