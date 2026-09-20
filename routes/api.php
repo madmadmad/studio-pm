@@ -37,7 +37,7 @@ Route::middleware('auth:sanctum')->name('api.')->group(function () {
     Route::post('invoices/{invoice}/send', [InvoiceController::class, 'send']);
     Route::post('invoices/{invoice}/mark-paid', [InvoiceController::class, 'markPaid']);
 
-    Route::apiResource('companies.proposals', ProposalController::class)->shallow()->only(['index', 'store', 'update']);
+    Route::apiResource('companies.proposals', ProposalController::class)->shallow()->only(['index', 'store', 'update', 'destroy']);
     Route::post('proposals/{proposal}/send', [ProposalController::class, 'send']);
     Route::post('proposals/{proposal}/unaccept', [ProposalController::class, 'unaccept']);
 

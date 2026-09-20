@@ -1,6 +1,6 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { useState } from 'react';
-import { Check, Copy, Eye, PaperPlaneTilt, PencilSimple } from '@phosphor-icons/react';
+import { useEffect, useState } from 'react';
+import { Check, Copy, Eye, PaperPlaneTilt, PencilSimple, Trash } from '@phosphor-icons/react';
 import AppLayout from '../../Layouts/AppLayout';
 import EmptyState from '../../Components/EmptyState';
 import { ProposalStatusBadge } from '../../Components/StatusBadges';
@@ -8,8 +8,16 @@ import { formatCurrency, formatDate } from '../../lib/format';
 import { api } from '../../lib/api';
 import { copyToClipboard } from '../../lib/clipboard';
 
-export default function ProposalsIndex({ proposals }) {
+export default function ProposalsIndex({ proposals: proposalsProp }) {
+    const [proposals, setProposals] = useState(proposalsProp);
     const [copiedId, setCopiedId] = useState(null);
+    const [deletingId, setDeletingId] = useState(null);
+
+    // Keeps local state in sync whenever a router.reload() elsewhere in this
+    // component brings in a fresh copy of the prop.
+    useEffect(() => {
+        setProposals(proposalsProp);
+    }, [proposalsProp]);
 
     async function sendProposal(proposal) {
         await api.post(`/api/proposals/${proposal.id}/send`);
@@ -28,6 +36,22 @@ export default function ProposalsIndex({ proposals }) {
         }
         setCopiedId(proposal.id);
         setTimeout(() => setCopiedId((id) => (id === proposal.id ? null : id)), 1500);
+    }
+
+    async function deleteProposal(proposal) {
+        if (deletingId === proposal.id) return; // already in flight -- ignore a repeat click
+        const amount = proposal.estimate_amount ? formatCurrency(proposal.estimate_amount) : 'this';
+        const warning = `Delete ${amount} proposal "${proposal.title}" to ${proposal.company.name}? This can't be undone. The linked project (if any) is not affected.`;
+        if (!confirm(warning)) return;
+        setDeletingId(proposal.id);
+        try {
+            await api.delete(`/api/proposals/${proposal.id}`);
+            setProposals((current) => current.filter((p) => p.id !== proposal.id));
+        } catch (err) {
+            alert(err.message || 'Could not delete this proposal.');
+        } finally {
+            setDeletingId(null);
+        }
     }
 
     return (
@@ -102,6 +126,16 @@ export default function ProposalsIndex({ proposals }) {
                                             )}
                                             {proposal.status === 'accepted' && (
                                                 <span className="text-xs text-sage">{formatDate(proposal.accepted_at)}</span>
+                                            )}
+                                            {proposal.status !== 'accepted' && (
+                                                <button
+                                                    onClick={() => deleteProposal(proposal)}
+                                                    disabled={deletingId === proposal.id}
+                                                    title="Delete"
+                                                    className="text-sage hover:text-brick disabled:opacity-50"
+                                                >
+                                                    <Trash size={16} />
+                                                </button>
                                             )}
                                         </div>
                                     </td>

@@ -129,6 +129,19 @@ class ProposalController extends Controller
         $project->update(['status' => $status]);
     }
 
+    // The linked project is never touched here -- proposals.project_id
+    // points *at* the project, so deleting a proposal can't cascade onto
+    // it either way. Accepted proposals are protected instead, same as
+    // paid invoices: it's the record of what was actually sold.
+    public function destroy(Proposal $proposal)
+    {
+        abort_if($proposal->status === 'accepted', 422, 'Accepted proposals cannot be deleted.');
+
+        $proposal->delete();
+
+        return response()->noContent();
+    }
+
     // Authenticated only -- reverts a mistaken or premature acceptance back
     // to sent, so the client's link still works and they can accept again.
     public function unaccept(Proposal $proposal)
