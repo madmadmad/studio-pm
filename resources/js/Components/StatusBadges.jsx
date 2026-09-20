@@ -3,9 +3,9 @@ import { displayInvoiceStatus } from '../lib/format';
 
 const INVOICE_STATUS = {
     draft: { tone: 'neutral', label: 'Draft' },
-    sent: { tone: 'brass', label: 'Sent' },
-    paid: { tone: 'pine', label: 'Paid' },
-    overdue: { tone: 'brick', label: 'Overdue' },
+    sent: { tone: 'watermelon', label: 'Sent' },
+    paid: { tone: 'fern', label: 'Paid' },
+    overdue: { tone: 'fuchsia', label: 'Overdue' },
 };
 
 export function InvoiceStatusBadge({ invoice }) {
@@ -16,8 +16,8 @@ export function InvoiceStatusBadge({ invoice }) {
 
 const PROPOSAL_STATUS = {
     draft: { tone: 'neutral', label: 'Draft' },
-    sent: { tone: 'brass', label: 'Sent' },
-    accepted: { tone: 'pine', label: 'Accepted' },
+    sent: { tone: 'watermelon', label: 'Sent' },
+    accepted: { tone: 'fern', label: 'Accepted' },
 };
 
 export function ProposalStatusBadge({ proposal }) {
@@ -27,14 +27,14 @@ export function ProposalStatusBadge({ proposal }) {
 
 export function CompanyStatusBadge({ company }) {
     return company.status === 'active'
-        ? <Badge tone="pine" label="Active" />
+        ? <Badge tone="fern" label="Active" />
         : <Badge tone="neutral" label="Inactive" />;
 }
 
 const TASK_STATUS = {
     todo: { tone: 'neutral', label: 'To do' },
-    in_progress: { tone: 'brass', label: 'In progress' },
-    done: { tone: 'pine', label: 'Done' },
+    in_progress: { tone: 'watermelon', label: 'In progress' },
+    done: { tone: 'fern', label: 'Done' },
 };
 
 export function TaskStatusBadge({ task }) {
@@ -44,8 +44,8 @@ export function TaskStatusBadge({ task }) {
 
 const PROJECT_STATUS = {
     leads: { tone: 'neutral', label: 'Leads' },
-    estimated: { tone: 'brass', label: 'Estimated' },
-    active: { tone: 'pine', label: 'Active' },
+    estimated: { tone: 'watermelon', label: 'Estimated' },
+    active: { tone: 'fern', label: 'Active' },
     inactive: { tone: 'neutral', label: 'Inactive' },
     completed: { tone: 'neutral', label: 'Completed' },
     archived: { tone: 'neutral', label: 'Archived' },

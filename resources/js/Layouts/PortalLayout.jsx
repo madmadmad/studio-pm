@@ -7,10 +7,10 @@ export default function PortalLayout({ children }) {
     }
 
     return (
-        <div className="min-h-screen bg-paper text-ink">
-            <header className="bg-ink text-paper px-6 py-4 flex items-center justify-between">
+        <div className="min-h-screen bg-porcelain text-gunmetal">
+            <header className="bg-gunmetal text-porcelain px-6 py-4 flex items-center justify-between">
                 <Link href="/portal" className="font-semibold">Client Hub</Link>
-                <a href="/portal/logout" onClick={handleLogout} className="text-sm text-paper/60 hover:text-paper">
+                <a href="/portal/logout" onClick={handleLogout} className="text-sm text-porcelain/60 hover:text-porcelain">
                     Sign out
                 </a>
             </header>

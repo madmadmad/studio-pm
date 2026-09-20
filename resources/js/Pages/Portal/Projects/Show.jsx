@@ -21,7 +21,7 @@ function TabBar({ tab, setTab }) {
                     key={t}
                     onClick={() => setTab(t)}
                     className={`text-sm font-medium px-3 py-2 border-b-2 -mb-px whitespace-nowrap ${
-                        tab === t ? 'border-ink text-ink' : 'border-transparent text-sage'
+                        tab === t ? 'border-gunmetal text-gunmetal' : 'border-transparent text-shadow-grey'
                     }`}
                 >
                     {t}
@@ -34,7 +34,7 @@ function TabBar({ tab, setTab }) {
 function OverviewTab({ project }) {
     return (
         <div className="bg-white rounded-lg border border-border p-4">
-            <div className="text-sm text-sage mb-1">Status</div>
+            <div className="text-sm text-shadow-grey mb-1">Status</div>
             <ProjectStatusBadge project={project} />
             {project.description && (
                 <p className="text-sm mt-4 whitespace-pre-wrap">{project.description}</p>
@@ -68,7 +68,7 @@ function NewTaskForm({ project }) {
                 onChange={(e) => setTitle(e.target.value)}
                 className="border border-border rounded px-3 py-2 text-sm flex-1"
             />
-            <button type="submit" disabled={saving} className="bg-pine text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50">Add task</button>
+            <button type="submit" disabled={saving} className="bg-fern text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50">Add task</button>
         </form>
     );
 }
@@ -87,7 +87,7 @@ function TaskRow({ task }) {
         <div className="flex items-center justify-between px-4 py-3 border-b border-border last:border-b-0">
             <div>
                 <div className="text-sm font-medium">{task.title}</div>
-                {task.due_date && <div className="text-xs text-sage">Due {formatDate(task.due_date)}</div>}
+                {task.due_date && <div className="text-xs text-shadow-grey">Due {formatDate(task.due_date)}</div>}
             </div>
             <button onClick={cycleStatus}>
                 <TaskStatusBadge task={{ status }} />
@@ -138,14 +138,14 @@ function MessageThread({ message }) {
         <div className="border-b border-border last:border-b-0 p-4">
             <div className="flex items-center justify-between mb-1">
                 <div className="text-sm font-medium">{message.subject ?? '(no subject)'}</div>
-                <div className="text-xs text-sage">{formatDate(message.sent_at)}</div>
+                <div className="text-xs text-shadow-grey">{formatDate(message.sent_at)}</div>
             </div>
-            <div className="text-xs text-sage mb-2">{senderName}</div>
+            <div className="text-xs text-shadow-grey mb-2">{senderName}</div>
             <p className="text-sm whitespace-pre-wrap mb-2">{message.body}</p>
 
             {(message.replies || []).map((reply) => (
                 <div key={reply.id} className="ml-4 pl-3 border-l-2 border-border mt-3">
-                    <div className="text-xs text-sage mb-1">
+                    <div className="text-xs text-shadow-grey mb-1">
                         {reply.sender_contact?.name ?? reply.sender_user?.name ?? 'Studio'} &middot; {formatDate(reply.sent_at)}
                     </div>
                     <p className="text-sm whitespace-pre-wrap">{reply.body}</p>
@@ -163,12 +163,12 @@ function MessageThread({ message }) {
                         placeholder="Write a reply..."
                     />
                     <div className="flex gap-2 justify-end">
-                        <button type="button" onClick={() => setReplying(false)} className="text-sm px-3 py-1.5 rounded text-sage">Cancel</button>
-                        <button type="submit" disabled={saving} className="bg-pine text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50">Reply</button>
+                        <button type="button" onClick={() => setReplying(false)} className="text-sm px-3 py-1.5 rounded text-shadow-grey">Cancel</button>
+                        <button type="submit" disabled={saving} className="bg-fern text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50">Reply</button>
                     </div>
                 </form>
             ) : (
-                <button onClick={() => setReplying(true)} className="text-xs text-brass hover:underline mt-2 ml-4">Reply</button>
+                <button onClick={() => setReplying(true)} className="text-xs text-watermelon hover:underline mt-2 ml-4">Reply</button>
             )}
         </div>
     );
@@ -197,7 +197,7 @@ function NewMessageForm({ project }) {
 
     if (!showForm) {
         return (
-            <button onClick={() => setShowForm(true)} className="bg-ink text-white text-sm font-medium px-3 py-1.5 rounded mb-4">
+            <button onClick={() => setShowForm(true)} className="bg-gunmetal text-white text-sm font-medium px-3 py-1.5 rounded mb-4">
                 New message
             </button>
         );
@@ -208,8 +208,8 @@ function NewMessageForm({ project }) {
             <input required placeholder="Subject" value={subject} onChange={(e) => setSubject(e.target.value)} className="border border-border rounded px-3 py-2 text-sm" />
             <textarea required rows={4} placeholder="Message" value={body} onChange={(e) => setBody(e.target.value)} className="border border-border rounded px-3 py-2 text-sm" />
             <div className="flex gap-2 justify-end">
-                <button type="button" onClick={() => setShowForm(false)} className="text-sm px-3 py-1.5 rounded text-sage">Cancel</button>
-                <button type="submit" disabled={saving} className="bg-pine text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50">Send</button>
+                <button type="button" onClick={() => setShowForm(false)} className="text-sm px-3 py-1.5 rounded text-shadow-grey">Cancel</button>
+                <button type="submit" disabled={saving} className="bg-fern text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50">Send</button>
             </div>
         </form>
     );
@@ -240,7 +240,7 @@ function ProposalsTab({ project }) {
                     <div key={proposal.id} className="flex items-center justify-between px-4 py-3 border-b border-border last:border-b-0">
                         <div>
                             <div className="text-sm font-medium">{proposal.title}</div>
-                            <div className="text-xs text-sage">Accepted {formatDate(proposal.accepted_at)}</div>
+                            <div className="text-xs text-shadow-grey">Accepted {formatDate(proposal.accepted_at)}</div>
                         </div>
                         <div className="flex items-center gap-3">
                             <span className="tabular-nums text-sm">{formatCurrency(proposal.estimate_amount)}</span>
@@ -249,7 +249,7 @@ function ProposalsTab({ project }) {
                                 href={`/p/${proposal.accept_token}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="bg-pine text-white text-xs font-bold px-3 py-1.5 rounded hover:bg-pine/90"
+                                className="bg-fern text-white text-xs font-bold px-3 py-1.5 rounded hover:bg-fern/90"
                             >
                                 Client view
                             </a>
@@ -271,7 +271,7 @@ function InvoicesTab({ project }) {
                     <div key={invoice.id} className="flex items-center justify-between px-4 py-3 border-b border-border last:border-b-0">
                         <div>
                             <div className="text-sm font-medium">Invoice #{invoice.invoice_number ?? invoice.id}</div>
-                            <div className="text-xs text-sage">Issued {formatDate(invoice.issued_on)} &middot; Due {formatDate(invoice.due_on)}</div>
+                            <div className="text-xs text-shadow-grey">Issued {formatDate(invoice.issued_on)} &middot; Due {formatDate(invoice.due_on)}</div>
                         </div>
                         <div className="flex items-center gap-3">
                             <span className="tabular-nums text-sm">{formatCurrency(invoiceTotal(invoice.items, invoice.surcharge))}</span>
@@ -280,7 +280,7 @@ function InvoicesTab({ project }) {
                                 href={`/i/${invoice.public_token}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="bg-pine text-white text-xs font-bold px-3 py-1.5 rounded hover:bg-pine/90"
+                                className="bg-fern text-white text-xs font-bold px-3 py-1.5 rounded hover:bg-fern/90"
                             >
                                 Client view
                             </a>
@@ -301,7 +301,7 @@ function TeamTab({ project }) {
                 project.active_users.map((user) => (
                     <div key={user.id} className="flex items-center justify-between px-4 py-3 border-b border-border last:border-b-0">
                         <div className="text-sm font-medium">{user.name}</div>
-                        <span className="text-xs text-sage capitalize">{user.role.replace('_', ' ')}</span>
+                        <span className="text-xs text-shadow-grey capitalize">{user.role.replace('_', ' ')}</span>
                     </div>
                 ))
             )}
@@ -316,7 +316,7 @@ export default function PortalProjectShow({ project }) {
         <PortalLayout>
             <Head title={project.name} />
             <div className="mb-1">
-                <Link href="/portal" className="text-sm text-sage hover:underline inline-flex items-center gap-1">
+                <Link href="/portal" className="text-sm text-shadow-grey hover:underline inline-flex items-center gap-1">
                     <ArrowLeft size={14} /> Your projects
                 </Link>
             </div>
@@ -324,7 +324,7 @@ export default function PortalProjectShow({ project }) {
                 <h1 className="font-display text-2xl font-semibold">{project.name}</h1>
                 <ProjectStatusBadge project={project} />
             </div>
-            <p className="text-sm text-sage mb-6">{project.company.name}</p>
+            <p className="text-sm text-shadow-grey mb-6">{project.company.name}</p>
 
             <TabBar tab={tab} setTab={setTab} />
 

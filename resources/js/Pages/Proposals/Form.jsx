@@ -200,7 +200,7 @@ export default function ProposalsForm({ proposal, companies, services, presetCom
             <Head title={isEditing ? `Edit — ${proposal.title}` : 'New proposal'} />
             <div className="max-w-3xl">
             <div className="mb-1">
-                <Link href="/proposals" className="text-sm text-sage hover:underline inline-flex items-center gap-1">
+                <Link href="/proposals" className="text-sm text-shadow-grey hover:underline inline-flex items-center gap-1">
                     <ArrowLeft size={14} /> Proposals
                 </Link>
             </div>
@@ -209,20 +209,20 @@ export default function ProposalsForm({ proposal, companies, services, presetCom
                 {isEditing && (
                     <div className="flex items-center gap-3">
                         <ProposalStatusBadge proposal={proposal} />
-                        <a href={`/p/${proposal.accept_token}`} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-sage hover:underline">
+                        <a href={`/p/${proposal.accept_token}`} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-shadow-grey hover:underline">
                             Preview
                         </a>
                         {proposal.status === 'draft' ? (
-                            <button type="button" disabled={sending} onClick={sendProposal} className="text-sm font-medium text-brass disabled:opacity-50">
+                            <button type="button" disabled={sending} onClick={sendProposal} className="text-sm font-medium text-watermelon disabled:opacity-50">
                                 {sending ? 'Sending…' : 'Send'}
                             </button>
                         ) : (
-                            <button type="button" onClick={copyLink} className="text-sm font-medium text-sage">
+                            <button type="button" onClick={copyLink} className="text-sm font-medium text-shadow-grey">
                                 {copied ? 'Copied!' : 'Copy link'}
                             </button>
                         )}
                         {proposal.status === 'accepted' && (
-                            <button type="button" disabled={unaccepting} onClick={unacceptProposal} className="text-sm font-medium text-brick disabled:opacity-50">
+                            <button type="button" disabled={unaccepting} onClick={unacceptProposal} className="text-sm font-medium text-fuchsia disabled:opacity-50">
                                 {unaccepting ? 'Reverting…' : 'Unaccept'}
                             </button>
                         )}
@@ -236,7 +236,7 @@ export default function ProposalsForm({ proposal, companies, services, presetCom
                         value={form.company_id}
                         disabled={isEditing || contextLocked}
                         onChange={(e) => handleCompanyChange(e.target.value)}
-                        className="border border-border rounded px-3 py-2 text-sm disabled:bg-paper disabled:text-sage"
+                        className="border border-border rounded px-3 py-2 text-sm disabled:bg-porcelain disabled:text-shadow-grey"
                     >
                         <option value="">Select client</option>
                         {companies.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -245,7 +245,7 @@ export default function ProposalsForm({ proposal, companies, services, presetCom
                         value={form.contact_id}
                         disabled={!form.company_id}
                         onChange={(e) => setForm({ ...form, contact_id: e.target.value })}
-                        className="border border-border rounded px-3 py-2 text-sm disabled:bg-paper disabled:text-sage"
+                        className="border border-border rounded px-3 py-2 text-sm disabled:bg-porcelain disabled:text-shadow-grey"
                     >
                         <option value="">
                             {form.company_id ? 'Send to (no specific contact)' : 'Select a client first'}
@@ -259,7 +259,7 @@ export default function ProposalsForm({ proposal, companies, services, presetCom
                 </div>
                 <div className="mb-3">
                     {isEditing ? (
-                        <div className="border border-border rounded px-3 py-2 text-sm bg-paper text-sage">
+                        <div className="border border-border rounded px-3 py-2 text-sm bg-porcelain text-shadow-grey">
                             Project: {proposal.project?.name ?? '—'}
                         </div>
                     ) : (
@@ -268,7 +268,7 @@ export default function ProposalsForm({ proposal, companies, services, presetCom
                                 value={form.company_id ? (form.project_id || NEW_PROJECT) : ''}
                                 disabled={!form.company_id || contextLocked}
                                 onChange={(e) => handleProjectChange(e.target.value)}
-                                className="border border-border rounded px-3 py-2 text-sm disabled:bg-paper disabled:text-sage"
+                                className="border border-border rounded px-3 py-2 text-sm disabled:bg-porcelain disabled:text-shadow-grey"
                             >
                                 {!form.company_id ? (
                                     <option value="">Select a client first</option>
@@ -285,7 +285,7 @@ export default function ProposalsForm({ proposal, companies, services, presetCom
                                     value={form.new_project_name}
                                     disabled={!form.company_id}
                                     onChange={(e) => setForm({ ...form, new_project_name: e.target.value })}
-                                    className="border border-border rounded px-3 py-2 text-sm disabled:bg-paper disabled:text-sage"
+                                    className="border border-border rounded px-3 py-2 text-sm disabled:bg-porcelain disabled:text-shadow-grey"
                                 />
                             )}
                         </div>
@@ -302,7 +302,7 @@ export default function ProposalsForm({ proposal, companies, services, presetCom
                             className="border border-border rounded px-3 py-2 text-sm tabular-nums w-full"
                         />
                     ) : (
-                        <div className="border border-border rounded px-3 py-2 text-sm tabular-nums bg-paper text-sage">
+                        <div className="border border-border rounded px-3 py-2 text-sm tabular-nums bg-porcelain text-shadow-grey">
                             Estimate: {formatCurrency(itemsTotal)} (from line items)
                         </div>
                     )}
@@ -318,7 +318,7 @@ export default function ProposalsForm({ proposal, companies, services, presetCom
                 </div>
 
                 <div className="mb-4">
-                    <div className="text-xs font-semibold text-sage mb-2">Services</div>
+                    <div className="text-xs font-semibold text-shadow-grey mb-2">Services</div>
                     {form.items.map((item, idx) => (
                         <div
                             key={idx}
@@ -335,7 +335,7 @@ export default function ProposalsForm({ proposal, companies, services, presetCom
                             }`}
                         >
                             <div
-                                className="pt-3 text-sage cursor-grab"
+                                className="pt-3 text-shadow-grey cursor-grab"
                                 title="Drag to reorder"
                             >
                                 <DotsSixVertical size={14} weight="bold" />
@@ -378,20 +378,20 @@ export default function ProposalsForm({ proposal, companies, services, presetCom
                                         value={item.details}
                                         onChange={(e) => updateItem(idx, 'details', e.target.value)}
                                         rows={2}
-                                        className="col-span-9 border border-border rounded px-2 py-2 text-xs text-sage"
+                                        className="col-span-9 border border-border rounded px-2 py-2 text-xs text-shadow-grey"
                                     />
                                 </div>
                                 <button
                                     type="button"
                                     onClick={() => removeItem(idx)}
-                                    className="text-xs text-brick"
+                                    className="text-xs text-fuchsia"
                                 >
                                     Remove
                                 </button>
                             </div>
                         </div>
                     ))}
-                    <button type="button" onClick={addItem} className="text-sm font-medium text-brass">+ Add line item</button>
+                    <button type="button" onClick={addItem} className="text-sm font-medium text-watermelon">+ Add line item</button>
 
                     {form.items.length > 0 && (
                         <div className="flex justify-end mt-3 pt-3 border-t border-border">
@@ -402,11 +402,11 @@ export default function ProposalsForm({ proposal, companies, services, presetCom
                     )}
                 </div>
 
-                {error && <div className="text-sm mb-3 text-brick">{error}</div>}
+                {error && <div className="text-sm mb-3 text-fuchsia">{error}</div>}
 
                 <div className="flex gap-2 justify-end">
-                    <Link href="/proposals" className="text-sm px-3 py-1.5 rounded text-sage">Cancel</Link>
-                    <button type="button" disabled={saving} onClick={save} className="bg-pine text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50">
+                    <Link href="/proposals" className="text-sm px-3 py-1.5 rounded text-shadow-grey">Cancel</Link>
+                    <button type="button" disabled={saving} onClick={save} className="bg-fern text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50">
                         {isEditing ? 'Save changes' : 'Save draft'}
                     </button>
                 </div>

@@ -8,7 +8,7 @@ export default function PortalProjectsIndex({ projects }) {
         <PortalLayout>
             <Head title="Your projects" />
             <h1 className="font-display text-2xl font-semibold mb-1">Your projects</h1>
-            <p className="text-sm text-sage mb-6">{projects.length} project{projects.length !== 1 ? 's' : ''}.</p>
+            <p className="text-sm text-shadow-grey mb-6">{projects.length} project{projects.length !== 1 ? 's' : ''}.</p>
 
             <div className="bg-white rounded-lg border border-border">
                 {projects.length === 0 ? (
@@ -18,7 +18,7 @@ export default function PortalProjectsIndex({ projects }) {
                         <Link
                             key={project.id}
                             href={`/portal/projects/${project.id}`}
-                            className="flex items-center justify-between px-4 py-3 border-b border-border last:border-b-0 hover:bg-paper"
+                            className="flex items-center justify-between px-4 py-3 border-b border-border last:border-b-0 hover:bg-porcelain"
                         >
                             <div className="text-sm font-medium">{project.name}</div>
                             <ProjectStatusBadge project={project} />

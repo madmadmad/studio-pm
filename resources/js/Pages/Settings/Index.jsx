@@ -32,10 +32,10 @@ export default function SettingsIndex({ studioProfile }) {
         <AppLayout>
             <Head title="Settings" />
             <h1 className="font-display text-2xl font-semibold mb-1">Settings</h1>
-            <p className="text-sm text-sage mb-6">This is how your studio appears on proposals sent to clients.</p>
+            <p className="text-sm text-shadow-grey mb-6">This is how your studio appears on proposals sent to clients.</p>
 
             <form onSubmit={submit} className="bg-white rounded-lg border border-border p-4 max-w-lg">
-                <div className="text-xs font-semibold text-sage mb-2">Studio information</div>
+                <div className="text-xs font-semibold text-shadow-grey mb-2">Studio information</div>
                 <input
                     required
                     placeholder="Studio name"
@@ -70,8 +70,8 @@ export default function SettingsIndex({ studioProfile }) {
                     className="border border-border rounded px-3 py-2 text-sm w-full mb-4"
                 />
 
-                <div className="text-xs font-semibold text-sage mb-2">Payment instructions</div>
-                <p className="text-xs text-sage mb-2">
+                <div className="text-xs font-semibold text-shadow-grey mb-2">Payment instructions</div>
+                <p className="text-xs text-shadow-grey mb-2">
                     Shown on sent invoices alongside the Pay Now button, for clients who'd rather pay by ACH or check.
                 </p>
                 <textarea
@@ -82,8 +82,8 @@ export default function SettingsIndex({ studioProfile }) {
                     className="border border-border rounded px-3 py-2 text-sm w-full mb-3"
                 />
                 <div className="flex items-center justify-end gap-3">
-                    {saved && <span className="text-sm text-pine">Saved</span>}
-                    <button type="submit" disabled={saving} className="bg-pine text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50">
+                    {saved && <span className="text-sm text-fern">Saved</span>}
+                    <button type="submit" disabled={saving} className="bg-fern text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50">
                         Save
                     </button>
                 </div>

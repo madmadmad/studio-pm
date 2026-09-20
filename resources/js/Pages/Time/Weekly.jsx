@@ -55,13 +55,13 @@ export default function TimeWeekly({ weekStart, weekEnd, entries, companies }) {
                     <button onClick={() => goToWeek(addDays(weekStart, -7))} className="px-2 py-1.5 rounded border border-border flex items-center">
                         <CaretLeft size={14} />
                     </button>
-                    <span className="text-sage">{formatDate(weekStart)} &ndash; {formatDate(weekEnd)}</span>
+                    <span className="text-shadow-grey">{formatDate(weekStart)} &ndash; {formatDate(weekEnd)}</span>
                     <button onClick={() => goToWeek(addDays(weekStart, 7))} className="px-2 py-1.5 rounded border border-border flex items-center">
                         <CaretRight size={14} />
                     </button>
                 </div>
             </div>
-            <p className="text-sm text-sage mb-6">
+            <p className="text-sm text-shadow-grey mb-6">
                 <span className="tabular-nums">{totalHours}h</span> logged this week. Edits here update the same entries shown in Time Tracking.
             </p>
 
@@ -71,7 +71,7 @@ export default function TimeWeekly({ weekStart, weekEnd, entries, companies }) {
                 ) : (
                     <table className="w-full text-sm">
                         <thead>
-                            <tr className="text-left border-b border-border text-sage">
+                            <tr className="text-left border-b border-border text-shadow-grey">
                                 <th className="px-4 py-2 font-medium">Date</th>
                                 <th className="px-4 py-2 font-medium">Client</th>
                                 <th className="px-4 py-2 font-medium">Hours</th>
@@ -82,7 +82,7 @@ export default function TimeWeekly({ weekStart, weekEnd, entries, companies }) {
                             {entries.map((entry) => (
                                 <tr key={entry.id} className="border-b border-border last:border-b-0">
                                     <td className="px-4 py-2">{formatDate(entry.date)}</td>
-                                    <td className="px-4 py-2 text-sage">{entry.company?.name ?? '—'}</td>
+                                    <td className="px-4 py-2 text-shadow-grey">{entry.company?.name ?? '—'}</td>
                                     <td className="px-2 py-1 tabular-nums w-24">
                                         <EditableCell entry={entry} field="hours" type="number" />
                                     </td>

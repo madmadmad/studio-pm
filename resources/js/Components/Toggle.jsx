@@ -7,7 +7,7 @@ export default function Toggle({ checked, onChange, label }) {
                 aria-checked={checked}
                 onClick={() => onChange(!checked)}
                 className={`relative inline-flex h-5 w-9 flex-shrink-0 items-center rounded-full transition-colors ${
-                    checked ? 'bg-pine' : 'bg-border'
+                    checked ? 'bg-fern' : 'bg-border'
                 }`}
             >
                 <span

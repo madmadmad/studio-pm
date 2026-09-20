@@ -67,11 +67,11 @@ export default function TimeIndex({ timeEntries, companies, projects }) {
             <Head title="Time" />
             <div className="flex items-center justify-between mb-1">
                 <h1 className="font-display text-2xl font-semibold">Time</h1>
-                <button onClick={() => setShowForm(true)} className="bg-ink text-white text-sm font-medium px-3 py-1.5 rounded">
+                <button onClick={() => setShowForm(true)} className="bg-gunmetal text-white text-sm font-medium px-3 py-1.5 rounded">
                     Log time
                 </button>
             </div>
-            <p className="text-sm text-sage mb-6">{unbilledHours}h unbilled across {companies.length} clients.</p>
+            <p className="text-sm text-shadow-grey mb-6">{unbilledHours}h unbilled across {companies.length} clients.</p>
 
             {showForm && (
                 <form onSubmit={submitTimeEntry} className="bg-white rounded-lg border border-border p-4 mb-6 grid grid-cols-2 gap-3">
@@ -97,8 +97,8 @@ export default function TimeIndex({ timeEntries, companies, projects }) {
                     <input required type="number" min="0.25" step="0.25" placeholder="Hours" value={form.hours} onChange={(e) => setForm({ ...form, hours: e.target.value })} className="border border-border rounded px-3 py-2 text-sm" />
                     <input placeholder="What did you work on?" value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} className="border border-border rounded px-3 py-2 text-sm col-span-2" />
                     <div className="flex gap-2 col-span-2 justify-end">
-                        <button type="button" onClick={() => setShowForm(false)} className="text-sm px-3 py-1.5 rounded text-sage">Cancel</button>
-                        <button type="submit" disabled={saving} className="bg-pine text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50">Log time</button>
+                        <button type="button" onClick={() => setShowForm(false)} className="text-sm px-3 py-1.5 rounded text-shadow-grey">Cancel</button>
+                        <button type="submit" disabled={saving} className="bg-fern text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50">Log time</button>
                     </div>
                 </form>
             )}
@@ -109,7 +109,7 @@ export default function TimeIndex({ timeEntries, companies, projects }) {
                 ) : (
                     <table className="w-full text-sm">
                         <thead>
-                            <tr className="text-left border-b border-border text-sage">
+                            <tr className="text-left border-b border-border text-shadow-grey">
                                 <th className="px-4 py-2 font-medium">Date</th>
                                 <th className="px-4 py-2 font-medium">Client</th>
                                 <th className="px-4 py-2 font-medium">Project</th>
@@ -127,18 +127,18 @@ export default function TimeIndex({ timeEntries, companies, projects }) {
                                             {entry.company?.name ?? '—'}
                                         </Link>
                                     </td>
-                                    <td className="px-4 py-3 text-sage">{entry.project?.name ?? '—'}</td>
+                                    <td className="px-4 py-3 text-shadow-grey">{entry.project?.name ?? '—'}</td>
                                     <td className="px-4 py-3 tabular-nums">{entry.hours}h</td>
-                                    <td className="px-4 py-3 text-sage">{entry.note}</td>
+                                    <td className="px-4 py-3 text-shadow-grey">{entry.note}</td>
                                     <td className="px-4 py-3 text-right">
                                         {entry.billed ? (
-                                            <Badge tone="pine" label="Billed" />
+                                            <Badge tone="fern" label="Billed" />
                                         ) : queuedIds.has(entry.id) ? (
                                             <button onClick={() => removeFromTray(entry.id)}>
-                                                <Badge tone="brass" label="Queued" />
+                                                <Badge tone="watermelon" label="Queued" />
                                             </button>
                                         ) : (
-                                            <button onClick={() => billEntry(entry)} className="text-sm font-medium text-brass">
+                                            <button onClick={() => billEntry(entry)} className="text-sm font-medium text-watermelon">
                                                 Bill this
                                             </button>
                                         )}
@@ -151,12 +151,12 @@ export default function TimeIndex({ timeEntries, companies, projects }) {
             </div>
 
             {tray.length > 0 && (
-                <div className="rounded-lg p-4 flex items-center justify-between bg-brass-soft">
+                <div className="rounded-lg p-4 flex items-center justify-between bg-watermelon-soft">
                     <div className="text-sm">
                         {tray.length} {tray.length === 1 ? 'entry' : 'entries'} ready to bill &mdash;{' '}
                         <span className="tabular-nums">{formatCurrency(traySubtotal)}</span>
                     </div>
-                    <button onClick={createInvoiceFromTray} className="bg-brass text-white text-sm font-medium px-3 py-1.5 rounded">
+                    <button onClick={createInvoiceFromTray} className="bg-watermelon text-white text-sm font-medium px-3 py-1.5 rounded">
                         Create invoice
                     </button>
                 </div>

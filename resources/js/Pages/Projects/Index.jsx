@@ -91,16 +91,16 @@ export default function ProjectsIndex({ projects, companies, archivedView = fals
             <div className="flex items-center justify-between mb-1">
                 <h1 className="font-display text-2xl font-semibold">{archivedView ? 'Archived Projects' : 'Projects'}</h1>
                 {archivedView ? (
-                    <Link href="/projects" className="text-sm font-medium text-sage hover:underline">
+                    <Link href="/projects" className="text-sm font-medium text-shadow-grey hover:underline">
                         All Projects
                     </Link>
                 ) : (
-                    <button onClick={() => setShowForm(true)} className="bg-ink text-white text-sm font-medium px-3 py-1.5 rounded">
+                    <button onClick={() => setShowForm(true)} className="bg-gunmetal text-white text-sm font-medium px-3 py-1.5 rounded">
                         New project
                     </button>
                 )}
             </div>
-            <p className="text-sm text-sage mb-4">
+            <p className="text-sm text-shadow-grey mb-4">
                 {archivedView
                     ? `${projects.length} archived project${projects.length !== 1 ? 's' : ''}.`
                     : `${projects.length} project${projects.length !== 1 ? 's' : ''} across all clients.`}
@@ -114,14 +114,14 @@ export default function ProjectsIndex({ projects, companies, archivedView = fals
                                 key={s.value}
                                 onClick={() => setFilter(s.value)}
                                 className={`text-sm px-3 py-1.5 rounded ${
-                                    filter === s.value ? 'bg-ink text-white' : 'text-sage border border-border'
+                                    filter === s.value ? 'bg-gunmetal text-white' : 'text-shadow-grey border border-border'
                                 }`}
                             >
                                 {s.label}
                             </button>
                         ))}
                     </div>
-                    <Link href="/projects/archived" className="text-sm text-sage hover:underline">
+                    <Link href="/projects/archived" className="text-sm text-shadow-grey hover:underline">
                         Archived
                     </Link>
                 </div>
@@ -142,7 +142,7 @@ export default function ProjectsIndex({ projects, companies, archivedView = fals
                         value={form.contact_id}
                         disabled={!form.company_id}
                         onChange={(e) => setForm({ ...form, contact_id: e.target.value })}
-                        className="border border-border rounded px-3 py-2 text-sm disabled:bg-paper disabled:text-sage"
+                        className="border border-border rounded px-3 py-2 text-sm disabled:bg-porcelain disabled:text-shadow-grey"
                     >
                         <option value="">
                             {form.company_id ? 'No contact' : 'Select a client first'}
@@ -166,10 +166,10 @@ export default function ProjectsIndex({ projects, companies, archivedView = fals
                         onChange={(e) => setForm({ ...form, description: e.target.value })}
                         className="border border-border rounded px-3 py-2 text-sm col-span-2"
                     />
-                    {error && <div className="text-sm text-brick col-span-2">{error}</div>}
+                    {error && <div className="text-sm text-fuchsia col-span-2">{error}</div>}
                     <div className="flex gap-2 col-span-2 justify-end">
-                        <button type="button" onClick={() => setShowForm(false)} className="text-sm px-3 py-1.5 rounded text-sage">Cancel</button>
-                        <button type="submit" disabled={saving} className="bg-pine text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50">Save project</button>
+                        <button type="button" onClick={() => setShowForm(false)} className="text-sm px-3 py-1.5 rounded text-shadow-grey">Cancel</button>
+                        <button type="submit" disabled={saving} className="bg-fern text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50">Save project</button>
                     </div>
                 </form>
             )}
@@ -180,7 +180,7 @@ export default function ProjectsIndex({ projects, companies, archivedView = fals
                 ) : (
                     <table className="w-full text-sm">
                         <thead>
-                            <tr className="text-left border-b border-border text-sage">
+                            <tr className="text-left border-b border-border text-shadow-grey">
                                 <th className="px-4 py-2 font-medium">Project</th>
                                 <th className="px-4 py-2 font-medium">Client</th>
                                 <th className="px-4 py-2 font-medium">Tasks</th>
@@ -196,11 +196,11 @@ export default function ProjectsIndex({ projects, companies, archivedView = fals
                                         </Link>
                                     </td>
                                     <td className="px-4 py-3">
-                                        <Link href={`/clients/${project.company.id}`} className="text-sage hover:underline">
+                                        <Link href={`/clients/${project.company.id}`} className="text-shadow-grey hover:underline">
                                             {project.company.name}
                                         </Link>
                                     </td>
-                                    <td className="px-4 py-3 text-sage">{taskProgress(project)}</td>
+                                    <td className="px-4 py-3 text-shadow-grey">{taskProgress(project)}</td>
                                     <td className="px-4 py-3">
                                         <div className="flex items-center gap-2">
                                             <ProjectStatusBadge project={project} />
@@ -208,7 +208,7 @@ export default function ProjectsIndex({ projects, companies, archivedView = fals
                                                 value={project.status}
                                                 disabled={pendingStatus[project.id]}
                                                 onChange={(e) => changeStatus(project, e.target.value)}
-                                                className="text-xs border border-border rounded px-1 py-0.5 text-sage"
+                                                className="text-xs border border-border rounded px-1 py-0.5 text-shadow-grey"
                                             >
                                                 {STATUS_OPTIONS.map((s) => (
                                                     <option key={s.value} value={s.value}>{s.label}</option>

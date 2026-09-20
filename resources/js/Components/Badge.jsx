@@ -1,8 +1,8 @@
 const TONES = {
-    neutral: 'bg-[#E7E7E9] text-sage',
-    brass: 'bg-brass-soft text-brass',
-    pine: 'bg-pine-soft text-pine',
-    brick: 'bg-brick-soft text-brick',
+    neutral: 'bg-[#E7E7E9] text-shadow-grey',
+    watermelon: 'bg-watermelon-soft text-watermelon',
+    fern: 'bg-fern-soft text-fern',
+    fuchsia: 'bg-fuchsia-soft text-fuchsia',
 };
 
 export default function Badge({ tone = 'neutral', label }) {

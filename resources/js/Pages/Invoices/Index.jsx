@@ -163,11 +163,11 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
             <Head title="Invoices" />
             <div className="flex items-center justify-between mb-1">
                 <h1 className="font-display text-2xl font-semibold">Invoices</h1>
-                <button onClick={openNewInvoice} className="bg-ink text-white text-sm font-medium px-3 py-1.5 rounded">
+                <button onClick={openNewInvoice} className="bg-gunmetal text-white text-sm font-medium px-3 py-1.5 rounded">
                     New invoice
                 </button>
             </div>
-            <p className="text-sm text-sage mb-6">
+            <p className="text-sm text-shadow-grey mb-6">
                 {formatCurrency(outstandingTotal)} outstanding across {invoices.filter((i) => i.status === 'sent').length} sent invoices.
             </p>
 
@@ -187,7 +187,7 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
                             value={draft.contact_id}
                             disabled={!draft.company_id}
                             onChange={(e) => setDraft({ ...draft, contact_id: e.target.value })}
-                            className="border border-border rounded px-3 py-2 text-sm disabled:bg-paper disabled:text-sage"
+                            className="border border-border rounded px-3 py-2 text-sm disabled:bg-porcelain disabled:text-shadow-grey"
                         >
                             <option value="">
                                 {draft.company_id ? 'Bill to (no specific contact)' : 'Select a client first'}
@@ -220,7 +220,7 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
                                         className="border border-border rounded px-3 py-2 text-sm tabular-nums w-28"
                                     />
                                     {draft.items.length > 1 && (
-                                        <button type="button" onClick={() => removeItemRow(idx)} className="text-sm px-2 text-brick">Remove</button>
+                                        <button type="button" onClick={() => removeItemRow(idx)} className="text-sm px-2 text-fuchsia">Remove</button>
                                     )}
                                 </div>
                                 <textarea
@@ -228,20 +228,20 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
                                     value={item.details || ''}
                                     onChange={(e) => updateItem(idx, 'details', e.target.value)}
                                     rows={2}
-                                    className="border border-border rounded px-3 py-2 text-xs text-sage w-full"
+                                    className="border border-border rounded px-3 py-2 text-xs text-shadow-grey w-full"
                                 />
                             </div>
                         ))}
-                        <button type="button" onClick={addItemRow} className="text-sm font-medium text-brass">+ Add line item</button>
+                        <button type="button" onClick={addItemRow} className="text-sm font-medium text-watermelon">+ Add line item</button>
                     </div>
 
                     <div className="text-sm mb-4 space-y-1">
-                        <div className="flex justify-between text-sage">
+                        <div className="flex justify-between text-shadow-grey">
                             <span>Subtotal</span>
                             <span className="tabular-nums">{formatCurrency(subtotal)}</span>
                         </div>
                         {draft.surcharge && (
-                            <div className="flex justify-between text-sage">
+                            <div className="flex justify-between text-shadow-grey">
                                 <span>Card fee (3%)</span>
                                 <span className="tabular-nums">{formatCurrency(surchargeAmount)}</span>
                             </div>
@@ -260,12 +260,12 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
                         />
                     </div>
 
-                    {error && <div className="text-sm mb-3 text-brick">{error}</div>}
+                    {error && <div className="text-sm mb-3 text-fuchsia">{error}</div>}
 
                     <div className="flex gap-2 justify-end">
-                        <button type="button" onClick={() => setShowForm(false)} className="text-sm px-3 py-1.5 rounded text-sage">Cancel</button>
-                        <button type="button" disabled={saving} onClick={() => saveInvoice('draft')} className="text-sm font-medium px-3 py-1.5 rounded border border-pine text-pine disabled:opacity-50">Save as draft</button>
-                        <button type="button" disabled={saving} onClick={() => saveInvoice('sent')} className="bg-ink text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50">Send invoice</button>
+                        <button type="button" onClick={() => setShowForm(false)} className="text-sm px-3 py-1.5 rounded text-shadow-grey">Cancel</button>
+                        <button type="button" disabled={saving} onClick={() => saveInvoice('draft')} className="text-sm font-medium px-3 py-1.5 rounded border border-fern text-fern disabled:opacity-50">Save as draft</button>
+                        <button type="button" disabled={saving} onClick={() => saveInvoice('sent')} className="bg-gunmetal text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50">Send invoice</button>
                     </div>
                 </div>
             )}
@@ -276,7 +276,7 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
                 ) : (
                     <table className="w-full text-sm">
                         <thead>
-                            <tr className="text-left border-b border-border text-sage">
+                            <tr className="text-left border-b border-border text-shadow-grey">
                                 <th className="px-4 py-2 font-medium">#</th>
                                 <th className="px-4 py-2 font-medium">Client</th>
                                 <th className="px-4 py-2 font-medium">Issued</th>
@@ -289,43 +289,43 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
                         <tbody>
                             {invoices.map((invoice) => (
                                 <tr key={invoice.id} className="border-b border-border last:border-b-0">
-                                    <td className="px-4 py-3 tabular-nums text-sage">{invoice.invoice_number}</td>
+                                    <td className="px-4 py-3 tabular-nums text-shadow-grey">{invoice.invoice_number}</td>
                                     <td className="px-4 py-3 font-medium">
                                         <Link href={`/invoices/${invoice.id}`} className="hover:underline">
                                             {invoice.company?.name}
                                         </Link>
                                     </td>
-                                    <td className="px-4 py-3 text-sage">{formatDate(invoice.issued_on)}</td>
-                                    <td className="px-4 py-3 text-sage">{formatDate(invoice.due_on)}</td>
+                                    <td className="px-4 py-3 text-shadow-grey">{formatDate(invoice.issued_on)}</td>
+                                    <td className="px-4 py-3 text-shadow-grey">{formatDate(invoice.due_on)}</td>
                                     <td className="px-4 py-3 tabular-nums">{formatCurrency(invoiceTotal(invoice.items, invoice.surcharge))}</td>
                                     <td className="px-4 py-3"><InvoiceStatusBadge invoice={invoice} /></td>
                                     <td className="px-4 py-3 text-right">
                                         <div className="flex items-center justify-end gap-3">
-                                            <a href={`/i/${invoice.public_token}`} target="_blank" rel="noopener noreferrer" title="Preview" className="text-sage hover:text-ink">
+                                            <a href={`/i/${invoice.public_token}`} target="_blank" rel="noopener noreferrer" title="Preview" className="text-shadow-grey hover:text-gunmetal">
                                                 <Eye size={16} />
                                             </a>
                                             {invoice.status === 'draft' && (
-                                                <Link href={`/invoices/${invoice.id}`} title="Edit" className="text-pine hover:text-pine/70">
+                                                <Link href={`/invoices/${invoice.id}`} title="Edit" className="text-fern hover:text-fern/70">
                                                     <PencilSimple size={16} />
                                                 </Link>
                                             )}
                                             {invoice.status === 'draft' && (
-                                                <button onClick={() => sendInvoice(invoice)} title="Send" className="text-brass hover:text-brass/70">
+                                                <button onClick={() => sendInvoice(invoice)} title="Send" className="text-watermelon hover:text-watermelon/70">
                                                     <PaperPlaneTilt size={16} />
                                                 </button>
                                             )}
                                             {invoice.status !== 'draft' && (
-                                                <button onClick={() => copyLink(invoice)} title={copiedId === invoice.id ? 'Copied!' : 'Copy link'} className="text-sage hover:text-ink">
+                                                <button onClick={() => copyLink(invoice)} title={copiedId === invoice.id ? 'Copied!' : 'Copy link'} className="text-shadow-grey hover:text-gunmetal">
                                                     {copiedId === invoice.id ? <Check size={16} /> : <Copy size={16} />}
                                                 </button>
                                             )}
                                             {invoice.status !== 'draft' && (
-                                                <a href={`/invoices/${invoice.id}/pdf`} title="Download PDF" className="text-sage hover:text-ink">
+                                                <a href={`/invoices/${invoice.id}/pdf`} title="Download PDF" className="text-shadow-grey hover:text-gunmetal">
                                                     <DownloadSimple size={16} />
                                                 </a>
                                             )}
                                             {invoice.status === 'sent' && (
-                                                <button onClick={() => markPaid(invoice)} title="Mark paid" className="text-pine hover:text-pine/70">
+                                                <button onClick={() => markPaid(invoice)} title="Mark paid" className="text-fern hover:text-fern/70">
                                                     <CheckCircle size={16} />
                                                 </button>
                                             )}
@@ -334,7 +334,7 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
                                                     onClick={() => deleteInvoice(invoice)}
                                                     disabled={deletingId === invoice.id}
                                                     title="Delete"
-                                                    className="text-sage hover:text-brick disabled:opacity-50"
+                                                    className="text-shadow-grey hover:text-fuchsia disabled:opacity-50"
                                                 >
                                                     <Trash size={16} />
                                                 </button>

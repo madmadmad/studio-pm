@@ -81,11 +81,11 @@ export default function ServicesIndex({ services: servicesProp }) {
             <Head title="Services" />
             <div className="flex items-center justify-between mb-1">
                 <h1 className="font-display text-2xl font-semibold">Services</h1>
-                <button onClick={startCreate} className="bg-ink text-white text-sm font-medium px-3 py-1.5 rounded">
+                <button onClick={startCreate} className="bg-gunmetal text-white text-sm font-medium px-3 py-1.5 rounded">
                     Add service
                 </button>
             </div>
-            <p className="text-sm text-sage mb-6">Your rate catalog &mdash; used as defaults when building invoice line items.</p>
+            <p className="text-sm text-shadow-grey mb-6">Your rate catalog &mdash; used as defaults when building invoice line items.</p>
 
             {showForm && (
                 <form onSubmit={submit} className="bg-white rounded-lg border border-border p-4 mb-6 grid grid-cols-2 gap-3">
@@ -97,8 +97,8 @@ export default function ServicesIndex({ services: servicesProp }) {
                     </select>
                     <input placeholder="Description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="border border-border rounded px-3 py-2 text-sm col-span-2" />
                     <div className="flex gap-2 col-span-2 justify-end">
-                        <button type="button" onClick={cancel} className="text-sm px-3 py-1.5 rounded text-sage">Cancel</button>
-                        <button type="submit" disabled={saving} className="bg-pine text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50">Save</button>
+                        <button type="button" onClick={cancel} className="text-sm px-3 py-1.5 rounded text-shadow-grey">Cancel</button>
+                        <button type="submit" disabled={saving} className="bg-fern text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50">Save</button>
                     </div>
                 </form>
             )}
@@ -109,7 +109,7 @@ export default function ServicesIndex({ services: servicesProp }) {
                 ) : (
                     <table className="w-full text-sm">
                         <thead>
-                            <tr className="text-left border-b border-border text-sage">
+                            <tr className="text-left border-b border-border text-shadow-grey">
                                 <th className="px-4 py-2 font-medium">Name</th>
                                 <th className="px-4 py-2 font-medium">Rate</th>
                                 <th className="px-4 py-2 font-medium">Unit</th>
@@ -121,17 +121,17 @@ export default function ServicesIndex({ services: servicesProp }) {
                                 <tr key={service.id} className="border-b border-border last:border-b-0">
                                     <td className="px-4 py-3 font-medium">{service.name}</td>
                                     <td className="px-4 py-3 tabular-nums">{formatCurrency(service.default_rate)}</td>
-                                    <td className="px-4 py-3 text-sage capitalize">{service.unit}</td>
+                                    <td className="px-4 py-3 text-shadow-grey capitalize">{service.unit}</td>
                                     <td className="px-4 py-3 text-right">
                                         <div className="flex items-center justify-end gap-3">
-                                            <button onClick={() => startEdit(service)} title="Edit" className="text-pine hover:text-pine/70">
+                                            <button onClick={() => startEdit(service)} title="Edit" className="text-fern hover:text-fern/70">
                                                 <PencilSimple size={16} />
                                             </button>
                                             <button
                                                 onClick={() => remove(service)}
                                                 disabled={deletingId === service.id}
                                                 title="Delete"
-                                                className="text-sage hover:text-brick disabled:opacity-50"
+                                                className="text-shadow-grey hover:text-fuchsia disabled:opacity-50"
                                             >
                                                 <Trash size={16} />
                                             </button>

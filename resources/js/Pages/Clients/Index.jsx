@@ -35,12 +35,12 @@ export default function ClientsIndex({ companies }) {
                 <h1 className="font-display text-2xl font-semibold">Clients</h1>
                 <button
                     onClick={() => setShowForm(true)}
-                    className="bg-ink text-white text-sm font-medium px-3 py-1.5 rounded"
+                    className="bg-gunmetal text-white text-sm font-medium px-3 py-1.5 rounded"
                 >
                     Add client
                 </button>
             </div>
-            <p className="text-sm text-sage mb-6">
+            <p className="text-sm text-shadow-grey mb-6">
                 {companies.length} client{companies.length !== 1 ? 's' : ''} on file.
             </p>
 
@@ -59,12 +59,12 @@ export default function ClientsIndex({ companies }) {
                         onChange={(e) => setForm({ ...form, phone: e.target.value })}
                         className="border border-border rounded px-3 py-2 text-sm col-span-2"
                     />
-                    {error && <div className="text-sm text-brick col-span-2">{error}</div>}
+                    {error && <div className="text-sm text-fuchsia col-span-2">{error}</div>}
                     <div className="flex gap-2 col-span-2 justify-end">
-                        <button type="button" onClick={() => setShowForm(false)} className="text-sm px-3 py-1.5 rounded text-sage">
+                        <button type="button" onClick={() => setShowForm(false)} className="text-sm px-3 py-1.5 rounded text-shadow-grey">
                             Cancel
                         </button>
-                        <button type="submit" disabled={saving} className="bg-pine text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50">
+                        <button type="submit" disabled={saving} className="bg-fern text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50">
                             Save client
                         </button>
                     </div>
@@ -77,7 +77,7 @@ export default function ClientsIndex({ companies }) {
                 ) : (
                     <table className="w-full text-sm">
                         <thead>
-                            <tr className="text-left border-b border-border text-sage">
+                            <tr className="text-left border-b border-border text-shadow-grey">
                                 <th className="px-4 py-2 font-medium">Client</th>
                                 <th className="px-4 py-2 font-medium">Contact</th>
                                 <th className="px-4 py-2 font-medium">Status</th>
@@ -86,20 +86,20 @@ export default function ClientsIndex({ companies }) {
                         </thead>
                         <tbody>
                             {companies.map((c) => (
-                                <tr key={c.id} className="border-b border-border last:border-b-0 hover:bg-paper">
+                                <tr key={c.id} className="border-b border-border last:border-b-0 hover:bg-porcelain">
                                     <td className="px-4 py-3 font-medium">
                                         <Link href={`/clients/${c.id}`} className="hover:underline">
                                             {c.name}
                                         </Link>
                                     </td>
-                                    <td className="px-4 py-3 text-sage">
+                                    <td className="px-4 py-3 text-shadow-grey">
                                         {c.contacts?.[0] ? `${c.contacts[0].name} · ${c.contacts[0].email ?? ''}` : '—'}
                                     </td>
                                     <td className="px-4 py-3">
                                         <CompanyStatusBadge company={c} />
                                     </td>
                                     <td className="px-4 py-3 text-right">
-                                        <Link href={`/clients/${c.id}`} className="text-sm font-medium text-pine hover:underline">
+                                        <Link href={`/clients/${c.id}`} className="text-sm font-medium text-fern hover:underline">
                                             Edit
                                         </Link>
                                     </td>

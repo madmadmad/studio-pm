@@ -52,12 +52,12 @@ function DetailsCard({ company }) {
                     <h1 className="font-display text-2xl font-semibold">{company.name}</h1>
                     <div className="flex items-center gap-3">
                         <CompanyStatusBadge company={company} />
-                        <button onClick={() => setEditing(true)} className="text-sm font-medium text-pine hover:underline">
+                        <button onClick={() => setEditing(true)} className="text-sm font-medium text-fern hover:underline">
                             Edit
                         </button>
                     </div>
                 </div>
-                <p className="text-sm text-sage">
+                <p className="text-sm text-shadow-grey">
                     {company.phone}{address ? `${company.phone ? ' · ' : ''}${address}` : ''}
                 </p>
             </div>
@@ -79,8 +79,8 @@ function DetailsCard({ company }) {
                 <input placeholder="Zip" value={form.postal_code} onChange={(e) => setForm({ ...form, postal_code: e.target.value })} className="border border-border rounded px-3 py-2 text-sm" />
             </div>
             <div className="flex gap-2 col-span-2 justify-end">
-                <button type="button" onClick={() => setEditing(false)} className="text-sm px-3 py-1.5 rounded text-sage">Cancel</button>
-                <button type="submit" disabled={saving} className="bg-pine text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50">Save</button>
+                <button type="button" onClick={() => setEditing(false)} className="text-sm px-3 py-1.5 rounded text-shadow-grey">Cancel</button>
+                <button type="submit" disabled={saving} className="bg-fern text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50">Save</button>
             </div>
         </form>
     );
@@ -89,8 +89,8 @@ function DetailsCard({ company }) {
 function ContactRoleBadges({ contact }) {
     return (
         <>
-            {contact.is_primary && <Badge tone="pine" label="Primary" />}
-            {contact.is_billing && <Badge tone="brass" label="Billing" />}
+            {contact.is_primary && <Badge tone="fern" label="Primary" />}
+            {contact.is_billing && <Badge tone="watermelon" label="Billing" />}
         </>
     );
 }
@@ -130,8 +130,8 @@ function ContactsCard({ company }) {
     return (
         <div className="bg-white rounded-lg border border-border p-4 mb-6">
             <div className="flex items-center justify-between mb-3">
-                <h2 className="text-sm font-semibold text-sage">Contacts</h2>
-                <button onClick={() => setShowForm(!showForm)} className="text-sm font-medium text-brass">
+                <h2 className="text-sm font-semibold text-shadow-grey">Contacts</h2>
+                <button onClick={() => setShowForm(!showForm)} className="text-sm font-medium text-watermelon">
                     {showForm ? 'Cancel' : '+ Add contact'}
                 </button>
             </div>
@@ -150,7 +150,7 @@ function ContactsCard({ company }) {
                         <input type="checkbox" checked={form.is_billing} onChange={(e) => setForm({ ...form, is_billing: e.target.checked })} />
                         Billing contact
                     </label>
-                    <button type="submit" className="col-span-2 bg-pine text-white text-sm font-medium px-3 py-1.5 rounded">Save contact</button>
+                    <button type="submit" className="col-span-2 bg-fern text-white text-sm font-medium px-3 py-1.5 rounded">Save contact</button>
                 </form>
             )}
 
@@ -164,20 +164,20 @@ function ContactsCard({ company }) {
                                 <div className="font-medium">
                                     {contact.name}{contact.role ? ` · ${contact.role}` : ''}
                                 </div>
-                                <div className="text-sage">{contact.email}</div>
+                                <div className="text-shadow-grey">{contact.email}</div>
                             </div>
                             <div className="flex items-center gap-2">
                                 <ContactRoleBadges contact={contact} />
-                                <button onClick={() => toggleFlag(contact, 'is_primary')} className="text-xs text-sage hover:text-ink">
+                                <button onClick={() => toggleFlag(contact, 'is_primary')} className="text-xs text-shadow-grey hover:text-gunmetal">
                                     {contact.is_primary ? 'Unset primary' : 'Make primary'}
                                 </button>
-                                <button onClick={() => toggleFlag(contact, 'is_billing')} className="text-xs text-sage hover:text-ink">
+                                <button onClick={() => toggleFlag(contact, 'is_billing')} className="text-xs text-shadow-grey hover:text-gunmetal">
                                     {contact.is_billing ? 'Unset billing' : 'Make billing'}
                                 </button>
                                 {contact.has_portal_access ? (
                                     <Badge tone="sage" label="Portal access" />
                                 ) : (
-                                    <button onClick={() => inviteToPortal(contact)} className="text-xs text-brass hover:underline">
+                                    <button onClick={() => inviteToPortal(contact)} className="text-xs text-watermelon hover:underline">
                                         Invite to portal
                                     </button>
                                 )}
@@ -235,8 +235,8 @@ function ProjectsCard({ company }) {
     return (
         <div className="bg-white rounded-lg border border-border p-4 mb-6">
             <div className="flex items-center justify-between mb-3">
-                <h2 className="text-sm font-semibold text-sage">Projects</h2>
-                <button onClick={() => setShowForm(!showForm)} className="text-sm font-medium text-brass">
+                <h2 className="text-sm font-semibold text-shadow-grey">Projects</h2>
+                <button onClick={() => setShowForm(!showForm)} className="text-sm font-medium text-watermelon">
                     {showForm ? 'Cancel' : '+ Add project'}
                 </button>
             </div>
@@ -244,7 +244,7 @@ function ProjectsCard({ company }) {
             {showForm && (
                 <form onSubmit={submit} className="flex gap-2 mb-4">
                     <input required placeholder="Project name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="border border-border rounded px-3 py-2 text-sm flex-1" />
-                    <button type="submit" className="bg-pine text-white text-sm font-medium px-3 py-1.5 rounded">Save</button>
+                    <button type="submit" className="bg-fern text-white text-sm font-medium px-3 py-1.5 rounded">Save</button>
                 </form>
             )}
 
@@ -272,7 +272,7 @@ function ProjectsCard({ company }) {
                                     onChange={(e) => setTaskInputs({ ...taskInputs, [project.id]: e.target.value })}
                                     className="border border-border rounded px-2 py-1 text-xs flex-1"
                                 />
-                                <button onClick={() => addTask(project.id)} className="text-xs font-medium text-pine">Add</button>
+                                <button onClick={() => addTask(project.id)} className="text-xs font-medium text-fern">Add</button>
                             </div>
                         </div>
                     ))}
@@ -285,7 +285,7 @@ function ProjectsCard({ company }) {
 function InvoicesCard({ company }) {
     return (
         <div className="bg-white rounded-lg border border-border p-4 mb-6">
-            <h2 className="text-sm font-semibold text-sage mb-3">Invoices</h2>
+            <h2 className="text-sm font-semibold text-shadow-grey mb-3">Invoices</h2>
             {company.invoices.length === 0 ? (
                 <EmptyState text="No invoices yet." />
             ) : (
@@ -310,7 +310,7 @@ function InvoicesCard({ company }) {
 function ProposalsCard({ company }) {
     return (
         <div className="bg-white rounded-lg border border-border p-4">
-            <h2 className="text-sm font-semibold text-sage mb-3">Proposals</h2>
+            <h2 className="text-sm font-semibold text-shadow-grey mb-3">Proposals</h2>
             {company.proposals.length === 0 ? (
                 <EmptyState text="No proposals yet." />
             ) : (
@@ -337,7 +337,7 @@ export default function ClientsShow({ company }) {
         <AppLayout>
             <Head title={company.name} />
             <div className="mb-1">
-                <Link href="/clients" className="text-sm text-sage hover:underline inline-flex items-center gap-1">
+                <Link href="/clients" className="text-sm text-shadow-grey hover:underline inline-flex items-center gap-1">
                     <ArrowLeft size={14} /> Clients
                 </Link>
             </div>

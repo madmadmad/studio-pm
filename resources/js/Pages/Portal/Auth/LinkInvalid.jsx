@@ -8,12 +8,12 @@ const MESSAGES = {
 
 export default function LinkInvalid({ reason }) {
     return (
-        <div className="min-h-screen flex items-center justify-center bg-paper text-ink px-4">
+        <div className="min-h-screen flex items-center justify-center bg-porcelain text-gunmetal px-4">
             <div className="w-full max-w-sm text-center">
                 <div className="text-xl font-semibold mb-2">Client Hub</div>
                 <div className="bg-white rounded-lg border border-border p-6 flex flex-col gap-4">
-                    <p className="text-sm text-sage">{MESSAGES[reason] ?? MESSAGES.invalid}</p>
-                    <Link href="/portal/login" className="bg-ink text-white text-sm font-medium px-3 py-2 rounded">
+                    <p className="text-sm text-shadow-grey">{MESSAGES[reason] ?? MESSAGES.invalid}</p>
+                    <Link href="/portal/login" className="bg-gunmetal text-white text-sm font-medium px-3 py-2 rounded">
                         Request a new link
                     </Link>
                 </div>

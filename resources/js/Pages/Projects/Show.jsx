@@ -26,7 +26,7 @@ function TabBar({ tab, setTab, tabs }) {
                     key={t}
                     onClick={() => setTab(t)}
                     className={`text-sm font-medium px-3 py-2 border-b-2 -mb-px whitespace-nowrap ${
-                        tab === t ? 'border-ink text-ink' : 'border-transparent text-sage'
+                        tab === t ? 'border-gunmetal text-gunmetal' : 'border-transparent text-shadow-grey'
                     }`}
                 >
                     {t}
@@ -62,18 +62,18 @@ function PoNumberField({ project }) {
                     placeholder="PO number"
                     className="border border-border rounded px-3 py-1.5 text-sm"
                 />
-                <button onClick={save} disabled={saving} className="text-sm font-medium text-pine disabled:opacity-50">Save</button>
-                <button onClick={() => setEditing(false)} className="text-sm text-sage">Cancel</button>
+                <button onClick={save} disabled={saving} className="text-sm font-medium text-fern disabled:opacity-50">Save</button>
+                <button onClick={() => setEditing(false)} className="text-sm text-shadow-grey">Cancel</button>
             </div>
         );
     }
 
     return (
-        <div className="flex items-center gap-2 text-sm text-sage mb-6">
+        <div className="flex items-center gap-2 text-sm text-shadow-grey mb-6">
             <span>PO Number: {project.po_number || '—'}</span>
             <button
                 onClick={() => { setValue(project.po_number || ''); setEditing(true); }}
-                className="text-sm font-medium text-pine"
+                className="text-sm font-medium text-fern"
             >
                 Edit
             </button>
@@ -114,18 +114,18 @@ function ContactField({ project }) {
                         </option>
                     ))}
                 </select>
-                <button onClick={save} disabled={saving} className="text-sm font-medium text-pine disabled:opacity-50">Save</button>
-                <button onClick={() => setEditing(false)} className="text-sm text-sage">Cancel</button>
+                <button onClick={save} disabled={saving} className="text-sm font-medium text-fern disabled:opacity-50">Save</button>
+                <button onClick={() => setEditing(false)} className="text-sm text-shadow-grey">Cancel</button>
             </div>
         );
     }
 
     return (
-        <div className="flex items-center gap-2 text-sm text-sage mb-6">
+        <div className="flex items-center gap-2 text-sm text-shadow-grey mb-6">
             <span>Contact: {project.contact?.name || '—'}</span>
             <button
                 onClick={() => { setValue(project.contact_id ? String(project.contact_id) : ''); setEditing(true); }}
-                className="text-sm font-medium text-pine"
+                className="text-sm font-medium text-fern"
             >
                 Edit
             </button>
@@ -143,42 +143,42 @@ function OverviewTab({ project }) {
 
     return (
         <div>
-            {project.description && <p className="text-sm text-sage mb-6">{project.description}</p>}
+            {project.description && <p className="text-sm text-shadow-grey mb-6">{project.description}</p>}
             <ContactField project={project} />
             <PoNumberField project={project} />
             <div className={`grid gap-4 mb-6 ${budget > 0 ? 'grid-cols-6' : 'grid-cols-4'}`}>
                 <div className="bg-white rounded-lg border border-border p-4">
-                    <div className="text-xs text-sage mb-1">Tasks</div>
+                    <div className="text-xs text-shadow-grey mb-1">Tasks</div>
                     <div className="tabular-nums text-xl">{doneTasks}/{project.tasks.length}</div>
                 </div>
                 <div className="bg-white rounded-lg border border-border p-4">
-                    <div className="text-xs text-sage mb-1">Hours logged</div>
+                    <div className="text-xs text-shadow-grey mb-1">Hours logged</div>
                     <div className="tabular-nums text-xl">{totalHours}h</div>
                 </div>
                 <div className="bg-white rounded-lg border border-border p-4">
-                    <div className="text-xs text-sage mb-1">Unbilled hours</div>
+                    <div className="text-xs text-shadow-grey mb-1">Unbilled hours</div>
                     <div className="tabular-nums text-xl">{unbilledHours}h</div>
                 </div>
                 <div className="bg-white rounded-lg border border-border p-4">
-                    <div className="text-xs text-sage mb-1">Total invoiced</div>
+                    <div className="text-xs text-shadow-grey mb-1">Total invoiced</div>
                     <div className="tabular-nums text-xl">{formatCurrency(totalInvoiced)}</div>
                 </div>
                 {budget > 0 && (
                     <>
                         <div className="bg-white rounded-lg border border-border p-4">
-                            <div className="text-xs text-sage mb-1">Budget</div>
+                            <div className="text-xs text-shadow-grey mb-1">Budget</div>
                             <div className="tabular-nums text-xl">{formatCurrency(budget)}</div>
                         </div>
                         <div className="bg-white rounded-lg border border-border p-4">
-                            <div className="text-xs text-sage mb-1">Remaining</div>
-                            <div className={`tabular-nums text-xl ${remaining < 0 ? 'text-brick' : ''}`}>{formatCurrency(remaining)}</div>
+                            <div className="text-xs text-shadow-grey mb-1">Remaining</div>
+                            <div className={`tabular-nums text-xl ${remaining < 0 ? 'text-fuchsia' : ''}`}>{formatCurrency(remaining)}</div>
                         </div>
                     </>
                 )}
             </div>
             {project.team_names?.length > 0 && (
                 <div>
-                    <div className="text-xs text-sage mb-2">Team</div>
+                    <div className="text-xs text-shadow-grey mb-2">Team</div>
                     <div className="flex gap-2 flex-wrap">
                         {project.team_names.map((name) => (
                             <Badge key={name} tone="neutral" label={name} />
@@ -211,7 +211,7 @@ function TaskRow({ task, teamNames, onChange, onOpen }) {
                 <button
                     onClick={() => onOpen(task.id)}
                     title="Open task"
-                    className="flex-shrink-0 w-7 h-7 flex items-center justify-center rounded border border-border text-sage opacity-0 group-hover:opacity-100 hover:text-ink hover:border-ink transition-opacity"
+                    className="flex-shrink-0 w-7 h-7 flex items-center justify-center rounded border border-border text-shadow-grey opacity-0 group-hover:opacity-100 hover:text-gunmetal hover:border-gunmetal transition-opacity"
                 >
                     <CaretRight size={14} weight="bold" />
                 </button>
@@ -220,7 +220,7 @@ function TaskRow({ task, teamNames, onChange, onOpen }) {
                 <select
                     value={task.assignee ?? ''}
                     onChange={(e) => updateField('assignee', e.target.value)}
-                    className="h-8 border border-transparent hover:border-border rounded px-2 text-sm w-full bg-transparent text-sage"
+                    className="h-8 border border-transparent hover:border-border rounded px-2 text-sm w-full bg-transparent text-shadow-grey"
                 >
                     <option value="">Unassigned</option>
                     {teamNames.map((name) => <option key={name} value={name}>{name}</option>)}
@@ -231,7 +231,7 @@ function TaskRow({ task, teamNames, onChange, onOpen }) {
                     type="date"
                     value={task.due_date ? task.due_date.slice(0, 10) : ''}
                     onChange={(e) => updateField('due_date', e.target.value)}
-                    className="h-8 border border-transparent hover:border-border rounded px-2 text-xs w-full bg-transparent text-sage"
+                    className="h-8 border border-transparent hover:border-border rounded px-2 text-xs w-full bg-transparent text-shadow-grey"
                 />
             </div>
             <div className="col-span-2 text-right">
@@ -298,13 +298,13 @@ function SubtaskRow({ subtask, onChange, isDragging, onDragStart, onDragOver, on
             onDragEnd={onDragEnd}
             className={`flex items-start gap-2 py-2 border-b border-border last:border-b-0 group ${isDragging ? 'opacity-40' : ''}`}
         >
-            <span className="text-sage cursor-grab opacity-0 group-hover:opacity-100 flex-shrink-0 mt-1">
+            <span className="text-shadow-grey cursor-grab opacity-0 group-hover:opacity-100 flex-shrink-0 mt-1">
                 <DotsSixVertical size={14} weight="bold" />
             </span>
             <button
                 onClick={toggleDone}
                 className={`mt-0.5 w-5 h-5 rounded flex items-center justify-center flex-shrink-0 text-xs ${
-                    subtask.status === 'done' ? 'bg-pine text-white' : 'border border-border'
+                    subtask.status === 'done' ? 'bg-fern text-white' : 'border border-border'
                 }`}
             >
                 {subtask.status === 'done' && <Check size={12} weight="bold" />}
@@ -314,10 +314,10 @@ function SubtaskRow({ subtask, onChange, isDragging, onDragStart, onDragOver, on
                 onChange={(e) => setTitle(e.target.value)}
                 onBlur={() => title !== subtask.title && updateField('title', title)}
                 className={`flex-1 min-w-0 text-sm border-none focus:outline-none bg-transparent leading-normal py-0.5 ${
-                    subtask.status === 'done' ? 'line-through text-sage' : ''
+                    subtask.status === 'done' ? 'line-through text-shadow-grey' : ''
                 }`}
             />
-            <button onClick={remove} className="mt-0.5 text-sage hover:text-brick opacity-0 group-hover:opacity-100 flex-shrink-0 px-1">
+            <button onClick={remove} className="mt-0.5 text-shadow-grey hover:text-fuchsia opacity-0 group-hover:opacity-100 flex-shrink-0 px-1">
                 <X size={12} />
             </button>
         </div>
@@ -348,7 +348,7 @@ function SubtasksSection({ task, onChange }) {
 
     return (
         <div className="mb-6">
-            <div className="text-xs font-semibold text-sage mb-2">Subtasks</div>
+            <div className="text-xs font-semibold text-shadow-grey mb-2">Subtasks</div>
             {subtasks.length > 0 && (
                 <div className="mb-1">
                     {subtasks.map((subtask, idx) => (
@@ -375,7 +375,7 @@ function SubtasksSection({ task, onChange }) {
                     onChange={(e) => setTitle(e.target.value)}
                     className="flex-1 border border-border rounded px-3 py-2 text-sm"
                 />
-                <button type="submit" className="bg-pine text-white text-sm font-medium px-3 py-2 rounded flex-shrink-0">
+                <button type="submit" className="bg-fern text-white text-sm font-medium px-3 py-2 rounded flex-shrink-0">
                     Add
                 </button>
             </form>
@@ -423,11 +423,11 @@ function FilesSection({ task, onChange }) {
     return (
         <div className="mb-6">
             <div className="flex items-center justify-between mb-2">
-                <div className="text-xs font-semibold text-sage">Files</div>
+                <div className="text-xs font-semibold text-shadow-grey">Files</div>
                 <button
                     onClick={() => inputRef.current.click()}
                     disabled={uploading}
-                    className="text-sm font-medium text-pine flex items-center gap-1 disabled:opacity-50"
+                    className="text-sm font-medium text-fern flex items-center gap-1 disabled:opacity-50"
                 >
                     <Paperclip size={14} /> {uploading ? 'Uploading…' : 'Add file'}
                 </button>
@@ -444,16 +444,16 @@ function FilesSection({ task, onChange }) {
                         >
                             <div className="min-w-0">
                                 <div className="text-sm truncate">{file.filename}</div>
-                                <div className="text-xs text-sage">{formatFileSize(file.size)}</div>
+                                <div className="text-xs text-shadow-grey">{formatFileSize(file.size)}</div>
                             </div>
                             <div className="flex items-center gap-1 flex-shrink-0">
-                                <a href={file.url} download={file.filename} title="Download" className="text-sage hover:text-ink p-1.5">
+                                <a href={file.url} download={file.filename} title="Download" className="text-shadow-grey hover:text-gunmetal p-1.5">
                                     <DownloadSimple size={16} />
                                 </a>
                                 <button
                                     onClick={() => remove(file)}
                                     title="Remove"
-                                    className="text-sage hover:text-brick p-1.5 opacity-0 group-hover:opacity-100"
+                                    className="text-shadow-grey hover:text-fuchsia p-1.5 opacity-0 group-hover:opacity-100"
                                 >
                                     <X size={14} />
                                 </button>
@@ -492,7 +492,7 @@ function TaskDrawer({ task, teamNames, onClose, onChange }) {
 
     return (
         <div className="fixed inset-0 z-50">
-            <div className="absolute inset-0 bg-ink/20 drawer-overlay" onClick={onClose} />
+            <div className="absolute inset-0 bg-gunmetal/20 drawer-overlay" onClick={onClose} />
             <div className="absolute right-0 top-0 h-full w-[600px] max-w-[95vw] bg-white shadow-xl flex flex-col drawer-panel">
                 <div className="flex items-center justify-between px-6 py-4 border-b border-border">
                     <select
@@ -502,7 +502,7 @@ function TaskDrawer({ task, teamNames, onClose, onChange }) {
                     >
                         {TASK_STATUS_OPTIONS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
                     </select>
-                    <button onClick={onClose} className="text-sage hover:text-ink px-1">
+                    <button onClick={onClose} className="text-shadow-grey hover:text-gunmetal px-1">
                         <X size={20} />
                     </button>
                 </div>
@@ -516,7 +516,7 @@ function TaskDrawer({ task, teamNames, onClose, onChange }) {
                     />
 
                     <div className="text-sm mb-6 pb-4 border-b border-border">
-                        <div className="text-xs font-semibold text-sage mb-1">Assignee</div>
+                        <div className="text-xs font-semibold text-shadow-grey mb-1">Assignee</div>
                         <select
                             value={task.assignee ?? ''}
                             onChange={(e) => updateField('assignee', e.target.value)}
@@ -528,7 +528,7 @@ function TaskDrawer({ task, teamNames, onClose, onChange }) {
                     </div>
 
                     <div className="mb-6">
-                        <div className="text-xs font-semibold text-sage mb-2">Description</div>
+                        <div className="text-xs font-semibold text-shadow-grey mb-2">Description</div>
                         <textarea
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
@@ -544,7 +544,7 @@ function TaskDrawer({ task, teamNames, onClose, onChange }) {
                     <FilesSection task={task} onChange={onChange} />
 
                     <div className="mb-6">
-                        <div className="text-xs font-semibold text-sage mb-2">Due date</div>
+                        <div className="text-xs font-semibold text-shadow-grey mb-2">Due date</div>
                         <input
                             type="date"
                             value={task.due_date ? task.due_date.slice(0, 10) : ''}
@@ -553,7 +553,7 @@ function TaskDrawer({ task, teamNames, onClose, onChange }) {
                         />
                     </div>
 
-                    <div className="text-xs text-sage">Created {formatDate(task.created_at)}</div>
+                    <div className="text-xs text-shadow-grey">Created {formatDate(task.created_at)}</div>
                 </div>
             </div>
         </div>
@@ -583,14 +583,14 @@ function TasksTab({ project }) {
                     onChange={(e) => setTitle(e.target.value)}
                     className="border border-border rounded px-3 py-2 text-sm flex-1"
                 />
-                <button type="submit" className="bg-pine text-white text-sm font-medium px-3 py-1.5 rounded">Add</button>
+                <button type="submit" className="bg-fern text-white text-sm font-medium px-3 py-1.5 rounded">Add</button>
             </form>
             <div className="bg-white rounded-lg border border-border overflow-hidden">
                 {project.tasks.length === 0 ? (
                     <EmptyState text="No tasks yet." />
                 ) : (
                     <>
-                        <div className="grid grid-cols-12 gap-2 px-4 py-2 border-b border-border text-xs font-medium text-sage">
+                        <div className="grid grid-cols-12 gap-2 px-4 py-2 border-b border-border text-xs font-medium text-shadow-grey">
                             <div className="col-span-5">Task</div>
                             <div className="col-span-3">Assignee</div>
                             <div className="col-span-2">Due date</div>
@@ -625,12 +625,12 @@ function NoteRow({ note, onOpen }) {
     return (
         <button
             onClick={() => onOpen(note.id)}
-            className="w-full flex items-center justify-between gap-2 px-4 py-3 border-b border-border last:border-b-0 text-sm text-left group hover:bg-paper"
+            className="w-full flex items-center justify-between gap-2 px-4 py-3 border-b border-border last:border-b-0 text-sm text-left group hover:bg-porcelain"
         >
             <span className="truncate font-medium">{note.title || 'Untitled note'}</span>
             <span className="flex items-center gap-2 flex-shrink-0">
-                <span className="text-xs text-sage">{formatDate(note.updated_at)}</span>
-                <span className="w-7 h-7 flex items-center justify-center rounded border border-border text-sage opacity-0 group-hover:opacity-100 transition-opacity">
+                <span className="text-xs text-shadow-grey">{formatDate(note.updated_at)}</span>
+                <span className="w-7 h-7 flex items-center justify-center rounded border border-border text-shadow-grey opacity-0 group-hover:opacity-100 transition-opacity">
                     <CaretRight size={14} weight="bold" />
                 </span>
             </span>
@@ -684,15 +684,15 @@ function NoteDrawer({ note, onClose, onChange }) {
 
     return (
         <div className="fixed inset-0 z-50">
-            <div className="absolute inset-0 bg-ink/20 drawer-overlay" onClick={onClose} />
+            <div className="absolute inset-0 bg-gunmetal/20 drawer-overlay" onClick={onClose} />
             <div className="absolute right-0 top-0 h-full w-[600px] max-w-[95vw] bg-white shadow-xl flex flex-col drawer-panel">
                 <div className="flex items-center justify-between px-6 py-4 border-b border-border">
-                    <span className="text-xs text-sage">Edited {formatDate(note.updated_at)}</span>
+                    <span className="text-xs text-shadow-grey">Edited {formatDate(note.updated_at)}</span>
                     <div className="flex items-center gap-3">
-                        <button onClick={remove} title="Delete note" className="text-sage hover:text-brick px-1">
+                        <button onClick={remove} title="Delete note" className="text-shadow-grey hover:text-fuchsia px-1">
                             <Trash size={18} />
                         </button>
-                        <button onClick={onClose} className="text-sage hover:text-ink px-1">
+                        <button onClick={onClose} className="text-shadow-grey hover:text-gunmetal px-1">
                             <X size={20} />
                         </button>
                     </div>
@@ -738,7 +738,7 @@ function NotesTab({ project }) {
                 <button
                     onClick={createNote}
                     disabled={creating}
-                    className="bg-pine text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50"
+                    className="bg-fern text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50"
                 >
                     + New note
                 </button>
@@ -790,11 +790,11 @@ function MessagesTab({ project }) {
         <div>
             <form onSubmit={send} className="bg-white rounded-lg border border-border p-4 mb-4">
                 {!clientEmail && (
-                    <div className="text-sm text-brick mb-2">
+                    <div className="text-sm text-fuchsia mb-2">
                         This client has no email on file — add one on the client page before sending.
                     </div>
                 )}
-                <div className="text-xs text-sage mb-2">To: {clientEmail ?? '—'}</div>
+                <div className="text-xs text-shadow-grey mb-2">To: {clientEmail ?? '—'}</div>
                 <input
                     placeholder="Subject"
                     value={form.subject}
@@ -808,9 +808,9 @@ function MessagesTab({ project }) {
                     rows={4}
                     className="border border-border rounded px-3 py-2 text-sm w-full mb-2"
                 />
-                {error && <div className="text-sm text-brick mb-2">{error}</div>}
+                {error && <div className="text-sm text-fuchsia mb-2">{error}</div>}
                 <div className="flex justify-end">
-                    <button type="submit" disabled={saving || !clientEmail} className="bg-ink text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50">
+                    <button type="submit" disabled={saving || !clientEmail} className="bg-gunmetal text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50">
                         Send email
                     </button>
                 </div>
@@ -824,9 +824,9 @@ function MessagesTab({ project }) {
                         <div key={message.id} className="bg-white rounded-lg border border-border p-4">
                             <div className="flex items-center justify-between mb-1">
                                 <span className="text-sm font-medium">{message.subject}</span>
-                                <span className="text-xs text-sage">{formatDate(message.sent_at)}</span>
+                                <span className="text-xs text-shadow-grey">{formatDate(message.sent_at)}</span>
                             </div>
-                            <div className="text-xs text-sage mb-2">To: {message.to_email}</div>
+                            <div className="text-xs text-shadow-grey mb-2">To: {message.to_email}</div>
                             <div className="text-sm whitespace-pre-wrap">{message.body}</div>
                         </div>
                     ))}
@@ -839,20 +839,20 @@ function MessagesTab({ project }) {
 function TimeEntryRow({ entry, onOpen }) {
     return (
         <div className="grid grid-cols-12 gap-2 items-center px-4 py-2 border-b border-border last:border-b-0 text-sm group">
-            <div className="col-span-2 text-sage">{formatDate(entry.date)}</div>
+            <div className="col-span-2 text-shadow-grey">{formatDate(entry.date)}</div>
             <div className="col-span-2 tabular-nums">{entry.hours}h</div>
             <div className="col-span-6 flex items-center gap-2">
-                <span className="truncate text-sage">{entry.task ? entry.task.title : entry.note || '—'}</span>
+                <span className="truncate text-shadow-grey">{entry.task ? entry.task.title : entry.note || '—'}</span>
                 <button
                     onClick={() => onOpen(entry.id)}
                     title="Open entry"
-                    className="flex-shrink-0 w-7 h-7 flex items-center justify-center rounded border border-border text-sage opacity-0 group-hover:opacity-100 hover:text-ink hover:border-ink transition-opacity"
+                    className="flex-shrink-0 w-7 h-7 flex items-center justify-center rounded border border-border text-shadow-grey opacity-0 group-hover:opacity-100 hover:text-gunmetal hover:border-gunmetal transition-opacity"
                 >
                     <CaretRight size={14} weight="bold" />
                 </button>
             </div>
             <div className="col-span-2 text-right">
-                {entry.billed ? <Badge tone="pine" label="Billed" /> : <Badge tone="neutral" label="Unbilled" />}
+                {entry.billed ? <Badge tone="fern" label="Billed" /> : <Badge tone="neutral" label="Unbilled" />}
             </div>
         </div>
     );
@@ -890,15 +890,15 @@ function TimeEntryDrawer({ entry, tasks, onClose, onChange }) {
 
     return (
         <div className="fixed inset-0 z-50">
-            <div className="absolute inset-0 bg-ink/20 drawer-overlay" onClick={onClose} />
+            <div className="absolute inset-0 bg-gunmetal/20 drawer-overlay" onClick={onClose} />
             <div className="absolute right-0 top-0 h-full w-[600px] max-w-[95vw] bg-white shadow-xl flex flex-col drawer-panel">
                 <div className="flex items-center justify-between px-6 py-4 border-b border-border">
-                    {entry.billed ? <Badge tone="pine" label="Billed" /> : <Badge tone="neutral" label="Unbilled" />}
+                    {entry.billed ? <Badge tone="fern" label="Billed" /> : <Badge tone="neutral" label="Unbilled" />}
                     <div className="flex items-center gap-3">
-                        <button onClick={remove} title="Delete entry" className="text-sage hover:text-brick px-1">
+                        <button onClick={remove} title="Delete entry" className="text-shadow-grey hover:text-fuchsia px-1">
                             <Trash size={18} />
                         </button>
-                        <button onClick={onClose} className="text-sage hover:text-ink px-1">
+                        <button onClick={onClose} className="text-shadow-grey hover:text-gunmetal px-1">
                             <X size={20} />
                         </button>
                     </div>
@@ -907,7 +907,7 @@ function TimeEntryDrawer({ entry, tasks, onClose, onChange }) {
                 <div className="flex-1 overflow-y-auto px-6 py-4">
                     <div className="grid grid-cols-2 gap-3 mb-6 pb-4 border-b border-border">
                         <div>
-                            <div className="text-xs font-semibold text-sage mb-1">Date</div>
+                            <div className="text-xs font-semibold text-shadow-grey mb-1">Date</div>
                             <input
                                 type="date"
                                 value={entry.date.slice(0, 10)}
@@ -916,7 +916,7 @@ function TimeEntryDrawer({ entry, tasks, onClose, onChange }) {
                             />
                         </div>
                         <div>
-                            <div className="text-xs font-semibold text-sage mb-1">Hours</div>
+                            <div className="text-xs font-semibold text-shadow-grey mb-1">Hours</div>
                             <input
                                 type="number"
                                 min="0.25"
@@ -930,7 +930,7 @@ function TimeEntryDrawer({ entry, tasks, onClose, onChange }) {
                     </div>
 
                     <div className="mb-6">
-                        <div className="text-xs font-semibold text-sage mb-1">Task</div>
+                        <div className="text-xs font-semibold text-shadow-grey mb-1">Task</div>
                         <select
                             value={entry.task_id ?? ''}
                             onChange={(e) => updateField('task_id', e.target.value || null)}
@@ -942,7 +942,7 @@ function TimeEntryDrawer({ entry, tasks, onClose, onChange }) {
                     </div>
 
                     <div className="mb-6">
-                        <div className="text-xs font-semibold text-sage mb-2">Note</div>
+                        <div className="text-xs font-semibold text-shadow-grey mb-2">Note</div>
                         <AutoResizeTextarea
                             value={note}
                             onChange={(e) => setNote(e.target.value)}
@@ -1003,14 +1003,14 @@ function TimeTab({ project }) {
                 </select>
                 <input required type="number" min="0.25" step="0.25" placeholder="Hours" value={form.hours} onChange={(e) => setForm({ ...form, hours: e.target.value })} className="border border-border rounded px-3 py-2 text-sm" />
                 <input placeholder="Note" value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} className="border border-border rounded px-3 py-2 text-sm" />
-                <button type="submit" disabled={saving} className="col-span-4 bg-pine text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50 justify-self-end w-fit">Log time</button>
+                <button type="submit" disabled={saving} className="col-span-4 bg-fern text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50 justify-self-end w-fit">Log time</button>
             </form>
             <div className="bg-white rounded-lg border border-border overflow-hidden">
                 {project.time_entries.length === 0 ? (
                     <EmptyState text="No time logged yet." />
                 ) : (
                     <>
-                        <div className="grid grid-cols-12 gap-2 px-4 py-2 border-b border-border text-xs font-medium text-sage">
+                        <div className="grid grid-cols-12 gap-2 px-4 py-2 border-b border-border text-xs font-medium text-shadow-grey">
                             <div className="col-span-2">Date</div>
                             <div className="col-span-2">Hours</div>
                             <div className="col-span-6">Task / Note</div>
@@ -1041,7 +1041,7 @@ function ProposalsTab({ project }) {
             <div className="flex justify-end mb-4">
                 <Link
                     href={`/proposals/create?company_id=${project.company_id}&project_id=${project.id}`}
-                    className="bg-ink text-white text-sm font-medium px-3 py-1.5 rounded"
+                    className="bg-gunmetal text-white text-sm font-medium px-3 py-1.5 rounded"
                 >
                     New proposal
                 </Link>
@@ -1053,7 +1053,7 @@ function ProposalsTab({ project }) {
                 ) : (
                     <table className="w-full text-sm">
                         <thead>
-                            <tr className="text-left border-b border-border text-sage">
+                            <tr className="text-left border-b border-border text-shadow-grey">
                                 <th className="px-4 py-2 font-medium">Title</th>
                                 <th className="px-4 py-2 font-medium">Estimate</th>
                                 <th className="px-4 py-2 font-medium">Status</th>
@@ -1218,13 +1218,13 @@ function BillingTab({ project }) {
         <div>
             <div className="flex items-center justify-between mb-4">
                 {budget > 0 ? (
-                    <div className="text-sm text-sage">
-                        Budget <span className="tabular-nums font-medium text-ink">{formatCurrency(budget)}</span>
+                    <div className="text-sm text-shadow-grey">
+                        Budget <span className="tabular-nums font-medium text-gunmetal">{formatCurrency(budget)}</span>
                         {' · '}
-                        Remaining <span className={`tabular-nums font-medium ${remaining < 0 ? 'text-brick' : 'text-ink'}`}>{formatCurrency(remaining)}</span>
+                        Remaining <span className={`tabular-nums font-medium ${remaining < 0 ? 'text-fuchsia' : 'text-gunmetal'}`}>{formatCurrency(remaining)}</span>
                     </div>
                 ) : <div />}
-                <button onClick={() => (showForm ? setShowForm(false) : openForm())} className="bg-ink text-white text-sm font-medium px-3 py-1.5 rounded">
+                <button onClick={() => (showForm ? setShowForm(false) : openForm())} className="bg-gunmetal text-white text-sm font-medium px-3 py-1.5 rounded">
                     {showForm ? 'Cancel' : 'New invoice'}
                 </button>
             </div>
@@ -1244,7 +1244,7 @@ function BillingTab({ project }) {
                                 ))}
                             </select>
                             {wasScaledToRemaining && (
-                                <div className="text-xs text-sage mt-1">
+                                <div className="text-xs text-shadow-grey mt-1">
                                     Scaled to the {formatCurrency(Math.max(remaining, 0))} left in the budget.
                                 </div>
                             )}
@@ -1271,7 +1271,7 @@ function BillingTab({ project }) {
                                         className="border border-border rounded px-3 py-2 text-sm tabular-nums w-28"
                                     />
                                     {form.items.length > 1 && (
-                                        <button type="button" onClick={() => removeItemRow(idx)} className="text-sm px-2 text-brick">Remove</button>
+                                        <button type="button" onClick={() => removeItemRow(idx)} className="text-sm px-2 text-fuchsia">Remove</button>
                                     )}
                                 </div>
                                 <textarea
@@ -1279,20 +1279,20 @@ function BillingTab({ project }) {
                                     value={item.details || ''}
                                     onChange={(e) => updateItem(idx, 'details', e.target.value)}
                                     rows={2}
-                                    className="border border-border rounded px-3 py-2 text-xs text-sage w-full"
+                                    className="border border-border rounded px-3 py-2 text-xs text-shadow-grey w-full"
                                 />
                             </div>
                         ))}
-                        <button type="button" onClick={addItemRow} className="text-sm font-medium text-brass">+ Add line item</button>
+                        <button type="button" onClick={addItemRow} className="text-sm font-medium text-watermelon">+ Add line item</button>
                     </div>
 
                     <div className="text-sm mb-3 space-y-1">
-                        <div className="flex justify-between text-sage">
+                        <div className="flex justify-between text-shadow-grey">
                             <span>Subtotal</span>
                             <span className="tabular-nums">{formatCurrency(formSubtotal)}</span>
                         </div>
                         {form.surcharge && (
-                            <div className="flex justify-between text-sage">
+                            <div className="flex justify-between text-shadow-grey">
                                 <span>Card fee (3%)</span>
                                 <span className="tabular-nums">{formatCurrency(formSurchargeAmount)}</span>
                             </div>
@@ -1310,9 +1310,9 @@ function BillingTab({ project }) {
                             label="Client covers card processing fee (3%)"
                         />
                     </div>
-                    {error && <div className="text-sm text-brick mb-2">{error}</div>}
+                    {error && <div className="text-sm text-fuchsia mb-2">{error}</div>}
                     <div className="flex justify-end">
-                        <button type="submit" disabled={saving} className="bg-pine text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50">Create draft invoice</button>
+                        <button type="submit" disabled={saving} className="bg-fern text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50">Create draft invoice</button>
                     </div>
                 </form>
             )}
@@ -1323,7 +1323,7 @@ function BillingTab({ project }) {
                 ) : (
                     <table className="w-full text-sm">
                         <thead>
-                            <tr className="text-left border-b border-border text-sage">
+                            <tr className="text-left border-b border-border text-shadow-grey">
                                 <th className="px-4 py-2 font-medium">#</th>
                                 <th className="px-4 py-2 font-medium">Issued</th>
                                 <th className="px-4 py-2 font-medium">Total</th>
@@ -1334,7 +1334,7 @@ function BillingTab({ project }) {
                         <tbody>
                             {project.invoices.map((invoice) => (
                                 <tr key={invoice.id} className="border-b border-border last:border-b-0">
-                                    <td className="px-4 py-2 tabular-nums text-sage">{invoice.invoice_number}</td>
+                                    <td className="px-4 py-2 tabular-nums text-shadow-grey">{invoice.invoice_number}</td>
                                     <td className="px-4 py-2">
                                         <Link href={`/invoices/${invoice.id}`} className="hover:underline">
                                             {formatDate(invoice.issued_on)}
@@ -1344,31 +1344,31 @@ function BillingTab({ project }) {
                                     <td className="px-4 py-2"><InvoiceStatusBadge invoice={invoice} /></td>
                                     <td className="px-4 py-2 text-right">
                                         <div className="flex items-center justify-end gap-3">
-                                            <a href={`/i/${invoice.public_token}`} target="_blank" rel="noopener noreferrer" title="Preview" className="text-sage hover:text-ink">
+                                            <a href={`/i/${invoice.public_token}`} target="_blank" rel="noopener noreferrer" title="Preview" className="text-shadow-grey hover:text-gunmetal">
                                                 <Eye size={16} />
                                             </a>
                                             {invoice.status === 'draft' && (
-                                                <Link href={`/invoices/${invoice.id}`} title="Edit" className="text-pine hover:text-pine/70">
+                                                <Link href={`/invoices/${invoice.id}`} title="Edit" className="text-fern hover:text-fern/70">
                                                     <PencilSimple size={16} />
                                                 </Link>
                                             )}
                                             {invoice.status === 'draft' && (
-                                                <button onClick={() => sendInvoice(invoice)} title="Send" className="text-brass hover:text-brass/70">
+                                                <button onClick={() => sendInvoice(invoice)} title="Send" className="text-watermelon hover:text-watermelon/70">
                                                     <PaperPlaneTilt size={16} />
                                                 </button>
                                             )}
                                             {invoice.status !== 'draft' && (
-                                                <button onClick={() => copyInvoiceLink(invoice)} title={copiedInvoiceId === invoice.id ? 'Copied!' : 'Copy link'} className="text-sage hover:text-ink">
+                                                <button onClick={() => copyInvoiceLink(invoice)} title={copiedInvoiceId === invoice.id ? 'Copied!' : 'Copy link'} className="text-shadow-grey hover:text-gunmetal">
                                                     {copiedInvoiceId === invoice.id ? <Check size={16} /> : <Copy size={16} />}
                                                 </button>
                                             )}
                                             {invoice.status !== 'draft' && (
-                                                <a href={`/invoices/${invoice.id}/pdf`} title="Download PDF" className="text-sage hover:text-ink">
+                                                <a href={`/invoices/${invoice.id}/pdf`} title="Download PDF" className="text-shadow-grey hover:text-gunmetal">
                                                     <DownloadSimple size={16} />
                                                 </a>
                                             )}
                                             {invoice.status === 'sent' && (
-                                                <button onClick={() => markInvoicePaid(invoice)} title="Mark paid" className="text-pine hover:text-pine/70">
+                                                <button onClick={() => markInvoicePaid(invoice)} title="Mark paid" className="text-fern hover:text-fern/70">
                                                     <CheckCircle size={16} />
                                                 </button>
                                             )}
@@ -1377,7 +1377,7 @@ function BillingTab({ project }) {
                                                     onClick={() => deleteInvoice(invoice)}
                                                     disabled={deletingInvoiceId === invoice.id}
                                                     title="Delete"
-                                                    className="text-sage hover:text-brick disabled:opacity-50"
+                                                    className="text-shadow-grey hover:text-fuchsia disabled:opacity-50"
                                                 >
                                                     <Trash size={16} />
                                                 </button>
@@ -1421,16 +1421,16 @@ function ExpensesTab({ project }) {
                 <input placeholder="Category" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} className="border border-border rounded px-3 py-2 text-sm" />
                 <input required type="date" value={form.occurred_on} onChange={(e) => setForm({ ...form, occurred_on: e.target.value })} className="border border-border rounded px-3 py-2 text-sm" />
                 <input placeholder="Description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="border border-border rounded px-3 py-2 text-sm" />
-                <button type="submit" disabled={saving} className="col-span-2 bg-pine text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50 justify-self-end w-fit">Add expense</button>
+                <button type="submit" disabled={saving} className="col-span-2 bg-fern text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50 justify-self-end w-fit">Add expense</button>
             </form>
-            <div className="text-sm text-sage mb-2">Total expenses: <span className="tabular-nums text-brick">{formatCurrency(total)}</span></div>
+            <div className="text-sm text-shadow-grey mb-2">Total expenses: <span className="tabular-nums text-fuchsia">{formatCurrency(total)}</span></div>
             <div className="bg-white rounded-lg border border-border overflow-hidden">
                 {expenses.length === 0 ? (
                     <EmptyState text="No expenses logged for this project." />
                 ) : (
                     <table className="w-full text-sm">
                         <thead>
-                            <tr className="text-left border-b border-border text-sage">
+                            <tr className="text-left border-b border-border text-shadow-grey">
                                 <th className="px-4 py-2 font-medium">Date</th>
                                 <th className="px-4 py-2 font-medium">Category</th>
                                 <th className="px-4 py-2 font-medium">Description</th>
@@ -1441,9 +1441,9 @@ function ExpensesTab({ project }) {
                             {expenses.map((t) => (
                                 <tr key={t.id} className="border-b border-border last:border-b-0">
                                     <td className="px-4 py-2">{formatDate(t.occurred_on)}</td>
-                                    <td className="px-4 py-2 text-sage">{t.category ?? '—'}</td>
-                                    <td className="px-4 py-2 text-sage">{t.description}</td>
-                                    <td className="px-4 py-2 text-right tabular-nums text-brick">{formatCurrency(t.amount)}</td>
+                                    <td className="px-4 py-2 text-shadow-grey">{t.category ?? '—'}</td>
+                                    <td className="px-4 py-2 text-shadow-grey">{t.description}</td>
+                                    <td className="px-4 py-2 text-right tabular-nums text-fuchsia">{formatCurrency(t.amount)}</td>
                                 </tr>
                             ))}
                         </tbody>
@@ -1487,7 +1487,7 @@ function AssignedStaff({ project, canManageTeam, teamMembers }) {
 
     return (
         <div className="mb-8">
-            <h2 className="text-sm font-semibold mb-3 text-sage">Assigned staff</h2>
+            <h2 className="text-sm font-semibold mb-3 text-shadow-grey">Assigned staff</h2>
             {canManageTeam && (
                 <form onSubmit={assign} className="flex gap-2 mb-4">
                     <select
@@ -1500,7 +1500,7 @@ function AssignedStaff({ project, canManageTeam, teamMembers }) {
                             <option key={tm.id} value={tm.id}>{tm.name}</option>
                         ))}
                     </select>
-                    <button type="submit" disabled={busy || !pickId} className="bg-pine text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50">Assign</button>
+                    <button type="submit" disabled={busy || !pickId} className="bg-fern text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50">Assign</button>
                 </form>
             )}
             {assigned.length === 0 ? (
@@ -1511,7 +1511,7 @@ function AssignedStaff({ project, canManageTeam, teamMembers }) {
                         <span key={user.id} className="inline-flex items-center gap-2 bg-white border border-border rounded-full px-3 py-1 text-sm">
                             {user.name}
                             {canManageTeam && (
-                                <button onClick={() => unassign(user)} className="text-sage hover:text-brick">
+                                <button onClick={() => unassign(user)} className="text-shadow-grey hover:text-fuchsia">
                                     <X size={14} />
                                 </button>
                             )}
@@ -1554,7 +1554,7 @@ function TeamTab({ project, canManageTeam, teamMembers }) {
         <div>
             <AssignedStaff project={project} canManageTeam={canManageTeam} teamMembers={teamMembers} />
 
-            <h2 className="text-sm font-semibold mb-3 text-sage">Other names (not linked to a login)</h2>
+            <h2 className="text-sm font-semibold mb-3 text-shadow-grey">Other names (not linked to a login)</h2>
             <form onSubmit={add} className="flex gap-2 mb-4">
                 <input
                     placeholder="Add team member name"
@@ -1562,7 +1562,7 @@ function TeamTab({ project, canManageTeam, teamMembers }) {
                     onChange={(e) => setInput(e.target.value)}
                     className="border border-border rounded px-3 py-2 text-sm flex-1"
                 />
-                <button type="submit" disabled={saving} className="bg-pine text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50">Add</button>
+                <button type="submit" disabled={saving} className="bg-fern text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50">Add</button>
             </form>
             {names.length === 0 ? (
                 <EmptyState text="No one assigned yet." />
@@ -1571,7 +1571,7 @@ function TeamTab({ project, canManageTeam, teamMembers }) {
                     {names.map((name) => (
                         <span key={name} className="inline-flex items-center gap-2 bg-white border border-border rounded-full px-3 py-1 text-sm">
                             {name}
-                            <button onClick={() => remove(name)} className="text-sage hover:text-brick">
+                            <button onClick={() => remove(name)} className="text-shadow-grey hover:text-fuchsia">
                                 <X size={14} />
                             </button>
                         </span>
@@ -1590,7 +1590,7 @@ export default function ProjectsShow({ project, canManageTeam, teamMembers }) {
         <AppLayout>
             <Head title={project.name} />
             <div className="mb-1">
-                <Link href="/projects" className="text-sm text-sage hover:underline inline-flex items-center gap-1">
+                <Link href="/projects" className="text-sm text-shadow-grey hover:underline inline-flex items-center gap-1">
                     <ArrowLeft size={14} /> Projects
                 </Link>
             </div>
@@ -1598,7 +1598,7 @@ export default function ProjectsShow({ project, canManageTeam, teamMembers }) {
                 <h1 className="font-display text-2xl font-semibold">{project.name}</h1>
                 <ProjectStatusBadge project={project} />
             </div>
-            <p className="text-sm text-sage mb-6">
+            <p className="text-sm text-shadow-grey mb-6">
                 <Link href={`/clients/${project.company.id}`} className="hover:underline">{project.company.name}</Link>
             </p>
 

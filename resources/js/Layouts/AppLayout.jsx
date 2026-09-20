@@ -31,26 +31,26 @@ export default function AppLayout({ children }) {
     }
 
     return (
-        <div className="flex min-h-screen bg-paper text-ink">
-            <aside className="w-56 flex-shrink-0 p-5 flex flex-col gap-1 bg-ink">
+        <div className="flex min-h-screen bg-porcelain text-gunmetal">
+            <aside className="w-56 flex-shrink-0 p-5 flex flex-col gap-1 bg-gunmetal">
                 <div className="mb-6">
-                    <div className="text-lg font-semibold text-paper">Studio PM</div>
-                    <div className="text-xs text-paper/50">Client and billing workspace</div>
+                    <div className="text-lg font-semibold text-porcelain">Studio PM</div>
+                    <div className="text-xs text-porcelain/50">Client and billing workspace</div>
                 </div>
                 {navItems.map((item) => (
                     <Link
                         key={item.href}
                         href={item.href}
                         className={`text-left px-3 py-2 rounded text-sm font-medium transition-colors ${
-                            isActive(item.href) ? 'bg-[#373B45] text-brass' : 'text-paper/60 hover:text-paper'
+                            isActive(item.href) ? 'bg-[#373B45] text-watermelon' : 'text-porcelain/60 hover:text-porcelain'
                         }`}
                     >
                         {item.label}
                     </Link>
                 ))}
-                <div className="mt-auto pt-4 border-t border-paper/15">
-                    {user && <div className="text-xs text-paper/50 mb-2 truncate">{user.email}</div>}
-                    <a href="/logout" onClick={handleLogout} className="text-sm text-paper/60 hover:text-paper">
+                <div className="mt-auto pt-4 border-t border-porcelain/15">
+                    {user && <div className="text-xs text-porcelain/50 mb-2 truncate">{user.email}</div>}
+                    <a href="/logout" onClick={handleLogout} className="text-sm text-porcelain/60 hover:text-porcelain">
                         Log out
                     </a>
                 </div>

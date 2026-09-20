@@ -97,17 +97,18 @@
      * Shadow Grey -> navigation + primary text. Porcelain -> workspace background.
      * Watermelon -> accent (links, active nav, "in progress" states).
      * Fern -> edit/save actions and "done" states. Hot Fuchsia -> danger/overdue.
+     * Variable names below match these palette names directly.
      */
-    --color-ink: #23262e;
-    --color-paper: #f7f7f7;
+    --color-gunmetal: #23262e;
+    --color-porcelain: #f7f7f7;
     --color-border: #e7e7e9;
-    --color-sage: #595F64;
-    --color-brass: #ffffff;
-    --color-brass-soft: #fce2e8;
-    --color-pine: #5AA329;
-    --color-pine-soft: #e7efe3;
-    --color-brick: #ff365b;
-    --color-brick-soft: #ffe3e9;
+    --color-shadow-grey: #595F64;
+    --color-watermelon: #f41347;
+    --color-watermelon-soft: #fce2e8;
+    --color-fern: #5AA329;
+    --color-fern-soft: #e7efe3;
+    --color-fuchsia: #ff365b;
+    --color-fuchsia-soft: #ffe3e9;
 
     /*
      * Single knob for corner rounding app-wide -- change this one value to
@@ -123,8 +124,8 @@
 }
 
 body {
-    background-color: var(--color-paper);
-    color: var(--color-ink);
+    background-color: var(--color-porcelain);
+    color: var(--color-gunmetal);
     /* One consistent tracking value everywhere -- headlines included --
        rather than varying it (or widening it) per element. */
     letter-spacing: -0.011em;

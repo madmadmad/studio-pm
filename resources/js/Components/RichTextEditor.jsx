@@ -7,7 +7,7 @@ function ToolbarButton({ active, onClick, children }) {
         <button
             type="button"
             onClick={onClick}
-            className={`text-xs font-medium px-2 py-1 rounded ${active ? 'bg-ink text-white' : 'text-sage hover:bg-paper'}`}
+            className={`text-xs font-medium px-2 py-1 rounded ${active ? 'bg-gunmetal text-white' : 'text-shadow-grey hover:bg-porcelain'}`}
         >
             {children}
         </button>
@@ -45,7 +45,7 @@ export default function RichTextEditor({ value, onChange }) {
 
     return (
         <div className="border border-border rounded overflow-hidden">
-            <div className="flex gap-1 border-b border-border px-2 py-1 bg-paper">
+            <div className="flex gap-1 border-b border-border px-2 py-1 bg-porcelain">
                 <ToolbarButton active={editor.isActive('bold')} onClick={() => editor.chain().focus().toggleBold().run()}>Bold</ToolbarButton>
                 <ToolbarButton active={editor.isActive('italic')} onClick={() => editor.chain().focus().toggleItalic().run()}>Italic</ToolbarButton>
                 <ToolbarButton active={editor.isActive('heading', { level: 2 })} onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}>H2</ToolbarButton>
