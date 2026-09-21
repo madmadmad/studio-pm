@@ -152,6 +152,20 @@ button {
 }
 
 /*
+ * Text inputs, search boxes, and dropdowns read as transparent by default
+ * (Tailwind's preflight strips the native white background), so on the
+ * porcelain page background they blend in instead of standing out as
+ * fields. Every such field gets a white background app-wide, without
+ * having to add bg-white to each one individually. Checkbox/radio/color/
+ * file inputs are excluded -- a background-color on them either does
+ * nothing or looks wrong.
+ */
+input:not([type='checkbox']):not([type='radio']):not([type='color']):not([type='file']),
+select {
+    background-color: white;
+}
+
+/*
  * Headlines: heavier weight and tighter tracking than body text.
  * Unlayered, so it wins over Tailwind's layered font-semibold/font-medium
  * utility on the same element without having to edit every page's class.
