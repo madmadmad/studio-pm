@@ -13,12 +13,12 @@ createInertiaApp({
         return page.default;
     },
     setup({ el, App, props }) {
-        // Bold app-wide by default -- Phosphor's "regular" weight read as
-        // too thin at the small sizes (14-20px) icons are used at here.
-        // A weight="bold" prop set at an individual icon still wins over
-        // this, so the handful of icons already forcing it are unaffected.
+        // App-wide icon defaults -- size matches the 20px standard used by
+        // .icon-btn (see components.css) so any icon that doesn't set its
+        // own size prop still lines up; either value is still overridden
+        // by a prop set on an individual icon.
         createRoot(el).render(
-            <IconContext.Provider value={{ weight: 'bold' }}>
+            <IconContext.Provider value={{ weight: 'regular', size: 20 }}>
                 <App {...props} />
             </IconContext.Provider>
         );
