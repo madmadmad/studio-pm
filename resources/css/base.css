@@ -41,10 +41,17 @@ button {
  * having to add bg-white to each one individually. Checkbox/radio/color/
  * file inputs are excluded -- a background-color on them either does
  * nothing or looks wrong.
+ *
+ * color-scheme: light is what actually makes a <select>'s open dropdown
+ * list white too -- that popup is native browser/OS chrome, not part of
+ * the element's own CSS box, so on a system set to dark mode it ignores
+ * background-color entirely and renders dark unless told which scheme
+ * this app supports. This app has no dark theme, so it's always light.
  */
 input:not([type='checkbox']):not([type='radio']):not([type='color']):not([type='file']),
 select {
     background-color: white;
+    color-scheme: light;
 }
 
 /*
