@@ -55,6 +55,24 @@ select {
 }
 
 /*
+ * background-color alone doesn't fully take on a <select> -- some browsers
+ * paint its closed box with a bit of native shading regardless, which is
+ * why a select next to a text input reads as a slightly different white.
+ * appearance: none removes that native chrome entirely (including the
+ * native arrow), so the custom arrow below is what makes it still read
+ * as a dropdown.
+ */
+select {
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23595F64' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.6rem center;
+    background-size: 12px;
+    padding-right: 2rem;
+}
+
+/*
  * Headlines: heavier weight and tighter tracking than body text.
  * Unlayered, so it wins over Tailwind's layered font-semibold/font-medium
  * utility on the same element without having to edit every page's class.

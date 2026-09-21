@@ -232,6 +232,12 @@
     background-color: var(--color-porcelain);
 }
 
+/* .field's own padding shorthand would otherwise override the room
+   base.css's select rule reserves for the custom dropdown arrow. */
+select.field {
+    padding-right: 2rem;
+}
+
 /* Static: a non-form element (e.g. a <div>) styled to match a disabled
    .field, for showing a fixed value in a form's layout without it being
    an actual input (a locked "Project: X" line, a computed total). */
