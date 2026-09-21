@@ -227,7 +227,15 @@
     outline-offset: 1px;
     border-color: transparent;
 }
-.field:read-only,
+/* :read-only is scoped to input/textarea on purpose -- per spec, :read-write
+   only ever applies to text inputs, textareas, and contenteditable, so a
+   <select> (nothing to type into, no readonly attribute exists for it)
+   matches :read-only unconditionally. Left unscoped, this rule silently
+   painted every dropdown porcelain regardless of the plain white rule
+   below. :disabled has no such gotcha -- it only matches when actually
+   disabled -- so it stays applied to .field as a whole. */
+input.field:read-only,
+textarea.field:read-only,
 .field:disabled {
     background-color: var(--color-porcelain);
 }
