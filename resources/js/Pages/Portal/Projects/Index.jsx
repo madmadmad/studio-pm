@@ -10,7 +10,7 @@ export default function PortalProjectsIndex({ projects }) {
             <h1 className="font-display text-2xl font-semibold mb-1">Your projects</h1>
             <p className="text-sm text-shadow-grey mb-6">{projects.length} project{projects.length !== 1 ? 's' : ''}.</p>
 
-            <div className="bg-white rounded-lg border border-border">
+            <div className="card">
                 {projects.length === 0 ? (
                     <EmptyState text="No projects yet." />
                 ) : (

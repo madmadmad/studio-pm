@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { formatDate } from '../lib/format';
 import { api } from '../lib/api';
+import Badge from './Badge';
+import Button from './Button';
 import EmptyState from './EmptyState';
 
 function participantName(participant) {
@@ -52,7 +54,7 @@ function NewThreadForm({ recipientOptions, onCreate, onCancel }) {
     }
 
     return (
-        <form onSubmit={submit} className="bg-white rounded-lg border border-border p-4 mb-4">
+        <form onSubmit={submit} className="card card-padded mb-4">
             <div className="text-xs font-semibold text-shadow-grey mb-2 uppercase">To</div>
             <div className="flex flex-wrap gap-2 mb-3">
                 {recipientOptions.length === 0 && <div className="text-sm text-shadow-grey">No one else is on this project yet.</div>}
@@ -78,21 +80,19 @@ function NewThreadForm({ recipientOptions, onCreate, onCancel }) {
                 placeholder="Subject"
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}
-                className="border border-border rounded px-3 py-2 text-sm w-full mb-2"
+                className="field mb-2"
             />
             <textarea
                 placeholder="Message…"
                 value={body}
                 onChange={(e) => setBody(e.target.value)}
                 rows={4}
-                className="border border-border rounded px-3 py-2 text-sm w-full mb-2"
+                className="field mb-2"
             />
             {error && <div className="text-sm text-fuchsia mb-2">{error}</div>}
             <div className="flex justify-end gap-2">
-                <button type="button" onClick={onCancel} className="text-sm px-3 py-1.5 rounded text-shadow-grey">Cancel</button>
-                <button type="submit" disabled={saving} className="bg-gunmetal text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50">
-                    Send
-                </button>
+                <Button type="button" variant="secondary" onClick={onCancel}>Cancel</Button>
+                <Button type="submit" disabled={saving}>Send</Button>
             </div>
         </form>
     );
@@ -133,7 +133,7 @@ function ThreadView({ thread, currentActorType, currentActorId, endpoints, onCha
         <div>
             <button onClick={onBack} className="text-sm text-shadow-grey hover:text-gunmetal mb-3">&larr; All messages</button>
 
-            <div className="bg-white rounded-lg border border-border overflow-hidden mb-4">
+            <div className="card overflow-hidden mb-4">
                 <div className="px-4 py-3 border-b border-border">
                     <div className="text-sm font-semibold">{thread.subject}</div>
                     <div className="text-xs text-shadow-grey mt-1">
@@ -154,26 +154,22 @@ function ThreadView({ thread, currentActorType, currentActorId, endpoints, onCha
             </div>
 
             {amParticipant ? (
-                <form onSubmit={submitReply} className="bg-white rounded-lg border border-border p-4">
+                <form onSubmit={submitReply} className="card card-padded">
                     <textarea
                         placeholder="Write a reply…"
                         value={body}
                         onChange={(e) => setBody(e.target.value)}
                         rows={3}
-                        className="border border-border rounded px-3 py-2 text-sm w-full mb-2"
+                        className="field mb-2"
                     />
                     <div className="flex justify-end">
-                        <button type="submit" disabled={saving} className="bg-gunmetal text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50">
-                            Reply
-                        </button>
+                        <Button type="submit" disabled={saving}>Reply</Button>
                     </div>
                 </form>
             ) : (
-                <div className="bg-white rounded-lg border border-border p-4 flex items-center justify-between">
+                <div className="card card-padded flex items-center justify-between">
                     <div className="text-sm text-shadow-grey">You're not part of this thread yet.</div>
-                    <button onClick={join} disabled={joining} className="bg-fern text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50">
-                        Join thread
-                    </button>
+                    <Button variant="confirm" onClick={join} disabled={joining}>Join thread</Button>
                 </div>
             )}
         </div>
@@ -210,9 +206,7 @@ export default function MessagesPanel({ project, currentActorType, currentActorI
         <div>
             <div className="flex justify-end mb-4">
                 {!showForm && (
-                    <button onClick={() => setShowForm(true)} className="bg-gunmetal text-white text-sm font-medium px-3 py-1.5 rounded">
-                        New message
-                    </button>
+                    <Button onClick={() => setShowForm(true)}>New message</Button>
                 )}
             </div>
 
@@ -223,7 +217,7 @@ export default function MessagesPanel({ project, currentActorType, currentActorI
             {threads.length === 0 ? (
                 <EmptyState text="No messages yet." />
             ) : (
-                <div className="bg-white rounded-lg border border-border overflow-hidden">
+                <div className="card overflow-hidden">
                     {threads.map((thread) => {
                         const participants = threadParticipantActors(thread);
                         const amParticipant = participants.some((p) => isSameActor(p, currentActorType, currentActorId));
@@ -238,9 +232,7 @@ export default function MessagesPanel({ project, currentActorType, currentActorI
                                 <div>
                                     <div className="text-sm font-medium flex items-center gap-2">
                                         {thread.subject}
-                                        {!amParticipant && (
-                                            <span className="text-xs px-2 py-0.5 rounded-full bg-watermelon-soft text-watermelon">Not joined</span>
-                                        )}
+                                        {!amParticipant && <Badge tone="watermelon" label="Not joined" />}
                                     </div>
                                     <div className="text-xs text-shadow-grey mt-1">{participants.map((p) => p.name).join(', ') || '—'}</div>
                                 </div>

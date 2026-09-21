@@ -2,6 +2,8 @@ import { Head, usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import { ArrowCounterClockwise, EnvelopeSimple, Trash, UserMinus } from '@phosphor-icons/react';
 import AppLayout from '../../Layouts/AppLayout';
+import Badge from '../../Components/Badge';
+import Button from '../../Components/Button';
 import EmptyState from '../../Components/EmptyState';
 import { formatDate } from '../../lib/format';
 import { api } from '../../lib/api';
@@ -12,12 +14,12 @@ function emptyForm() {
 
 function StatusBadge({ user }) {
     if (user.deactivated_at) {
-        return <span className="text-xs px-2 py-0.5 rounded-full bg-fuchsia/10 text-fuchsia font-medium">Deactivated</span>;
+        return <Badge tone="fuchsia" label="Deactivated" />;
     }
     if (user.has_pending_invite) {
-        return <span className="text-xs px-2 py-0.5 rounded-full bg-watermelon/10 text-watermelon font-medium">Invite pending</span>;
+        return <Badge tone="watermelon" label="Invite pending" />;
     }
-    return <span className="text-xs px-2 py-0.5 rounded-full bg-fern/10 text-fern font-medium">Active</span>;
+    return <Badge tone="fern" label="Active" />;
 }
 
 export default function UsersIndex({ users: usersProp }) {
@@ -116,65 +118,63 @@ export default function UsersIndex({ users: usersProp }) {
             <Head title="Team" />
             <div className="flex items-center justify-between mb-1">
                 <h1 className="font-display text-2xl font-semibold">Team</h1>
-                <button onClick={() => setShowForm(true)} className="bg-gunmetal text-white text-sm font-medium px-3 py-1.5 rounded">
-                    Invite staff
-                </button>
+                <Button onClick={() => setShowForm(true)}>Invite staff</Button>
             </div>
             <p className="text-sm text-shadow-grey mb-6">Managers see and edit everything. Team Members only see projects they're assigned to.</p>
 
             {showForm && (
-                <form onSubmit={submit} className="bg-white rounded-lg border border-border p-4 mb-6 grid grid-cols-2 gap-3">
-                    <input required placeholder="Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="border border-border rounded px-3 py-2 text-sm" />
-                    <input required type="email" placeholder="Email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="border border-border rounded px-3 py-2 text-sm" />
-                    <select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })} className="border border-border rounded px-3 py-2 text-sm col-span-2">
+                <form onSubmit={submit} className="card card-padded mb-6 grid grid-cols-2 gap-3">
+                    <input required placeholder="Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="field" />
+                    <input required type="email" placeholder="Email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="field" />
+                    <select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })} className="field col-span-2">
                         <option value="team_member">Team Member</option>
                         <option value="manager">Manager</option>
                     </select>
                     <p className="text-xs text-shadow-grey col-span-2">They'll get an email with a link to set their own password.</p>
                     <div className="flex gap-2 col-span-2 justify-end">
-                        <button type="button" onClick={() => setShowForm(false)} className="text-sm px-3 py-1.5 rounded text-shadow-grey">Cancel</button>
-                        <button type="submit" disabled={saving} className="bg-fern text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50">Send invite</button>
+                        <Button type="button" variant="secondary" onClick={() => setShowForm(false)}>Cancel</Button>
+                        <Button type="submit" variant="confirm" disabled={saving}>Send invite</Button>
                     </div>
                 </form>
             )}
 
-            <div className="bg-white rounded-lg border border-border overflow-hidden">
+            <div className="card overflow-hidden">
                 {users.length === 0 ? (
                     <EmptyState text="No staff yet." />
                 ) : (
-                    <table className="w-full text-sm">
+                    <table className="table">
                         <thead>
-                            <tr className="text-left border-b border-border text-shadow-grey">
-                                <th className="px-4 py-2 font-medium">Name</th>
-                                <th className="px-4 py-2 font-medium">Email</th>
-                                <th className="px-4 py-2 font-medium">Role</th>
-                                <th className="px-4 py-2 font-medium">Status</th>
-                                <th className="px-4 py-2 font-medium"></th>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Status</th>
+                                <th></th>
                             </tr>
                         </thead>
                         <tbody>
                             {users.map((user) => (
-                                <tr key={user.id} className="border-b border-border last:border-b-0">
-                                    <td className="px-4 py-3 font-medium">{user.name}</td>
-                                    <td className="px-4 py-3 text-shadow-grey">{user.email}</td>
-                                    <td className="px-4 py-3">
+                                <tr key={user.id}>
+                                    <td className="font-medium">{user.name}</td>
+                                    <td className="text-shadow-grey">{user.email}</td>
+                                    <td>
                                         <select
                                             value={user.role}
                                             disabled={busyId === user.id || !!user.deactivated_at}
                                             onChange={(e) => changeRole(user, e.target.value)}
-                                            className="border border-border rounded px-2 py-1 text-sm disabled:opacity-50"
+                                            className="field field-xs w-auto disabled:opacity-50"
                                         >
                                             <option value="team_member">Team Member</option>
                                             <option value="manager">Manager</option>
                                         </select>
                                     </td>
-                                    <td className="px-4 py-3">
+                                    <td>
                                         <StatusBadge user={user} />
                                         {user.invited_at && !user.deactivated_at && (
                                             <div className="text-xs text-shadow-grey mt-1">Invited {formatDate(user.invited_at)}</div>
                                         )}
                                     </td>
-                                    <td className="px-4 py-3 text-right">
+                                    <td className="text-right">
                                         <div className="flex items-center justify-end gap-3">
                                             {user.has_pending_invite && !user.deactivated_at && (
                                                 <button onClick={() => resendInvite(user)} disabled={busyId === user.id} title="Resend invite" className="text-shadow-grey hover:text-gunmetal disabled:opacity-50">

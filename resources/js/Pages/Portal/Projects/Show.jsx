@@ -2,6 +2,7 @@ import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import { ArrowLeft } from '@phosphor-icons/react';
 import PortalLayout from '../../../Layouts/PortalLayout';
+import Button from '../../../Components/Button';
 import EmptyState from '../../../Components/EmptyState';
 import MessagesPanel from '../../../Components/MessagesPanel';
 import { ProjectStatusBadge, TaskStatusBadge, InvoiceStatusBadge, ProposalStatusBadge } from '../../../Components/StatusBadges';
@@ -34,7 +35,7 @@ function TabBar({ tab, setTab }) {
 
 function OverviewTab({ project }) {
     return (
-        <div className="bg-white rounded-lg border border-border p-4">
+        <div className="card card-padded">
             <div className="text-sm text-shadow-grey mb-1">Status</div>
             <ProjectStatusBadge project={project} />
             {project.description && (
@@ -67,9 +68,9 @@ function NewTaskForm({ project }) {
                 placeholder="New task title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="border border-border rounded px-3 py-2 text-sm flex-1"
+                className="field flex-1"
             />
-            <button type="submit" disabled={saving} className="bg-fern text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50">Add task</button>
+            <Button type="submit" variant="confirm" disabled={saving}>Add task</Button>
         </form>
     );
 }
@@ -101,7 +102,7 @@ function TasksTab({ project }) {
     return (
         <div>
             <NewTaskForm project={project} />
-            <div className="bg-white rounded-lg border border-border overflow-hidden">
+            <div className="card overflow-hidden">
                 {project.tasks.length === 0 ? (
                     <EmptyState text="No tasks yet." />
                 ) : (
@@ -141,7 +142,7 @@ function MessagesTab({ project }) {
 
 function ProposalsTab({ project }) {
     return (
-        <div className="bg-white rounded-lg border border-border overflow-hidden">
+        <div className="card overflow-hidden">
             {project.proposals.length === 0 ? (
                 <EmptyState text="No accepted proposals yet." />
             ) : (
@@ -158,7 +159,7 @@ function ProposalsTab({ project }) {
                                 href={`/p/${proposal.accept_token}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="bg-fern text-white text-xs font-bold px-3 py-1.5 rounded hover:bg-fern/90"
+                                className="btn btn-confirm btn-sm"
                             >
                                 Client view
                             </a>
@@ -172,7 +173,7 @@ function ProposalsTab({ project }) {
 
 function InvoicesTab({ project }) {
     return (
-        <div className="bg-white rounded-lg border border-border overflow-hidden">
+        <div className="card overflow-hidden">
             {project.invoices.length === 0 ? (
                 <EmptyState text="No invoices yet." />
             ) : (
@@ -189,7 +190,7 @@ function InvoicesTab({ project }) {
                                 href={`/i/${invoice.public_token}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="bg-fern text-white text-xs font-bold px-3 py-1.5 rounded hover:bg-fern/90"
+                                className="btn btn-confirm btn-sm"
                             >
                                 Client view
                             </a>
@@ -203,7 +204,7 @@ function InvoicesTab({ project }) {
 
 function TeamTab({ project }) {
     return (
-        <div className="bg-white rounded-lg border border-border overflow-hidden">
+        <div className="card overflow-hidden">
             {(project.active_users || []).length === 0 ? (
                 <EmptyState text="No staff assigned yet." />
             ) : (

@@ -1,6 +1,7 @@
 import { Head } from '@inertiajs/react';
 import { useState } from 'react';
 import AppLayout from '../../Layouts/AppLayout';
+import Button from '../../Components/Button';
 import { api } from '../../lib/api';
 
 export default function SettingsIndex({ studioProfile }) {
@@ -34,40 +35,40 @@ export default function SettingsIndex({ studioProfile }) {
             <h1 className="font-display text-2xl font-semibold mb-1">Settings</h1>
             <p className="text-sm text-shadow-grey mb-6">This is how your studio appears on proposals sent to clients.</p>
 
-            <form onSubmit={submit} className="bg-white rounded-lg border border-border p-4 max-w-lg">
+            <form onSubmit={submit} className="card card-padded max-w-lg">
                 <div className="text-xs font-semibold text-shadow-grey mb-2">Studio information</div>
                 <input
                     required
                     placeholder="Studio name"
                     value={form.name}
                     onChange={(e) => setForm({ ...form, name: e.target.value })}
-                    className="border border-border rounded px-3 py-2 text-sm w-full mb-2"
+                    className="field mb-2"
                 />
                 <textarea
                     placeholder="Address"
                     value={form.address}
                     onChange={(e) => setForm({ ...form, address: e.target.value })}
                     rows={3}
-                    className="border border-border rounded px-3 py-2 text-sm w-full mb-2"
+                    className="field mb-2"
                 />
                 <input
                     type="email"
                     placeholder="Email"
                     value={form.email}
                     onChange={(e) => setForm({ ...form, email: e.target.value })}
-                    className="border border-border rounded px-3 py-2 text-sm w-full mb-2"
+                    className="field mb-2"
                 />
                 <input
                     placeholder="Phone"
                     value={form.phone}
                     onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                    className="border border-border rounded px-3 py-2 text-sm w-full mb-2"
+                    className="field mb-2"
                 />
                 <input
                     placeholder="Website"
                     value={form.website}
                     onChange={(e) => setForm({ ...form, website: e.target.value })}
-                    className="border border-border rounded px-3 py-2 text-sm w-full mb-4"
+                    className="field mb-4"
                 />
 
                 <div className="text-xs font-semibold text-shadow-grey mb-2">Payment instructions</div>
@@ -79,13 +80,13 @@ export default function SettingsIndex({ studioProfile }) {
                     value={form.payment_instructions}
                     onChange={(e) => setForm({ ...form, payment_instructions: e.target.value })}
                     rows={3}
-                    className="border border-border rounded px-3 py-2 text-sm w-full mb-3"
+                    className="field mb-3"
                 />
                 <div className="flex items-center justify-end gap-3">
                     {saved && <span className="text-sm text-fern">Saved</span>}
-                    <button type="submit" disabled={saving} className="bg-fern text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50">
+                    <Button type="submit" variant="confirm" disabled={saving}>
                         Save
-                    </button>
+                    </Button>
                 </div>
             </form>
         </AppLayout>

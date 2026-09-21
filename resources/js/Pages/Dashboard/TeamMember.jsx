@@ -17,7 +17,7 @@ export default function TeamMemberDashboard({ projects, weekHours }) {
             </div>
 
             <h2 className="text-sm font-semibold mb-3 text-shadow-grey">Your projects</h2>
-            <div className="bg-white rounded-lg border border-border">
+            <div className="card">
                 {projects.length === 0 ? (
                     <EmptyState text="You're not assigned to any projects yet." />
                 ) : (

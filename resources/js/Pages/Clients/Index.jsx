@@ -1,6 +1,7 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
 import AppLayout from '../../Layouts/AppLayout';
+import Button from '../../Components/Button';
 import EmptyState from '../../Components/EmptyState';
 import { CompanyStatusBadge } from '../../Components/StatusBadges';
 import { api } from '../../lib/api';
@@ -33,73 +34,68 @@ export default function ClientsIndex({ companies }) {
             <Head title="Clients" />
             <div className="flex items-center justify-between mb-1">
                 <h1 className="font-display text-2xl font-semibold">Clients</h1>
-                <button
-                    onClick={() => setShowForm(true)}
-                    className="bg-gunmetal text-white text-sm font-medium px-3 py-1.5 rounded"
-                >
-                    Add client
-                </button>
+                <Button onClick={() => setShowForm(true)}>Add client</Button>
             </div>
             <p className="text-sm text-shadow-grey mb-6">
                 {companies.length} client{companies.length !== 1 ? 's' : ''} on file.
             </p>
 
             {showForm && (
-                <form onSubmit={handleSubmit} className="bg-white rounded-lg border border-border p-4 mb-6 grid grid-cols-2 gap-3">
+                <form onSubmit={handleSubmit} className="card card-padded mb-6 grid grid-cols-2 gap-3">
                     <input
                         required
                         placeholder="Client or company name"
                         value={form.name}
                         onChange={(e) => setForm({ ...form, name: e.target.value })}
-                        className="border border-border rounded px-3 py-2 text-sm col-span-2"
+                        className="field col-span-2"
                     />
                     <input
                         placeholder="Phone"
                         value={form.phone}
                         onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                        className="border border-border rounded px-3 py-2 text-sm col-span-2"
+                        className="field col-span-2"
                     />
                     {error && <div className="text-sm text-fuchsia col-span-2">{error}</div>}
                     <div className="flex gap-2 col-span-2 justify-end">
-                        <button type="button" onClick={() => setShowForm(false)} className="text-sm px-3 py-1.5 rounded text-shadow-grey">
+                        <Button type="button" variant="secondary" onClick={() => setShowForm(false)}>
                             Cancel
-                        </button>
-                        <button type="submit" disabled={saving} className="bg-fern text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50">
+                        </Button>
+                        <Button type="submit" variant="confirm" disabled={saving}>
                             Save client
-                        </button>
+                        </Button>
                     </div>
                 </form>
             )}
 
-            <div className="bg-white rounded-lg border border-border overflow-hidden">
+            <div className="card overflow-hidden">
                 {companies.length === 0 ? (
                     <EmptyState text="No clients yet." />
                 ) : (
-                    <table className="w-full text-sm">
+                    <table className="table">
                         <thead>
-                            <tr className="text-left border-b border-border text-shadow-grey">
-                                <th className="px-4 py-2 font-medium">Client</th>
-                                <th className="px-4 py-2 font-medium">Contact</th>
-                                <th className="px-4 py-2 font-medium">Status</th>
-                                <th className="px-4 py-2 font-medium"></th>
+                            <tr>
+                                <th>Client</th>
+                                <th>Contact</th>
+                                <th>Status</th>
+                                <th></th>
                             </tr>
                         </thead>
                         <tbody>
                             {companies.map((c) => (
-                                <tr key={c.id} className="border-b border-border last:border-b-0 hover:bg-porcelain">
-                                    <td className="px-4 py-3 font-medium">
+                                <tr key={c.id} className="hover:bg-porcelain">
+                                    <td className="font-medium">
                                         <Link href={`/clients/${c.id}`} className="hover:underline">
                                             {c.name}
                                         </Link>
                                     </td>
-                                    <td className="px-4 py-3 text-shadow-grey">
+                                    <td className="text-shadow-grey">
                                         {c.contacts?.[0] ? `${c.contacts[0].name} · ${c.contacts[0].email ?? ''}` : '—'}
                                     </td>
-                                    <td className="px-4 py-3">
+                                    <td>
                                         <CompanyStatusBadge company={c} />
                                     </td>
-                                    <td className="px-4 py-3 text-right">
-                                        <Link href={`/clients/${c.id}`} className="text-sm font-medium text-fern hover:underline">
+                                    <td className="text-right">
+                                        <Link href={`/clients/${c.id}`} className="btn-link">
                                             Edit
                                         </Link>
                                     </td>

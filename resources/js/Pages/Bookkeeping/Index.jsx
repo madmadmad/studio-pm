@@ -1,6 +1,7 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
 import AppLayout from '../../Layouts/AppLayout';
+import Button from '../../Components/Button';
 import MetricCard from '../../Components/MetricCard';
 import EmptyState from '../../Components/EmptyState';
 import { formatCurrency, formatDate } from '../../lib/format';
@@ -38,9 +39,7 @@ export default function BookkeepingIndex({ transactions, summary }) {
             <Head title="Bookkeeping" />
             <div className="flex items-center justify-between mb-1">
                 <h1 className="font-display text-2xl font-semibold">Bookkeeping</h1>
-                <button onClick={() => setShowForm(true)} className="bg-gunmetal text-white text-sm font-medium px-3 py-1.5 rounded">
-                    Add income
-                </button>
+                <Button onClick={() => setShowForm(true)}>Add income</Button>
             </div>
             <p className="text-sm text-shadow-grey mb-6">
                 Income, month by month &mdash; not double-entry accounting. Expenses are tracked on the{' '}
@@ -54,40 +53,40 @@ export default function BookkeepingIndex({ transactions, summary }) {
             </div>
 
             {showForm && (
-                <form onSubmit={submit} className="bg-white rounded-lg border border-border p-4 mb-6 grid grid-cols-2 gap-3">
-                    <input required type="number" min="0.01" step="0.01" placeholder="Amount" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} className="border border-border rounded px-3 py-2 text-sm tabular-nums" />
-                    <input placeholder="Category" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} className="border border-border rounded px-3 py-2 text-sm" />
-                    <input required type="date" value={form.occurred_on} onChange={(e) => setForm({ ...form, occurred_on: e.target.value })} className="border border-border rounded px-3 py-2 text-sm" />
-                    <input placeholder="Description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="border border-border rounded px-3 py-2 text-sm" />
+                <form onSubmit={submit} className="card card-padded mb-6 grid grid-cols-2 gap-3">
+                    <input required type="number" min="0.01" step="0.01" placeholder="Amount" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} className="field tabular-nums" />
+                    <input placeholder="Category" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} className="field" />
+                    <input required type="date" value={form.occurred_on} onChange={(e) => setForm({ ...form, occurred_on: e.target.value })} className="field" />
+                    <input placeholder="Description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="field" />
                     <div className="flex gap-2 col-span-2 justify-end">
-                        <button type="button" onClick={() => setShowForm(false)} className="text-sm px-3 py-1.5 rounded text-shadow-grey">Cancel</button>
-                        <button type="submit" disabled={saving} className="bg-fern text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50">Save</button>
+                        <Button type="button" variant="secondary" onClick={() => setShowForm(false)}>Cancel</Button>
+                        <Button type="submit" variant="confirm" disabled={saving}>Save</Button>
                     </div>
                 </form>
             )}
 
-            <div className="bg-white rounded-lg border border-border overflow-hidden">
+            <div className="card overflow-hidden">
                 {transactions.length === 0 ? (
                     <EmptyState text="No income logged yet." />
                 ) : (
-                    <table className="w-full text-sm">
+                    <table className="table">
                         <thead>
-                            <tr className="text-left border-b border-border text-shadow-grey">
-                                <th className="px-4 py-2 font-medium">Date</th>
-                                <th className="px-4 py-2 font-medium">Category</th>
-                                <th className="px-4 py-2 font-medium">Description</th>
-                                <th className="px-4 py-2 font-medium text-right">Amount</th>
-                                <th className="px-4 py-2 font-medium"></th>
+                            <tr>
+                                <th>Date</th>
+                                <th>Category</th>
+                                <th>Description</th>
+                                <th className="text-right">Amount</th>
+                                <th></th>
                             </tr>
                         </thead>
                         <tbody>
                             {transactions.map((t) => (
-                                <tr key={t.id} className="border-b border-border last:border-b-0">
-                                    <td className="px-4 py-2">{formatDate(t.occurred_on)}</td>
-                                    <td className="px-4 py-2 text-shadow-grey">{t.category ?? '—'}</td>
-                                    <td className="px-4 py-2 text-shadow-grey">{t.description}</td>
-                                    <td className="px-4 py-2 text-right tabular-nums text-fern">+{formatCurrency(t.amount)}</td>
-                                    <td className="px-4 py-2 text-right">
+                                <tr key={t.id}>
+                                    <td>{formatDate(t.occurred_on)}</td>
+                                    <td className="text-shadow-grey">{t.category ?? '—'}</td>
+                                    <td className="text-shadow-grey">{t.description}</td>
+                                    <td className="text-right tabular-nums text-fern">+{formatCurrency(t.amount)}</td>
+                                    <td className="text-right">
                                         <button onClick={() => remove(t)} className="text-xs text-shadow-grey hover:text-fuchsia">Remove</button>
                                     </td>
                                 </tr>

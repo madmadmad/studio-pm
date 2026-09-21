@@ -2,6 +2,7 @@ import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
 import { ArrowLeft, CaretRight, Check, CheckCircle, Copy, DotsSixVertical, DownloadSimple, Eye, Paperclip, PaperPlaneTilt, PencilSimple, Trash, X } from '@phosphor-icons/react';
 import AppLayout from '../../Layouts/AppLayout';
+import Button from '../../Components/Button';
 import EmptyState from '../../Components/EmptyState';
 import Badge from '../../Components/Badge';
 import RichTextEditor from '../../Components/RichTextEditor';
@@ -61,9 +62,9 @@ function PoNumberField({ project }) {
                     value={value}
                     onChange={(e) => setValue(e.target.value)}
                     placeholder="PO number"
-                    className="border border-border rounded px-3 py-1.5 text-sm"
+                    className="field field-sm"
                 />
-                <button onClick={save} disabled={saving} className="text-sm font-medium text-fern disabled:opacity-50">Save</button>
+                <Button variant="link" onClick={save} disabled={saving}>Save</Button>
                 <button onClick={() => setEditing(false)} className="text-sm text-shadow-grey">Cancel</button>
             </div>
         );
@@ -72,12 +73,9 @@ function PoNumberField({ project }) {
     return (
         <div className="flex items-center gap-2 text-sm text-shadow-grey mb-6">
             <span>PO Number: {project.po_number || '—'}</span>
-            <button
-                onClick={() => { setValue(project.po_number || ''); setEditing(true); }}
-                className="text-sm font-medium text-fern"
-            >
+            <Button variant="link" onClick={() => { setValue(project.po_number || ''); setEditing(true); }}>
                 Edit
-            </button>
+            </Button>
         </div>
     );
 }
@@ -106,7 +104,7 @@ function ContactField({ project }) {
                     autoFocus
                     value={value}
                     onChange={(e) => setValue(e.target.value)}
-                    className="border border-border rounded px-3 py-1.5 text-sm"
+                    className="field field-sm"
                 >
                     <option value="">No contact</option>
                     {contacts.map((contact) => (
@@ -115,7 +113,7 @@ function ContactField({ project }) {
                         </option>
                     ))}
                 </select>
-                <button onClick={save} disabled={saving} className="text-sm font-medium text-fern disabled:opacity-50">Save</button>
+                <Button variant="link" onClick={save} disabled={saving}>Save</Button>
                 <button onClick={() => setEditing(false)} className="text-sm text-shadow-grey">Cancel</button>
             </div>
         );
@@ -124,12 +122,9 @@ function ContactField({ project }) {
     return (
         <div className="flex items-center gap-2 text-sm text-shadow-grey mb-6">
             <span>Contact: {project.contact?.name || '—'}</span>
-            <button
-                onClick={() => { setValue(project.contact_id ? String(project.contact_id) : ''); setEditing(true); }}
-                className="text-sm font-medium text-fern"
-            >
+            <Button variant="link" onClick={() => { setValue(project.contact_id ? String(project.contact_id) : ''); setEditing(true); }}>
                 Edit
-            </button>
+            </Button>
         </div>
     );
 }
@@ -148,29 +143,29 @@ function OverviewTab({ project }) {
             <ContactField project={project} />
             <PoNumberField project={project} />
             <div className={`grid gap-4 mb-6 ${budget > 0 ? 'grid-cols-6' : 'grid-cols-4'}`}>
-                <div className="bg-white rounded-lg border border-border p-4">
+                <div className="card card-padded">
                     <div className="text-xs text-shadow-grey mb-1">Tasks</div>
                     <div className="tabular-nums text-xl">{doneTasks}/{project.tasks.length}</div>
                 </div>
-                <div className="bg-white rounded-lg border border-border p-4">
+                <div className="card card-padded">
                     <div className="text-xs text-shadow-grey mb-1">Hours logged</div>
                     <div className="tabular-nums text-xl">{totalHours}h</div>
                 </div>
-                <div className="bg-white rounded-lg border border-border p-4">
+                <div className="card card-padded">
                     <div className="text-xs text-shadow-grey mb-1">Unbilled hours</div>
                     <div className="tabular-nums text-xl">{unbilledHours}h</div>
                 </div>
-                <div className="bg-white rounded-lg border border-border p-4">
+                <div className="card card-padded">
                     <div className="text-xs text-shadow-grey mb-1">Total invoiced</div>
                     <div className="tabular-nums text-xl">{formatCurrency(totalInvoiced)}</div>
                 </div>
                 {budget > 0 && (
                     <>
-                        <div className="bg-white rounded-lg border border-border p-4">
+                        <div className="card card-padded">
                             <div className="text-xs text-shadow-grey mb-1">Budget</div>
                             <div className="tabular-nums text-xl">{formatCurrency(budget)}</div>
                         </div>
-                        <div className="bg-white rounded-lg border border-border p-4">
+                        <div className="card card-padded">
                             <div className="text-xs text-shadow-grey mb-1">Remaining</div>
                             <div className={`tabular-nums text-xl ${remaining < 0 ? 'text-fuchsia' : ''}`}>{formatCurrency(remaining)}</div>
                         </div>
@@ -374,11 +369,11 @@ function SubtasksSection({ task, onChange }) {
                     placeholder="Add subtask"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    className="flex-1 border border-border rounded px-3 py-2 text-sm"
+                    className="field flex-1"
                 />
-                <button type="submit" className="bg-fern text-white text-sm font-medium px-3 py-2 rounded flex-shrink-0">
+                <Button type="submit" variant="confirm" className="btn-lg flex-shrink-0">
                     Add
-                </button>
+                </Button>
             </form>
         </div>
     );
@@ -425,13 +420,9 @@ function FilesSection({ task, onChange }) {
         <div className="mb-6">
             <div className="flex items-center justify-between mb-2">
                 <div className="text-xs font-semibold text-shadow-grey">Files</div>
-                <button
-                    onClick={() => inputRef.current.click()}
-                    disabled={uploading}
-                    className="text-sm font-medium text-fern flex items-center gap-1 disabled:opacity-50"
-                >
+                <Button variant="link" onClick={() => inputRef.current.click()} disabled={uploading}>
                     <Paperclip size={14} /> {uploading ? 'Uploading…' : 'Add file'}
-                </button>
+                </Button>
                 <input ref={inputRef} type="file" onChange={handleFileChange} className="hidden" />
             </div>
             {files.length === 0 ? (
@@ -499,7 +490,7 @@ function TaskDrawer({ task, teamNames, onClose, onChange }) {
                     <select
                         value={task.status}
                         onChange={(e) => updateField('status', e.target.value)}
-                        className="text-sm font-medium border border-border rounded px-2 py-1"
+                        className="field field-xs font-medium w-auto"
                     >
                         {TASK_STATUS_OPTIONS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
                     </select>
@@ -521,7 +512,7 @@ function TaskDrawer({ task, teamNames, onClose, onChange }) {
                         <select
                             value={task.assignee ?? ''}
                             onChange={(e) => updateField('assignee', e.target.value)}
-                            className="border border-border rounded px-2 py-1 text-sm"
+                            className="field field-xs w-auto"
                         >
                             <option value="">Unassigned</option>
                             {teamNames.map((name) => <option key={name} value={name}>{name}</option>)}
@@ -536,7 +527,7 @@ function TaskDrawer({ task, teamNames, onClose, onChange }) {
                             onBlur={() => description !== (task.description ?? '') && updateField('description', description)}
                             rows={6}
                             placeholder="Add a description…"
-                            className="w-full border border-border rounded px-3 py-2 text-sm"
+                            className="field"
                         />
                     </div>
 
@@ -550,7 +541,7 @@ function TaskDrawer({ task, teamNames, onClose, onChange }) {
                             type="date"
                             value={task.due_date ? task.due_date.slice(0, 10) : ''}
                             onChange={(e) => updateField('due_date', e.target.value)}
-                            className="border border-border rounded px-3 py-2 text-sm"
+                            className="field"
                         />
                     </div>
 
@@ -582,11 +573,11 @@ function TasksTab({ project }) {
                     placeholder="New task"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    className="border border-border rounded px-3 py-2 text-sm flex-1"
+                    className="field flex-1"
                 />
-                <button type="submit" className="bg-fern text-white text-sm font-medium px-3 py-1.5 rounded">Add</button>
+                <Button type="submit" variant="confirm">Add</Button>
             </form>
-            <div className="bg-white rounded-lg border border-border overflow-hidden">
+            <div className="card overflow-hidden">
                 {project.tasks.length === 0 ? (
                     <EmptyState text="No tasks yet." />
                 ) : (
@@ -736,15 +727,11 @@ function NotesTab({ project }) {
     return (
         <div>
             <div className="flex justify-end mb-4">
-                <button
-                    onClick={createNote}
-                    disabled={creating}
-                    className="bg-fern text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50"
-                >
+                <Button variant="confirm" onClick={createNote} disabled={creating}>
                     + New note
-                </button>
+                </Button>
             </div>
-            <div className="bg-white rounded-lg border border-border overflow-hidden">
+            <div className="card overflow-hidden">
                 {project.notes.length === 0 ? (
                     <EmptyState text="No notes yet." />
                 ) : (
@@ -870,7 +857,7 @@ function TimeEntryDrawer({ entry, tasks, onClose, onChange }) {
                                 type="date"
                                 value={entry.date.slice(0, 10)}
                                 onChange={(e) => updateField('date', e.target.value)}
-                                className="border border-border rounded px-2 py-1 text-sm w-full"
+                                className="field field-xs w-full"
                             />
                         </div>
                         <div>
@@ -882,7 +869,7 @@ function TimeEntryDrawer({ entry, tasks, onClose, onChange }) {
                                 value={hours}
                                 onChange={(e) => setHours(e.target.value)}
                                 onBlur={() => Number(hours) !== Number(entry.hours) && updateField('hours', hours)}
-                                className="border border-border rounded px-2 py-1 text-sm w-full tabular-nums"
+                                className="field field-xs w-full tabular-nums"
                             />
                         </div>
                     </div>
@@ -892,7 +879,7 @@ function TimeEntryDrawer({ entry, tasks, onClose, onChange }) {
                         <select
                             value={entry.task_id ?? ''}
                             onChange={(e) => updateField('task_id', e.target.value || null)}
-                            className="border border-border rounded px-2 py-1 text-sm w-full"
+                            className="field field-xs w-full"
                         >
                             <option value="">No task</option>
                             {tasks.map((t) => <option key={t.id} value={t.id}>{t.title}</option>)}
@@ -906,7 +893,7 @@ function TimeEntryDrawer({ entry, tasks, onClose, onChange }) {
                             onChange={(e) => setNote(e.target.value)}
                             onBlur={() => note !== (entry.note ?? '') && updateField('note', note)}
                             placeholder="Add a note…"
-                            className="w-full border border-border rounded px-3 py-2 text-sm"
+                            className="field"
                         />
                     </div>
 
@@ -953,17 +940,17 @@ function TimeTab({ project }) {
 
     return (
         <div>
-            <form onSubmit={logTime} className="bg-white rounded-lg border border-border p-4 mb-4 grid grid-cols-4 gap-2">
-                <input required type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className="border border-border rounded px-3 py-2 text-sm" />
-                <select value={form.task_id} onChange={(e) => setForm({ ...form, task_id: e.target.value })} className="border border-border rounded px-3 py-2 text-sm">
+            <form onSubmit={logTime} className="card card-padded mb-4 grid grid-cols-4 gap-2">
+                <input required type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className="field" />
+                <select value={form.task_id} onChange={(e) => setForm({ ...form, task_id: e.target.value })} className="field">
                     <option value="">No task</option>
                     {project.tasks.map((t) => <option key={t.id} value={t.id}>{t.title}</option>)}
                 </select>
-                <input required type="number" min="0.25" step="0.25" placeholder="Hours" value={form.hours} onChange={(e) => setForm({ ...form, hours: e.target.value })} className="border border-border rounded px-3 py-2 text-sm" />
-                <input placeholder="Note" value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} className="border border-border rounded px-3 py-2 text-sm" />
-                <button type="submit" disabled={saving} className="col-span-4 bg-fern text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50 justify-self-end w-fit">Log time</button>
+                <input required type="number" min="0.25" step="0.25" placeholder="Hours" value={form.hours} onChange={(e) => setForm({ ...form, hours: e.target.value })} className="field" />
+                <input placeholder="Note" value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} className="field" />
+                <Button type="submit" variant="confirm" disabled={saving} className="col-span-4 justify-self-end w-fit">Log time</Button>
             </form>
-            <div className="bg-white rounded-lg border border-border overflow-hidden">
+            <div className="card overflow-hidden">
                 {project.time_entries.length === 0 ? (
                     <EmptyState text="No time logged yet." />
                 ) : (
@@ -999,36 +986,36 @@ function ProposalsTab({ project }) {
             <div className="flex justify-end mb-4">
                 <Link
                     href={`/proposals/create?company_id=${project.company_id}&project_id=${project.id}`}
-                    className="bg-gunmetal text-white text-sm font-medium px-3 py-1.5 rounded"
+                    className="btn btn-primary"
                 >
                     New proposal
                 </Link>
             </div>
 
-            <div className="bg-white rounded-lg border border-border overflow-hidden">
+            <div className="card overflow-hidden">
                 {project.proposals.length === 0 ? (
                     <EmptyState text="No proposals for this project yet." />
                 ) : (
-                    <table className="w-full text-sm">
+                    <table className="table">
                         <thead>
-                            <tr className="text-left border-b border-border text-shadow-grey">
-                                <th className="px-4 py-2 font-medium">Title</th>
-                                <th className="px-4 py-2 font-medium">Estimate</th>
-                                <th className="px-4 py-2 font-medium">Status</th>
+                            <tr>
+                                <th>Title</th>
+                                <th>Estimate</th>
+                                <th>Status</th>
                             </tr>
                         </thead>
                         <tbody>
                             {project.proposals.map((proposal) => (
-                                <tr key={proposal.id} className="border-b border-border last:border-b-0">
-                                    <td className="px-4 py-3">
+                                <tr key={proposal.id}>
+                                    <td>
                                         <Link href={`/proposals/${proposal.id}/edit`} className="hover:underline">
                                             {proposal.title}
                                         </Link>
                                     </td>
-                                    <td className="px-4 py-3 tabular-nums">
+                                    <td className="tabular-nums">
                                         {proposal.estimate_amount ? formatCurrency(proposal.estimate_amount) : '—'}
                                     </td>
-                                    <td className="px-4 py-3"><ProposalStatusBadge proposal={proposal} /></td>
+                                    <td><ProposalStatusBadge proposal={proposal} /></td>
                                 </tr>
                             ))}
                         </tbody>
@@ -1183,19 +1170,19 @@ function BillingTab({ project }) {
                         Remaining <span className={`tabular-nums font-medium ${remaining < 0 ? 'text-fuchsia' : 'text-gunmetal'}`}>{formatCurrency(remaining)}</span>
                     </div>
                 ) : <div />}
-                <button onClick={() => (showForm ? setShowForm(false) : openForm())} className="bg-gunmetal text-white text-sm font-medium px-3 py-1.5 rounded">
+                <Button onClick={() => (showForm ? setShowForm(false) : openForm())}>
                     {showForm ? 'Cancel' : 'New invoice'}
-                </button>
+                </Button>
             </div>
 
             {showForm && (
-                <form onSubmit={createInvoice} className="bg-white rounded-lg border border-border p-4 mb-4">
+                <form onSubmit={createInvoice} className="card card-padded mb-4">
                     {proposalsWithItems.length > 0 && (
                         <div className="mb-3">
                             <select
                                 value={form.proposal_id}
                                 onChange={(e) => copyFromProposal(e.target.value)}
-                                className="border border-border rounded px-3 py-2 text-sm w-full"
+                                className="field"
                             >
                                 <option value="">Copy line items from a proposal…</option>
                                 {proposalsWithItems.map((p) => (
@@ -1218,7 +1205,7 @@ function BillingTab({ project }) {
                                         placeholder="Description"
                                         value={item.description}
                                         onChange={(e) => updateItem(idx, 'description', e.target.value)}
-                                        className="border border-border rounded px-3 py-2 text-sm flex-1"
+                                        className="field flex-1"
                                     />
                                     <input
                                         type="number"
@@ -1227,10 +1214,10 @@ function BillingTab({ project }) {
                                         placeholder="Amount"
                                         value={item.amount}
                                         onChange={(e) => updateItem(idx, 'amount', e.target.value)}
-                                        className="border border-border rounded px-3 py-2 text-sm tabular-nums w-28"
+                                        className="field tabular-nums w-28"
                                     />
                                     {form.items.length > 1 && (
-                                        <button type="button" onClick={() => removeItemRow(idx)} className="text-sm px-2 text-fuchsia">Remove</button>
+                                        <Button variant="link-danger" onClick={() => removeItemRow(idx)}>Remove</Button>
                                     )}
                                 </div>
                                 <textarea
@@ -1238,11 +1225,11 @@ function BillingTab({ project }) {
                                     value={item.details || ''}
                                     onChange={(e) => updateItem(idx, 'details', e.target.value)}
                                     rows={2}
-                                    className="border border-border rounded px-3 py-2 text-xs text-shadow-grey w-full"
+                                    className="field text-xs text-shadow-grey"
                                 />
                             </div>
                         ))}
-                        <button type="button" onClick={addItemRow} className="text-sm font-medium text-watermelon">+ Add line item</button>
+                        <Button variant="link-accent" onClick={addItemRow}>+ Add line item</Button>
                     </div>
 
                     <div className="text-sm mb-3 space-y-1">
@@ -1265,37 +1252,37 @@ function BillingTab({ project }) {
                     </div>
                     {error && <div className="text-sm text-fuchsia mb-2">{error}</div>}
                     <div className="flex justify-end">
-                        <button type="submit" disabled={saving} className="bg-fern text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50">Create draft invoice</button>
+                        <Button type="submit" variant="confirm" disabled={saving}>Create draft invoice</Button>
                     </div>
                 </form>
             )}
 
-            <div className="bg-white rounded-lg border border-border overflow-hidden">
+            <div className="card overflow-hidden">
                 {project.invoices.length === 0 ? (
                     <EmptyState text="No invoices for this project yet." />
                 ) : (
-                    <table className="w-full text-sm">
+                    <table className="table">
                         <thead>
-                            <tr className="text-left border-b border-border text-shadow-grey">
-                                <th className="px-4 py-2 font-medium">#</th>
-                                <th className="px-4 py-2 font-medium">Issued</th>
-                                <th className="px-4 py-2 font-medium">Total</th>
-                                <th className="px-4 py-2 font-medium">Status</th>
-                                <th className="px-4 py-2 font-medium"></th>
+                            <tr>
+                                <th>#</th>
+                                <th>Issued</th>
+                                <th>Total</th>
+                                <th>Status</th>
+                                <th></th>
                             </tr>
                         </thead>
                         <tbody>
                             {project.invoices.map((invoice) => (
-                                <tr key={invoice.id} className="border-b border-border last:border-b-0">
-                                    <td className="px-4 py-2 tabular-nums text-shadow-grey">{invoice.invoice_number}</td>
-                                    <td className="px-4 py-2">
+                                <tr key={invoice.id}>
+                                    <td className="tabular-nums text-shadow-grey">{invoice.invoice_number}</td>
+                                    <td>
                                         <Link href={`/invoices/${invoice.id}`} className="hover:underline">
                                             {formatDate(invoice.issued_on)}
                                         </Link>
                                     </td>
-                                    <td className="px-4 py-2 tabular-nums">{formatCurrency(invoiceTotal(invoice.items, invoice.surcharge))}</td>
-                                    <td className="px-4 py-2"><InvoiceStatusBadge invoice={invoice} /></td>
-                                    <td className="px-4 py-2 text-right">
+                                    <td className="tabular-nums">{formatCurrency(invoiceTotal(invoice.items, invoice.surcharge))}</td>
+                                    <td><InvoiceStatusBadge invoice={invoice} /></td>
+                                    <td className="text-right">
                                         <div className="flex items-center justify-end gap-3">
                                             <a href={`/i/${invoice.public_token}`} target="_blank" rel="noopener noreferrer" title="Preview" className="text-shadow-grey hover:text-gunmetal">
                                                 <Eye size={16} />
@@ -1375,10 +1362,10 @@ function ExpensesTab({ project }) {
 
     return (
         <div>
-            <form onSubmit={addExpense} className="bg-white rounded-lg border border-border p-4 mb-4 grid grid-cols-2 gap-2">
-                <input required placeholder="Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="border border-border rounded px-3 py-2 text-sm col-span-2" />
-                <input required type="number" min="0.01" step="0.01" placeholder="Amount" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} className="border border-border rounded px-3 py-2 text-sm tabular-nums" />
-                <input required type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className="border border-border rounded px-3 py-2 text-sm" />
+            <form onSubmit={addExpense} className="card card-padded mb-4 grid grid-cols-2 gap-2">
+                <input required placeholder="Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="field col-span-2" />
+                <input required type="number" min="0.01" step="0.01" placeholder="Amount" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} className="field tabular-nums" />
+                <input required type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className="field" />
                 <label className="flex items-center gap-2 text-sm">
                     <input type="checkbox" checked={form.is_billable} onChange={(e) => setForm({ ...form, is_billable: e.target.checked })} />
                     Billable to this project
@@ -1388,33 +1375,33 @@ function ExpensesTab({ project }) {
                     value={form.markup_percent}
                     disabled={!form.is_billable}
                     onChange={(e) => setForm({ ...form, markup_percent: e.target.value })}
-                    className="border border-border rounded px-3 py-2 text-sm tabular-nums disabled:opacity-50"
+                    className="field tabular-nums disabled:opacity-50"
                 />
-                <button type="submit" disabled={saving} className="col-span-2 bg-fern text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50 justify-self-end w-fit">Add expense</button>
+                <Button type="submit" variant="confirm" disabled={saving} className="col-span-2 justify-self-end w-fit">Add expense</Button>
             </form>
             <div className="text-sm text-shadow-grey mb-2">Total expenses: <span className="tabular-nums text-fuchsia">{formatCurrency(total)}</span></div>
-            <div className="bg-white rounded-lg border border-border overflow-hidden">
+            <div className="card overflow-hidden">
                 {expenses.length === 0 ? (
                     <EmptyState text="No expenses logged for this project." />
                 ) : (
-                    <table className="w-full text-sm">
+                    <table className="table">
                         <thead>
-                            <tr className="text-left border-b border-border text-shadow-grey">
-                                <th className="px-4 py-2 font-medium">Date</th>
-                                <th className="px-4 py-2 font-medium">Name</th>
-                                <th className="px-4 py-2 font-medium">Status</th>
-                                <th className="px-4 py-2 font-medium text-right">Amount</th>
-                                <th className="px-4 py-2 font-medium"></th>
+                            <tr>
+                                <th>Date</th>
+                                <th>Name</th>
+                                <th>Status</th>
+                                <th className="text-right">Amount</th>
+                                <th></th>
                             </tr>
                         </thead>
                         <tbody>
                             {expenses.map((e) => (
-                                <tr key={e.id} className="border-b border-border last:border-b-0">
-                                    <td className="px-4 py-2">{formatDate(e.date)}</td>
-                                    <td className="px-4 py-2 text-shadow-grey">{e.name}</td>
-                                    <td className="px-4 py-2"><ExpenseStatusBadge expense={e} /></td>
-                                    <td className="px-4 py-2 text-right tabular-nums text-fuchsia">{formatCurrency(e.amount)}</td>
-                                    <td className="px-4 py-2 text-right">
+                                <tr key={e.id}>
+                                    <td>{formatDate(e.date)}</td>
+                                    <td className="text-shadow-grey">{e.name}</td>
+                                    <td><ExpenseStatusBadge expense={e} /></td>
+                                    <td className="text-right tabular-nums text-fuchsia">{formatCurrency(e.amount)}</td>
+                                    <td className="text-right">
                                         {e.billing_status === 'unbilled' && (
                                             <button onClick={() => remove(e)} className="text-shadow-grey hover:text-fuchsia">
                                                 <Trash size={14} />
@@ -1470,14 +1457,14 @@ function AssignedStaff({ project, canManageTeam, assignableStaff }) {
                     <select
                         value={pickId}
                         onChange={(e) => setPickId(e.target.value)}
-                        className="border border-border rounded px-3 py-2 text-sm flex-1"
+                        className="field flex-1"
                     >
                         <option value="">Assign staff&hellip;</option>
                         {available.map((staffer) => (
                             <option key={staffer.id} value={staffer.id}>{staffer.name}</option>
                         ))}
                     </select>
-                    <button type="submit" disabled={busy || !pickId} className="bg-fern text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50">Assign</button>
+                    <Button type="submit" variant="confirm" disabled={busy || !pickId}>Assign</Button>
                 </form>
             )}
             {assigned.length === 0 ? (
@@ -1537,9 +1524,9 @@ function TeamTab({ project, canManageTeam, assignableStaff }) {
                     placeholder="Add team member name"
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
-                    className="border border-border rounded px-3 py-2 text-sm flex-1"
+                    className="field flex-1"
                 />
-                <button type="submit" disabled={saving} className="bg-fern text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50">Add</button>
+                <Button type="submit" variant="confirm" disabled={saving}>Add</Button>
             </form>
             {names.length === 0 ? (
                 <EmptyState text="No one assigned yet." />

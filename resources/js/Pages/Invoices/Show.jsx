@@ -2,6 +2,7 @@ import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
 import { ArrowLeft, Check, Copy, DownloadSimple, Eye } from '@phosphor-icons/react';
 import AppLayout from '../../Layouts/AppLayout';
+import Button from '../../Components/Button';
 import Toggle from '../../Components/Toggle';
 import { InvoiceStatusBadge } from '../../Components/StatusBadges';
 import { formatCurrency, formatDate, invoiceSubtotal, invoiceTotal } from '../../lib/format';
@@ -123,7 +124,7 @@ export default function InvoicesShow({ invoice }) {
                         </a>
                     )}
                     {invoice.status === 'draft' && !editing && (
-                        <button onClick={startEditing} className="text-sm font-medium text-fern">Edit</button>
+                        <Button variant="link" onClick={startEditing}>Edit</Button>
                     )}
                 </div>
             </div>
@@ -134,12 +135,12 @@ export default function InvoicesShow({ invoice }) {
             </p>
 
             {editing ? (
-                <div className="bg-white rounded-lg border border-border p-4 mb-6">
+                <div className="card card-padded mb-6">
                     <div className="grid grid-cols-2 gap-3 mb-4">
                         <select
                             value={form.contact_id}
                             onChange={(e) => setForm({ ...form, contact_id: e.target.value })}
-                            className="border border-border rounded px-3 py-2 text-sm"
+                            className="field"
                         >
                             <option value="">Bill to (no specific contact)</option>
                             {invoice.company.contacts.map((contact) => (
@@ -152,7 +153,7 @@ export default function InvoicesShow({ invoice }) {
                             type="date"
                             value={form.due_on}
                             onChange={(e) => setForm({ ...form, due_on: e.target.value })}
-                            className="border border-border rounded px-3 py-2 text-sm"
+                            className="field"
                         />
                     </div>
 
@@ -164,7 +165,7 @@ export default function InvoicesShow({ invoice }) {
                                         placeholder="Description"
                                         value={item.description}
                                         onChange={(e) => updateItem(idx, 'description', e.target.value)}
-                                        className="border border-border rounded px-3 py-2 text-sm flex-1"
+                                        className="field flex-1"
                                     />
                                     <input
                                         type="number"
@@ -173,10 +174,10 @@ export default function InvoicesShow({ invoice }) {
                                         placeholder="Amount"
                                         value={item.amount}
                                         onChange={(e) => updateItem(idx, 'amount', e.target.value)}
-                                        className="border border-border rounded px-3 py-2 text-sm tabular-nums w-28"
+                                        className="field tabular-nums w-28"
                                     />
                                     {form.items.length > 1 && (
-                                        <button type="button" onClick={() => removeItemRow(idx)} className="text-sm px-2 text-fuchsia">Remove</button>
+                                        <Button variant="link-danger" onClick={() => removeItemRow(idx)}>Remove</Button>
                                     )}
                                 </div>
                                 <textarea
@@ -184,11 +185,11 @@ export default function InvoicesShow({ invoice }) {
                                     value={item.details || ''}
                                     onChange={(e) => updateItem(idx, 'details', e.target.value)}
                                     rows={2}
-                                    className="border border-border rounded px-3 py-2 text-xs text-shadow-grey w-full"
+                                    className="field text-xs text-shadow-grey"
                                 />
                             </div>
                         ))}
-                        <button type="button" onClick={addItemRow} className="text-sm font-medium text-watermelon">+ Add line item</button>
+                        <Button variant="link-accent" onClick={addItemRow}>+ Add line item</Button>
                     </div>
 
                     <div className="text-sm mb-4 space-y-1">
@@ -213,29 +214,29 @@ export default function InvoicesShow({ invoice }) {
                     {error && <div className="text-sm text-fuchsia mb-3">{error}</div>}
 
                     <div className="flex gap-2 justify-end">
-                        <button type="button" onClick={() => setEditing(false)} className="text-sm px-3 py-1.5 rounded text-shadow-grey">Cancel</button>
-                        <button type="button" disabled={saving} onClick={save} className="bg-fern text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50">Save</button>
+                        <Button variant="secondary" onClick={() => setEditing(false)}>Cancel</Button>
+                        <Button variant="confirm" disabled={saving} onClick={save}>Save</Button>
                     </div>
                 </div>
             ) : (
-                <div className="bg-white rounded-lg border border-border p-4 mb-6">
-                    <table className="w-full text-sm mb-4">
+                <div className="card card-padded mb-6">
+                    <table className="table table-flush mb-4">
                         <thead>
-                            <tr className="text-left border-b border-border text-shadow-grey">
-                                <th className="py-2 font-medium">Description</th>
-                                <th className="py-2 font-medium text-right">Amount</th>
+                            <tr>
+                                <th>Description</th>
+                                <th className="text-right">Amount</th>
                             </tr>
                         </thead>
                         <tbody>
                             {invoice.items.map((item) => (
-                                <tr key={item.id} className="border-b border-border last:border-b-0">
-                                    <td className="py-2">
+                                <tr key={item.id}>
+                                    <td>
                                         {item.description}
                                         {item.details && item.details !== item.description && (
                                             <div className="text-xs text-shadow-grey mt-1 whitespace-pre-wrap">{item.details}</div>
                                         )}
                                     </td>
-                                    <td className="py-2 text-right tabular-nums align-top">{formatCurrency(item.amount)}</td>
+                                    <td className="text-right tabular-nums align-top">{formatCurrency(item.amount)}</td>
                                 </tr>
                             ))}
                         </tbody>
@@ -255,7 +256,7 @@ export default function InvoicesShow({ invoice }) {
             )}
 
             {invoice.payments.length > 0 && (
-                <div className="bg-white rounded-lg border border-border p-4 mb-6">
+                <div className="card card-padded mb-6">
                     <h2 className="text-sm font-semibold text-shadow-grey mb-3">Payments</h2>
                     <ul className="text-sm divide-y divide-border">
                         {invoice.payments.map((payment) => (
@@ -271,21 +272,21 @@ export default function InvoicesShow({ invoice }) {
             {!editing && (
                 <div className="flex items-center gap-2">
                     {invoice.status === 'draft' && (
-                        <button onClick={sendInvoice} className="bg-gunmetal text-white text-sm font-medium px-3 py-1.5 rounded">Send invoice</button>
+                        <Button onClick={sendInvoice}>Send invoice</Button>
                     )}
                     {invoice.status === 'sent' && (
                         <>
                             <select
                                 value={paymentMethod}
                                 onChange={(e) => setPaymentMethod(e.target.value)}
-                                className="border border-border rounded px-3 py-1.5 text-sm"
+                                className="field field-sm w-auto"
                             >
                                 <option value="check">Check</option>
                                 <option value="other">Other</option>
                             </select>
-                            <button onClick={recordPayment} disabled={recordingPayment} className="bg-fern text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50">
+                            <Button variant="confirm" onClick={recordPayment} disabled={recordingPayment}>
                                 Record payment
-                            </button>
+                            </Button>
                         </>
                     )}
                 </div>

@@ -17,6 +17,7 @@ use App\Http\Controllers\Web\SettingsPageController;
 use App\Http\Controllers\Web\TimePageController;
 use App\Http\Controllers\Web\UserPageController;
 use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
 
 // Login, logout, and password reset are all registered by Fortify (see
 // FortifyServiceProvider) -- it owns /login, /logout, /forgot-password, and
@@ -64,6 +65,10 @@ Route::middleware('auth')->group(function () {
         Route::get('/settings', [SettingsPageController::class, 'index'])->name('settings.index');
 
         Route::get('/users', [UserPageController::class, 'index'])->name('users.index');
+
+        // Live reference for the shared button/card/field/table classes in
+        // resources/css/components.css -- see that file's banner comment.
+        Route::get('/style-guide', fn () => Inertia::render('Dev/StyleGuide'))->name('style-guide');
     });
 });
 

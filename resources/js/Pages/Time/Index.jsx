@@ -1,6 +1,7 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
 import AppLayout from '../../Layouts/AppLayout';
+import Button from '../../Components/Button';
 import EmptyState from '../../Components/EmptyState';
 import Badge from '../../Components/Badge';
 import { formatCurrency, formatDate } from '../../lib/format';
@@ -67,19 +68,17 @@ export default function TimeIndex({ timeEntries, companies, projects }) {
             <Head title="Time" />
             <div className="flex items-center justify-between mb-1">
                 <h1 className="font-display text-2xl font-semibold">Time</h1>
-                <button onClick={() => setShowForm(true)} className="bg-gunmetal text-white text-sm font-medium px-3 py-1.5 rounded">
-                    Log time
-                </button>
+                <Button onClick={() => setShowForm(true)}>Log time</Button>
             </div>
             <p className="text-sm text-shadow-grey mb-6">{unbilledHours}h unbilled across {companies.length} clients.</p>
 
             {showForm && (
-                <form onSubmit={submitTimeEntry} className="bg-white rounded-lg border border-border p-4 mb-6 grid grid-cols-2 gap-3">
+                <form onSubmit={submitTimeEntry} className="card card-padded mb-6 grid grid-cols-2 gap-3">
                     <select
                         required
                         value={form.company_id}
                         onChange={(e) => setForm({ ...form, company_id: e.target.value, project_id: '' })}
-                        className="border border-border rounded px-3 py-2 text-sm"
+                        className="field"
                     >
                         <option value="">Select client</option>
                         {companies.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -87,50 +86,50 @@ export default function TimeIndex({ timeEntries, companies, projects }) {
                     <select
                         value={form.project_id}
                         onChange={(e) => setForm({ ...form, project_id: e.target.value })}
-                        className="border border-border rounded px-3 py-2 text-sm"
+                        className="field"
                         disabled={!form.company_id}
                     >
                         <option value="">No project</option>
                         {projectsForCompany.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
                     </select>
-                    <input required type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className="border border-border rounded px-3 py-2 text-sm" />
-                    <input required type="number" min="0.25" step="0.25" placeholder="Hours" value={form.hours} onChange={(e) => setForm({ ...form, hours: e.target.value })} className="border border-border rounded px-3 py-2 text-sm" />
-                    <input placeholder="What did you work on?" value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} className="border border-border rounded px-3 py-2 text-sm col-span-2" />
+                    <input required type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className="field" />
+                    <input required type="number" min="0.25" step="0.25" placeholder="Hours" value={form.hours} onChange={(e) => setForm({ ...form, hours: e.target.value })} className="field" />
+                    <input placeholder="What did you work on?" value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} className="field col-span-2" />
                     <div className="flex gap-2 col-span-2 justify-end">
-                        <button type="button" onClick={() => setShowForm(false)} className="text-sm px-3 py-1.5 rounded text-shadow-grey">Cancel</button>
-                        <button type="submit" disabled={saving} className="bg-fern text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50">Log time</button>
+                        <Button type="button" variant="secondary" onClick={() => setShowForm(false)}>Cancel</Button>
+                        <Button type="submit" variant="confirm" disabled={saving}>Log time</Button>
                     </div>
                 </form>
             )}
 
-            <div className="bg-white rounded-lg border border-border overflow-hidden mb-4">
+            <div className="card overflow-hidden mb-4">
                 {timeEntries.length === 0 ? (
                     <EmptyState text="No time logged yet. Track hours against a client to start building an invoice." />
                 ) : (
-                    <table className="w-full text-sm">
+                    <table className="table">
                         <thead>
-                            <tr className="text-left border-b border-border text-shadow-grey">
-                                <th className="px-4 py-2 font-medium">Date</th>
-                                <th className="px-4 py-2 font-medium">Client</th>
-                                <th className="px-4 py-2 font-medium">Project</th>
-                                <th className="px-4 py-2 font-medium">Hours</th>
-                                <th className="px-4 py-2 font-medium">Note</th>
-                                <th className="px-4 py-2 font-medium"></th>
+                            <tr>
+                                <th>Date</th>
+                                <th>Client</th>
+                                <th>Project</th>
+                                <th>Hours</th>
+                                <th>Note</th>
+                                <th></th>
                             </tr>
                         </thead>
                         <tbody>
                             {timeEntries.map((entry) => (
-                                <tr key={entry.id} className="border-b border-border last:border-b-0">
-                                    <td className="px-4 py-3">{formatDate(entry.date)}</td>
-                                    <td className="px-4 py-3">
+                                <tr key={entry.id}>
+                                    <td>{formatDate(entry.date)}</td>
+                                    <td>
                                         <Link href={`/clients/${entry.company_id}`} className="hover:underline">
                                             {entry.company?.name ?? '—'}
                                         </Link>
                                     </td>
-                                    <td className="px-4 py-3 text-shadow-grey">{entry.project?.name ?? '—'}</td>
-                                    <td className="px-4 py-3 tabular-nums">{entry.hours}h</td>
-                                    <td className="px-4 py-3 text-shadow-grey">{entry.note}</td>
-                                    <td className="px-4 py-3 text-right">
+                                    <td className="text-shadow-grey">{entry.project?.name ?? '—'}</td>
+                                    <td className="tabular-nums">{entry.hours}h</td>
+                                    <td className="text-shadow-grey">{entry.note}</td>
+                                    <td className="text-right">
                                         {entry.billed ? (
                                             <Badge tone="fern" label="Billed" />
                                         ) : queuedIds.has(entry.id) ? (
@@ -138,9 +137,7 @@ export default function TimeIndex({ timeEntries, companies, projects }) {
                                                 <Badge tone="watermelon" label="Queued" />
                                             </button>
                                         ) : (
-                                            <button onClick={() => billEntry(entry)} className="text-sm font-medium text-watermelon">
-                                                Bill this
-                                            </button>
+                                            <Button variant="link-accent" onClick={() => billEntry(entry)}>Bill this</Button>
                                         )}
                                     </td>
                                 </tr>
@@ -156,9 +153,7 @@ export default function TimeIndex({ timeEntries, companies, projects }) {
                         {tray.length} {tray.length === 1 ? 'entry' : 'entries'} ready to bill &mdash;{' '}
                         <span className="tabular-nums">{formatCurrency(traySubtotal)}</span>
                     </div>
-                    <button onClick={createInvoiceFromTray} className="bg-watermelon text-white text-sm font-medium px-3 py-1.5 rounded">
-                        Create invoice
-                    </button>
+                    <Button variant="accent" onClick={createInvoiceFromTray}>Create invoice</Button>
                 </div>
             )}
         </AppLayout>

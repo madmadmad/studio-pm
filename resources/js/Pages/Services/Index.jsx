@@ -2,6 +2,7 @@ import { Head } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import { PencilSimple, Trash } from '@phosphor-icons/react';
 import AppLayout from '../../Layouts/AppLayout';
+import Button from '../../Components/Button';
 import EmptyState from '../../Components/EmptyState';
 import { formatCurrency } from '../../lib/format';
 import { api } from '../../lib/api';
@@ -81,48 +82,46 @@ export default function ServicesIndex({ services: servicesProp }) {
             <Head title="Services" />
             <div className="flex items-center justify-between mb-1">
                 <h1 className="font-display text-2xl font-semibold">Services</h1>
-                <button onClick={startCreate} className="bg-gunmetal text-white text-sm font-medium px-3 py-1.5 rounded">
-                    Add service
-                </button>
+                <Button onClick={startCreate}>Add service</Button>
             </div>
             <p className="text-sm text-shadow-grey mb-6">Your rate catalog &mdash; used as defaults when building invoice line items.</p>
 
             {showForm && (
-                <form onSubmit={submit} className="bg-white rounded-lg border border-border p-4 mb-6 grid grid-cols-2 gap-3">
-                    <input required placeholder="Service name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="border border-border rounded px-3 py-2 text-sm col-span-2" />
-                    <input required type="number" min="0" step="0.01" placeholder="Default rate ($)" value={form.default_rate} onChange={(e) => setForm({ ...form, default_rate: e.target.value })} className="border border-border rounded px-3 py-2 text-sm tabular-nums" />
-                    <select value={form.unit} onChange={(e) => setForm({ ...form, unit: e.target.value })} className="border border-border rounded px-3 py-2 text-sm">
+                <form onSubmit={submit} className="card card-padded mb-6 grid grid-cols-2 gap-3">
+                    <input required placeholder="Service name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="field col-span-2" />
+                    <input required type="number" min="0" step="0.01" placeholder="Default rate ($)" value={form.default_rate} onChange={(e) => setForm({ ...form, default_rate: e.target.value })} className="field tabular-nums" />
+                    <select value={form.unit} onChange={(e) => setForm({ ...form, unit: e.target.value })} className="field">
                         <option value="hourly">Hourly</option>
                         <option value="fixed">Fixed</option>
                     </select>
-                    <input placeholder="Description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="border border-border rounded px-3 py-2 text-sm col-span-2" />
+                    <input placeholder="Description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="field col-span-2" />
                     <div className="flex gap-2 col-span-2 justify-end">
-                        <button type="button" onClick={cancel} className="text-sm px-3 py-1.5 rounded text-shadow-grey">Cancel</button>
-                        <button type="submit" disabled={saving} className="bg-fern text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50">Save</button>
+                        <Button type="button" variant="secondary" onClick={cancel}>Cancel</Button>
+                        <Button type="submit" variant="confirm" disabled={saving}>Save</Button>
                     </div>
                 </form>
             )}
 
-            <div className="bg-white rounded-lg border border-border overflow-hidden">
+            <div className="card overflow-hidden">
                 {services.length === 0 ? (
                     <EmptyState text="No services yet." />
                 ) : (
-                    <table className="w-full text-sm">
+                    <table className="table">
                         <thead>
-                            <tr className="text-left border-b border-border text-shadow-grey">
-                                <th className="px-4 py-2 font-medium">Name</th>
-                                <th className="px-4 py-2 font-medium">Rate</th>
-                                <th className="px-4 py-2 font-medium">Unit</th>
-                                <th className="px-4 py-2 font-medium"></th>
+                            <tr>
+                                <th>Name</th>
+                                <th>Rate</th>
+                                <th>Unit</th>
+                                <th></th>
                             </tr>
                         </thead>
                         <tbody>
                             {services.map((service) => (
-                                <tr key={service.id} className="border-b border-border last:border-b-0">
-                                    <td className="px-4 py-3 font-medium">{service.name}</td>
-                                    <td className="px-4 py-3 tabular-nums">{formatCurrency(service.default_rate)}</td>
-                                    <td className="px-4 py-3 text-shadow-grey capitalize">{service.unit}</td>
-                                    <td className="px-4 py-3 text-right">
+                                <tr key={service.id}>
+                                    <td className="font-medium">{service.name}</td>
+                                    <td className="tabular-nums">{formatCurrency(service.default_rate)}</td>
+                                    <td className="text-shadow-grey capitalize">{service.unit}</td>
+                                    <td className="text-right">
                                         <div className="flex items-center justify-end gap-3">
                                             <button onClick={() => startEdit(service)} title="Edit" className="text-fern hover:text-fern/70">
                                                 <PencilSimple size={16} />

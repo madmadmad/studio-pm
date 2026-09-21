@@ -1,5 +1,5 @@
 const TONES = {
-    neutral: 'bg-[#E7E7E9] text-shadow-grey',
+    neutral: 'bg-mist text-shadow-grey',
     watermelon: 'bg-watermelon-soft text-watermelon',
     fern: 'bg-fern-soft text-fern',
     fuchsia: 'bg-fuchsia-soft text-fuchsia',

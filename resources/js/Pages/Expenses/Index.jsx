@@ -2,6 +2,7 @@ import { Head } from '@inertiajs/react';
 import { useEffect, useMemo, useState } from 'react';
 import { CaretDown, CaretRight, PaperclipHorizontal, PencilSimple, Trash, X } from '@phosphor-icons/react';
 import AppLayout from '../../Layouts/AppLayout';
+import Button from '../../Components/Button';
 import EmptyState from '../../Components/EmptyState';
 import Badge from '../../Components/Badge';
 import { ExpenseStatusBadge } from '../../Components/StatusBadges';
@@ -91,7 +92,7 @@ function CategoryAndTaxManager({ categories, setCategories, taxes, setTaxes }) {
             </button>
             {open && (
                 <div className="mt-3 grid grid-cols-2 gap-4">
-                    <div className="bg-white rounded-lg border border-border p-4">
+                    <div className="card card-padded">
                         <h3 className="text-sm font-semibold mb-3">Categories</h3>
                         <div className="flex flex-col gap-2 mb-3">
                             {categories.map((category) => (
@@ -105,11 +106,11 @@ function CategoryAndTaxManager({ categories, setCategories, taxes, setTaxes }) {
                         </div>
                         <form onSubmit={addCategory} className="flex gap-2">
                             <input type="color" value={categoryForm.color} onChange={(e) => setCategoryForm({ ...categoryForm, color: e.target.value })} className="w-9 h-9 border border-border rounded" />
-                            <input placeholder="New category" value={categoryForm.name} onChange={(e) => setCategoryForm({ ...categoryForm, name: e.target.value })} className="border border-border rounded px-3 py-2 text-sm flex-1" />
-                            <button type="submit" className="bg-gunmetal text-white text-sm font-medium px-3 py-1.5 rounded">Add</button>
+                            <input placeholder="New category" value={categoryForm.name} onChange={(e) => setCategoryForm({ ...categoryForm, name: e.target.value })} className="field flex-1" />
+                            <Button type="submit">Add</Button>
                         </form>
                     </div>
-                    <div className="bg-white rounded-lg border border-border p-4">
+                    <div className="card card-padded">
                         <h3 className="text-sm font-semibold mb-3">Taxes</h3>
                         <div className="flex flex-col gap-2 mb-3">
                             {taxes.map((tax) => (
@@ -122,9 +123,9 @@ function CategoryAndTaxManager({ categories, setCategories, taxes, setTaxes }) {
                             ))}
                         </div>
                         <form onSubmit={addTax} className="flex gap-2">
-                            <input placeholder="Tax name" value={taxForm.name} onChange={(e) => setTaxForm({ ...taxForm, name: e.target.value })} className="border border-border rounded px-3 py-2 text-sm flex-1" />
-                            <input type="number" min="0" max="100" step="0.01" placeholder="Rate %" value={taxForm.rate} onChange={(e) => setTaxForm({ ...taxForm, rate: e.target.value })} className="border border-border rounded px-3 py-2 text-sm w-24 tabular-nums" />
-                            <button type="submit" className="bg-gunmetal text-white text-sm font-medium px-3 py-1.5 rounded">Add</button>
+                            <input placeholder="Tax name" value={taxForm.name} onChange={(e) => setTaxForm({ ...taxForm, name: e.target.value })} className="field flex-1" />
+                            <input type="number" min="0" max="100" step="0.01" placeholder="Rate %" value={taxForm.rate} onChange={(e) => setTaxForm({ ...taxForm, rate: e.target.value })} className="field w-24 tabular-nums" />
+                            <Button type="submit">Add</Button>
                         </form>
                     </div>
                 </div>
@@ -265,31 +266,29 @@ export default function ExpensesIndex({ expenses: expensesProp, categories: cate
             <Head title="Expenses" />
             <div className="flex items-center justify-between mb-1">
                 <h1 className="font-display text-2xl font-semibold">Expenses</h1>
-                <button onClick={startCreate} className="bg-gunmetal text-white text-sm font-medium px-3 py-1.5 rounded">
-                    New expense
-                </button>
+                <Button onClick={startCreate}>New expense</Button>
             </div>
             <p className="text-sm text-shadow-grey mb-4">Track costs, mark them billable to a project, and attach them to an invoice with markup applied.</p>
 
             <CategoryAndTaxManager categories={categories} setCategories={setCategories} taxes={taxes} setTaxes={setTaxes} />
 
             {showForm && (
-                <form onSubmit={submit} className="bg-white rounded-lg border border-border p-4 mb-6">
+                <form onSubmit={submit} className="card card-padded mb-6">
                     {error && <div className="text-sm text-fuchsia mb-3">{error}</div>}
                     <div className="grid grid-cols-2 gap-3">
-                        <input required placeholder="Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="border border-border rounded px-3 py-2 text-sm col-span-2" />
-                        <select value={form.category_id} onChange={(e) => setForm({ ...form, category_id: e.target.value })} className="border border-border rounded px-3 py-2 text-sm">
+                        <input required placeholder="Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="field col-span-2" />
+                        <select value={form.category_id} onChange={(e) => setForm({ ...form, category_id: e.target.value })} className="field">
                             <option value="">Category&hellip;</option>
                             {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                         </select>
-                        <input required type="number" min="0.01" step="0.01" placeholder="Amount" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} className="border border-border rounded px-3 py-2 text-sm tabular-nums" />
-                        <select value={form.tax_id} onChange={(e) => setForm({ ...form, tax_id: e.target.value })} className="border border-border rounded px-3 py-2 text-sm">
+                        <input required type="number" min="0.01" step="0.01" placeholder="Amount" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} className="field tabular-nums" />
+                        <select value={form.tax_id} onChange={(e) => setForm({ ...form, tax_id: e.target.value })} className="field">
                             <option value="">No tax</option>
                             {taxes.map((t) => <option key={t.id} value={t.id}>{t.name} ({t.rate}%)</option>)}
                         </select>
-                        <input required type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className="border border-border rounded px-3 py-2 text-sm" />
+                        <input required type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className="field" />
 
-                        <select value={form.project_id} onChange={(e) => setForm({ ...form, project_id: e.target.value })} className="border border-border rounded px-3 py-2 text-sm col-span-2">
+                        <select value={form.project_id} onChange={(e) => setForm({ ...form, project_id: e.target.value })} className="field col-span-2">
                             <option value="">No project</option>
                             {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
                         </select>
@@ -303,7 +302,7 @@ export default function ExpensesIndex({ expenses: expensesProp, categories: cate
                             value={form.markup_percent}
                             disabled={!form.is_billable}
                             onChange={(e) => setForm({ ...form, markup_percent: e.target.value })}
-                            className="border border-border rounded px-3 py-2 text-sm tabular-nums disabled:opacity-50"
+                            className="field tabular-nums disabled:opacity-50"
                         />
 
                         <label className="col-span-2 flex items-center gap-2 text-sm cursor-pointer">
@@ -319,13 +318,13 @@ export default function ExpensesIndex({ expenses: expensesProp, categories: cate
                     </button>
                     {showAdditional && (
                         <div className="grid grid-cols-2 gap-3">
-                            <select value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value })} className="border border-border rounded px-3 py-2 text-sm">
+                            <select value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value })} className="field">
                                 <option value="USD">USD</option>
                                 <option value="CAD">CAD</option>
                                 <option value="EUR">EUR</option>
                                 <option value="GBP">GBP</option>
                             </select>
-                            <input placeholder="Source label (e.g. bank/card name)" value={form.source_label} onChange={(e) => setForm({ ...form, source_label: e.target.value })} className="border border-border rounded px-3 py-2 text-sm" />
+                            <input placeholder="Source label (e.g. bank/card name)" value={form.source_label} onChange={(e) => setForm({ ...form, source_label: e.target.value })} className="field" />
                             <label className="flex items-center gap-2 text-sm">
                                 <input type="checkbox" checked={form.is_recurring} onChange={(e) => setForm({ ...form, is_recurring: e.target.checked })} />
                                 Recurring expense
@@ -334,7 +333,7 @@ export default function ExpensesIndex({ expenses: expensesProp, categories: cate
                                 value={form.recurrence_interval}
                                 disabled={!form.is_recurring}
                                 onChange={(e) => setForm({ ...form, recurrence_interval: e.target.value })}
-                                className="border border-border rounded px-3 py-2 text-sm disabled:opacity-50"
+                                className="field disabled:opacity-50"
                             >
                                 <option value="weekly">Weekly</option>
                                 <option value="monthly">Monthly</option>
@@ -345,8 +344,8 @@ export default function ExpensesIndex({ expenses: expensesProp, categories: cate
                     )}
 
                     <div className="flex gap-2 justify-end mt-4">
-                        <button type="button" onClick={cancel} className="text-sm px-3 py-1.5 rounded text-shadow-grey">Cancel</button>
-                        <button type="submit" disabled={saving} className="bg-fern text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50">Save</button>
+                        <Button type="button" variant="secondary" onClick={cancel}>Cancel</Button>
+                        <Button type="submit" variant="confirm" disabled={saving}>Save</Button>
                     </div>
                 </form>
             )}
@@ -356,12 +355,12 @@ export default function ExpensesIndex({ expenses: expensesProp, categories: cate
                     placeholder="Search expenses by name&hellip;"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    className="border border-border rounded px-3 py-2 text-sm w-full max-w-sm"
+                    className="field w-full max-w-sm"
                 />
                 <select
                     value={categoryFilter}
                     onChange={(e) => setCategoryFilter(e.target.value)}
-                    className="border border-border rounded px-3 py-2 text-sm"
+                    className="field"
                 >
                     <option value="">All categories</option>
                     <option value="uncategorized">Uncategorized</option>
@@ -369,28 +368,28 @@ export default function ExpensesIndex({ expenses: expensesProp, categories: cate
                 </select>
             </div>
 
-            <div className="bg-white rounded-lg border border-border overflow-hidden">
+            <div className="card overflow-hidden">
                 {filtered.length === 0 ? (
                     <EmptyState text="No expenses found." />
                 ) : (
-                    <table className="w-full text-sm">
+                    <table className="table">
                         <thead>
-                            <tr className="text-left border-b border-border text-shadow-grey">
-                                <th className="px-4 py-2 font-medium">Name</th>
-                                <th className="px-4 py-2 font-medium">Project</th>
-                                <th className="px-4 py-2 font-medium">Date</th>
-                                <th className="px-4 py-2 font-medium">Category</th>
-                                <th className="px-4 py-2 font-medium">Status</th>
-                                <th className="px-4 py-2 font-medium text-right">Amount</th>
-                                <th className="px-4 py-2 font-medium"></th>
+                            <tr>
+                                <th>Name</th>
+                                <th>Project</th>
+                                <th>Date</th>
+                                <th>Category</th>
+                                <th>Status</th>
+                                <th className="text-right">Amount</th>
+                                <th></th>
                             </tr>
                         </thead>
                         <tbody>
                             {filtered.map((expense) => {
                                 const projectDraftInvoices = draftInvoices.filter((inv) => inv.project_id === expense.project_id);
                                 return (
-                                    <tr key={expense.id} className="border-b border-border last:border-b-0 align-top">
-                                        <td className="px-4 py-3">
+                                    <tr key={expense.id} className="align-top">
+                                        <td>
                                             <div className="font-medium flex items-center gap-2">
                                                 {expense.name}
                                                 {expense.receipt_url && (
@@ -404,12 +403,12 @@ export default function ExpensesIndex({ expenses: expensesProp, categories: cate
                                                 {expense.source_label ? ` · ${expense.source_label}` : ''}
                                             </div>
                                         </td>
-                                        <td className="px-4 py-3 text-shadow-grey">{projectById[expense.project_id]?.name ?? '—'}</td>
-                                        <td className="px-4 py-3">{formatDate(expense.date)}</td>
-                                        <td className="px-4 py-3"><CategoryPill category={expense.category} /></td>
-                                        <td className="px-4 py-3"><ExpenseStatusBadge expense={expense} /></td>
-                                        <td className="px-4 py-3 text-right tabular-nums">{formatCurrency(expense.amount)}</td>
-                                        <td className="px-4 py-3 text-right">
+                                        <td className="text-shadow-grey">{projectById[expense.project_id]?.name ?? '—'}</td>
+                                        <td>{formatDate(expense.date)}</td>
+                                        <td><CategoryPill category={expense.category} /></td>
+                                        <td><ExpenseStatusBadge expense={expense} /></td>
+                                        <td className="text-right tabular-nums">{formatCurrency(expense.amount)}</td>
+                                        <td className="text-right">
                                             <div className="flex items-center justify-end gap-3">
                                                 {expense.billing_status === 'unbilled' && expense.is_billable && projectDraftInvoices.length > 0 && (
                                                     <select

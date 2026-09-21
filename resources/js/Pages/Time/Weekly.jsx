@@ -65,28 +65,28 @@ export default function TimeWeekly({ weekStart, weekEnd, entries, companies }) {
                 <span className="tabular-nums">{totalHours}h</span> logged this week. Edits here update the same entries shown in Time Tracking.
             </p>
 
-            <div className="bg-white rounded-lg border border-border overflow-hidden">
+            <div className="card overflow-hidden">
                 {entries.length === 0 ? (
                     <EmptyState text="No time logged for this week." />
                 ) : (
-                    <table className="w-full text-sm">
+                    <table className="table">
                         <thead>
-                            <tr className="text-left border-b border-border text-shadow-grey">
-                                <th className="px-4 py-2 font-medium">Date</th>
-                                <th className="px-4 py-2 font-medium">Client</th>
-                                <th className="px-4 py-2 font-medium">Hours</th>
-                                <th className="px-4 py-2 font-medium">Note</th>
+                            <tr>
+                                <th>Date</th>
+                                <th>Client</th>
+                                <th>Hours</th>
+                                <th>Note</th>
                             </tr>
                         </thead>
                         <tbody>
                             {entries.map((entry) => (
-                                <tr key={entry.id} className="border-b border-border last:border-b-0">
-                                    <td className="px-4 py-2">{formatDate(entry.date)}</td>
-                                    <td className="px-4 py-2 text-shadow-grey">{entry.company?.name ?? '—'}</td>
-                                    <td className="px-2 py-1 tabular-nums w-24">
+                                <tr key={entry.id}>
+                                    <td>{formatDate(entry.date)}</td>
+                                    <td className="text-shadow-grey">{entry.company?.name ?? '—'}</td>
+                                    <td className="cell-tight tabular-nums w-24">
                                         <EditableCell entry={entry} field="hours" type="number" />
                                     </td>
-                                    <td className="px-2 py-1">
+                                    <td className="cell-tight">
                                         <EditableCell entry={entry} field="note" />
                                     </td>
                                 </tr>

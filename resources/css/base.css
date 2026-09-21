@@ -1,0 +1,108 @@
+/*
+ * BASE -- global element defaults. These apply to bare HTML elements
+ * (body, a, button, input...) app-wide, without needing a class on every
+ * instance. Component-specific styling (buttons, cards, fields, tables)
+ * lives in components.css instead.
+ */
+
+body {
+    background-color: var(--color-porcelain);
+    color: var(--color-gunmetal);
+    /* One consistent tracking value everywhere -- headlines included --
+       rather than varying it (or widening it) per element. */
+    letter-spacing: -0.011em;
+}
+
+/*
+ * Every link and button in the app should read as clickable, regardless
+ * of which Tailwind utilities (or none) an individual element carries.
+ * Buttons default to `cursor: default` in browsers (unlike links), and
+ * button text has been a mix of font-medium/font-semibold/plain -- this
+ * makes both consistent app-wide without touching every className.
+ * Unlayered, so it wins over Tailwind's layered utilities on the same
+ * element (same trick as .font-display below).
+ */
+a,
+button:not(:disabled) {
+    cursor: pointer;
+}
+button:disabled {
+    cursor: not-allowed;
+}
+button {
+    font-weight: 700;
+}
+
+/*
+ * Text inputs, search boxes, and dropdowns read as transparent by default
+ * (Tailwind's preflight strips the native white background), so on the
+ * porcelain page background they blend in instead of standing out as
+ * fields. Every such field gets a white background app-wide, without
+ * having to add bg-white to each one individually. Checkbox/radio/color/
+ * file inputs are excluded -- a background-color on them either does
+ * nothing or looks wrong.
+ */
+input:not([type='checkbox']):not([type='radio']):not([type='color']):not([type='file']),
+select {
+    background-color: white;
+}
+
+/*
+ * Headlines: heavier weight and tighter tracking than body text.
+ * Unlayered, so it wins over Tailwind's layered font-semibold/font-medium
+ * utility on the same element without having to edit every page's class.
+ */
+.font-display {
+    font-weight: 800;
+    letter-spacing: -0.03rem;
+}
+
+.proposal-body {
+    line-height: 1.6;
+}
+.proposal-body p {
+    margin-bottom: 0.75em;
+}
+.proposal-body ul,
+.proposal-body ol {
+    margin: 0.5em 0 0.75em 1.25em;
+}
+.proposal-body ul {
+    list-style: disc;
+}
+.proposal-body ol {
+    list-style: decimal;
+}
+.proposal-body h1,
+.proposal-body h2,
+.proposal-body h3,
+.proposal-body h4 {
+    font-family: var(--font-display);
+    font-weight: 800;
+    letter-spacing: -0.03rem;
+    margin: 0.75em 0 0.4em;
+}
+
+@keyframes drawer-slide-in {
+    from {
+        transform: translateX(100%);
+    }
+    to {
+        transform: translateX(0);
+    }
+}
+.drawer-panel {
+    animation: drawer-slide-in 200ms ease-out;
+}
+
+@keyframes drawer-fade-in {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+.drawer-overlay {
+    animation: drawer-fade-in 200ms ease-out;
+}

@@ -1,6 +1,7 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
 import AppLayout from '../../Layouts/AppLayout';
+import Button from '../../Components/Button';
 import EmptyState from '../../Components/EmptyState';
 import { ProjectStatusBadge } from '../../Components/StatusBadges';
 import { api } from '../../lib/api';
@@ -95,9 +96,7 @@ export default function ProjectsIndex({ projects, companies, archivedView = fals
                         All Projects
                     </Link>
                 ) : (
-                    <button onClick={() => setShowForm(true)} className="bg-gunmetal text-white text-sm font-medium px-3 py-1.5 rounded">
-                        New project
-                    </button>
+                    <Button onClick={() => setShowForm(true)}>New project</Button>
                 )}
             </div>
             <p className="text-sm text-shadow-grey mb-4">
@@ -128,12 +127,12 @@ export default function ProjectsIndex({ projects, companies, archivedView = fals
             )}
 
             {showForm && (
-                <form onSubmit={submit} className="bg-white rounded-lg border border-border p-4 mb-6 grid grid-cols-2 gap-3">
+                <form onSubmit={submit} className="card card-padded mb-6 grid grid-cols-2 gap-3">
                     <select
                         required
                         value={form.company_id}
                         onChange={(e) => handleCompanyChange(e.target.value)}
-                        className="border border-border rounded px-3 py-2 text-sm"
+                        className="field"
                     >
                         <option value="">Select client</option>
                         {companies.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -142,7 +141,7 @@ export default function ProjectsIndex({ projects, companies, archivedView = fals
                         value={form.contact_id}
                         disabled={!form.company_id}
                         onChange={(e) => setForm({ ...form, contact_id: e.target.value })}
-                        className="border border-border rounded px-3 py-2 text-sm disabled:bg-porcelain disabled:text-shadow-grey"
+                        className="field"
                     >
                         <option value="">
                             {form.company_id ? 'No contact' : 'Select a client first'}
@@ -158,50 +157,50 @@ export default function ProjectsIndex({ projects, companies, archivedView = fals
                         placeholder="Project name"
                         value={form.name}
                         onChange={(e) => setForm({ ...form, name: e.target.value })}
-                        className="border border-border rounded px-3 py-2 text-sm col-span-2"
+                        className="field col-span-2"
                     />
                     <input
                         placeholder="Description"
                         value={form.description}
                         onChange={(e) => setForm({ ...form, description: e.target.value })}
-                        className="border border-border rounded px-3 py-2 text-sm col-span-2"
+                        className="field col-span-2"
                     />
                     {error && <div className="text-sm text-fuchsia col-span-2">{error}</div>}
                     <div className="flex gap-2 col-span-2 justify-end">
-                        <button type="button" onClick={() => setShowForm(false)} className="text-sm px-3 py-1.5 rounded text-shadow-grey">Cancel</button>
-                        <button type="submit" disabled={saving} className="bg-fern text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50">Save project</button>
+                        <Button type="button" variant="secondary" onClick={() => setShowForm(false)}>Cancel</Button>
+                        <Button type="submit" variant="confirm" disabled={saving}>Save project</Button>
                     </div>
                 </form>
             )}
 
-            <div className="bg-white rounded-lg border border-border overflow-hidden">
+            <div className="card overflow-hidden">
                 {visibleProjects.length === 0 ? (
                     <EmptyState text="No projects match this filter." />
                 ) : (
-                    <table className="w-full text-sm">
+                    <table className="table">
                         <thead>
-                            <tr className="text-left border-b border-border text-shadow-grey">
-                                <th className="px-4 py-2 font-medium">Project</th>
-                                <th className="px-4 py-2 font-medium">Client</th>
-                                <th className="px-4 py-2 font-medium">Tasks</th>
-                                <th className="px-4 py-2 font-medium">Status</th>
+                            <tr>
+                                <th>Project</th>
+                                <th>Client</th>
+                                <th>Tasks</th>
+                                <th>Status</th>
                             </tr>
                         </thead>
                         <tbody>
                             {visibleProjects.map((project) => (
-                                <tr key={project.id} className="border-b border-border last:border-b-0">
-                                    <td className="px-4 py-3 font-medium">
+                                <tr key={project.id}>
+                                    <td className="font-medium">
                                         <Link href={`/projects/${project.id}`} className="hover:underline">
                                             {project.name}
                                         </Link>
                                     </td>
-                                    <td className="px-4 py-3">
+                                    <td>
                                         <Link href={`/clients/${project.company.id}`} className="text-shadow-grey hover:underline">
                                             {project.company.name}
                                         </Link>
                                     </td>
-                                    <td className="px-4 py-3 text-shadow-grey">{taskProgress(project)}</td>
-                                    <td className="px-4 py-3">
+                                    <td className="text-shadow-grey">{taskProgress(project)}</td>
+                                    <td>
                                         <div className="flex items-center gap-2">
                                             <ProjectStatusBadge project={project} />
                                             <select

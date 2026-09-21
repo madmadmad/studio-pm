@@ -1,4 +1,5 @@
 import { useForm, usePage } from '@inertiajs/react';
+import Button from '../../../Components/Button';
 
 export default function RequestLink() {
     const { props } = usePage();
@@ -18,29 +19,25 @@ export default function RequestLink() {
                     <div className="text-sm text-shadow-grey">Sign in to follow your project</div>
                 </div>
 
-                <form onSubmit={submit} className="bg-white rounded-lg border border-border p-6 flex flex-col gap-3">
+                <form onSubmit={submit} className="card p-6 flex flex-col gap-3">
                     {status && <div className="text-sm text-fern">{status}</div>}
                     <p className="text-sm text-shadow-grey">
                         Enter your email and we&rsquo;ll send you a link to sign in &mdash; no password needed.
                     </p>
                     <div>
-                        <label className="block text-xs font-medium text-shadow-grey mb-1">Email</label>
+                        <label className="field-label">Email</label>
                         <input
                             type="email"
                             autoFocus
                             value={data.email}
                             onChange={(e) => setData('email', e.target.value)}
-                            className="border border-border rounded px-3 py-2 text-sm w-full"
+                            className="field"
                         />
                         {errors.email && <div className="text-xs text-fuchsia mt-1">{errors.email}</div>}
                     </div>
-                    <button
-                        type="submit"
-                        disabled={processing}
-                        className="bg-gunmetal text-white text-sm font-medium px-3 py-2 rounded mt-2 disabled:opacity-50"
-                    >
+                    <Button type="submit" disabled={processing} className="btn-lg mt-2">
                         Email me a sign-in link
-                    </button>
+                    </Button>
                 </form>
             </div>
         </div>

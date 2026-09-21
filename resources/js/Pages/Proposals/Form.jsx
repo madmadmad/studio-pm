@@ -2,6 +2,7 @@ import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
 import { ArrowLeft, Check, Copy, DotsSixVertical, Eye } from '@phosphor-icons/react';
 import AppLayout from '../../Layouts/AppLayout';
+import Button from '../../Components/Button';
 import RichTextEditor from '../../Components/RichTextEditor';
 import { ProposalStatusBadge } from '../../Components/StatusBadges';
 import { formatCurrency } from '../../lib/format';
@@ -213,30 +214,30 @@ export default function ProposalsForm({ proposal, companies, services, presetCom
                             <Eye size={16} />
                         </a>
                         {proposal.status === 'draft' ? (
-                            <button type="button" disabled={sending} onClick={sendProposal} className="text-sm font-medium text-watermelon disabled:opacity-50">
+                            <Button variant="link-accent" disabled={sending} onClick={sendProposal}>
                                 {sending ? 'Sending…' : 'Send'}
-                            </button>
+                            </Button>
                         ) : (
                             <button type="button" onClick={copyLink} title={copied ? 'Copied!' : 'Copy link'} className="text-shadow-grey hover:text-gunmetal">
                                 {copied ? <Check size={16} /> : <Copy size={16} />}
                             </button>
                         )}
                         {proposal.status === 'accepted' && (
-                            <button type="button" disabled={unaccepting} onClick={unacceptProposal} className="text-sm font-medium text-fuchsia disabled:opacity-50">
+                            <Button variant="link-danger" disabled={unaccepting} onClick={unacceptProposal}>
                                 {unaccepting ? 'Reverting…' : 'Unaccept'}
-                            </button>
+                            </Button>
                         )}
                     </div>
                 )}
             </div>
 
-            <div className="bg-white rounded-lg border border-border p-4">
+            <div className="card card-padded">
                 <div className="grid grid-cols-2 gap-3 mb-3">
                     <select
                         value={form.company_id}
                         disabled={isEditing || contextLocked}
                         onChange={(e) => handleCompanyChange(e.target.value)}
-                        className="border border-border rounded px-3 py-2 text-sm disabled:bg-porcelain disabled:text-shadow-grey"
+                        className="field"
                     >
                         <option value="">Select client</option>
                         {companies.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -245,7 +246,7 @@ export default function ProposalsForm({ proposal, companies, services, presetCom
                         value={form.contact_id}
                         disabled={!form.company_id}
                         onChange={(e) => setForm({ ...form, contact_id: e.target.value })}
-                        className="border border-border rounded px-3 py-2 text-sm disabled:bg-porcelain disabled:text-shadow-grey"
+                        className="field"
                     >
                         <option value="">
                             {form.company_id ? 'Send to (no specific contact)' : 'Select a client first'}
@@ -259,7 +260,7 @@ export default function ProposalsForm({ proposal, companies, services, presetCom
                 </div>
                 <div className="mb-3">
                     {isEditing ? (
-                        <div className="border border-border rounded px-3 py-2 text-sm bg-porcelain text-shadow-grey">
+                        <div className="field field-static">
                             Project: {proposal.project?.name ?? '—'}
                         </div>
                     ) : (
@@ -268,7 +269,7 @@ export default function ProposalsForm({ proposal, companies, services, presetCom
                                 value={form.company_id ? (form.project_id || NEW_PROJECT) : ''}
                                 disabled={!form.company_id || contextLocked}
                                 onChange={(e) => handleProjectChange(e.target.value)}
-                                className="border border-border rounded px-3 py-2 text-sm disabled:bg-porcelain disabled:text-shadow-grey"
+                                className="field"
                             >
                                 {!form.company_id ? (
                                     <option value="">Select a client first</option>
@@ -285,7 +286,7 @@ export default function ProposalsForm({ proposal, companies, services, presetCom
                                     value={form.new_project_name}
                                     disabled={!form.company_id}
                                     onChange={(e) => setForm({ ...form, new_project_name: e.target.value })}
-                                    className="border border-border rounded px-3 py-2 text-sm disabled:bg-porcelain disabled:text-shadow-grey"
+                                    className="field"
                                 />
                             )}
                         </div>
@@ -299,10 +300,10 @@ export default function ProposalsForm({ proposal, companies, services, presetCom
                             placeholder="Estimate amount ($)"
                             value={form.estimate_amount}
                             onChange={(e) => setForm({ ...form, estimate_amount: e.target.value })}
-                            className="border border-border rounded px-3 py-2 text-sm tabular-nums w-full"
+                            className="field tabular-nums"
                         />
                     ) : (
-                        <div className="border border-border rounded px-3 py-2 text-sm tabular-nums bg-porcelain text-shadow-grey">
+                        <div className="field field-static tabular-nums">
                             Estimate: {formatCurrency(itemsTotal)} (from line items)
                         </div>
                     )}
@@ -311,7 +312,7 @@ export default function ProposalsForm({ proposal, companies, services, presetCom
                     placeholder="Proposal title"
                     value={form.title}
                     onChange={(e) => setForm({ ...form, title: e.target.value })}
-                    className="border border-border rounded px-3 py-2 text-sm w-full mb-3"
+                    className="field mb-3"
                 />
                 <div className="mb-4">
                     <RichTextEditor value={form.body} onChange={(body) => setForm({ ...form, body })} />
@@ -345,7 +346,7 @@ export default function ProposalsForm({ proposal, companies, services, presetCom
                                     <select
                                         value={item.service_id}
                                         onChange={(e) => updateItem(idx, 'service_id', e.target.value)}
-                                        className="col-span-5 h-9 border border-border rounded px-2 text-sm"
+                                        className="field field-xs h-9 col-span-5"
                                     >
                                         <option value="">Custom</option>
                                         {services.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
@@ -357,7 +358,7 @@ export default function ProposalsForm({ proposal, companies, services, presetCom
                                         placeholder="Qty"
                                         value={item.quantity}
                                         onChange={(e) => updateItem(idx, 'quantity', e.target.value)}
-                                        className="col-span-2 h-9 border border-border rounded px-2 text-sm tabular-nums"
+                                        className="field field-xs h-9 tabular-nums col-span-2"
                                     />
                                     <input
                                         type="number"
@@ -366,7 +367,7 @@ export default function ProposalsForm({ proposal, companies, services, presetCom
                                         placeholder="Rate"
                                         value={item.rate}
                                         onChange={(e) => updateItem(idx, 'rate', e.target.value)}
-                                        className="col-span-2 h-9 border border-border rounded px-2 text-sm tabular-nums"
+                                        className="field field-xs h-9 tabular-nums col-span-2"
                                     />
                                     <div className="col-span-3 h-9 flex items-center justify-end text-sm tabular-nums">
                                         {formatCurrency(lineAmount(item))}
@@ -378,7 +379,7 @@ export default function ProposalsForm({ proposal, companies, services, presetCom
                                         value={item.details}
                                         onChange={(e) => updateItem(idx, 'details', e.target.value)}
                                         rows={2}
-                                        className="col-span-9 border border-border rounded px-2 py-2 text-xs text-shadow-grey"
+                                        className="field field-xs text-xs text-shadow-grey col-span-9"
                                     />
                                 </div>
                                 <button
@@ -391,7 +392,7 @@ export default function ProposalsForm({ proposal, companies, services, presetCom
                             </div>
                         </div>
                     ))}
-                    <button type="button" onClick={addItem} className="text-sm font-medium text-watermelon">+ Add line item</button>
+                    <Button variant="link-accent" onClick={addItem}>+ Add line item</Button>
 
                     {form.items.length > 0 && (
                         <div className="flex justify-end mt-3 pt-3 border-t border-border">
@@ -405,10 +406,10 @@ export default function ProposalsForm({ proposal, companies, services, presetCom
                 {error && <div className="text-sm mb-3 text-fuchsia">{error}</div>}
 
                 <div className="flex gap-2 justify-end">
-                    <Link href="/proposals" className="text-sm px-3 py-1.5 rounded text-shadow-grey">Cancel</Link>
-                    <button type="button" disabled={saving} onClick={save} className="bg-fern text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50">
+                    <Link href="/proposals" className="btn btn-secondary">Cancel</Link>
+                    <Button type="button" variant="confirm" disabled={saving} onClick={save}>
                         {isEditing ? 'Save changes' : 'Save draft'}
-                    </button>
+                    </Button>
                 </div>
             </div>
             </div>

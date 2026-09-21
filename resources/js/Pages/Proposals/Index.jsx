@@ -59,50 +59,50 @@ export default function ProposalsIndex({ proposals: proposalsProp }) {
             <Head title="Proposals" />
             <div className="flex items-center justify-between mb-1">
                 <h1 className="font-display text-2xl font-semibold">Proposals</h1>
-                <Link href="/proposals/create" className="bg-gunmetal text-white text-sm font-medium px-3 py-1.5 rounded">
+                <Link href="/proposals/create" className="btn btn-primary">
                     New proposal
                 </Link>
             </div>
             <p className="text-sm text-shadow-grey mb-6">{proposals.length} proposal{proposals.length !== 1 ? 's' : ''} on file.</p>
 
-            <div className="bg-white rounded-lg border border-border overflow-hidden">
+            <div className="card overflow-hidden">
                 {proposals.length === 0 ? (
                     <EmptyState text="No proposals yet." />
                 ) : (
-                    <table className="w-full text-sm">
+                    <table className="table">
                         <thead>
-                            <tr className="text-left border-b border-border text-shadow-grey">
-                                <th className="px-4 py-2 font-medium">Client</th>
-                                <th className="px-4 py-2 font-medium">Project</th>
-                                <th className="px-4 py-2 font-medium">Title</th>
-                                <th className="px-4 py-2 font-medium">Estimate</th>
-                                <th className="px-4 py-2 font-medium">Status</th>
-                                <th className="px-4 py-2 font-medium"></th>
+                            <tr>
+                                <th>Client</th>
+                                <th>Project</th>
+                                <th>Title</th>
+                                <th>Estimate</th>
+                                <th>Status</th>
+                                <th></th>
                             </tr>
                         </thead>
                         <tbody>
                             {proposals.map((proposal) => (
-                                <tr key={proposal.id} className="border-b border-border last:border-b-0">
-                                    <td className="px-4 py-3">
+                                <tr key={proposal.id}>
+                                    <td>
                                         <div className="font-medium">{proposal.company.name}</div>
                                     </td>
-                                    <td className="px-4 py-3">
+                                    <td>
                                         {proposal.project ? (
                                             <Link href={`/projects/${proposal.project.id}`} className="hover:underline">
                                                 {proposal.project.name}
                                             </Link>
                                         ) : '—'}
                                     </td>
-                                    <td className="px-4 py-3">
+                                    <td>
                                         <Link href={`/proposals/${proposal.id}/edit`} className="hover:underline">
                                             {proposal.title}
                                         </Link>
                                     </td>
-                                    <td className="px-4 py-3 tabular-nums">
+                                    <td className="tabular-nums">
                                         {proposal.estimate_amount ? formatCurrency(proposal.estimate_amount) : '—'}
                                     </td>
-                                    <td className="px-4 py-3"><ProposalStatusBadge proposal={proposal} /></td>
-                                    <td className="px-4 py-3 text-right">
+                                    <td><ProposalStatusBadge proposal={proposal} /></td>
+                                    <td className="text-right">
                                         <div className="flex items-center justify-end gap-3">
                                             <a href={`/p/${proposal.accept_token}`} target="_blank" rel="noopener noreferrer" title="Preview" className="text-shadow-grey hover:text-gunmetal">
                                                 <Eye size={16} />

@@ -2,6 +2,7 @@ import { Head, Link, router } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import { Check, CheckCircle, Copy, DownloadSimple, Eye, PaperPlaneTilt, PencilSimple, Trash } from '@phosphor-icons/react';
 import AppLayout from '../../Layouts/AppLayout';
+import Button from '../../Components/Button';
 import EmptyState from '../../Components/EmptyState';
 import Toggle from '../../Components/Toggle';
 import { InvoiceStatusBadge } from '../../Components/StatusBadges';
@@ -164,22 +165,20 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
             <Head title="Invoices" />
             <div className="flex items-center justify-between mb-1">
                 <h1 className="font-display text-2xl font-semibold">Invoices</h1>
-                <button onClick={openNewInvoice} className="bg-gunmetal text-white text-sm font-medium px-3 py-1.5 rounded">
-                    New invoice
-                </button>
+                <Button onClick={openNewInvoice}>New invoice</Button>
             </div>
             <p className="text-sm text-shadow-grey mb-6">
                 {formatCurrency(outstandingTotal)} outstanding across {invoices.filter((i) => i.status === 'sent').length} sent invoices.
             </p>
 
             {showForm && (
-                <div className="bg-white rounded-lg border border-border p-4 mb-6">
+                <div className="card card-padded mb-6">
                     <div className="grid grid-cols-2 gap-3 mb-4">
                         <select
                             required
                             value={draft.company_id}
                             onChange={(e) => handleCompanyChange(e.target.value)}
-                            className="border border-border rounded px-3 py-2 text-sm"
+                            className="field"
                         >
                             <option value="">Select client</option>
                             {companies.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -188,7 +187,7 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
                             value={draft.contact_id}
                             disabled={!draft.company_id}
                             onChange={(e) => setDraft({ ...draft, contact_id: e.target.value })}
-                            className="border border-border rounded px-3 py-2 text-sm disabled:bg-porcelain disabled:text-shadow-grey"
+                            className="field"
                         >
                             <option value="">
                                 {draft.company_id ? 'Bill to (no specific contact)' : 'Select a client first'}
@@ -209,7 +208,7 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
                                         placeholder="Description"
                                         value={item.description}
                                         onChange={(e) => updateItem(idx, 'description', e.target.value)}
-                                        className="border border-border rounded px-3 py-2 text-sm flex-1"
+                                        className="field flex-1"
                                     />
                                     <input
                                         placeholder="Amount"
@@ -218,10 +217,10 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
                                         step="0.01"
                                         value={item.amount}
                                         onChange={(e) => updateItem(idx, 'amount', e.target.value)}
-                                        className="border border-border rounded px-3 py-2 text-sm tabular-nums w-28"
+                                        className="field tabular-nums w-28"
                                     />
                                     {draft.items.length > 1 && (
-                                        <button type="button" onClick={() => removeItemRow(idx)} className="text-sm px-2 text-fuchsia">Remove</button>
+                                        <Button variant="link-danger" onClick={() => removeItemRow(idx)}>Remove</Button>
                                     )}
                                 </div>
                                 <textarea
@@ -229,11 +228,11 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
                                     value={item.details || ''}
                                     onChange={(e) => updateItem(idx, 'details', e.target.value)}
                                     rows={2}
-                                    className="border border-border rounded px-3 py-2 text-xs text-shadow-grey w-full"
+                                    className="field text-xs text-shadow-grey"
                                 />
                             </div>
                         ))}
-                        <button type="button" onClick={addItemRow} className="text-sm font-medium text-watermelon">+ Add line item</button>
+                        <Button variant="link-accent" onClick={addItemRow}>+ Add line item</Button>
                     </div>
 
                     <div className="text-sm mb-4 space-y-1">
@@ -258,43 +257,43 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
                     {error && <div className="text-sm mb-3 text-fuchsia">{error}</div>}
 
                     <div className="flex gap-2 justify-end">
-                        <button type="button" onClick={() => setShowForm(false)} className="text-sm px-3 py-1.5 rounded text-shadow-grey">Cancel</button>
-                        <button type="button" disabled={saving} onClick={() => saveInvoice('draft')} className="text-sm font-medium px-3 py-1.5 rounded border border-fern text-fern disabled:opacity-50">Save as draft</button>
-                        <button type="button" disabled={saving} onClick={() => saveInvoice('sent')} className="bg-gunmetal text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50">Send invoice</button>
+                        <Button type="button" variant="secondary" onClick={() => setShowForm(false)}>Cancel</Button>
+                        <Button type="button" variant="outline" disabled={saving} onClick={() => saveInvoice('draft')}>Save as draft</Button>
+                        <Button type="button" disabled={saving} onClick={() => saveInvoice('sent')}>Send invoice</Button>
                     </div>
                 </div>
             )}
 
-            <div className="bg-white rounded-lg border border-border overflow-hidden">
+            <div className="card overflow-hidden">
                 {invoices.length === 0 ? (
                     <EmptyState text="No invoices yet." />
                 ) : (
-                    <table className="w-full text-sm">
+                    <table className="table">
                         <thead>
-                            <tr className="text-left border-b border-border text-shadow-grey">
-                                <th className="px-4 py-2 font-medium">#</th>
-                                <th className="px-4 py-2 font-medium">Client</th>
-                                <th className="px-4 py-2 font-medium">Issued</th>
-                                <th className="px-4 py-2 font-medium">Due</th>
-                                <th className="px-4 py-2 font-medium">Total</th>
-                                <th className="px-4 py-2 font-medium">Status</th>
-                                <th className="px-4 py-2 font-medium"></th>
+                            <tr>
+                                <th>#</th>
+                                <th>Client</th>
+                                <th>Issued</th>
+                                <th>Due</th>
+                                <th>Total</th>
+                                <th>Status</th>
+                                <th></th>
                             </tr>
                         </thead>
                         <tbody>
                             {invoices.map((invoice) => (
-                                <tr key={invoice.id} className="border-b border-border last:border-b-0">
-                                    <td className="px-4 py-3 tabular-nums text-shadow-grey">{invoice.invoice_number}</td>
-                                    <td className="px-4 py-3 font-medium">
+                                <tr key={invoice.id}>
+                                    <td className="tabular-nums text-shadow-grey">{invoice.invoice_number}</td>
+                                    <td className="font-medium">
                                         <Link href={`/invoices/${invoice.id}`} className="hover:underline">
                                             {invoice.company?.name}
                                         </Link>
                                     </td>
-                                    <td className="px-4 py-3 text-shadow-grey">{formatDate(invoice.issued_on)}</td>
-                                    <td className="px-4 py-3 text-shadow-grey">{formatDate(invoice.due_on)}</td>
-                                    <td className="px-4 py-3 tabular-nums">{formatCurrency(invoiceTotal(invoice.items, invoice.surcharge))}</td>
-                                    <td className="px-4 py-3"><InvoiceStatusBadge invoice={invoice} /></td>
-                                    <td className="px-4 py-3 text-right">
+                                    <td className="text-shadow-grey">{formatDate(invoice.issued_on)}</td>
+                                    <td className="text-shadow-grey">{formatDate(invoice.due_on)}</td>
+                                    <td className="tabular-nums">{formatCurrency(invoiceTotal(invoice.items, invoice.surcharge))}</td>
+                                    <td><InvoiceStatusBadge invoice={invoice} /></td>
+                                    <td className="text-right">
                                         <div className="flex items-center justify-end gap-3">
                                             <a href={`/i/${invoice.public_token}`} target="_blank" rel="noopener noreferrer" title="Preview" className="text-shadow-grey hover:text-gunmetal">
                                                 <Eye size={16} />

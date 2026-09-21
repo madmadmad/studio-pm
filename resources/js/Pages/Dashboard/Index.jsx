@@ -19,7 +19,7 @@ export default function DashboardIndex({ metrics, recentInvoices }) {
             </div>
 
             <h2 className="text-sm font-semibold mb-3 text-shadow-grey">Recent invoices</h2>
-            <div className="bg-white rounded-lg border border-border">
+            <div className="card">
                 {recentInvoices.length === 0 ? (
                     <EmptyState text="No invoices yet." />
                 ) : (

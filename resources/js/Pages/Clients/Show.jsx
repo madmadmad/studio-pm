@@ -2,6 +2,7 @@ import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
 import { ArrowLeft } from '@phosphor-icons/react';
 import AppLayout from '../../Layouts/AppLayout';
+import Button from '../../Components/Button';
 import EmptyState from '../../Components/EmptyState';
 import Badge from '../../Components/Badge';
 import { InvoiceStatusBadge, ProposalStatusBadge, ProjectStatusBadge, TaskStatusBadge, CompanyStatusBadge } from '../../Components/StatusBadges';
@@ -52,9 +53,7 @@ function DetailsCard({ company }) {
                     <h1 className="font-display text-2xl font-semibold">{company.name}</h1>
                     <div className="flex items-center gap-3">
                         <CompanyStatusBadge company={company} />
-                        <button onClick={() => setEditing(true)} className="text-sm font-medium text-fern hover:underline">
-                            Edit
-                        </button>
+                        <Button variant="link" onClick={() => setEditing(true)}>Edit</Button>
                     </div>
                 </div>
                 <p className="text-sm text-shadow-grey">
@@ -65,22 +64,22 @@ function DetailsCard({ company }) {
     }
 
     return (
-        <form onSubmit={submit} className="bg-white rounded-lg border border-border p-4 mb-6 grid grid-cols-2 gap-3">
-            <input required placeholder="Client or company name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="border border-border rounded px-3 py-2 text-sm col-span-2" />
-            <input placeholder="Phone" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className="border border-border rounded px-3 py-2 text-sm" />
-            <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })} className="border border-border rounded px-3 py-2 text-sm">
+        <form onSubmit={submit} className="card card-padded mb-6 grid grid-cols-2 gap-3">
+            <input required placeholder="Client or company name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="field col-span-2" />
+            <input placeholder="Phone" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className="field" />
+            <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })} className="field">
                 <option value="active">Active</option>
                 <option value="inactive">Inactive</option>
             </select>
-            <input placeholder="Street address" value={form.address_line1} onChange={(e) => setForm({ ...form, address_line1: e.target.value })} className="border border-border rounded px-3 py-2 text-sm col-span-2" />
+            <input placeholder="Street address" value={form.address_line1} onChange={(e) => setForm({ ...form, address_line1: e.target.value })} className="field col-span-2" />
             <div className="col-span-2 grid grid-cols-[2fr_1fr_1fr] gap-3">
-                <input placeholder="City" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} className="border border-border rounded px-3 py-2 text-sm" />
-                <input placeholder="State" value={form.state} onChange={(e) => setForm({ ...form, state: e.target.value })} className="border border-border rounded px-3 py-2 text-sm" />
-                <input placeholder="Zip" value={form.postal_code} onChange={(e) => setForm({ ...form, postal_code: e.target.value })} className="border border-border rounded px-3 py-2 text-sm" />
+                <input placeholder="City" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} className="field" />
+                <input placeholder="State" value={form.state} onChange={(e) => setForm({ ...form, state: e.target.value })} className="field" />
+                <input placeholder="Zip" value={form.postal_code} onChange={(e) => setForm({ ...form, postal_code: e.target.value })} className="field" />
             </div>
             <div className="flex gap-2 col-span-2 justify-end">
-                <button type="button" onClick={() => setEditing(false)} className="text-sm px-3 py-1.5 rounded text-shadow-grey">Cancel</button>
-                <button type="submit" disabled={saving} className="bg-fern text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50">Save</button>
+                <Button type="button" variant="secondary" onClick={() => setEditing(false)}>Cancel</Button>
+                <Button type="submit" variant="confirm" disabled={saving}>Save</Button>
             </div>
         </form>
     );
@@ -128,20 +127,20 @@ function ContactsCard({ company }) {
     }
 
     return (
-        <div className="bg-white rounded-lg border border-border p-4 mb-6">
+        <div className="card card-padded mb-6">
             <div className="flex items-center justify-between mb-3">
                 <h2 className="text-sm font-semibold text-shadow-grey">Contacts</h2>
-                <button onClick={() => setShowForm(!showForm)} className="text-sm font-medium text-watermelon">
+                <Button variant="link-accent" onClick={() => setShowForm(!showForm)}>
                     {showForm ? 'Cancel' : '+ Add contact'}
-                </button>
+                </Button>
             </div>
 
             {showForm && (
                 <form onSubmit={submit} className="grid grid-cols-2 gap-2 mb-4">
-                    <input required placeholder="Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="border border-border rounded px-3 py-2 text-sm" />
-                    <input placeholder="Role" value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })} className="border border-border rounded px-3 py-2 text-sm" />
-                    <input type="email" placeholder="Email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="border border-border rounded px-3 py-2 text-sm" />
-                    <input placeholder="Phone" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className="border border-border rounded px-3 py-2 text-sm" />
+                    <input required placeholder="Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="field" />
+                    <input placeholder="Role" value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })} className="field" />
+                    <input type="email" placeholder="Email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="field" />
+                    <input placeholder="Phone" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className="field" />
                     <label className="flex items-center gap-2 text-sm">
                         <input type="checkbox" checked={form.is_primary} onChange={(e) => setForm({ ...form, is_primary: e.target.checked })} />
                         Primary contact
@@ -150,7 +149,7 @@ function ContactsCard({ company }) {
                         <input type="checkbox" checked={form.is_billing} onChange={(e) => setForm({ ...form, is_billing: e.target.checked })} />
                         Billing contact
                     </label>
-                    <button type="submit" className="col-span-2 bg-fern text-white text-sm font-medium px-3 py-1.5 rounded">Save contact</button>
+                    <Button type="submit" variant="confirm" className="col-span-2">Save contact</Button>
                 </form>
             )}
 
@@ -233,18 +232,18 @@ function ProjectsCard({ company }) {
     }
 
     return (
-        <div className="bg-white rounded-lg border border-border p-4 mb-6">
+        <div className="card card-padded mb-6">
             <div className="flex items-center justify-between mb-3">
                 <h2 className="text-sm font-semibold text-shadow-grey">Projects</h2>
-                <button onClick={() => setShowForm(!showForm)} className="text-sm font-medium text-watermelon">
+                <Button variant="link-accent" onClick={() => setShowForm(!showForm)}>
                     {showForm ? 'Cancel' : '+ Add project'}
-                </button>
+                </Button>
             </div>
 
             {showForm && (
                 <form onSubmit={submit} className="flex gap-2 mb-4">
-                    <input required placeholder="Project name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="border border-border rounded px-3 py-2 text-sm flex-1" />
-                    <button type="submit" className="bg-fern text-white text-sm font-medium px-3 py-1.5 rounded">Save</button>
+                    <input required placeholder="Project name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="field flex-1" />
+                    <Button type="submit" variant="confirm">Save</Button>
                 </form>
             )}
 
@@ -284,7 +283,7 @@ function ProjectsCard({ company }) {
 
 function InvoicesCard({ company }) {
     return (
-        <div className="bg-white rounded-lg border border-border p-4 mb-6">
+        <div className="card card-padded mb-6">
             <h2 className="text-sm font-semibold text-shadow-grey mb-3">Invoices</h2>
             {company.invoices.length === 0 ? (
                 <EmptyState text="No invoices yet." />
@@ -309,7 +308,7 @@ function InvoicesCard({ company }) {
 
 function ProposalsCard({ company }) {
     return (
-        <div className="bg-white rounded-lg border border-border p-4">
+        <div className="card card-padded">
             <h2 className="text-sm font-semibold text-shadow-grey mb-3">Proposals</h2>
             {company.proposals.length === 0 ? (
                 <EmptyState text="No proposals yet." />
