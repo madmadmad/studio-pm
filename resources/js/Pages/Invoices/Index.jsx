@@ -296,31 +296,31 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
                                     <td className="text-right">
                                         <div className="flex items-center justify-end gap-3">
                                             <a href={`/i/${invoice.public_token}`} target="_blank" rel="noopener noreferrer" title="Preview" className="icon-btn icon-btn-secondary">
-                                                <Eye size={20} />
+                                                <Eye />
                                             </a>
                                             {invoice.status === 'draft' && (
                                                 <Link href={`/invoices/${invoice.id}`} title="Edit" className="icon-btn icon-btn-confirm">
-                                                    <PencilSimple size={20} />
+                                                    <PencilSimple />
                                                 </Link>
                                             )}
                                             {invoice.status === 'draft' && (
                                                 <button onClick={() => sendInvoice(invoice)} title="Send" className="icon-btn icon-btn-accent">
-                                                    <PaperPlaneTilt size={20} />
+                                                    <PaperPlaneTilt />
                                                 </button>
                                             )}
                                             {invoice.status !== 'draft' && (
                                                 <button onClick={() => copyLink(invoice)} title={copiedId === invoice.id ? 'Copied!' : 'Copy link'} className="icon-btn icon-btn-secondary">
-                                                    {copiedId === invoice.id ? <Check size={20} /> : <Copy size={20} />}
+                                                    {copiedId === invoice.id ? <Check /> : <Copy />}
                                                 </button>
                                             )}
                                             {invoice.status !== 'draft' && (
                                                 <a href={`/invoices/${invoice.id}/pdf`} title="Download PDF" className="icon-btn icon-btn-secondary">
-                                                    <DownloadSimple size={20} />
+                                                    <DownloadSimple />
                                                 </a>
                                             )}
                                             {invoice.status === 'sent' && (
                                                 <button onClick={() => markPaid(invoice)} title="Mark paid (check)" className="icon-btn icon-btn-confirm">
-                                                    <CheckCircle size={20} />
+                                                    <CheckCircle />
                                                 </button>
                                             )}
                                             {invoice.status !== 'paid' && (
@@ -330,7 +330,7 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
                                                     title="Delete"
                                                     className="icon-btn icon-btn-danger"
                                                 >
-                                                    <Trash size={20} />
+                                                    <Trash />
                                                 </button>
                                             )}
                                         </div>

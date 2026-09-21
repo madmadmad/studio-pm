@@ -211,7 +211,7 @@ export default function ProposalsForm({ proposal, companies, services, presetCom
                     <div className="flex items-center gap-3">
                         <ProposalStatusBadge proposal={proposal} />
                         <a href={`/p/${proposal.accept_token}`} target="_blank" rel="noopener noreferrer" title="Preview" className="icon-btn icon-btn-secondary">
-                            <Eye size={20} />
+                            <Eye />
                         </a>
                         {proposal.status === 'draft' ? (
                             <Button variant="link-accent" disabled={sending} onClick={sendProposal}>
@@ -219,7 +219,7 @@ export default function ProposalsForm({ proposal, companies, services, presetCom
                             </Button>
                         ) : (
                             <button type="button" onClick={copyLink} title={copied ? 'Copied!' : 'Copy link'} className="icon-btn icon-btn-secondary">
-                                {copied ? <Check size={20} /> : <Copy size={20} />}
+                                {copied ? <Check /> : <Copy />}
                             </button>
                         )}
                         {proposal.status === 'accepted' && (

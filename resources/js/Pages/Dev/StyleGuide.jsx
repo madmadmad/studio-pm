@@ -93,13 +93,13 @@ export default function StyleGuide() {
 
             <Section title="Icon buttons" description="A bare icon as a row action -- .icon-btn plus exactly one variant. Used for Preview, Copy, Download, Edit, Mark paid, Send, and Delete throughout invoices, proposals, expenses, and project tabs.">
                 <div className="flex flex-wrap items-start gap-6">
-                    <IconButtonExample icon={<Eye size={20} />} label="Preview" variant="icon-btn-secondary" />
-                    <IconButtonExample icon={<Copy size={20} />} label="Copy link" variant="icon-btn-secondary" />
-                    <IconButtonExample icon={<DownloadSimple size={20} />} label="Download" variant="icon-btn-secondary" />
-                    <IconButtonExample icon={<PencilSimple size={20} />} label="Edit" variant="icon-btn-confirm" />
-                    <IconButtonExample icon={<CheckCircle size={20} />} label="Mark paid" variant="icon-btn-confirm" />
-                    <IconButtonExample icon={<PaperPlaneTilt size={20} />} label="Send" variant="icon-btn-accent" />
-                    <IconButtonExample icon={<Trash size={20} />} label="Delete" variant="icon-btn-danger" />
+                    <IconButtonExample icon={<Eye />} label="Preview" variant="icon-btn-secondary" />
+                    <IconButtonExample icon={<Copy />} label="Copy link" variant="icon-btn-secondary" />
+                    <IconButtonExample icon={<DownloadSimple />} label="Download" variant="icon-btn-secondary" />
+                    <IconButtonExample icon={<PencilSimple />} label="Edit" variant="icon-btn-confirm" />
+                    <IconButtonExample icon={<CheckCircle />} label="Mark paid" variant="icon-btn-confirm" />
+                    <IconButtonExample icon={<PaperPlaneTilt />} label="Send" variant="icon-btn-accent" />
+                    <IconButtonExample icon={<Trash />} label="Delete" variant="icon-btn-danger" />
                 </div>
             </Section>
 

@@ -13,10 +13,10 @@ createInertiaApp({
         return page.default;
     },
     setup({ el, App, props }) {
-        // App-wide icon defaults -- size matches the 20px standard used by
-        // .icon-btn (see components.css) so any icon that doesn't set its
-        // own size prop still lines up; either value is still overridden
-        // by a prop set on an individual icon.
+        // App-wide icon defaults. Icon buttons (.icon-btn -- see
+        // components.css) deliberately omit their own size prop so this is
+        // the one place controlling their size; an icon elsewhere that
+        // still sets its own size/weight prop overrides this as usual.
         createRoot(el).render(
             <IconContext.Provider value={{ weight: 'regular', size: 20 }}>
                 <App {...props} />

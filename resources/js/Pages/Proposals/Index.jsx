@@ -105,14 +105,14 @@ export default function ProposalsIndex({ proposals: proposalsProp }) {
                                     <td className="text-right">
                                         <div className="flex items-center justify-end gap-3">
                                             <a href={`/p/${proposal.accept_token}`} target="_blank" rel="noopener noreferrer" title="Preview" className="icon-btn icon-btn-secondary">
-                                                <Eye size={20} />
+                                                <Eye />
                                             </a>
                                             <Link href={`/proposals/${proposal.id}/edit`} title="Edit" className="icon-btn icon-btn-confirm">
-                                                <PencilSimple size={20} />
+                                                <PencilSimple />
                                             </Link>
                                             {proposal.status === 'draft' && (
                                                 <button onClick={() => sendProposal(proposal)} title="Send" className="icon-btn icon-btn-accent">
-                                                    <PaperPlaneTilt size={20} />
+                                                    <PaperPlaneTilt />
                                                 </button>
                                             )}
                                             {proposal.status !== 'draft' && (
@@ -121,7 +121,7 @@ export default function ProposalsIndex({ proposals: proposalsProp }) {
                                                     title={copiedId === proposal.id ? 'Copied!' : 'Copy link'}
                                                     className="icon-btn icon-btn-secondary"
                                                 >
-                                                    {copiedId === proposal.id ? <Check size={20} /> : <Copy size={20} />}
+                                                    {copiedId === proposal.id ? <Check /> : <Copy />}
                                                 </button>
                                             )}
                                             {proposal.status === 'accepted' && (
@@ -134,7 +134,7 @@ export default function ProposalsIndex({ proposals: proposalsProp }) {
                                                     title="Delete"
                                                     className="icon-btn icon-btn-danger"
                                                 >
-                                                    <Trash size={20} />
+                                                    <Trash />
                                                 </button>
                                             )}
                                         </div>

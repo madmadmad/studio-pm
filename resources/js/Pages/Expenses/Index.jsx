@@ -99,7 +99,7 @@ function CategoryAndTaxManager({ categories, setCategories, taxes, setTaxes }) {
                                 <div key={category.id} className="flex items-center justify-between text-sm">
                                     <CategoryPill category={category} />
                                     <button onClick={() => removeCategory(category)} className="icon-btn icon-btn-danger">
-                                        <X size={20} />
+                                        <X />
                                     </button>
                                 </div>
                             ))}
@@ -117,7 +117,7 @@ function CategoryAndTaxManager({ categories, setCategories, taxes, setTaxes }) {
                                 <div key={tax.id} className="flex items-center justify-between text-sm">
                                     <span>{tax.name} <span className="text-shadow-grey tabular-nums">({tax.rate}%)</span></span>
                                     <button onClick={() => removeTax(tax)} className="icon-btn icon-btn-danger">
-                                        <X size={20} />
+                                        <X />
                                     </button>
                                 </div>
                             ))}
@@ -394,7 +394,7 @@ export default function ExpensesIndex({ expenses: expensesProp, categories: cate
                                                 {expense.name}
                                                 {expense.receipt_url && (
                                                     <a href={expense.receipt_url} target="_blank" rel="noreferrer" title="View receipt" className="icon-btn icon-btn-secondary">
-                                                        <PaperclipHorizontal size={20} />
+                                                        <PaperclipHorizontal />
                                                     </a>
                                                 )}
                                             </div>
@@ -429,10 +429,10 @@ export default function ExpensesIndex({ expenses: expensesProp, categories: cate
                                                 {expense.billing_status === 'unbilled' && (
                                                     <>
                                                         <button onClick={() => startEdit(expense)} title="Edit" className="icon-btn icon-btn-confirm">
-                                                            <PencilSimple size={20} />
+                                                            <PencilSimple />
                                                         </button>
                                                         <button onClick={() => remove(expense)} title="Delete" className="icon-btn icon-btn-danger">
-                                                            <Trash size={20} />
+                                                            <Trash />
                                                         </button>
                                                     </>
                                                 )}
