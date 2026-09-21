@@ -138,6 +138,7 @@ export default function ExpensesIndex({ expenses: expensesProp, categories: cate
     const [categories, setCategories] = useState(categoriesProp);
     const [taxes, setTaxes] = useState(taxesProp);
     const [search, setSearch] = useState('');
+    const [categoryFilter, setCategoryFilter] = useState('');
     const [showForm, setShowForm] = useState(false);
     const [editingId, setEditingId] = useState(null);
     const [form, setForm] = useState(emptyForm());
@@ -152,10 +153,14 @@ export default function ExpensesIndex({ expenses: expensesProp, categories: cate
     useEffect(() => setTaxes(taxesProp), [taxesProp]);
 
     const filtered = useMemo(() => {
-        if (!search.trim()) return expenses;
         const q = search.trim().toLowerCase();
-        return expenses.filter((e) => e.name.toLowerCase().includes(q));
-    }, [expenses, search]);
+        return expenses.filter((e) => {
+            if (q && !e.name.toLowerCase().includes(q)) return false;
+            if (categoryFilter === 'uncategorized' && e.category_id) return false;
+            if (categoryFilter && categoryFilter !== 'uncategorized' && String(e.category_id) !== categoryFilter) return false;
+            return true;
+        });
+    }, [expenses, search, categoryFilter]);
 
     function startCreate() {
         setEditingId(null);
@@ -346,12 +351,23 @@ export default function ExpensesIndex({ expenses: expensesProp, categories: cate
                 </form>
             )}
 
-            <input
-                placeholder="Search expenses by name&hellip;"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="border border-border rounded px-3 py-2 text-sm mb-4 w-full max-w-sm"
-            />
+            <div className="flex gap-2 mb-4">
+                <input
+                    placeholder="Search expenses by name&hellip;"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="border border-border rounded px-3 py-2 text-sm w-full max-w-sm"
+                />
+                <select
+                    value={categoryFilter}
+                    onChange={(e) => setCategoryFilter(e.target.value)}
+                    className="border border-border rounded px-3 py-2 text-sm"
+                >
+                    <option value="">All categories</option>
+                    <option value="uncategorized">Uncategorized</option>
+                    {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
+            </div>
 
             <div className="bg-white rounded-lg border border-border overflow-hidden">
                 {filtered.length === 0 ? (
