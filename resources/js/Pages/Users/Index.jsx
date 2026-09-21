@@ -1,6 +1,6 @@
-import { Head } from '@inertiajs/react';
+import { Head, usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
-import { ArrowCounterClockwise, EnvelopeSimple, UserMinus } from '@phosphor-icons/react';
+import { ArrowCounterClockwise, EnvelopeSimple, Trash, UserMinus } from '@phosphor-icons/react';
 import AppLayout from '../../Layouts/AppLayout';
 import EmptyState from '../../Components/EmptyState';
 import { formatDate } from '../../lib/format';
@@ -21,6 +21,8 @@ function StatusBadge({ user }) {
 }
 
 export default function UsersIndex({ users: usersProp }) {
+    const { props } = usePage();
+    const currentUserId = props.auth?.user?.id;
     const [users, setUsers] = useState(usersProp);
     const [showForm, setShowForm] = useState(false);
     const [form, setForm] = useState(emptyForm());
@@ -79,6 +81,19 @@ export default function UsersIndex({ users: usersProp }) {
             setUsers((current) => current.map((u) => (u.id === user.id ? updated : u)));
         } catch (err) {
             alert(err.message || 'Could not reactivate this user.');
+        } finally {
+            setBusyId(null);
+        }
+    }
+
+    async function deleteUser(user) {
+        if (!confirm(`Permanently delete ${user.name}? This can't be undone.`)) return;
+        setBusyId(user.id);
+        try {
+            await api.delete(`/api/users/${user.id}/permanent`);
+            setUsers((current) => current.filter((u) => u.id !== user.id));
+        } catch (err) {
+            alert(err.message || 'Could not delete this user.');
         } finally {
             setBusyId(null);
         }
@@ -173,6 +188,11 @@ export default function UsersIndex({ users: usersProp }) {
                                             ) : (
                                                 <button onClick={() => deactivate(user)} disabled={busyId === user.id} title="Deactivate" className="text-shadow-grey hover:text-fuchsia disabled:opacity-50">
                                                     <UserMinus size={16} />
+                                                </button>
+                                            )}
+                                            {user.id !== currentUserId && (
+                                                <button onClick={() => deleteUser(user)} disabled={busyId === user.id} title="Delete permanently" className="text-shadow-grey hover:text-watermelon disabled:opacity-50">
+                                                    <Trash size={16} />
                                                 </button>
                                             )}
                                         </div>

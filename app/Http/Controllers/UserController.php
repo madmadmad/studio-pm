@@ -61,6 +61,21 @@ class UserController extends Controller
         return response()->noContent();
     }
 
+    // Permanent deletion, unlike destroy() above. Only allowed when the user
+    // has no time entries -- deleting them would cascade-delete that history
+    // (and anything invoiced from it). Deactivate them instead in that case.
+    public function forceDestroy(User $user)
+    {
+        $this->authorize('delete', $user);
+
+        abort_if($user->timeEntries()->exists(), 422, 'This user has logged time entries and can\'t be permanently deleted. Deactivate them instead.');
+
+        DB::table('sessions')->where('user_id', $user->id)->delete();
+        $user->delete();
+
+        return response()->noContent();
+    }
+
     public function reactivate(User $user)
     {
         $this->authorize('update', $user);

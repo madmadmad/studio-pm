@@ -74,6 +74,7 @@ Route::middleware('auth:sanctum')->name('api.')->group(function () {
         Route::apiResource('users', UserController::class)->only(['index', 'store', 'update', 'destroy']);
         Route::post('users/{user}/resend-invite', [UserController::class, 'resendInvite']);
         Route::post('users/{user}/reactivate', [UserController::class, 'reactivate']);
+        Route::delete('users/{user}/permanent', [UserController::class, 'forceDestroy']);
     });
 });
 
