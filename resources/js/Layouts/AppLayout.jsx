@@ -9,6 +9,7 @@ const NAV_ITEMS = [
     { href: '/invoices', label: 'Invoices', managerOnly: true },
     { href: '/proposals', label: 'Proposals', managerOnly: true },
     { href: '/bookkeeping', label: 'Bookkeeping', managerOnly: true },
+    { href: '/expenses', label: 'Expenses', managerOnly: true },
     { href: '/services', label: 'Services', managerOnly: true },
     { href: '/users', label: 'Team', managerOnly: true },
     { href: '/settings', label: 'Settings', managerOnly: true },

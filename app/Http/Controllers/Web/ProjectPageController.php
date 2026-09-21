@@ -65,6 +65,7 @@ class ProjectPageController extends Controller
                 'invoices.items',
                 'proposals.items',
                 'transactions' => fn ($query) => $query->orderByDesc('occurred_on'),
+                'expenses' => fn ($query) => $query->with('category')->orderByDesc('date'),
             ]);
         }
 

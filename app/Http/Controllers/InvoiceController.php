@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Company;
+use App\Models\Expense;
 use App\Models\Invoice;
 use App\Models\TimeEntry;
 use App\Services\StripeCheckoutService;
@@ -95,6 +96,9 @@ class InvoiceController extends Controller
             // them up so those hours can be invoiced again later.
             $oldItemIds = $invoice->items()->pluck('id');
             TimeEntry::whereIn('invoice_item_id', $oldItemIds)->update(['billed' => false, 'invoice_item_id' => null]);
+            Expense::whereIn('invoice_item_id', $oldItemIds)->update([
+                'invoice_id' => null, 'invoice_item_id' => null, 'billing_status' => 'unbilled',
+            ]);
             $invoice->items()->delete();
 
             $invoice->items()->createMany($data['items']);
@@ -135,6 +139,9 @@ class InvoiceController extends Controller
             // "billed" with nothing to point at once the invoice is gone.
             $itemIds = $invoice->items()->pluck('id');
             TimeEntry::whereIn('invoice_item_id', $itemIds)->update(['billed' => false, 'invoice_item_id' => null]);
+            Expense::whereIn('invoice_item_id', $itemIds)->update([
+                'invoice_id' => null, 'invoice_item_id' => null, 'billing_status' => 'unbilled',
+            ]);
 
             $invoice->delete();
         });

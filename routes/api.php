@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\ContactController;
+use App\Http\Controllers\ExpenseCategoryController;
+use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\NoteController;
@@ -16,6 +18,7 @@ use App\Http\Controllers\StudioProfileController;
 use App\Http\Controllers\SubtaskController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TaskFileController;
+use App\Http\Controllers\TaxController;
 use App\Http\Controllers\TimeEntryController;
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\UserController;
@@ -59,6 +62,12 @@ Route::middleware('auth:sanctum')->name('api.')->group(function () {
 
         Route::apiResource('transactions', TransactionController::class)->only(['index', 'store', 'destroy']);
         Route::get('bookkeeping/summary', [TransactionController::class, 'summary']);
+
+        Route::apiResource('expense-categories', ExpenseCategoryController::class)->only(['index', 'store', 'update', 'destroy']);
+        Route::apiResource('taxes', TaxController::class)->only(['index', 'store', 'update', 'destroy']);
+        Route::apiResource('expenses', ExpenseController::class)->only(['index', 'store', 'update', 'destroy']);
+        Route::post('expenses/{expense}/attach-to-invoice', [ExpenseController::class, 'attachToInvoice']);
+        Route::post('expenses/{expense}/detach-from-invoice', [ExpenseController::class, 'detachFromInvoice']);
 
         Route::patch('studio-profile', [StudioProfileController::class, 'update']);
 

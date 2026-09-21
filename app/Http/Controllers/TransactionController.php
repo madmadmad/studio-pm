@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Expense;
 use App\Models\Transaction;
 use Illuminate\Http\Request;
 
@@ -10,22 +11,25 @@ class TransactionController extends Controller
     public function index(Request $request)
     {
         return Transaction::query()
-            ->when($request->type, fn ($q) => $q->where('type', $request->type))
+            ->where('type', 'income')
             ->when($request->month, fn ($q) => $q->whereMonth('occurred_on', $request->month))
             ->orderByDesc('occurred_on')
             ->get();
     }
 
+    // Income only -- expenses are tracked through the Expense model now,
+    // via ExpenseController, so bookkeeping has one source of truth for them.
     public function store(Request $request)
     {
         $data = $request->validate([
-            'type' => ['required', 'in:income,expense'],
             'amount' => ['required', 'numeric', 'min:0.01'],
             'category' => ['nullable', 'string'],
             'occurred_on' => ['required', 'date'],
             'description' => ['nullable', 'string'],
             'project_id' => ['nullable', 'exists:projects,id'],
         ]);
+
+        $data['type'] = 'income';
 
         return Transaction::create($data);
     }
@@ -50,9 +54,8 @@ class TransactionController extends Controller
             ->whereMonth('occurred_on', $monthNumber)
             ->sum('amount');
 
-        $expenses = Transaction::where('type', 'expense')
-            ->whereYear('occurred_on', $year)
-            ->whereMonth('occurred_on', $monthNumber)
+        $expenses = Expense::whereYear('date', $year)
+            ->whereMonth('date', $monthNumber)
             ->sum('amount');
 
         return [

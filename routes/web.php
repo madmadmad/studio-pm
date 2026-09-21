@@ -4,6 +4,7 @@ use App\Http\Controllers\Web\AcceptInvitationController;
 use App\Http\Controllers\Web\BookkeepingPageController;
 use App\Http\Controllers\Web\ClientPageController;
 use App\Http\Controllers\Web\DashboardController;
+use App\Http\Controllers\Web\ExpensePageController;
 use App\Http\Controllers\Web\InvoicePageController;
 use App\Http\Controllers\Web\PortalAuthController;
 use App\Http\Controllers\Web\PortalPageController;
@@ -55,6 +56,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/proposals/{proposal}/edit', [ProposalPageController::class, 'edit'])->name('proposals.edit');
 
         Route::get('/bookkeeping', [BookkeepingPageController::class, 'index'])->name('bookkeeping.index');
+
+        Route::get('/expenses', [ExpensePageController::class, 'index'])->name('expenses.index');
 
         Route::get('/services', [ServicePageController::class, 'index'])->name('services.index');
 

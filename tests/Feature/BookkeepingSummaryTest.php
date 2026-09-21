@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Expense;
 use App\Models\Transaction;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -17,7 +18,7 @@ class BookkeepingSummaryTest extends TestCase
 
         Transaction::create(['type' => 'income', 'amount' => 500, 'occurred_on' => '2026-09-05']);
         Transaction::create(['type' => 'income', 'amount' => 250, 'occurred_on' => '2026-09-20']);
-        Transaction::create(['type' => 'expense', 'amount' => 120, 'occurred_on' => '2026-09-10']);
+        Expense::create(['name' => 'Software', 'amount' => 120, 'date' => '2026-09-10']);
         // Different month -- must not be included.
         Transaction::create(['type' => 'income', 'amount' => 9999, 'occurred_on' => '2026-08-15']);
 

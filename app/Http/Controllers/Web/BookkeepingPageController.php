@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
+use App\Models\Expense;
 use App\Models\Transaction;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -15,16 +16,18 @@ class BookkeepingPageController extends Controller
         $month = $request->query('month', now()->format('Y-m'));
         [$year, $monthNumber] = explode('-', $month);
 
-        $transactions = Transaction::orderByDesc('occurred_on')->get();
+        // Income stays here as manually-logged Transaction rows. Expenses
+        // are tracked on the dedicated Expenses page now -- this screen
+        // only reads their total for the monthly summary.
+        $transactions = Transaction::where('type', 'income')->orderByDesc('occurred_on')->get();
 
         $income = Transaction::where('type', 'income')
             ->whereYear('occurred_on', $year)
             ->whereMonth('occurred_on', $monthNumber)
             ->sum('amount');
 
-        $expenses = Transaction::where('type', 'expense')
-            ->whereYear('occurred_on', $year)
-            ->whereMonth('occurred_on', $monthNumber)
+        $expenses = Expense::whereYear('date', $year)
+            ->whereMonth('date', $monthNumber)
             ->sum('amount');
 
         return Inertia::render('Bookkeeping/Index', [

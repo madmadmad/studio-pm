@@ -7,7 +7,7 @@ import Badge from '../../Components/Badge';
 import RichTextEditor from '../../Components/RichTextEditor';
 import Toggle from '../../Components/Toggle';
 import MessagesPanel from '../../Components/MessagesPanel';
-import { ProjectStatusBadge, TaskStatusBadge, InvoiceStatusBadge, ProposalStatusBadge } from '../../Components/StatusBadges';
+import { ProjectStatusBadge, TaskStatusBadge, InvoiceStatusBadge, ProposalStatusBadge, ExpenseStatusBadge } from '../../Components/StatusBadges';
 import { formatCurrency, formatDate, invoiceSubtotal, invoiceTotal } from '../../lib/format';
 import { api } from '../../lib/api';
 import { copyToClipboard } from '../../lib/clipboard';
@@ -1348,32 +1348,48 @@ function BillingTab({ project }) {
 }
 
 function ExpensesTab({ project }) {
-    const expenses = project.transactions.filter((t) => t.type === 'expense');
-    const [form, setForm] = useState({ amount: '', category: '', occurred_on: new Date().toISOString().slice(0, 10), description: '' });
+    const expenses = project.expenses || [];
+    const [form, setForm] = useState({ name: '', amount: '', category_id: '', is_billable: false, markup_percent: '0', date: new Date().toISOString().slice(0, 10) });
     const [saving, setSaving] = useState(false);
 
     async function addExpense(e) {
         e.preventDefault();
-        if (!(parseFloat(form.amount) > 0) || !form.occurred_on) return;
+        if (!form.name.trim() || !(parseFloat(form.amount) > 0) || !form.date) return;
         setSaving(true);
         try {
-            await api.post('/api/transactions', { ...form, type: 'expense', project_id: project.id });
-            setForm({ amount: '', category: '', occurred_on: new Date().toISOString().slice(0, 10), description: '' });
+            await api.post('/api/expenses', { ...form, project_id: project.id });
+            setForm({ name: '', amount: '', category_id: '', is_billable: false, markup_percent: '0', date: new Date().toISOString().slice(0, 10) });
             reload();
         } finally {
             setSaving(false);
         }
     }
 
-    const total = expenses.reduce((s, t) => s + parseFloat(t.amount), 0);
+    async function remove(expense) {
+        if (!confirm(`Delete "${expense.name}"?`)) return;
+        await api.delete(`/api/expenses/${expense.id}`);
+        reload();
+    }
+
+    const total = expenses.reduce((s, e) => s + parseFloat(e.amount), 0);
 
     return (
         <div>
             <form onSubmit={addExpense} className="bg-white rounded-lg border border-border p-4 mb-4 grid grid-cols-2 gap-2">
+                <input required placeholder="Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="border border-border rounded px-3 py-2 text-sm col-span-2" />
                 <input required type="number" min="0.01" step="0.01" placeholder="Amount" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} className="border border-border rounded px-3 py-2 text-sm tabular-nums" />
-                <input placeholder="Category" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} className="border border-border rounded px-3 py-2 text-sm" />
-                <input required type="date" value={form.occurred_on} onChange={(e) => setForm({ ...form, occurred_on: e.target.value })} className="border border-border rounded px-3 py-2 text-sm" />
-                <input placeholder="Description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="border border-border rounded px-3 py-2 text-sm" />
+                <input required type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className="border border-border rounded px-3 py-2 text-sm" />
+                <label className="flex items-center gap-2 text-sm">
+                    <input type="checkbox" checked={form.is_billable} onChange={(e) => setForm({ ...form, is_billable: e.target.checked })} />
+                    Billable to this project
+                </label>
+                <input
+                    type="number" min="0" step="0.01" placeholder="Markup %"
+                    value={form.markup_percent}
+                    disabled={!form.is_billable}
+                    onChange={(e) => setForm({ ...form, markup_percent: e.target.value })}
+                    className="border border-border rounded px-3 py-2 text-sm tabular-nums disabled:opacity-50"
+                />
                 <button type="submit" disabled={saving} className="col-span-2 bg-fern text-white text-sm font-medium px-3 py-1.5 rounded disabled:opacity-50 justify-self-end w-fit">Add expense</button>
             </form>
             <div className="text-sm text-shadow-grey mb-2">Total expenses: <span className="tabular-nums text-fuchsia">{formatCurrency(total)}</span></div>
@@ -1385,18 +1401,26 @@ function ExpensesTab({ project }) {
                         <thead>
                             <tr className="text-left border-b border-border text-shadow-grey">
                                 <th className="px-4 py-2 font-medium">Date</th>
-                                <th className="px-4 py-2 font-medium">Category</th>
-                                <th className="px-4 py-2 font-medium">Description</th>
+                                <th className="px-4 py-2 font-medium">Name</th>
+                                <th className="px-4 py-2 font-medium">Status</th>
                                 <th className="px-4 py-2 font-medium text-right">Amount</th>
+                                <th className="px-4 py-2 font-medium"></th>
                             </tr>
                         </thead>
                         <tbody>
-                            {expenses.map((t) => (
-                                <tr key={t.id} className="border-b border-border last:border-b-0">
-                                    <td className="px-4 py-2">{formatDate(t.occurred_on)}</td>
-                                    <td className="px-4 py-2 text-shadow-grey">{t.category ?? '—'}</td>
-                                    <td className="px-4 py-2 text-shadow-grey">{t.description}</td>
-                                    <td className="px-4 py-2 text-right tabular-nums text-fuchsia">{formatCurrency(t.amount)}</td>
+                            {expenses.map((e) => (
+                                <tr key={e.id} className="border-b border-border last:border-b-0">
+                                    <td className="px-4 py-2">{formatDate(e.date)}</td>
+                                    <td className="px-4 py-2 text-shadow-grey">{e.name}</td>
+                                    <td className="px-4 py-2"><ExpenseStatusBadge expense={e} /></td>
+                                    <td className="px-4 py-2 text-right tabular-nums text-fuchsia">{formatCurrency(e.amount)}</td>
+                                    <td className="px-4 py-2 text-right">
+                                        {e.billing_status === 'unbilled' && (
+                                            <button onClick={() => remove(e)} className="text-shadow-grey hover:text-fuchsia">
+                                                <Trash size={14} />
+                                            </button>
+                                        )}
+                                    </td>
                                 </tr>
                             ))}
                         </tbody>

@@ -55,3 +55,14 @@ export function ProjectStatusBadge({ project }) {
     const m = PROJECT_STATUS[project.status] || PROJECT_STATUS.active;
     return <Badge tone={m.tone} label={m.label} />;
 }
+
+const EXPENSE_STATUS = {
+    unbilled: { tone: 'neutral', label: 'Unbilled' },
+    billed: { tone: 'watermelon', label: 'Billed' },
+    billed_and_paid: { tone: 'fern', label: 'Paid' },
+};
+
+export function ExpenseStatusBadge({ expense }) {
+    const m = EXPENSE_STATUS[expense.billing_status] || EXPENSE_STATUS.unbilled;
+    return <Badge tone={m.tone} label={m.label} />;
+}

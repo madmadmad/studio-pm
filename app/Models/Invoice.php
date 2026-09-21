@@ -50,6 +50,11 @@ class Invoice extends Model
         return $this->hasMany(Payment::class);
     }
 
+    public function expenses(): HasMany
+    {
+        return $this->hasMany(Expense::class);
+    }
+
     public function subtotal(): float
     {
         return (float) $this->items->sum('amount');
@@ -107,5 +112,7 @@ class Invoice extends Model
             'invoice_id' => $this->id,
             'project_id' => $this->project_id,
         ]);
+
+        $this->expenses()->update(['billing_status' => 'billed_and_paid']);
     }
 }
