@@ -210,7 +210,7 @@ export default function ProposalsForm({ proposal, companies, services, presetCom
                 {isEditing && (
                     <div className="flex items-center gap-3">
                         <ProposalStatusBadge proposal={proposal} />
-                        <a href={`/p/${proposal.accept_token}`} target="_blank" rel="noopener noreferrer" title="Preview" className="text-shadow-grey hover:text-gunmetal">
+                        <a href={`/p/${proposal.accept_token}`} target="_blank" rel="noopener noreferrer" title="Preview" className="icon-btn icon-btn-secondary">
                             <Eye size={16} />
                         </a>
                         {proposal.status === 'draft' ? (
@@ -218,7 +218,7 @@ export default function ProposalsForm({ proposal, companies, services, presetCom
                                 {sending ? 'Sending…' : 'Send'}
                             </Button>
                         ) : (
-                            <button type="button" onClick={copyLink} title={copied ? 'Copied!' : 'Copy link'} className="text-shadow-grey hover:text-gunmetal">
+                            <button type="button" onClick={copyLink} title={copied ? 'Copied!' : 'Copy link'} className="icon-btn icon-btn-secondary">
                                 {copied ? <Check size={16} /> : <Copy size={16} />}
                             </button>
                         )}

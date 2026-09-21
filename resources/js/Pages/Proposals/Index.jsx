@@ -104,14 +104,14 @@ export default function ProposalsIndex({ proposals: proposalsProp }) {
                                     <td><ProposalStatusBadge proposal={proposal} /></td>
                                     <td className="text-right">
                                         <div className="flex items-center justify-end gap-3">
-                                            <a href={`/p/${proposal.accept_token}`} target="_blank" rel="noopener noreferrer" title="Preview" className="text-shadow-grey hover:text-gunmetal">
+                                            <a href={`/p/${proposal.accept_token}`} target="_blank" rel="noopener noreferrer" title="Preview" className="icon-btn icon-btn-secondary">
                                                 <Eye size={16} />
                                             </a>
-                                            <Link href={`/proposals/${proposal.id}/edit`} title="Edit" className="text-fern hover:text-fern/70">
+                                            <Link href={`/proposals/${proposal.id}/edit`} title="Edit" className="icon-btn icon-btn-confirm">
                                                 <PencilSimple size={16} />
                                             </Link>
                                             {proposal.status === 'draft' && (
-                                                <button onClick={() => sendProposal(proposal)} title="Send" className="text-watermelon hover:text-watermelon/70">
+                                                <button onClick={() => sendProposal(proposal)} title="Send" className="icon-btn icon-btn-accent">
                                                     <PaperPlaneTilt size={16} />
                                                 </button>
                                             )}
@@ -119,7 +119,7 @@ export default function ProposalsIndex({ proposals: proposalsProp }) {
                                                 <button
                                                     onClick={() => copyLink(proposal)}
                                                     title={copiedId === proposal.id ? 'Copied!' : 'Copy link'}
-                                                    className="text-shadow-grey hover:text-gunmetal"
+                                                    className="icon-btn icon-btn-secondary"
                                                 >
                                                     {copiedId === proposal.id ? <Check size={16} /> : <Copy size={16} />}
                                                 </button>
@@ -132,7 +132,7 @@ export default function ProposalsIndex({ proposals: proposalsProp }) {
                                                     onClick={() => deleteProposal(proposal)}
                                                     disabled={deletingId === proposal.id}
                                                     title="Delete"
-                                                    className="text-shadow-grey hover:text-fuchsia disabled:opacity-50"
+                                                    className="icon-btn icon-btn-danger"
                                                 >
                                                     <Trash size={16} />
                                                 </button>

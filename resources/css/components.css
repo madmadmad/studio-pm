@@ -141,6 +141,58 @@
 }
 
 /* ---------------------------------------------------------------------
+ * Icon buttons
+ * A bare Phosphor icon as a click target -- row actions (preview, copy,
+ * download, edit, mark paid, send, delete), no box or background, just
+ * a color and its hover state. Pair .icon-btn with exactly one variant,
+ * same idea as .btn -- the icon glyph itself carries the meaning, this
+ * only supplies the color.
+ * ------------------------------------------------------------------- */
+
+.icon-btn {
+    display: inline-flex;
+    align-items: center;
+    color: var(--color-shadow-grey);
+    transition: color 150ms ease, opacity 150ms ease;
+}
+.icon-btn:disabled {
+    opacity: 0.5;
+}
+
+/* Secondary: neutral row actions that don't change or remove anything
+   (Preview, Copy link, Download). Matches .btn-secondary's color pair. */
+.icon-btn-secondary:hover {
+    color: var(--color-gunmetal);
+}
+
+/* Confirm: an affirmative action on a row (Edit, Mark paid). Matches
+   .btn-confirm's fern -- lightens on hover rather than darkening, since
+   a small icon reads better going lighter than .btn-confirm's brightness
+   filter would at this size. */
+.icon-btn-confirm {
+    color: var(--color-fern);
+}
+.icon-btn-confirm:hover {
+    opacity: 0.7;
+}
+
+/* Accent: a watermelon-flagged action (Send). Matches .btn-accent. */
+.icon-btn-accent {
+    color: var(--color-watermelon);
+}
+.icon-btn-accent:hover {
+    opacity: 0.7;
+}
+
+/* Danger: destructive row actions (Delete). Neutral by default and only
+   turns fuchsia on hover -- unlike .btn-danger, which is always fuchsia --
+   so a row of actions doesn't read as alarming until you're about to
+   click it. */
+.icon-btn-danger:hover {
+    color: var(--color-fuchsia);
+}
+
+/* ---------------------------------------------------------------------
  * Cards
  * The white, bordered panel used for metrics, list rows, and grouped
  * content throughout the app.

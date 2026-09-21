@@ -112,14 +112,14 @@ export default function InvoicesShow({ invoice }) {
                 <h1 className="font-display text-2xl font-semibold">{invoice.company.name}</h1>
                 <div className="flex items-center gap-3">
                     <InvoiceStatusBadge invoice={invoice} />
-                    <a href={`/i/${invoice.public_token}`} target="_blank" rel="noopener noreferrer" title="Preview" className="text-shadow-grey hover:text-gunmetal">
+                    <a href={`/i/${invoice.public_token}`} target="_blank" rel="noopener noreferrer" title="Preview" className="icon-btn icon-btn-secondary">
                         <Eye size={16} />
                     </a>
-                    <button onClick={copyLink} title={copied ? 'Copied!' : 'Copy link'} className="text-shadow-grey hover:text-gunmetal">
+                    <button onClick={copyLink} title={copied ? 'Copied!' : 'Copy link'} className="icon-btn icon-btn-secondary">
                         {copied ? <Check size={16} /> : <Copy size={16} />}
                     </button>
                     {invoice.status !== 'draft' && (
-                        <a href={`/invoices/${invoice.id}/pdf`} title="Download PDF" className="text-shadow-grey hover:text-gunmetal">
+                        <a href={`/invoices/${invoice.id}/pdf`} title="Download PDF" className="icon-btn icon-btn-secondary">
                             <DownloadSimple size={16} />
                         </a>
                     )}

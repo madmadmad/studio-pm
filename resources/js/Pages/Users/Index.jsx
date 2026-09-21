@@ -177,7 +177,7 @@ export default function UsersIndex({ users: usersProp }) {
                                     <td className="text-right">
                                         <div className="flex items-center justify-end gap-3">
                                             {user.has_pending_invite && !user.deactivated_at && (
-                                                <button onClick={() => resendInvite(user)} disabled={busyId === user.id} title="Resend invite" className="text-shadow-grey hover:text-gunmetal disabled:opacity-50">
+                                                <button onClick={() => resendInvite(user)} disabled={busyId === user.id} title="Resend invite" className="icon-btn icon-btn-secondary">
                                                     <EnvelopeSimple size={16} />
                                                 </button>
                                             )}
@@ -186,12 +186,12 @@ export default function UsersIndex({ users: usersProp }) {
                                                     <ArrowCounterClockwise size={16} />
                                                 </button>
                                             ) : (
-                                                <button onClick={() => deactivate(user)} disabled={busyId === user.id} title="Deactivate" className="text-shadow-grey hover:text-fuchsia disabled:opacity-50">
+                                                <button onClick={() => deactivate(user)} disabled={busyId === user.id} title="Deactivate" className="icon-btn icon-btn-danger">
                                                     <UserMinus size={16} />
                                                 </button>
                                             )}
                                             {user.id !== currentUserId && (
-                                                <button onClick={() => deleteUser(user)} disabled={busyId === user.id} title="Delete permanently" className="text-shadow-grey hover:text-watermelon disabled:opacity-50">
+                                                <button onClick={() => deleteUser(user)} disabled={busyId === user.id} title="Delete permanently" className="icon-btn icon-btn-danger">
                                                     <Trash size={16} />
                                                 </button>
                                             )}

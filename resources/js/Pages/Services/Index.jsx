@@ -123,14 +123,14 @@ export default function ServicesIndex({ services: servicesProp }) {
                                     <td className="text-shadow-grey capitalize">{service.unit}</td>
                                     <td className="text-right">
                                         <div className="flex items-center justify-end gap-3">
-                                            <button onClick={() => startEdit(service)} title="Edit" className="text-fern hover:text-fern/70">
+                                            <button onClick={() => startEdit(service)} title="Edit" className="icon-btn icon-btn-confirm">
                                                 <PencilSimple size={16} />
                                             </button>
                                             <button
                                                 onClick={() => remove(service)}
                                                 disabled={deletingId === service.id}
                                                 title="Delete"
-                                                className="text-shadow-grey hover:text-fuchsia disabled:opacity-50"
+                                                className="icon-btn icon-btn-danger"
                                             >
                                                 <Trash size={16} />
                                             </button>

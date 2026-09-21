@@ -295,31 +295,31 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
                                     <td><InvoiceStatusBadge invoice={invoice} /></td>
                                     <td className="text-right">
                                         <div className="flex items-center justify-end gap-3">
-                                            <a href={`/i/${invoice.public_token}`} target="_blank" rel="noopener noreferrer" title="Preview" className="text-shadow-grey hover:text-gunmetal">
+                                            <a href={`/i/${invoice.public_token}`} target="_blank" rel="noopener noreferrer" title="Preview" className="icon-btn icon-btn-secondary">
                                                 <Eye size={16} />
                                             </a>
                                             {invoice.status === 'draft' && (
-                                                <Link href={`/invoices/${invoice.id}`} title="Edit" className="text-fern hover:text-fern/70">
+                                                <Link href={`/invoices/${invoice.id}`} title="Edit" className="icon-btn icon-btn-confirm">
                                                     <PencilSimple size={16} />
                                                 </Link>
                                             )}
                                             {invoice.status === 'draft' && (
-                                                <button onClick={() => sendInvoice(invoice)} title="Send" className="text-watermelon hover:text-watermelon/70">
+                                                <button onClick={() => sendInvoice(invoice)} title="Send" className="icon-btn icon-btn-accent">
                                                     <PaperPlaneTilt size={16} />
                                                 </button>
                                             )}
                                             {invoice.status !== 'draft' && (
-                                                <button onClick={() => copyLink(invoice)} title={copiedId === invoice.id ? 'Copied!' : 'Copy link'} className="text-shadow-grey hover:text-gunmetal">
+                                                <button onClick={() => copyLink(invoice)} title={copiedId === invoice.id ? 'Copied!' : 'Copy link'} className="icon-btn icon-btn-secondary">
                                                     {copiedId === invoice.id ? <Check size={16} /> : <Copy size={16} />}
                                                 </button>
                                             )}
                                             {invoice.status !== 'draft' && (
-                                                <a href={`/invoices/${invoice.id}/pdf`} title="Download PDF" className="text-shadow-grey hover:text-gunmetal">
+                                                <a href={`/invoices/${invoice.id}/pdf`} title="Download PDF" className="icon-btn icon-btn-secondary">
                                                     <DownloadSimple size={16} />
                                                 </a>
                                             )}
                                             {invoice.status === 'sent' && (
-                                                <button onClick={() => markPaid(invoice)} title="Mark paid (check)" className="text-fern hover:text-fern/70">
+                                                <button onClick={() => markPaid(invoice)} title="Mark paid (check)" className="icon-btn icon-btn-confirm">
                                                     <CheckCircle size={16} />
                                                 </button>
                                             )}
@@ -328,7 +328,7 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
                                                     onClick={() => deleteInvoice(invoice)}
                                                     disabled={deletingId === invoice.id}
                                                     title="Delete"
-                                                    className="text-shadow-grey hover:text-fuchsia disabled:opacity-50"
+                                                    className="icon-btn icon-btn-danger"
                                                 >
                                                     <Trash size={16} />
                                                 </button>

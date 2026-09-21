@@ -1,4 +1,5 @@
 import { Head } from '@inertiajs/react';
+import { CheckCircle, Copy, DownloadSimple, Eye, PaperPlaneTilt, PencilSimple, Trash } from '@phosphor-icons/react';
 import AppLayout from '../../Layouts/AppLayout';
 import Button from '../../Components/Button';
 import Card from '../../Components/Card';
@@ -11,6 +12,17 @@ function Section({ title, description, children }) {
             {description && <p className="text-sm text-shadow-grey mb-4">{description}</p>}
             {children}
         </section>
+    );
+}
+
+function IconButtonExample({ icon, label, variant }) {
+    return (
+        <div className="flex flex-col items-center gap-2">
+            <button title={label} className={`icon-btn ${variant}`}>
+                {icon}
+            </button>
+            <div className="text-xs text-shadow-grey text-center">{label}</div>
+        </div>
     );
 }
 
@@ -76,6 +88,18 @@ export default function StyleGuide() {
                 <div className="flex flex-wrap items-center gap-3">
                     <Button variant="primary" disabled>Primary (disabled)</Button>
                     <Button variant="confirm" disabled>Confirm (disabled)</Button>
+                </div>
+            </Section>
+
+            <Section title="Icon buttons" description="A bare icon as a row action -- .icon-btn plus exactly one variant. Used for Preview, Copy, Download, Edit, Mark paid, Send, and Delete throughout invoices, proposals, expenses, and project tabs.">
+                <div className="flex flex-wrap items-start gap-6">
+                    <IconButtonExample icon={<Eye size={18} />} label="Preview" variant="icon-btn-secondary" />
+                    <IconButtonExample icon={<Copy size={18} />} label="Copy link" variant="icon-btn-secondary" />
+                    <IconButtonExample icon={<DownloadSimple size={18} />} label="Download" variant="icon-btn-secondary" />
+                    <IconButtonExample icon={<PencilSimple size={18} />} label="Edit" variant="icon-btn-confirm" />
+                    <IconButtonExample icon={<CheckCircle size={18} />} label="Mark paid" variant="icon-btn-confirm" />
+                    <IconButtonExample icon={<PaperPlaneTilt size={18} />} label="Send" variant="icon-btn-accent" />
+                    <IconButtonExample icon={<Trash size={18} />} label="Delete" variant="icon-btn-danger" />
                 </div>
             </Section>
 
