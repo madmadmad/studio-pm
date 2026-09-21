@@ -124,7 +124,7 @@ export default function ServicesIndex({ services: servicesProp }) {
                                     <td className="text-right">
                                         <div className="flex items-center justify-end gap-3">
                                             <button onClick={() => startEdit(service)} title="Edit" className="icon-btn icon-btn-confirm">
-                                                <PencilSimple size={16} />
+                                                <PencilSimple size={20} />
                                             </button>
                                             <button
                                                 onClick={() => remove(service)}
@@ -132,7 +132,7 @@ export default function ServicesIndex({ services: servicesProp }) {
                                                 title="Delete"
                                                 className="icon-btn icon-btn-danger"
                                             >
-                                                <Trash size={16} />
+                                                <Trash size={20} />
                                             </button>
                                         </div>
                                     </td>

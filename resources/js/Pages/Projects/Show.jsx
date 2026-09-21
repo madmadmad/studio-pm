@@ -314,7 +314,7 @@ function SubtaskRow({ subtask, onChange, isDragging, onDragStart, onDragOver, on
                 }`}
             />
             <button onClick={remove} className="icon-btn icon-btn-danger mt-0.5 opacity-0 group-hover:opacity-100 flex-shrink-0 px-1">
-                <X size={12} />
+                <X size={20} />
             </button>
         </div>
     );
@@ -440,14 +440,14 @@ function FilesSection({ task, onChange }) {
                             </div>
                             <div className="flex items-center gap-1 flex-shrink-0">
                                 <a href={file.url} download={file.filename} title="Download" className="icon-btn icon-btn-secondary p-1.5">
-                                    <DownloadSimple size={16} />
+                                    <DownloadSimple size={20} />
                                 </a>
                                 <button
                                     onClick={() => remove(file)}
                                     title="Remove"
                                     className="icon-btn icon-btn-danger p-1.5 opacity-0 group-hover:opacity-100"
                                 >
-                                    <X size={14} />
+                                    <X size={20} />
                                 </button>
                             </div>
                         </div>
@@ -682,7 +682,7 @@ function NoteDrawer({ note, onClose, onChange }) {
                     <span className="text-xs text-shadow-grey">Edited {formatDate(note.updated_at)}</span>
                     <div className="flex items-center gap-3">
                         <button onClick={remove} title="Delete note" className="icon-btn icon-btn-danger px-1">
-                            <Trash size={18} />
+                            <Trash size={20} />
                         </button>
                         <button onClick={onClose} className="icon-btn icon-btn-secondary px-1">
                             <X size={20} />
@@ -841,7 +841,7 @@ function TimeEntryDrawer({ entry, tasks, onClose, onChange }) {
                     {entry.billed ? <Badge tone="fern" label="Billed" /> : <Badge tone="neutral" label="Unbilled" />}
                     <div className="flex items-center gap-3">
                         <button onClick={remove} title="Delete entry" className="icon-btn icon-btn-danger px-1">
-                            <Trash size={18} />
+                            <Trash size={20} />
                         </button>
                         <button onClick={onClose} className="icon-btn icon-btn-secondary px-1">
                             <X size={20} />
@@ -1285,31 +1285,31 @@ function BillingTab({ project }) {
                                     <td className="text-right">
                                         <div className="flex items-center justify-end gap-3">
                                             <a href={`/i/${invoice.public_token}`} target="_blank" rel="noopener noreferrer" title="Preview" className="icon-btn icon-btn-secondary">
-                                                <Eye size={16} />
+                                                <Eye size={20} />
                                             </a>
                                             {invoice.status === 'draft' && (
                                                 <Link href={`/invoices/${invoice.id}`} title="Edit" className="icon-btn icon-btn-confirm">
-                                                    <PencilSimple size={16} />
+                                                    <PencilSimple size={20} />
                                                 </Link>
                                             )}
                                             {invoice.status === 'draft' && (
                                                 <button onClick={() => sendInvoice(invoice)} title="Send" className="icon-btn icon-btn-accent">
-                                                    <PaperPlaneTilt size={16} />
+                                                    <PaperPlaneTilt size={20} />
                                                 </button>
                                             )}
                                             {invoice.status !== 'draft' && (
                                                 <button onClick={() => copyInvoiceLink(invoice)} title={copiedInvoiceId === invoice.id ? 'Copied!' : 'Copy link'} className="icon-btn icon-btn-secondary">
-                                                    {copiedInvoiceId === invoice.id ? <Check size={16} /> : <Copy size={16} />}
+                                                    {copiedInvoiceId === invoice.id ? <Check size={20} /> : <Copy size={20} />}
                                                 </button>
                                             )}
                                             {invoice.status !== 'draft' && (
                                                 <a href={`/invoices/${invoice.id}/pdf`} title="Download PDF" className="icon-btn icon-btn-secondary">
-                                                    <DownloadSimple size={16} />
+                                                    <DownloadSimple size={20} />
                                                 </a>
                                             )}
                                             {invoice.status === 'sent' && (
                                                 <button onClick={() => markInvoicePaid(invoice)} title="Mark paid (check)" className="icon-btn icon-btn-confirm">
-                                                    <CheckCircle size={16} />
+                                                    <CheckCircle size={20} />
                                                 </button>
                                             )}
                                             {invoice.status !== 'paid' && (
@@ -1319,7 +1319,7 @@ function BillingTab({ project }) {
                                                     title="Delete"
                                                     className="icon-btn icon-btn-danger"
                                                 >
-                                                    <Trash size={16} />
+                                                    <Trash size={20} />
                                                 </button>
                                             )}
                                         </div>
@@ -1404,7 +1404,7 @@ function ExpensesTab({ project }) {
                                     <td className="text-right">
                                         {e.billing_status === 'unbilled' && (
                                             <button onClick={() => remove(e)} className="icon-btn icon-btn-danger">
-                                                <Trash size={14} />
+                                                <Trash size={20} />
                                             </button>
                                         )}
                                     </td>
@@ -1476,7 +1476,7 @@ function AssignedStaff({ project, canManageTeam, assignableStaff }) {
                             {user.name}
                             {canManageTeam && (
                                 <button onClick={() => unassign(user)} className="icon-btn icon-btn-danger">
-                                    <X size={14} />
+                                    <X size={20} />
                                 </button>
                             )}
                         </span>
@@ -1536,7 +1536,7 @@ function TeamTab({ project, canManageTeam, assignableStaff }) {
                         <span key={name} className="inline-flex items-center gap-2 bg-white border border-border rounded-full px-3 py-1 text-sm">
                             {name}
                             <button onClick={() => remove(name)} className="icon-btn icon-btn-danger">
-                                <X size={14} />
+                                <X size={20} />
                             </button>
                         </span>
                     ))}

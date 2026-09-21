@@ -178,7 +178,7 @@ export default function UsersIndex({ users: usersProp }) {
                                         <div className="flex items-center justify-end gap-3">
                                             {user.has_pending_invite && !user.deactivated_at && (
                                                 <button onClick={() => resendInvite(user)} disabled={busyId === user.id} title="Resend invite" className="icon-btn icon-btn-secondary">
-                                                    <EnvelopeSimple size={16} />
+                                                    <EnvelopeSimple size={20} />
                                                 </button>
                                             )}
                                             {user.deactivated_at ? (
@@ -187,12 +187,12 @@ export default function UsersIndex({ users: usersProp }) {
                                                 </button>
                                             ) : (
                                                 <button onClick={() => deactivate(user)} disabled={busyId === user.id} title="Deactivate" className="icon-btn icon-btn-danger">
-                                                    <UserMinus size={16} />
+                                                    <UserMinus size={20} />
                                                 </button>
                                             )}
                                             {user.id !== currentUserId && (
                                                 <button onClick={() => deleteUser(user)} disabled={busyId === user.id} title="Delete permanently" className="icon-btn icon-btn-danger">
-                                                    <Trash size={16} />
+                                                    <Trash size={20} />
                                                 </button>
                                             )}
                                         </div>
