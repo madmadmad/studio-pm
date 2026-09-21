@@ -15,9 +15,16 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        User::firstOrCreate(
-            ['email' => 'bill@madmadmad.com'],
-            ['name' => 'Bill Sattler', 'password' => bcrypt('password')]
-        );
+        // firstOrNew + manual save (not updateOrCreate) so re-running this
+        // against remote syncs name/role every time -- the idempotent way
+        // to push admin/reference data -- without ever clobbering a
+        // password someone has already set.
+        $user = User::firstOrNew(['email' => 'bill@madmadmad.com']);
+        $user->name = 'Bill Sattler';
+        $user->role = User::ROLE_MANAGER;
+        if (! $user->exists) {
+            $user->password = bcrypt('password');
+        }
+        $user->save();
     }
 }

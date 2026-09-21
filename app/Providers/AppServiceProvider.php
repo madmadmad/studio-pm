@@ -13,6 +13,7 @@ use App\Policies\TimeEntryPolicy;
 use App\Policies\UserPolicy;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
@@ -36,6 +37,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Blocks migrate:fresh/refresh/reset and db:wipe from ever running
+        // in production, even with --force -- schema changes there must go
+        // through additive `migrate`, never a reset.
+        DB::prohibitDestructiveCommands($this->app->isProduction());
+
         Event::listen(WebhookReceived::class, MarkInvoicePaidFromStripeWebhook::class);
 
         Password::defaults(fn () => $this->app->isProduction()
