@@ -43,7 +43,7 @@ export default function AppLayout({ children }) {
                         key={item.href}
                         href={item.href}
                         className={`text-left px-3 py-2 rounded text-sm font-medium transition-colors ${
-                            isActive(item.href) ? 'bg-gunmetal-light text-watermelon' : 'text-porcelain/60 hover:text-porcelain'
+                            isActive(item.href) ? 'bg-gunmetal-light text-white' : 'text-porcelain/60 hover:text-porcelain'
                         }`}
                     >
                         {item.label}
