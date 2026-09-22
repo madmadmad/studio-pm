@@ -555,7 +555,14 @@ function TaskDrawer({ task, teamNames, onClose, onChange }) {
 function TasksTab({ project }) {
     const [title, setTitle] = useState('');
     const [selectedTaskId, setSelectedTaskId] = useState(null);
-    const teamNames = project.team_names || [];
+    // Assignable names come from two places: staff actually assigned to the
+    // project (real logins, via active_users) and free-text names added for
+    // people without one (team_names). Both should show up as assignee
+    // options here; dedupe in case a name appears in both.
+    const teamNames = [...new Set([
+        ...(project.active_users || []).map((u) => u.name),
+        ...(project.team_names || []),
+    ])];
     const selectedTask = project.tasks.find((t) => t.id === selectedTaskId) || null;
 
     async function addTask(e) {
