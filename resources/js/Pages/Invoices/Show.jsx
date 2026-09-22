@@ -102,7 +102,7 @@ export default function InvoicesShow({ invoice }) {
     return (
         <AppLayout>
             <Head title={`Invoice — ${invoice.company.name}`} />
-            <div className="max-w-3xl">
+            <div className="max-w-4xl">
             <div className="mb-1">
                 <Link href="/invoices" className="text-sm text-shadow-grey hover:underline inline-flex items-center gap-1">
                     <ArrowLeft size={14} /> Invoices

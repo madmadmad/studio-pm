@@ -199,7 +199,7 @@ export default function ProposalsForm({ proposal, companies, services, presetCom
     return (
         <AppLayout>
             <Head title={isEditing ? `Edit — ${proposal.title}` : 'New proposal'} />
-            <div className="max-w-3xl">
+            <div className="max-w-4xl">
             <div className="mb-1">
                 <Link href="/proposals" className="text-sm text-shadow-grey hover:underline inline-flex items-center gap-1">
                     <ArrowLeft size={14} /> Proposals
