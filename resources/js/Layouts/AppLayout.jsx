@@ -42,7 +42,7 @@ export default function AppLayout({ children }) {
                     <Link
                         key={item.href}
                         href={item.href}
-                        className={`text-left px-3 py-2 rounded text-sm font-medium transition-colors ${
+                        className={`text-left px-3 py-2 rounded text-sm font-semibold transition-colors ${
                             isActive(item.href) ? 'bg-gunmetal-light text-white' : 'text-porcelain/60 hover:text-porcelain'
                         }`}
                     >
