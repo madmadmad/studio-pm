@@ -5,8 +5,7 @@ namespace App\Http\Controllers\Web;
 use App\Http\Controllers\Controller;
 use App\Models\Company;
 use App\Models\Invoice;
-use App\Models\StudioProfile;
-use Barryvdh\DomPDF\Facade\Pdf;
+use App\Services\InvoicePdfRenderer;
 use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\Response as HttpResponse;
@@ -38,10 +37,7 @@ class InvoicePageController extends Controller
     {
         $invoice->load(['items', 'company', 'contact', 'project', 'payments']);
 
-        $pdf = Pdf::loadView('pdfs.invoice', [
-            'invoice' => $invoice,
-            'studio' => StudioProfile::current(),
-        ])->setPaper('letter'); // US business -- dompdf defaults to A4
+        $pdf = InvoicePdfRenderer::render($invoice);
 
         return $pdf->download("invoice-{$invoice->invoice_number}.pdf");
     }

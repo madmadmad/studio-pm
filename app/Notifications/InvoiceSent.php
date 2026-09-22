@@ -3,8 +3,7 @@
 namespace App\Notifications;
 
 use App\Models\Invoice;
-use App\Models\StudioProfile;
-use Barryvdh\DomPDF\Facade\Pdf;
+use App\Services\InvoicePdfRenderer;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
@@ -22,10 +21,7 @@ class InvoiceSent extends Notification
 
     public function toMail(object $notifiable): MailMessage
     {
-        $pdf = Pdf::loadView('pdfs.invoice', [
-            'invoice' => $this->invoice,
-            'studio' => StudioProfile::current(),
-        ])->setPaper('letter');
+        $pdf = InvoicePdfRenderer::render($this->invoice);
 
         return (new MailMessage)
             ->subject("Invoice #{$this->invoice->invoice_number} from {$this->invoice->company->name}")
