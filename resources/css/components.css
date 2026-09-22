@@ -215,12 +215,25 @@
 
 .field {
     display: block;
-    width: 100%;
     border: 1px solid var(--color-border);
     border-radius: var(--radius-app);
     padding: 0.5rem 0.75rem;
     font-size: 0.875rem;
     background-color: white;
+}
+/* width lives in its own layered rule -- unlike the rest of .field, this
+   one property is meant to be overridden, by a sizing utility (w-28,
+   flex-1, w-auto...) placed alongside .field on a specific field. Left
+   unlayered like the rest of .field, it always won regardless: Tailwind
+   utilities live in @layer utilities, and unlayered CSS beats every layer
+   no matter specificity, so a field like `className="field w-28"` still
+   rendered at 100% width with the sibling holding flex-1 squeezed to
+   ~0 -- see the invoice line-item row, where this was silently sending
+   typed amounts into the wrong-looking field. */
+@layer components {
+    .field {
+        width: 100%;
+    }
 }
 .field:focus {
     outline: 2px solid var(--color-watermelon);

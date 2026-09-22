@@ -162,7 +162,7 @@ export default function InvoicesShow({ invoice }) {
                             <div key={idx} className="mb-2 pb-2 border-b border-border last:border-b-0">
                                 <div className="flex gap-2 mb-1">
                                     <input
-                                        placeholder="Description"
+                                        placeholder="Line item description (required)"
                                         value={item.description}
                                         onChange={(e) => updateItem(idx, 'description', e.target.value)}
                                         className="field flex-1"
@@ -181,7 +181,7 @@ export default function InvoicesShow({ invoice }) {
                                     )}
                                 </div>
                                 <textarea
-                                    placeholder="Description shown to the client (optional)"
+                                    placeholder="Additional notes shown to the client (optional, not required)"
                                     value={item.details || ''}
                                     onChange={(e) => updateItem(idx, 'details', e.target.value)}
                                     rows={2}
