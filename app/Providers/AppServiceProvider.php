@@ -42,6 +42,15 @@ class AppServiceProvider extends ServiceProvider
         // through additive `migrate`, never a reset.
         DB::prohibitDestructiveCommands($this->app->isProduction());
 
+        // Cashier's WebhookController only verifies the Stripe-Signature
+        // header when a webhook secret is configured -- deliberately unset
+        // locally (see .env.example) so devs who aren't testing payments
+        // never need the Stripe CLI. Refuse to boot in production without
+        // it, since that would let anyone POST a fake "paid" webhook.
+        if ($this->app->isProduction() && ! config('cashier.webhook.secret')) {
+            throw new \RuntimeException('STRIPE_WEBHOOK_SECRET must be set in production.');
+        }
+
         Event::listen(WebhookReceived::class, MarkInvoicePaidFromStripeWebhook::class);
 
         Password::defaults(fn () => $this->app->isProduction()
