@@ -9,7 +9,7 @@ import RichTextEditor from '../../Components/RichTextEditor';
 import Toggle from '../../Components/Toggle';
 import MessagesPanel from '../../Components/MessagesPanel';
 import { ProjectStatusBadge, TaskStatusBadge, InvoiceStatusBadge, ProposalStatusBadge, ExpenseStatusBadge } from '../../Components/StatusBadges';
-import { formatCurrency, formatDate, invoiceSubtotal, invoiceTotal } from '../../lib/format';
+import { formatCurrency, formatDate, formatFileSize, invoiceSubtotal, invoiceTotal } from '../../lib/format';
 import { api } from '../../lib/api';
 import { copyToClipboard } from '../../lib/clipboard';
 
@@ -377,18 +377,6 @@ function SubtasksSection({ task, onChange }) {
             </form>
         </div>
     );
-}
-
-function formatFileSize(bytes) {
-    if (!bytes) return '0 KB';
-    const units = ['B', 'KB', 'MB', 'GB'];
-    let value = bytes;
-    let unitIndex = 0;
-    while (value >= 1024 && unitIndex < units.length - 1) {
-        value /= 1024;
-        unitIndex++;
-    }
-    return `${value.toFixed(unitIndex === 0 ? 0 : 1)} ${units[unitIndex]}`;
 }
 
 function FilesSection({ task, onChange }) {
@@ -777,11 +765,16 @@ function MessagesTab({ project }) {
             project={project}
             currentActorType="user"
             currentActorId={currentUser?.id}
+            currentActorRole={currentUser?.role}
             recipientOptions={recipientOptions}
             endpoints={{
                 create: `/api/projects/${project.id}/messages`,
                 reply: (id) => `/api/messages/${id}/replies`,
                 join: (id) => `/api/messages/${id}/join`,
+                update: (id) => `/api/messages/${id}`,
+                destroy: (id) => `/api/messages/${id}`,
+                attachmentUrl: (id) => `/api/attachments/${id}`,
+                attachmentThumbnailUrl: (id) => `/api/attachments/${id}/thumbnail`,
             }}
             onChange={reload}
         />

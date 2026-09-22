@@ -17,6 +17,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Private Uploads Disk
+    |--------------------------------------------------------------------------
+    |
+    | Where message attachments and avatars are stored. Never a public disk --
+    | reads always go through an authorization-checked controller (see
+    | MessageAttachmentController), which streams from this disk directly in
+    | development ("local", not web-exposed) or redirects to a short-lived
+    | signed URL in production ("s3", Laravel Cloud's object storage bucket).
+    |
+    */
+
+    'private_disk' => env('FILESYSTEM_PRIVATE_DISK', 'local'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Filesystem Disks
     |--------------------------------------------------------------------------
     |

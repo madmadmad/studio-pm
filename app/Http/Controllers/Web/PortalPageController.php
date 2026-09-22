@@ -28,10 +28,11 @@ class PortalPageController extends Controller
             'company.contacts',
             'tasks.subtasks',
             'tasks.files',
-            'messages' => fn ($q) => $q->with([
-                'senderUser', 'senderContact',
+            'messages' => fn ($q) => $q->withTrashed()->with([
+                'senderUser', 'senderContact', 'attachments',
                 'participants.user', 'participants.contact',
-                'replies.senderUser', 'replies.senderContact',
+                'replies' => fn ($r) => $r->withTrashed(),
+                'replies.senderUser', 'replies.senderContact', 'replies.attachments',
             ]),
             'activeUsers:id,name,role',
             'proposals' => fn ($q) => $q->where('status', 'accepted')->with('items'),

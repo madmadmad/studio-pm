@@ -62,6 +62,47 @@ async function requestForm(url, formData) {
     return parseResponse(response);
 }
 
+// XMLHttpRequest, not fetch, is what gives us real upload-progress events
+// (the message composer's per-attachment progress bar) -- fetch has no
+// equivalent for a multipart request body.
+function requestFormWithProgress(url, formData, onProgress) {
+    return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', url);
+        xhr.withCredentials = true;
+        xhr.setRequestHeader('Accept', 'application/json');
+        const token = readCookie('XSRF-TOKEN');
+        if (token) {
+            xhr.setRequestHeader('X-XSRF-TOKEN', token);
+        }
+
+        xhr.upload.onprogress = (e) => {
+            if (e.lengthComputable && onProgress) {
+                onProgress(Math.round((e.loaded / e.total) * 100));
+            }
+        };
+
+        xhr.onload = () => {
+            const isJson = (xhr.getResponseHeader('content-type') || '').includes('application/json');
+            const data = isJson && xhr.responseText ? JSON.parse(xhr.responseText) : null;
+
+            if (xhr.status >= 200 && xhr.status < 300) {
+                resolve(data);
+                return;
+            }
+
+            const error = new Error(data?.message || `Request failed (${xhr.status})`);
+            error.status = xhr.status;
+            error.errors = data?.errors || null;
+            reject(error);
+        };
+
+        xhr.onerror = () => reject(new Error('Network error'));
+
+        xhr.send(formData);
+    });
+}
+
 export const api = {
     get: (url) => request('GET', url),
     post: (url, body) => request('POST', url, body ?? {}),
@@ -69,4 +110,5 @@ export const api = {
     put: (url, body) => request('PUT', url, body ?? {}),
     delete: (url) => request('DELETE', url),
     postForm: (url, formData) => requestForm(url, formData),
+    postFormWithProgress: (url, formData, onProgress) => requestFormWithProgress(url, formData, onProgress),
 };

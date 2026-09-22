@@ -9,11 +9,13 @@
         "php": "^8.3",
         "barryvdh/laravel-dompdf": "^3.1",
         "inertiajs/inertia-laravel": "^3.3",
+        "intervention/image": "^4.3",
         "laravel/cashier": "^16.8",
         "laravel/fortify": "^1.39",
         "laravel/framework": "^13.17",
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^3.0",
+        "league/flysystem-aws-s3-v3": "^3.35",
         "symfony/http-client": "^8.1",
         "symfony/postmark-mailer": "^8.1",
         "tightenco/ziggy": "^2.6"

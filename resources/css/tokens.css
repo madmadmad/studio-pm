@@ -30,6 +30,16 @@
     --color-fern-soft: #e7efe3;
 
     /*
+     * Avatar fill colors -- a small curated set (not arbitrary hashed hues)
+     * so an initials avatar always harmonizes with the rest of the palette.
+     * Avatar.jsx picks one deterministically from an author's id; text on
+     * all of them is gunmetal.
+     */
+    --color-avatar-1: #dce8f5;
+    --color-avatar-2: #f5e8d3;
+    --color-avatar-3: #e6dcf5;
+
+    /*
      * Single knob for corner rounding app-wide -- change this one value to
      * adjust every `rounded`/`rounded-lg` element at once. (`rounded-full`
      * is intentionally untouched: it's a pill/circle shape, not a radius

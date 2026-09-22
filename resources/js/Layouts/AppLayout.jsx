@@ -1,4 +1,5 @@
 import { Link, router, usePage } from '@inertiajs/react';
+import Avatar from '../Components/Avatar';
 
 const NAV_ITEMS = [
     { href: '/', label: 'Overview' },
@@ -50,7 +51,15 @@ export default function AppLayout({ children }) {
                     </Link>
                 ))}
                 <div className="mt-auto pt-4 border-t border-porcelain/15">
-                    {user && <div className="text-xs text-porcelain/50 mb-2 truncate">{user.email}</div>}
+                    {user && (
+                        <Link href="/profile" className="flex items-center gap-2 mb-3 group">
+                            <Avatar name={user.name} avatarUrl={user.avatar_url} id={user.id} size={28} />
+                            <div className="min-w-0">
+                                <div className="text-sm text-porcelain/80 truncate group-hover:text-porcelain">{user.name}</div>
+                                <div className="text-xs text-porcelain/50 truncate">{user.email}</div>
+                            </div>
+                        </Link>
+                    )}
                     <a href="/logout" onClick={handleLogout} className="text-sm text-porcelain/60 hover:text-porcelain">
                         Log out
                     </a>

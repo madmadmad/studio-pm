@@ -5,11 +5,15 @@ use App\Http\Controllers\ContactController;
 use App\Http\Controllers\ExpenseCategoryController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\InvoiceController;
+use App\Http\Controllers\MessageAttachmentController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\NoteController;
+use App\Http\Controllers\Portal\MessageAttachmentController as PortalMessageAttachmentController;
 use App\Http\Controllers\Portal\MessageController as PortalMessageController;
+use App\Http\Controllers\Portal\ProfileController as PortalProfileController;
 use App\Http\Controllers\Portal\TaskController as PortalTaskController;
 use App\Http\Controllers\PortalInviteController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProjectAssignmentController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProposalController;
@@ -33,8 +37,15 @@ Route::middleware('auth:sanctum')->name('api.')->group(function () {
     Route::apiResource('tasks.files', TaskFileController::class)->shallow()->only(['store', 'destroy']);
     Route::apiResource('projects.notes', NoteController::class)->shallow()->only(['index', 'store', 'update', 'destroy']);
     Route::apiResource('projects.messages', MessageController::class)->shallow()->only(['index', 'store']);
+    Route::patch('messages/{message}', [MessageController::class, 'update']);
+    Route::delete('messages/{message}', [MessageController::class, 'destroy']);
     Route::post('messages/{message}/replies', [MessageController::class, 'reply']);
     Route::post('messages/{message}/join', [MessageController::class, 'join']);
+    Route::get('attachments/{attachment}', [MessageAttachmentController::class, 'show']);
+    Route::get('attachments/{attachment}/thumbnail', [MessageAttachmentController::class, 'thumbnail']);
+
+    Route::post('profile/avatar', [ProfileController::class, 'updateAvatar']);
+    Route::delete('profile/avatar', [ProfileController::class, 'destroyAvatar']);
 
     Route::get('time-entries', [TimeEntryController::class, 'index']);
     Route::post('time-entries', [TimeEntryController::class, 'store']);
@@ -86,8 +97,15 @@ Route::middleware('auth:client')->prefix('portal')->name('api.portal.')->group(f
 
     Route::get('projects/{project}/messages', [PortalMessageController::class, 'index']);
     Route::post('projects/{project}/messages', [PortalMessageController::class, 'store']);
+    Route::patch('messages/{message}', [PortalMessageController::class, 'update']);
+    Route::delete('messages/{message}', [PortalMessageController::class, 'destroy']);
     Route::post('messages/{message}/replies', [PortalMessageController::class, 'reply']);
     Route::post('messages/{message}/join', [PortalMessageController::class, 'join']);
+    Route::get('attachments/{attachment}', [PortalMessageAttachmentController::class, 'show']);
+    Route::get('attachments/{attachment}/thumbnail', [PortalMessageAttachmentController::class, 'thumbnail']);
+
+    Route::post('profile/avatar', [PortalProfileController::class, 'updateAvatar']);
+    Route::delete('profile/avatar', [PortalProfileController::class, 'destroyAvatar']);
 });
 
 // Public, no auth -- the client-facing surface for proposals. Much smaller

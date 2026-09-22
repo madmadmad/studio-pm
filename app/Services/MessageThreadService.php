@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Jobs\GenerateAttachmentThumbnail;
 use App\Models\Contact;
 use App\Models\Message;
 use App\Models\MessageParticipant;
@@ -9,8 +10,10 @@ use App\Models\Project;
 use App\Models\User;
 use App\Notifications\NewMessageReply;
 use App\Notifications\NewMessageThread;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 // Shared between the staff (App\Http\Controllers\MessageController) and
 // client (App\Http\Controllers\Portal\MessageController) message
@@ -19,6 +22,26 @@ use Illuminate\Support\Facades\DB;
 // is what stops the two controllers from drifting apart.
 class MessageThreadService
 {
+    /**
+     * Validation rules for the `attachments` array on a message create/reply
+     * request -- shared so the staff and portal controllers can't drift on
+     * limits. Mime types are checked against the file's real detected
+     * content, not the client-supplied extension.
+     */
+    public function attachmentValidationRules(): array
+    {
+        $mimes = collect(config('message_attachments.allowed_mimes'))->flatten()->unique()->values()->all();
+
+        return [
+            'attachments' => ['array', 'max:'.config('message_attachments.max_files_per_message')],
+            'attachments.*' => [
+                'file',
+                'max:'.config('message_attachments.max_file_size_kb'),
+                'mimetypes:'.implode(',', $mimes),
+            ],
+        ];
+    }
+
     /**
      * Resolves ["user:3", "contact:5", ...] tokens against who's actually
      * eligible on this project -- active team members and portal-access
@@ -60,16 +83,19 @@ class MessageThreadService
 
     /**
      * @param  Collection<int, User|Contact>  $recipients
+     * @param  UploadedFile[]  $attachments
      */
-    public function createThread(Project $project, User|Contact $sender, string $subject, string $body, Collection $recipients): Message
+    public function createThread(Project $project, User|Contact $sender, string $subject, ?string $body, Collection $recipients, array $attachments = []): Message
     {
-        return DB::transaction(function () use ($project, $sender, $subject, $body, $recipients) {
+        return DB::transaction(function () use ($project, $sender, $subject, $body, $recipients, $attachments) {
             $thread = $project->messages()->create([
                 ...$this->senderColumns($sender),
                 'subject' => $subject,
                 'body' => $body,
                 'sent_at' => now(),
             ]);
+
+            $this->storeAttachments($thread, $attachments);
 
             $this->addParticipant($thread, $sender);
             foreach ($recipients as $recipient) {
@@ -87,15 +113,20 @@ class MessageThreadService
     // Replying implicitly joins the thread if the author wasn't already a
     // participant -- see class docblock on Message for why "reply" and
     // "join" both just mean "add a participant row."
-    public function reply(Message $thread, User|Contact $author, string $body): Message
+    /**
+     * @param  UploadedFile[]  $attachments
+     */
+    public function reply(Message $thread, User|Contact $author, ?string $body, array $attachments = []): Message
     {
-        return DB::transaction(function () use ($thread, $author, $body) {
+        return DB::transaction(function () use ($thread, $author, $body, $attachments) {
             $reply = $thread->replies()->create([
                 'project_id' => $thread->project_id,
                 ...$this->senderColumns($author),
                 'body' => $body,
                 'sent_at' => now(),
             ]);
+
+            $this->storeAttachments($reply, $attachments);
 
             $this->addParticipant($thread, $author);
 
@@ -114,6 +145,57 @@ class MessageThreadService
     public function join(Message $thread, User|Contact $actor): void
     {
         $this->addParticipant($thread, $actor);
+    }
+
+    public function updateBody(Message $message, string $body): Message
+    {
+        $message->update(['body' => $body]);
+
+        return $message;
+    }
+
+    // Soft-deletes the message (so it renders as "Message deleted" without
+    // losing its place in the thread) but actually removes its attachment
+    // files from storage -- those aren't kept around just because the
+    // message row is.
+    public function deleteMessage(Message $message): void
+    {
+        foreach ($message->attachments as $attachment) {
+            Storage::disk($attachment->disk)->delete(array_filter([$attachment->path, $attachment->thumbnail_path]));
+        }
+        $message->attachments()->delete();
+        $message->delete();
+    }
+
+    /**
+     * @param  UploadedFile[]  $files
+     */
+    protected function storeAttachments(Message $message, array $files): void
+    {
+        $disk = config('filesystems.private_disk');
+        $imageExtensions = config('message_attachments.image_extensions');
+
+        foreach ($files as $file) {
+            $path = $file->store('message-attachments', $disk);
+            $isImage = in_array(strtolower($file->getClientOriginalExtension()), $imageExtensions, true);
+
+            [$width, $height] = $isImage ? (@getimagesize($file->getRealPath()) ?: [null, null]) : [null, null];
+
+            $attachment = $message->attachments()->create([
+                'disk' => $disk,
+                'path' => $path,
+                'original_name' => $file->getClientOriginalName(),
+                'mime_type' => $file->getMimeType(),
+                'size' => $file->getSize(),
+                'width' => $width,
+                'height' => $height,
+                'thumbnail_status' => $isImage ? 'pending' : 'not_applicable',
+            ]);
+
+            if ($isImage) {
+                GenerateAttachmentThumbnail::dispatch($attachment);
+            }
+        }
     }
 
     protected function addParticipant(Message $thread, User|Contact $actor): MessageParticipant

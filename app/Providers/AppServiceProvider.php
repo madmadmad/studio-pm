@@ -3,10 +3,12 @@
 namespace App\Providers;
 
 use App\Listeners\MarkInvoicePaidFromStripeWebhook;
+use App\Models\Message;
 use App\Models\Project;
 use App\Models\Task;
 use App\Models\TimeEntry;
 use App\Models\User;
+use App\Policies\MessagePolicy;
 use App\Policies\ProjectPolicy;
 use App\Policies\TaskPolicy;
 use App\Policies\TimeEntryPolicy;
@@ -57,6 +59,7 @@ class AppServiceProvider extends ServiceProvider
             ? Password::min(12)->mixedCase()->numbers()->symbols()->uncompromised()
             : Password::min(8));
 
+        Gate::policy(Message::class, MessagePolicy::class);
         Gate::policy(Project::class, ProjectPolicy::class);
         Gate::policy(Task::class, TaskPolicy::class);
         Gate::policy(TimeEntry::class, TimeEntryPolicy::class);

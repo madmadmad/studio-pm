@@ -134,6 +134,10 @@ function MessagesTab({ project }) {
                 create: `/api/portal/projects/${project.id}/messages`,
                 reply: (id) => `/api/portal/messages/${id}/replies`,
                 join: (id) => `/api/portal/messages/${id}/join`,
+                update: (id) => `/api/portal/messages/${id}`,
+                destroy: (id) => `/api/portal/messages/${id}`,
+                attachmentUrl: (id) => `/api/portal/attachments/${id}`,
+                attachmentThumbnailUrl: (id) => `/api/portal/attachments/${id}/thumbnail`,
             }}
             onChange={reload}
         />

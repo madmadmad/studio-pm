@@ -15,9 +15,9 @@ class Contact extends Model implements AuthenticatableContract
 {
     use AuthenticatableTrait, Notifiable;
 
-    protected $fillable = ['company_id', 'name', 'email', 'phone', 'role', 'is_primary', 'is_billing'];
+    protected $fillable = ['company_id', 'name', 'email', 'phone', 'role', 'is_primary', 'is_billing', 'avatar_path'];
 
-    protected $appends = ['has_portal_access'];
+    protected $appends = ['has_portal_access', 'avatar_url'];
 
     protected $casts = [
         'is_primary' => 'boolean',
@@ -45,6 +45,12 @@ class Contact extends Model implements AuthenticatableContract
     protected function getHasPortalAccessAttribute(): bool
     {
         return $this->hasPortalAccess();
+    }
+
+    // Never a raw disk URL -- see User::getAvatarUrlAttribute() for why.
+    protected function getAvatarUrlAttribute(): ?string
+    {
+        return $this->avatar_path ? route('avatars.contact', $this) : null;
     }
 
     // Client access is whole-company, not per-project -- every contact

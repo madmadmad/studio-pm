@@ -13,7 +13,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
-#[Fillable(['name', 'email', 'password', 'role'])]
+#[Fillable(['name', 'email', 'password', 'role', 'avatar_path'])]
 #[Hidden(['password', 'remember_token', 'invite_token'])]
 class User extends Authenticatable
 {
@@ -27,7 +27,7 @@ class User extends Authenticatable
     // The raw invite_token is hidden from JSON entirely -- this exposes just
     // enough for the Team admin UI to show an "invite pending" state and
     // offer a resend, without ever leaking the token value itself.
-    protected $appends = ['has_pending_invite'];
+    protected $appends = ['has_pending_invite', 'avatar_url'];
 
     /**
      * Get the attributes that should be cast.
@@ -48,6 +48,14 @@ class User extends Authenticatable
     protected function getHasPendingInviteAttribute(): bool
     {
         return $this->hasPendingInvite();
+    }
+
+    // Never a raw disk URL -- avatars live on the private disk like message
+    // attachments do, so this always routes through an authenticated
+    // controller action instead.
+    protected function getAvatarUrlAttribute(): ?string
+    {
+        return $this->avatar_path ? route('avatars.user', $this) : null;
     }
 
     public function isManager(): bool

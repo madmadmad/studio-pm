@@ -8,7 +8,6 @@ use App\Services\MagicLinkBroker;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
-use Illuminate\Support\Str;
 
 class NewMessageThread extends Notification
 {
@@ -25,7 +24,7 @@ class NewMessageThread extends Notification
     {
         $project = $this->thread->project;
         $sender = $this->thread->sender();
-        $snippet = Str::limit($this->thread->body, 200);
+        $snippet = $this->thread->loadMissing('attachments')->snippet();
 
         return (new MailMessage)
             ->subject("New message on {$project->name}: {$this->thread->subject}")

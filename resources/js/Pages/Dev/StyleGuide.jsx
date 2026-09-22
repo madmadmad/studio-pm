@@ -4,6 +4,8 @@ import AppLayout from '../../Layouts/AppLayout';
 import Button from '../../Components/Button';
 import Card from '../../Components/Card';
 import Badge from '../../Components/Badge';
+import Avatar from '../../Components/Avatar';
+import AttachmentChip from '../../Components/AttachmentChip';
 
 function Section({ title, description, children }) {
     return (
@@ -200,6 +202,22 @@ export default function StyleGuide() {
                         </tbody>
                     </table>
                 </Card>
+            </Section>
+
+            <Section title="Avatars" description="Avatar.jsx -- a photo when one's uploaded, otherwise initials on a color picked deterministically from the author's id (see tokens.css's --color-avatar-*).">
+                <div className="flex items-center gap-4">
+                    <Avatar name="Bill Sattler" id={1} size={40} />
+                    <Avatar name="Casey Client" id={2} size={40} />
+                    <Avatar name="Robin Teammate" id={3} size={40} />
+                    <Avatar name="Sam Bystander" id={4} size={40} />
+                </div>
+            </Section>
+
+            <Section title="Messages" description="The .message-card class (a soft, off-white message body) and .attachment-chip (a non-image file inline in a message) -- see MessagesPanel.jsx.">
+                <div className="message-card max-w-md mb-3">
+                    This is what a message body looks like -- soft background, generous padding, no heavy border.
+                </div>
+                <AttachmentChip attachment={{ original_name: 'brand-brief.pdf', size: 245000 }} downloadUrl="#" />
             </Section>
         </AppLayout>
     );

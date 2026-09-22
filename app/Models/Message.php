@@ -5,9 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Str;
 
 class Message extends Model
 {
+    use SoftDeletes;
+
     protected $fillable = [
         'project_id', 'parent_id', 'sender_user_id', 'sender_contact_id', 'subject', 'body', 'sent_at',
     ];
@@ -48,6 +52,11 @@ class Message extends Model
         return $this->hasMany(MessageParticipant::class);
     }
 
+    public function attachments(): HasMany
+    {
+        return $this->hasMany(MessageAttachment::class);
+    }
+
     public function sender(): User|Contact|null
     {
         return $this->senderUser ?? $this->senderContact;
@@ -68,5 +77,19 @@ class Message extends Model
     public function isParticipant(User|Contact $actor): bool
     {
         return $this->participants->contains(fn (MessageParticipant $p) => $p->isActor($actor));
+    }
+
+    // Used by the email notifications -- a message can be attachments-only
+    // (no body text at all), so falls back to naming what was sent instead
+    // of showing a blank line.
+    public function snippet(int $length = 200): string
+    {
+        if (trim((string) $this->body)) {
+            return Str::limit($this->body, $length);
+        }
+
+        $count = $this->attachments->count();
+
+        return $count > 0 ? "Sent {$count} ".Str::plural('attachment', $count) : '';
     }
 }

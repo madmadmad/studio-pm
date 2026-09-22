@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AvatarController;
 use App\Http\Controllers\Web\AcceptInvitationController;
 use App\Http\Controllers\Web\BookkeepingPageController;
 use App\Http\Controllers\Web\ClientPageController;
@@ -8,6 +9,8 @@ use App\Http\Controllers\Web\ExpensePageController;
 use App\Http\Controllers\Web\InvoicePageController;
 use App\Http\Controllers\Web\PortalAuthController;
 use App\Http\Controllers\Web\PortalPageController;
+use App\Http\Controllers\Web\PortalProfilePageController;
+use App\Http\Controllers\Web\ProfilePageController;
 use App\Http\Controllers\Web\ProjectPageController;
 use App\Http\Controllers\Web\ProposalPageController;
 use App\Http\Controllers\Web\PublicInvoiceController;
@@ -18,6 +21,14 @@ use App\Http\Controllers\Web\TimePageController;
 use App\Http\Controllers\Web\UserPageController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+
+// Avatars carry no sensitive business data, so unlike every other private
+// upload in this app they're reachable by any authenticated actor of
+// either guard rather than being scoped to a specific project -- see
+// AvatarController's own docblock. Outside both the "auth"/"auth:client"
+// groups below since either guard should work here.
+Route::get('/avatars/users/{user}', [AvatarController::class, 'user'])->name('avatars.user');
+Route::get('/avatars/contacts/{contact}', [AvatarController::class, 'contact'])->name('avatars.contact');
 
 // Login, logout, and password reset are all registered by Fortify (see
 // FortifyServiceProvider) -- it owns /login, /logout, /forgot-password, and
@@ -42,6 +53,8 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/time-entries', [TimePageController::class, 'index'])->name('time.index');
     Route::get('/timesheets', [TimePageController::class, 'weekly'])->name('timesheets.index');
+
+    Route::get('/profile', [ProfilePageController::class, 'index'])->name('profile.index');
 
     // Firm-wide financials and the client directory -- Managers only.
     Route::middleware('role:manager')->group(function () {
@@ -87,5 +100,6 @@ Route::prefix('portal')->name('portal.')->group(function () {
         Route::post('/logout', [PortalAuthController::class, 'logout'])->name('logout');
         Route::get('/', [PortalPageController::class, 'index'])->name('dashboard');
         Route::get('/projects/{project}', [PortalPageController::class, 'show'])->name('projects.show');
+        Route::get('/profile', [PortalProfilePageController::class, 'index'])->name('profile.index');
     });
 });

@@ -343,3 +343,42 @@ select.field {
  * edit" idea as the classes above -- kept in JS since the tone list is
  * short and used only through that component.
  * ------------------------------------------------------------------- */
+
+/* ---------------------------------------------------------------------
+ * Messages
+ * The threaded message row in MessagesPanel.jsx: an avatar, a connector
+ * line down to the next message, and the message body in a soft card.
+ * ------------------------------------------------------------------- */
+
+/* Soft, off-white -- deliberately lighter than .card's plain white so a
+   long thread doesn't read as a stack of hard-edged boxes. No border;
+   the porcelain page background is contrast enough. */
+.message-card {
+    background-color: var(--color-mist);
+    border-radius: var(--radius-app);
+    padding: 0.75rem 1rem;
+}
+
+/* The vertical timeline line below an avatar, connecting it to the next
+   message. Fades from the accent color (near the avatar) to transparent,
+   so consecutive messages read as one continuous thread rather than
+   isolated rows. Sits in a column with self-stretch so its height
+   always matches its row, however tall the message content is. */
+.message-connector {
+    width: 2px;
+    background: linear-gradient(to bottom, var(--color-watermelon), color-mix(in srgb, var(--color-watermelon) 0%, transparent));
+}
+
+/* A non-image attachment: file-type glyph + name + size + download,
+   inline within a .message-card. */
+.attachment-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background-color: white;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-app);
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8125rem;
+    max-width: 100%;
+}
