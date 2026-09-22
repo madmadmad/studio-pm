@@ -1102,7 +1102,11 @@ function BillingTab({ project }) {
         e.preventDefault();
         const validItems = form.items.filter((i) => i.description.trim() && parseFloat(i.amount) > 0);
         if (validItems.length === 0) {
-            setError('Add at least one line item with a description and amount.');
+            setError(
+                form.proposal_id && remaining <= 0
+                    ? "This project's budget is already fully invoiced, so the copied line items scaled to $0.00. Increase the budget or enter amounts manually below."
+                    : 'Add at least one line item with a description and amount.'
+            );
             return;
         }
         setSaving(true);
@@ -1190,9 +1194,15 @@ function BillingTab({ project }) {
                                 ))}
                             </select>
                             {wasScaledToRemaining && (
-                                <div className="text-xs text-shadow-grey mt-1">
-                                    Scaled to the {formatCurrency(Math.max(remaining, 0))} left in the budget.
-                                </div>
+                                remaining <= 0 ? (
+                                    <div className="text-xs text-watermelon mt-1">
+                                        This project's budget is already fully invoiced, so these line items scaled to $0.00 — increase the budget or edit the amounts below.
+                                    </div>
+                                ) : (
+                                    <div className="text-xs text-shadow-grey mt-1">
+                                        Scaled to the {formatCurrency(remaining)} left in the budget.
+                                    </div>
+                                )
                             )}
                         </div>
                     )}
