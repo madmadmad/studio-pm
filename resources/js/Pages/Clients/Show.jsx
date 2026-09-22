@@ -126,6 +126,19 @@ function ContactsCard({ company }) {
         }
     }
 
+    async function deleteContact(contact) {
+        const warning = contact.has_portal_access
+            ? ` This will also revoke their client portal access.`
+            : '';
+        if (!confirm(`Delete ${contact.name}?${warning}`)) return;
+        try {
+            await api.delete(`/api/contacts/${contact.id}`);
+            reload();
+        } catch (err) {
+            alert(err.message || 'Could not delete this contact.');
+        }
+    }
+
     return (
         <div className="card card-padded mb-6">
             <div className="flex items-center justify-between mb-3">
@@ -180,6 +193,9 @@ function ContactsCard({ company }) {
                                         Invite to portal
                                     </button>
                                 )}
+                                <button onClick={() => deleteContact(contact)} className="text-xs text-watermelon hover:underline">
+                                    Delete
+                                </button>
                             </div>
                         </li>
                     ))}
