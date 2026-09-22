@@ -35,6 +35,7 @@ export default function InvoicesShow({ invoice }) {
     const formTotal = invoiceTotal(form.items, form.surcharge);
 
     async function sendInvoice() {
+        if (sending) return;
         setSending(true);
         setError('');
         try {

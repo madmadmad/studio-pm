@@ -110,7 +110,9 @@ class InvoiceController extends Controller
 
     public function send(Invoice $invoice)
     {
-        $invoice->loadMissing('contact', 'company.contacts', 'items');
+        abort_unless($invoice->status === 'draft', 422, 'This invoice has already been sent.');
+
+        $invoice->loadMissing('contact', 'company.contacts', 'items', 'project', 'payments');
 
         // The invoice's own contact_id is only set when someone picked a
         // specific person to bill; "no specific contact" (the default) is a
@@ -125,11 +127,13 @@ class InvoiceController extends Controller
 
         abort_if(! $recipient?->email, 422, 'This invoice has no billing contact with an email address.');
 
-        $recipient->notify(new InvoiceSent($invoice));
+        DB::transaction(function () use ($invoice, $recipient) {
+            $recipient->notify(new InvoiceSent($invoice));
 
-        $invoice->update(['status' => 'sent']);
+            $invoice->update(['status' => 'sent']);
+        });
 
-        return $invoice->load('items');
+        return $invoice;
     }
 
     // Manual, manager-only -- for payments that never touch Stripe (check,
