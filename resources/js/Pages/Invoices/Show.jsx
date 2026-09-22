@@ -26,6 +26,7 @@ export default function InvoicesShow({ invoice }) {
     const [copied, setCopied] = useState(false);
     const [paymentMethod, setPaymentMethod] = useState('check');
     const [recordingPayment, setRecordingPayment] = useState(false);
+    const [sending, setSending] = useState(false);
 
     const subtotal = invoiceSubtotal(invoice.items);
     const total = invoiceTotal(invoice.items, invoice.surcharge);
@@ -34,8 +35,16 @@ export default function InvoicesShow({ invoice }) {
     const formTotal = invoiceTotal(form.items, form.surcharge);
 
     async function sendInvoice() {
-        await api.post(`/api/invoices/${invoice.id}/send`);
-        router.reload();
+        setSending(true);
+        setError('');
+        try {
+            await api.post(`/api/invoices/${invoice.id}/send`);
+            router.reload();
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setSending(false);
+        }
     }
 
     async function recordPayment() {
@@ -269,10 +278,12 @@ export default function InvoicesShow({ invoice }) {
                 </div>
             )}
 
+            {!editing && error && <div className="text-sm text-watermelon mb-3">{error}</div>}
+
             {!editing && (
                 <div className="flex items-center gap-2">
                     {invoice.status === 'draft' && (
-                        <Button onClick={sendInvoice}>Send invoice</Button>
+                        <Button onClick={sendInvoice} disabled={sending}>{sending ? 'Sending…' : 'Send invoice'}</Button>
                     )}
                     {invoice.status === 'sent' && (
                         <>

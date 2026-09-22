@@ -6,6 +6,7 @@ use App\Models\Company;
 use App\Models\Expense;
 use App\Models\Invoice;
 use App\Models\TimeEntry;
+use App\Notifications\InvoiceSent;
 use App\Services\StripeCheckoutService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -109,6 +110,23 @@ class InvoiceController extends Controller
 
     public function send(Invoice $invoice)
     {
+        $invoice->loadMissing('contact', 'company.contacts', 'items');
+
+        // The invoice's own contact_id is only set when someone picked a
+        // specific person to bill; "no specific contact" (the default) is a
+        // normal, common state that still needs a real recipient. Fall back
+        // to the company's billing contact, then its primary contact --
+        // same precedence the rest of the app uses when defaulting a
+        // company-level contact (e.g. Projects/Proposals pick the primary
+        // contact when nothing more specific is chosen).
+        $recipient = $invoice->contact
+            ?? $invoice->company->contacts->firstWhere('is_billing', true)
+            ?? $invoice->company->contacts->firstWhere('is_primary', true);
+
+        abort_if(! $recipient?->email, 422, 'This invoice has no billing contact with an email address.');
+
+        $recipient->notify(new InvoiceSent($invoice));
+
         $invoice->update(['status' => 'sent']);
 
         return $invoice->load('items');
