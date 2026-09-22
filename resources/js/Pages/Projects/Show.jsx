@@ -1227,7 +1227,7 @@ function BillingTab({ project }) {
                                         className="field tabular-nums w-28"
                                     />
                                     {form.items.length > 1 && (
-                                        <Button variant="link-danger" onClick={() => removeItemRow(idx)}>Remove</Button>
+                                        <Button type="button" variant="link-danger" onClick={() => removeItemRow(idx)}>Remove</Button>
                                     )}
                                 </div>
                                 <textarea
@@ -1239,7 +1239,7 @@ function BillingTab({ project }) {
                                 />
                             </div>
                         ))}
-                        <Button variant="link-accent" onClick={addItemRow}>+ Add line item</Button>
+                        <Button type="button" variant="link-accent" onClick={addItemRow}>+ Add line item</Button>
                     </div>
 
                     <div className="text-sm mb-3 space-y-1">
