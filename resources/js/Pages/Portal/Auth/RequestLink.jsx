@@ -33,7 +33,7 @@ export default function RequestLink() {
                             onChange={(e) => setData('email', e.target.value)}
                             className="field"
                         />
-                        {errors.email && <div className="text-xs text-fuchsia mt-1">{errors.email}</div>}
+                        {errors.email && <div className="text-xs text-watermelon mt-1">{errors.email}</div>}
                     </div>
                     <Button type="submit" disabled={processing} className="btn-lg mt-2">
                         Email me a sign-in link

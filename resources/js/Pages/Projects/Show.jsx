@@ -167,7 +167,7 @@ function OverviewTab({ project }) {
                         </div>
                         <div className="card card-padded">
                             <div className="text-xs text-shadow-grey mb-1">Remaining</div>
-                            <div className={`tabular-nums text-xl ${remaining < 0 ? 'text-fuchsia' : ''}`}>{formatCurrency(remaining)}</div>
+                            <div className={`tabular-nums text-xl ${remaining < 0 ? 'text-watermelon' : ''}`}>{formatCurrency(remaining)}</div>
                         </div>
                     </>
                 )}
@@ -1167,7 +1167,7 @@ function BillingTab({ project }) {
                     <div className="text-sm text-shadow-grey">
                         Budget <span className="tabular-nums font-medium text-gunmetal">{formatCurrency(budget)}</span>
                         {' · '}
-                        Remaining <span className={`tabular-nums font-medium ${remaining < 0 ? 'text-fuchsia' : 'text-gunmetal'}`}>{formatCurrency(remaining)}</span>
+                        Remaining <span className={`tabular-nums font-medium ${remaining < 0 ? 'text-watermelon' : 'text-gunmetal'}`}>{formatCurrency(remaining)}</span>
                     </div>
                 ) : <div />}
                 <Button onClick={() => (showForm ? setShowForm(false) : openForm())}>
@@ -1250,7 +1250,7 @@ function BillingTab({ project }) {
                             label="Offer to pay by card (adds a 3% fee, shown only at checkout)"
                         />
                     </div>
-                    {error && <div className="text-sm text-fuchsia mb-2">{error}</div>}
+                    {error && <div className="text-sm text-watermelon mb-2">{error}</div>}
                     <div className="flex justify-end">
                         <Button type="submit" variant="confirm" disabled={saving}>Create draft invoice</Button>
                     </div>
@@ -1379,7 +1379,7 @@ function ExpensesTab({ project }) {
                 />
                 <Button type="submit" variant="confirm" disabled={saving} className="col-span-2 justify-self-end w-fit">Add expense</Button>
             </form>
-            <div className="text-sm text-shadow-grey mb-2">Total expenses: <span className="tabular-nums text-fuchsia">{formatCurrency(total)}</span></div>
+            <div className="text-sm text-shadow-grey mb-2">Total expenses: <span className="tabular-nums text-watermelon">{formatCurrency(total)}</span></div>
             <div className="card overflow-hidden">
                 {expenses.length === 0 ? (
                     <EmptyState text="No expenses logged for this project." />
@@ -1400,7 +1400,7 @@ function ExpensesTab({ project }) {
                                     <td>{formatDate(e.date)}</td>
                                     <td className="text-shadow-grey">{e.name}</td>
                                     <td><ExpenseStatusBadge expense={e} /></td>
-                                    <td className="text-right tabular-nums text-fuchsia">{formatCurrency(e.amount)}</td>
+                                    <td className="text-right tabular-nums text-watermelon">{formatCurrency(e.amount)}</td>
                                     <td className="text-right">
                                         {e.billing_status === 'unbilled' && (
                                             <button onClick={() => remove(e)} className="icon-btn icon-btn-danger">

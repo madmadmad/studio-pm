@@ -254,7 +254,7 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
                         />
                     </div>
 
-                    {error && <div className="text-sm mb-3 text-fuchsia">{error}</div>}
+                    {error && <div className="text-sm mb-3 text-watermelon">{error}</div>}
 
                     <div className="flex gap-2 justify-end">
                         <Button type="button" variant="secondary" onClick={() => setShowForm(false)}>Cancel</Button>

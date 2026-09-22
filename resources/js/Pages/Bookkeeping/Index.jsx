@@ -87,7 +87,7 @@ export default function BookkeepingIndex({ transactions, summary }) {
                                     <td className="text-shadow-grey">{t.description}</td>
                                     <td className="text-right tabular-nums text-fern">+{formatCurrency(t.amount)}</td>
                                     <td className="text-right">
-                                        <button onClick={() => remove(t)} className="text-xs text-shadow-grey hover:text-fuchsia">Remove</button>
+                                        <button onClick={() => remove(t)} className="text-xs text-shadow-grey hover:text-watermelon">Remove</button>
                                     </td>
                                 </tr>
                             ))}

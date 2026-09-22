@@ -274,7 +274,7 @@ export default function ExpensesIndex({ expenses: expensesProp, categories: cate
 
             {showForm && (
                 <form onSubmit={submit} className="card card-padded mb-6">
-                    {error && <div className="text-sm text-fuchsia mb-3">{error}</div>}
+                    {error && <div className="text-sm text-watermelon mb-3">{error}</div>}
                     <div className="grid grid-cols-2 gap-3">
                         <input required placeholder="Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="field col-span-2" />
                         <select value={form.category_id} onChange={(e) => setForm({ ...form, category_id: e.target.value })} className="field">

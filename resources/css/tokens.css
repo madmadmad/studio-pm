@@ -10,10 +10,12 @@
     --font-display: 'Inter Display', 'Inter', ui-sans-serif, system-ui, sans-serif;
 
     /*
-     * Brand palette: Porcelain / Fern / Shadow Grey / Gunmetal / Watermelon / Hot Fuchsia.
+     * Brand palette: Porcelain / Fern / Shadow Grey / Gunmetal / Watermelon.
      * Shadow Grey -> navigation + primary text. Porcelain -> workspace background.
-     * Watermelon -> accent (links, active nav, "in progress" states).
-     * Fern -> edit/save actions and "done" states. Hot Fuchsia -> danger/overdue.
+     * Watermelon -> accent (links, active nav, "in progress" states) and
+     * danger/overdue -- this palette has no separate danger color, so
+     * watermelon covers both.
+     * Fern -> edit/save actions and "done" states.
      * Variable names below match these palette names directly.
      */
     --color-gunmetal: #23262e;
@@ -26,8 +28,6 @@
     --color-watermelon-soft: #fce2e8;
     --color-fern: #5aa329;
     --color-fern-soft: #e7efe3;
-    --color-fuchsia: #ff365b;
-    --color-fuchsia-soft: #ffe3e9;
 
     /*
      * Single knob for corner rounding app-wide -- change this one value to

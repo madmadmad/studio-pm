@@ -211,7 +211,7 @@ export default function InvoicesShow({ invoice }) {
                         />
                     </div>
 
-                    {error && <div className="text-sm text-fuchsia mb-3">{error}</div>}
+                    {error && <div className="text-sm text-watermelon mb-3">{error}</div>}
 
                     <div className="flex gap-2 justify-end">
                         <Button variant="secondary" onClick={() => setEditing(false)}>Cancel</Button>

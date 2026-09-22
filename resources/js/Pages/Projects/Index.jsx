@@ -165,7 +165,7 @@ export default function ProjectsIndex({ projects, companies, archivedView = fals
                         onChange={(e) => setForm({ ...form, description: e.target.value })}
                         className="field col-span-2"
                     />
-                    {error && <div className="text-sm text-fuchsia col-span-2">{error}</div>}
+                    {error && <div className="text-sm text-watermelon col-span-2">{error}</div>}
                     <div className="flex gap-2 col-span-2 justify-end">
                         <Button type="button" variant="secondary" onClick={() => setShowForm(false)}>Cancel</Button>
                         <Button type="submit" variant="confirm" disabled={saving}>Save project</Button>

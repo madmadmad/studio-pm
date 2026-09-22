@@ -49,8 +49,6 @@ const COLORS = [
     ['Watermelon soft', '--color-watermelon-soft'],
     ['Fern', '--color-fern'],
     ['Fern soft', '--color-fern-soft'],
-    ['Fuchsia', '--color-fuchsia'],
-    ['Fuchsia soft', '--color-fuchsia-soft'],
 ];
 
 export default function StyleGuide() {
@@ -157,7 +155,6 @@ export default function StyleGuide() {
                     <Badge tone="neutral" label="Neutral" />
                     <Badge tone="watermelon" label="Watermelon" />
                     <Badge tone="fern" label="Fern" />
-                    <Badge tone="fuchsia" label="Fuchsia" />
                 </div>
             </Section>
 

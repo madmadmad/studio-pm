@@ -14,7 +14,7 @@ function emptyForm() {
 
 function StatusBadge({ user }) {
     if (user.deactivated_at) {
-        return <Badge tone="fuchsia" label="Deactivated" />;
+        return <Badge tone="watermelon" label="Deactivated" />;
     }
     if (user.has_pending_invite) {
         return <Badge tone="watermelon" label="Invite pending" />;

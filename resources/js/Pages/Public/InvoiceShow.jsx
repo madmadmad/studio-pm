@@ -118,7 +118,7 @@ export default function InvoiceShow({ invoice, studio }) {
                                 {paying === 'ach' ? 'Redirecting…' : 'Pay by ACH — no fee'}
                             </button>
                         </div>
-                        {error && <div className="text-sm text-fuchsia mt-2">{error}</div>}
+                        {error && <div className="text-sm text-watermelon mt-2">{error}</div>}
 
                         {studio.payment_instructions && (
                             <div className="mt-6 pt-6 border-t border-border">

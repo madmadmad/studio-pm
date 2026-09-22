@@ -18,7 +18,7 @@ createInertiaApp({
         // the one place controlling their size; an icon elsewhere that
         // still sets its own size/weight prop overrides this as usual.
         createRoot(el).render(
-            <IconContext.Provider value={{ weight: 'regular', size: 20 }}>
+            <IconContext.Provider value={{ weight: 'regular', size: 18 }}>
                 <App {...props} />
             </IconContext.Provider>
         );

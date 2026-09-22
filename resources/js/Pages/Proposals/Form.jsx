@@ -385,7 +385,7 @@ export default function ProposalsForm({ proposal, companies, services, presetCom
                                 <button
                                     type="button"
                                     onClick={() => removeItem(idx)}
-                                    className="text-xs text-fuchsia"
+                                    className="text-xs text-watermelon"
                                 >
                                     Remove
                                 </button>
@@ -403,7 +403,7 @@ export default function ProposalsForm({ proposal, companies, services, presetCom
                     )}
                 </div>
 
-                {error && <div className="text-sm mb-3 text-fuchsia">{error}</div>}
+                {error && <div className="text-sm mb-3 text-watermelon">{error}</div>}
 
                 <div className="flex gap-2 justify-end">
                     <Link href="/proposals" className="btn btn-secondary">Cancel</Link>

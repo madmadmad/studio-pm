@@ -57,7 +57,7 @@ export default function AcceptInvitation({ token, email, valid }) {
                             onChange={(e) => setData('password', e.target.value)}
                             className="field"
                         />
-                        {errors.password && <div className="text-xs text-fuchsia mt-1">{errors.password}</div>}
+                        {errors.password && <div className="text-xs text-watermelon mt-1">{errors.password}</div>}
                     </div>
 
                     <div>

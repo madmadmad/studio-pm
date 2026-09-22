@@ -106,10 +106,10 @@
 /* Danger: destructive actions (Remove, Delete). */
 .btn-danger {
     background-color: transparent;
-    color: var(--color-fuchsia);
+    color: var(--color-watermelon);
 }
 .btn-danger:not(:disabled):hover {
-    background-color: var(--color-fuchsia-soft);
+    background-color: var(--color-watermelon-soft);
 }
 
 /* Link-style buttons: inline text actions, no button box. */
@@ -132,7 +132,7 @@
     color: var(--color-watermelon);
 }
 .btn-link-danger {
-    color: var(--color-fuchsia);
+    color: var(--color-watermelon);
 }
 .btn-link:not(:disabled):hover,
 .btn-link-accent:not(:disabled):hover,
@@ -185,11 +185,11 @@
 }
 
 /* Danger: destructive row actions (Delete). Neutral by default and only
-   turns fuchsia on hover -- unlike .btn-danger, which is always fuchsia --
-   so a row of actions doesn't read as alarming until you're about to
-   click it. */
+   turns watermelon on hover -- unlike .btn-danger, which is always
+   watermelon -- so a row of actions doesn't read as alarming until
+   you're about to click it. */
 .icon-btn-danger:hover {
-    color: var(--color-fuchsia);
+    color: var(--color-watermelon);
 }
 
 /* ---------------------------------------------------------------------

@@ -5,7 +5,7 @@ const INVOICE_STATUS = {
     draft: { tone: 'neutral', label: 'Draft' },
     sent: { tone: 'watermelon', label: 'Sent' },
     paid: { tone: 'fern', label: 'Paid' },
-    overdue: { tone: 'fuchsia', label: 'Overdue' },
+    overdue: { tone: 'watermelon', label: 'Overdue' },
 };
 
 export function InvoiceStatusBadge({ invoice }) {

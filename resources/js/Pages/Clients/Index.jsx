@@ -55,7 +55,7 @@ export default function ClientsIndex({ companies }) {
                         onChange={(e) => setForm({ ...form, phone: e.target.value })}
                         className="field col-span-2"
                     />
-                    {error && <div className="text-sm text-fuchsia col-span-2">{error}</div>}
+                    {error && <div className="text-sm text-watermelon col-span-2">{error}</div>}
                     <div className="flex gap-2 col-span-2 justify-end">
                         <Button type="button" variant="secondary" onClick={() => setShowForm(false)}>
                             Cancel
