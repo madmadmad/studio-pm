@@ -6,59 +6,41 @@ use App\Models\Invoice;
 use App\Models\StudioProfile;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Barryvdh\DomPDF\PDF as PdfDocument;
-use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Log;
-use Throwable;
+use RuntimeException;
 
 class InvoicePdfRenderer
 {
     /**
-     * dompdf's font cache registry (storage/fonts/installed-fonts.json)
-     * trusts a font is still cached once it's been registered once -- it
-     * never re-checks the .ufm/.ttf file is still on disk before loading
-     * it (see registerFont()'s early return in
-     * vendor/dompdf/dompdf/src/FontMetrics.php). storage/fonts is
-     * gitignored and rebuilt per-server, so if it's ever partially cleared
-     * (disk cleanup, a bad deploy) while the registry survives, every
-     * render fails permanently with an unrecoverable fopen() error until
-     * someone clears the cache by hand. Detect that failure and self-heal
-     * by clearing the cache and rendering once more.
+     * dompdf caches the Inter TTFs used by pdfs.invoice under storage/fonts
+     * (font_dir/font_cache in config/dompdf.php's defaults). That directory
+     * is gitignored as a whole (.gitignore: "/storage/fonts", not
+     * "/storage/fonts/*"), so a fresh deploy never creates it, and neither
+     * dompdf nor the barryvdh package ever calls mkdir() for it -- the
+     * package's own config comments just assume it "must exist and be
+     * writable". Without it, the first @font-face registration fails with
+     * an unrecoverable fopen(..., "w+") error. Ensure it exists before
+     * every render rather than relying on it having been provisioned by
+     * hand on each server.
      */
     public static function render(Invoice $invoice): PdfDocument
     {
-        try {
-            return self::build($invoice);
-        } catch (Throwable $e) {
-            if (! self::isStaleFontCache($e)) {
-                throw $e;
-            }
+        self::ensureFontCacheDirectoryExists();
 
-            Log::warning('Stale dompdf font cache, clearing storage/fonts and retrying.', [
-                'invoice_id' => $invoice->id,
-                'message' => $e->getMessage(),
-            ]);
-
-            File::deleteDirectory(storage_path('fonts'));
-
-            return self::build($invoice);
-        }
-    }
-
-    protected static function build(Invoice $invoice): PdfDocument
-    {
-        $pdf = Pdf::loadView('pdfs.invoice', [
+        return Pdf::loadView('pdfs.invoice', [
             'invoice' => $invoice,
             'studio' => StudioProfile::current(),
         ])->setPaper('letter'); // US business -- dompdf defaults to A4
-
-        $pdf->output(); // force rendering now so a stale cache fails here, not on ->download()/->output() later
-
-        return $pdf;
     }
 
-    protected static function isStaleFontCache(Throwable $e): bool
+    protected static function ensureFontCacheDirectoryExists(): void
     {
-        return str_contains($e->getMessage(), 'fopen(')
-            && str_contains($e->getMessage(), 'storage/fonts');
+        $dir = storage_path('fonts');
+
+        // @-suppressed: concurrent requests can race to create this on a
+        // cold server, and a losing mkdir() ("File exists") is expected,
+        // not an error -- the is_dir() check below is what actually matters.
+        if (! is_dir($dir) && ! @mkdir($dir, 0775, true) && ! is_dir($dir)) {
+            throw new RuntimeException("Could not create dompdf font cache directory: {$dir}");
+        }
     }
 }
