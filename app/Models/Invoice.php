@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\UtcDateTime;
 use App\Enums\PaymentTerms;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,13 +11,15 @@ use Illuminate\Support\Str;
 
 class Invoice extends Model
 {
-    protected $fillable = ['company_id', 'project_id', 'contact_id', 'status', 'surcharge', 'issued_on', 'due_on', 'payment_terms', 'stripe_checkout_session_id'];
+    protected $fillable = ['company_id', 'project_id', 'contact_id', 'status', 'surcharge', 'issued_on', 'due_on', 'payment_terms', 'stripe_checkout_session_id', 'sent_at', 'reminders_enabled'];
 
     protected $casts = [
         'surcharge' => 'boolean',
         'issued_on' => 'date',
         'due_on' => 'date',
         'payment_terms' => PaymentTerms::class,
+        'sent_at' => UtcDateTime::class,
+        'reminders_enabled' => 'boolean',
     ];
 
     protected static function booted(): void
@@ -74,6 +77,11 @@ class Invoice extends Model
         return $this->hasMany(Payment::class);
     }
 
+    public function invoiceSends(): HasMany
+    {
+        return $this->hasMany(InvoiceSend::class);
+    }
+
     public function expenses(): HasMany
     {
         return $this->hasMany(Expense::class);
@@ -99,6 +107,111 @@ class Invoice extends Model
     public function total(): float
     {
         return $this->subtotal();
+    }
+
+    // Invoice-level override wins over the company's, which wins over the
+    // app-wide config default -- same precedence as the send modal's
+    // "Automatic reminders" dropdown.
+    public function effectiveRemindersEnabled(): bool
+    {
+        return $this->reminders_enabled ?? $this->company->effectiveRemindersEnabled();
+    }
+
+    // What the client still owes -- the full total when nothing has been
+    // paid yet, otherwise the total minus whatever payments() already
+    // recorded. Reminders state this instead of the original total once a
+    // partial payment exists.
+    public function remainingBalance(): float
+    {
+        return round($this->total() - (float) $this->payments->sum('amount'), 2);
+    }
+
+    // The recipient a send/reminder actually goes to: the invoice's own
+    // contact when one was picked, otherwise the company's billing contact,
+    // otherwise its primary contact -- the same precedence the rest of the
+    // app uses when defaulting a company-level contact.
+    public function billingContact(): ?Contact
+    {
+        return $this->contact
+            ?? $this->company->contacts->firstWhere('is_billing', true)
+            ?? $this->company->contacts->firstWhere('is_primary', true);
+    }
+
+    // Invalidates the old /i/{token} link immediately by swapping in a new
+    // one -- used when a link needs to be revoked.
+    public function regenerateToken(): void
+    {
+        // forceFill, not update() -- public_token is deliberately excluded
+        // from $fillable (it's only ever set by booted()'s creating hook or
+        // here) so it can never be mass-assigned from a request payload.
+        $this->forceFill(['public_token' => Str::random(40)])->save();
+    }
+
+    // Blocks sending by either method (Send Invoice modal, Step 3): missing
+    // contact, no items/zero total, already paid, or missing dates. Contact
+    // must be eager-loaded via billingContact()'s relations (company.contacts,
+    // contact) and items/payments for this to avoid lazy-loading queries --
+    // deliberately not a global $appends entry, only appended explicitly by
+    // the invoice Show page.
+    public function sendBlockingIssues(): array
+    {
+        $issues = [];
+
+        if ($this->status === 'paid') {
+            $issues[] = 'This invoice is already paid.';
+        }
+
+        if ($this->items->isEmpty() || $this->total() <= 0) {
+            $issues[] = 'This invoice has no line items or a total of zero.';
+        }
+
+        if (! $this->issued_on || ! $this->due_on) {
+            $issues[] = 'This invoice is missing an issue date or due date.';
+        }
+
+        if (! $this->billingContact()) {
+            $issues[] = 'This invoice has no contact assigned.';
+        }
+
+        return $issues;
+    }
+
+    protected function getSendBlockingIssuesAttribute(): array
+    {
+        return $this->sendBlockingIssues();
+    }
+
+    // Blocks the Email tab specifically (a contact exists but has no email
+    // address) -- the Send via URL tab is still usable in that case.
+    protected function getContactEmailMissingAttribute(): bool
+    {
+        $contact = $this->billingContact();
+
+        return (bool) $contact && ! $contact->email;
+    }
+
+    // Whether the modal should prompt to bump the issue date to today --
+    // only relevant the first time a draft goes out; a target date later
+    // than today (a scheduled send) is still covered since issued_on being
+    // before today necessarily means it's before that later date too.
+    protected function getNeedsIssueDateUpdateAttribute(): bool
+    {
+        return ! $this->sent_at && $this->issued_on && $this->issued_on->lt(today());
+    }
+
+    protected function getRemainingBalanceAttribute(): float
+    {
+        return $this->remainingBalance();
+    }
+
+    protected function getEffectiveRemindersEnabledAttribute(): bool
+    {
+        return $this->effectiveRemindersEnabled();
+    }
+
+    protected function getPublicUrlAttribute(): string
+    {
+        return url('/i/'.$this->public_token);
     }
 
     // Whether a card payment (with its 3% fee, shown only at Stripe

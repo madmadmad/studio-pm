@@ -3,6 +3,7 @@ import { displayInvoiceStatus } from '../lib/format';
 
 const INVOICE_STATUS = {
     draft: { tone: 'neutral', label: 'Draft' },
+    scheduled: { tone: 'neutral', label: 'Scheduled' },
     sent: { tone: 'watermelon', label: 'Sent' },
     paid: { tone: 'fern', label: 'Paid' },
     overdue: { tone: 'watermelon', label: 'Overdue' },

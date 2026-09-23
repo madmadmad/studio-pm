@@ -26,6 +26,7 @@ class CompanyController extends Controller
             // Custom isn't a valid firm-wide-default choice -- it only ever
             // makes sense picked per-invoice.
             'default_payment_terms' => ['nullable', Rule::enum(PaymentTerms::class)->except(PaymentTerms::Custom)],
+            'reminders_enabled' => ['nullable', 'boolean'],
         ]);
 
         // The "use the firm default" option in the dropdown submits an
@@ -52,6 +53,7 @@ class CompanyController extends Controller
             'postal_code' => ['nullable', 'string', 'max:20'],
             'status' => ['sometimes', 'in:active,inactive'],
             'default_payment_terms' => ['nullable', Rule::enum(PaymentTerms::class)->except(PaymentTerms::Custom)],
+            'reminders_enabled' => ['nullable', 'boolean'],
         ]);
 
         if (array_key_exists('default_payment_terms', $data)) {

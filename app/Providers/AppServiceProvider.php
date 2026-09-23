@@ -72,5 +72,16 @@ class AppServiceProvider extends ServiceProvider
 
             return Limit::perMinute(1)->by($key);
         });
+
+        // One manual invoice send per invoice per minute -- guards against
+        // an accidental double-click, not a real attack surface (the route
+        // is already manager-only). The route parameter may not have been
+        // substituted into an Invoice model yet at this point in the
+        // middleware stack, so this handles either form.
+        RateLimiter::for('invoice-send', function (Request $request) {
+            $invoice = $request->route('invoice');
+
+            return Limit::perMinute(1)->by(is_object($invoice) ? $invoice->id : $invoice);
+        });
     }
 }

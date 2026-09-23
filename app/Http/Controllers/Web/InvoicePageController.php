@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Web;
 use App\Http\Controllers\Controller;
 use App\Models\Company;
 use App\Models\Invoice;
+use App\Models\StudioProfile;
 use App\Services\InvoicePdfRenderer;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -14,7 +15,9 @@ class InvoicePageController extends Controller
 {
     public function index(): Response
     {
-        $invoices = Invoice::with(['items', 'company'])->latest()->get();
+        $invoices = Invoice::with(['items', 'company'])
+            ->withExists(['invoiceSends as has_pending_scheduled_send' => fn ($query) => $query->where('type', 'email')->where('status', 'scheduled')])
+            ->latest()->get();
 
         return Inertia::render('Invoices/Index', [
             'invoices' => $invoices,
@@ -27,10 +30,19 @@ class InvoicePageController extends Controller
 
     public function show(Invoice $invoice): Response
     {
-        $invoice->load(['items.service', 'items.timeEntries', 'company.contacts', 'contact', 'project', 'payments']);
+        $invoice->load([
+            'items.service', 'items.timeEntries', 'company.contacts', 'contact', 'project', 'payments',
+            'invoiceSends' => fn ($query) => $query->with('sentBy:id,name')->latest('id'),
+        ]);
+        $invoice->append(['send_blocking_issues', 'contact_email_missing', 'needs_issue_date_update', 'remaining_balance', 'effective_reminders_enabled', 'public_url']);
 
         return Inertia::render('Invoices/Show', [
             'invoice' => $invoice,
+            'studio' => StudioProfile::current(),
+            'invoicingDefaults' => [
+                'emailTemplate' => config('invoicing.email_template'),
+                'emailSubjectTemplate' => config('invoicing.email_subject_template'),
+            ],
         ]);
     }
 

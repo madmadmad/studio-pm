@@ -1,12 +1,15 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { useState } from 'react';
-import { ArrowLeft, Check, Copy, DownloadSimple, Eye } from '@phosphor-icons/react';
+import { useEffect, useState } from 'react';
+import { ArrowLeft, Check, Copy, DownloadSimple, Eye, PaperPlaneTilt } from '@phosphor-icons/react';
 import AppLayout from '../../Layouts/AppLayout';
 import Button from '../../Components/Button';
 import Toggle from '../../Components/Toggle';
 import InvoiceDateFields from '../../Components/InvoiceDateFields';
+import SendInvoiceModal from '../../Components/SendInvoiceModal';
 import { InvoiceStatusBadge } from '../../Components/StatusBadges';
 import { formatCurrency, formatDate, invoiceSubtotal, invoiceTotal } from '../../lib/format';
+import { formatDateTimeEastern, utcToEasternParts, easternWallTimeToUtcIso } from '../../lib/datetime';
+import { reminderRows } from '../../lib/reminders';
 import { paymentTermsLabel } from '../../lib/paymentTerms';
 import { api } from '../../lib/api';
 import { copyToClipboard } from '../../lib/clipboard';
@@ -22,7 +25,10 @@ function editFormFrom(invoice) {
     };
 }
 
-export default function InvoicesShow({ invoice }) {
+export default function InvoicesShow({ invoice: initialInvoice, studio, invoicingDefaults }) {
+    const [invoice, setInvoice] = useState(initialInvoice);
+    useEffect(() => setInvoice(initialInvoice), [initialInvoice]);
+
     const [editing, setEditing] = useState(false);
     const [form, setForm] = useState(() => editFormFrom(invoice));
     const [saving, setSaving] = useState(false);
@@ -30,7 +36,11 @@ export default function InvoicesShow({ invoice }) {
     const [copied, setCopied] = useState(false);
     const [paymentMethod, setPaymentMethod] = useState('check');
     const [recordingPayment, setRecordingPayment] = useState(false);
-    const [sending, setSending] = useState(false);
+    const [sendModalOpen, setSendModalOpen] = useState(false);
+    const [successMessage, setSuccessMessage] = useState('');
+    const [reschedulingId, setReschedulingId] = useState(null);
+    const [rescheduleDate, setRescheduleDate] = useState('');
+    const [rescheduleTime, setRescheduleTime] = useState('');
 
     const subtotal = invoiceSubtotal(invoice.items);
     const total = invoiceTotal(invoice.items, invoice.surcharge);
@@ -38,18 +48,42 @@ export default function InvoicesShow({ invoice }) {
     const formSubtotal = invoiceSubtotal(form.items);
     const formTotal = invoiceTotal(form.items, form.surcharge);
 
-    async function sendInvoice() {
-        if (sending) return;
-        setSending(true);
-        setError('');
-        try {
-            await api.post(`/api/invoices/${invoice.id}/send`);
-            router.reload();
-        } catch (err) {
-            setError(err.message);
-        } finally {
-            setSending(false);
-        }
+    function handleSent(updatedInvoice, message) {
+        setInvoice(updatedInvoice);
+        setSendModalOpen(false);
+        setSuccessMessage(message);
+        setTimeout(() => setSuccessMessage(''), 6000);
+    }
+
+    const pendingScheduledSend = (invoice.invoice_sends || []).find((s) => s.type === 'email' && s.status === 'scheduled');
+
+    async function cancelScheduledSend(send) {
+        const updated = await api.post(`/api/invoices/${invoice.id}/sends/${send.id}/cancel`);
+        setInvoice((current) => ({ ...current, invoice_sends: current.invoice_sends.map((s) => (s.id === updated.id ? updated : s)) }));
+    }
+
+    async function sendScheduledNow(send) {
+        const updated = await api.post(`/api/invoices/${invoice.id}/sends/${send.id}/send-now`);
+        setInvoice((current) => ({ ...current, invoice_sends: current.invoice_sends.map((s) => (s.id === updated.id ? updated : s)) }));
+    }
+
+    function startRescheduling(send) {
+        const parts = utcToEasternParts(send.scheduled_for);
+        setReschedulingId(send.id);
+        setRescheduleDate(parts.date);
+        setRescheduleTime(parts.time);
+    }
+
+    async function confirmReschedule(send) {
+        const scheduledFor = easternWallTimeToUtcIso(rescheduleDate, rescheduleTime);
+        const updated = await api.post(`/api/invoices/${invoice.id}/sends/${send.id}/reschedule`, { scheduled_for: scheduledFor });
+        setInvoice((current) => ({ ...current, invoice_sends: current.invoice_sends.map((s) => (s.id === updated.id ? updated : s)) }));
+        setReschedulingId(null);
+    }
+
+    async function skipReminder(rule) {
+        const created = await api.post(`/api/invoices/${invoice.id}/reminders/skip`, { rule });
+        setInvoice((current) => ({ ...current, invoice_sends: [created, ...(current.invoice_sends || [])] }));
     }
 
     async function recordPayment() {
@@ -139,6 +173,16 @@ export default function InvoicesShow({ invoice }) {
                             <DownloadSimple />
                         </a>
                     )}
+                    {invoice.status !== 'paid' && (
+                        <button
+                            onClick={() => setSendModalOpen(true)}
+                            disabled={editing}
+                            title={editing ? 'Save or cancel your edits first' : invoice.sent_at ? 'Resend' : 'Send invoice'}
+                            className="icon-btn icon-btn-accent"
+                        >
+                            <PaperPlaneTilt />
+                        </button>
+                    )}
                     {invoice.status === 'draft' && !editing && (
                         <Button variant="link" onClick={startEditing}>Edit</Button>
                     )}
@@ -150,6 +194,18 @@ export default function InvoicesShow({ invoice }) {
                 {invoice.contact && <> &middot; Billed to {invoice.contact.name}</>}
                 {invoice.project?.po_number && <> &middot; PO #{invoice.project.po_number}</>}
             </p>
+
+            {successMessage && (
+                <div role="status" aria-live="polite" className="text-sm text-fern bg-fern-soft rounded px-3 py-2 mb-4">
+                    {successMessage}
+                </div>
+            )}
+
+            {editing && invoice.sent_at && (
+                <div className="text-sm text-shadow-grey bg-porcelain rounded px-3 py-2 mb-4">
+                    This invoice has already been sent. The client won&rsquo;t see changes in their original email until you resend it; the online link always shows the latest version.
+                </div>
+            )}
 
             {editing ? (
                 <div className="card card-padded mb-6">
@@ -284,31 +340,98 @@ export default function InvoicesShow({ invoice }) {
                 </div>
             )}
 
-            {!editing && error && <div className="text-sm text-watermelon mb-3">{error}</div>}
-
-            {!editing && (
-                <div className="flex items-center gap-2">
-                    {invoice.status === 'draft' && (
-                        <Button onClick={sendInvoice} disabled={sending}>{sending ? 'Sending…' : 'Send invoice'}</Button>
-                    )}
-                    {invoice.status === 'sent' && (
-                        <>
-                            <select
-                                value={paymentMethod}
-                                onChange={(e) => setPaymentMethod(e.target.value)}
-                                className="field field-sm w-auto"
-                            >
-                                <option value="check">Check</option>
-                                <option value="other">Other</option>
-                            </select>
-                            <Button variant="confirm" onClick={recordPayment} disabled={recordingPayment}>
-                                Record payment
-                            </Button>
-                        </>
+            {pendingScheduledSend && (
+                <div className="card card-padded mb-6">
+                    <div className="flex items-center justify-between">
+                        <span className="text-sm">
+                            Scheduled for <strong>{formatDateTimeEastern(pendingScheduledSend.scheduled_for)}</strong>
+                        </span>
+                        <div className="flex items-center gap-2">
+                            <Button variant="link" onClick={() => sendScheduledNow(pendingScheduledSend)}>Send now</Button>
+                            <Button variant="link" onClick={() => startRescheduling(pendingScheduledSend)}>Reschedule</Button>
+                            <Button variant="link-danger" onClick={() => cancelScheduledSend(pendingScheduledSend)}>Cancel</Button>
+                        </div>
+                    </div>
+                    {reschedulingId === pendingScheduledSend.id && (
+                        <div className="flex items-center gap-2 mt-3">
+                            <input type="date" value={rescheduleDate} onChange={(e) => setRescheduleDate(e.target.value)} className="field field-sm" />
+                            <input type="time" value={rescheduleTime} onChange={(e) => setRescheduleTime(e.target.value)} className="field field-sm" />
+                            <Button variant="confirm" onClick={() => confirmReschedule(pendingScheduledSend)}>Save</Button>
+                            <Button variant="secondary" onClick={() => setReschedulingId(null)}>Cancel</Button>
+                        </div>
                     )}
                 </div>
             )}
+
+            {invoice.status !== 'draft' && invoice.status !== 'paid' && (
+                <div className="card card-padded mb-6">
+                    <h2 className="text-sm font-semibold text-shadow-grey mb-3">Reminders</h2>
+                    <ul className="text-sm divide-y divide-border">
+                        {reminderRows(invoice).map((row) => (
+                            <li key={row.rule} className="py-2 flex items-center justify-between">
+                                <span>
+                                    {row.label} &middot; {formatDate(row.date.toISOString())}
+                                    {row.status === 'sent' && <span className="text-fern"> &middot; Sent</span>}
+                                    {row.status === 'cancelled' && <span className="text-shadow-grey"> &middot; Skipped</span>}
+                                    {row.status === 'failed' && <span className="text-watermelon"> &middot; Failed</span>}
+                                </span>
+                                {row.status === 'upcoming' && (
+                                    <Button variant="link-danger" onClick={() => skipReminder(row.rule)}>Skip</Button>
+                                )}
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            )}
+
+            {invoice.invoice_sends?.length > 0 && (
+                <div className="card card-padded mb-6">
+                    <h2 className="text-sm font-semibold text-shadow-grey mb-3">History</h2>
+                    <ul className="text-sm divide-y divide-border">
+                        {invoice.invoice_sends.map((send) => (
+                            <li key={send.id} className="py-2">
+                                {send.type === 'link' && <>Link copied{send.sent_by ? ` by ${send.sent_by.name}` : ''}, {formatDateTimeEastern(send.sent_at)}</>}
+                                {send.type === 'email' && send.status === 'sent' && <>Sent to {(send.recipients || []).join(', ')}, {formatDateTimeEastern(send.sent_at)}</>}
+                                {send.type === 'email' && send.status === 'scheduled' && <>Scheduled for {formatDateTimeEastern(send.scheduled_for)}</>}
+                                {send.type === 'email' && send.status === 'cancelled' && <>Scheduled send cancelled{send.failure_reason ? `: ${send.failure_reason}` : ''}</>}
+                                {send.type === 'email' && send.status === 'failed' && <span className="text-watermelon">Send failed{send.failure_reason ? `: ${send.failure_reason}` : ''}</span>}
+                                {send.type === 'reminder' && send.status === 'sent' && <>Reminder sent to {(send.recipients || []).join(', ')}, {formatDateTimeEastern(send.sent_at)}</>}
+                                {send.type === 'reminder' && send.status === 'cancelled' && <>Reminder skipped{send.failure_reason ? `: ${send.failure_reason}` : ''}</>}
+                                {send.type === 'reminder' && send.status === 'failed' && <span className="text-watermelon">Reminder failed{send.failure_reason ? `: ${send.failure_reason}` : ''}</span>}
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            )}
+
+            {!editing && error && <div className="text-sm text-watermelon mb-3">{error}</div>}
+
+            {!editing && invoice.status === 'sent' && (
+                <div className="flex items-center gap-2">
+                    <select
+                        value={paymentMethod}
+                        onChange={(e) => setPaymentMethod(e.target.value)}
+                        className="field field-sm w-auto"
+                    >
+                        <option value="check">Check</option>
+                        <option value="other">Other</option>
+                    </select>
+                    <Button variant="confirm" onClick={recordPayment} disabled={recordingPayment}>
+                        Record payment
+                    </Button>
+                </div>
+            )}
             </div>
+
+            {sendModalOpen && (
+                <SendInvoiceModal
+                    invoice={invoice}
+                    studio={studio}
+                    invoicingDefaults={invoicingDefaults}
+                    onClose={() => setSendModalOpen(false)}
+                    onSent={handleSent}
+                />
+            )}
         </AppLayout>
     );
 }

@@ -33,13 +33,20 @@ function DetailsCard({ company }) {
         postal_code: company.postal_code ?? '',
         status: company.status,
         default_payment_terms: company.default_payment_terms ?? '',
+        reminders_enabled: company.reminders_enabled === null ? '' : company.reminders_enabled ? '1' : '0',
     });
 
     async function submit(e) {
         e.preventDefault();
         setSaving(true);
         try {
-            await api.patch(`/api/companies/${company.id}`, form);
+            await api.patch(`/api/companies/${company.id}`, {
+                ...form,
+                // The select's own values are plain strings ('', '1', '0')
+                // -- reminders_enabled itself is a real nullable boolean on
+                // the server, unlike default_payment_terms' '' sentinel.
+                reminders_enabled: form.reminders_enabled === '' ? null : form.reminders_enabled === '1',
+            });
             setEditing(false);
             reload();
         } finally {
@@ -64,6 +71,11 @@ function DetailsCard({ company }) {
                 <p className="text-sm text-shadow-grey mt-1">
                     Default payment terms: {company.default_payment_terms ? paymentTermsLabel(company.default_payment_terms) : `${paymentTermsLabel(company.effective_payment_terms)} (firm default)`}
                 </p>
+                <p className="text-sm text-shadow-grey mt-1">
+                    Automatic reminders: {company.reminders_enabled === null
+                        ? `${company.effective_reminders_enabled ? 'On' : 'Off'} (app default)`
+                        : (company.reminders_enabled ? 'On' : 'Off')}
+                </p>
             </div>
         );
     }
@@ -87,6 +99,18 @@ function DetailsCard({ company }) {
                     {PAYMENT_TERMS.filter((t) => t.value !== 'custom').map((t) => (
                         <option key={t.value} value={t.value}>{t.label}</option>
                     ))}
+                </select>
+            </div>
+            <div className="col-span-2">
+                <label className="field-label">Automatic reminders</label>
+                <select
+                    value={form.reminders_enabled}
+                    onChange={(e) => setForm({ ...form, reminders_enabled: e.target.value })}
+                    className="field"
+                >
+                    <option value="">Use app default</option>
+                    <option value="1">On</option>
+                    <option value="0">Off</option>
                 </select>
             </div>
             <input placeholder="Street address" value={form.address_line1} onChange={(e) => setForm({ ...form, address_line1: e.target.value })} className="field col-span-2" />

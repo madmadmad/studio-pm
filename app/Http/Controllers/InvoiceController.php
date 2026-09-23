@@ -3,11 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Enums\PaymentTerms;
+use App\Jobs\SendInvoiceEmailJob;
+use App\Mail\InvoiceEmail;
 use App\Models\Company;
 use App\Models\Expense;
 use App\Models\Invoice;
+use App\Models\InvoiceSend;
 use App\Models\TimeEntry;
-use App\Notifications\InvoiceSent;
 use App\Services\StripeCheckoutService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -114,32 +116,184 @@ class InvoiceController extends Controller
         return $invoice->fresh()->load('items');
     }
 
-    public function send(Invoice $invoice)
+    // Backs the Send Invoice modal's footer button for both tabs: Send
+    // Email (now or scheduled) and Send via URL. Blocking checks (Step 3)
+    // always re-run server-side regardless of what the modal already
+    // showed, since the invoice may have changed between page load and
+    // submit.
+    public function send(Request $request, Invoice $invoice)
     {
-        abort_unless($invoice->status === 'draft', 422, 'This invoice has already been sent.');
+        $data = $request->validate([
+            'method' => ['required', 'in:email,link'],
+            'subject' => ['required_if:method,email', 'nullable', 'string', 'max:255'],
+            'message' => ['required_if:method,email', 'nullable', 'string'],
+            'cc' => ['nullable', 'array'],
+            'cc.*' => ['email'],
+            'send_copy_to_self' => ['boolean'],
+            'schedule' => ['nullable', 'in:now,later'],
+            'scheduled_for' => ['required_if:schedule,later', 'nullable', 'date'],
+            'reminders_enabled' => ['nullable', 'boolean'],
+            'mark_as_sent' => ['boolean'],
+            'update_issue_date' => ['boolean'],
+        ]);
 
-        $invoice->loadMissing('contact', 'company.contacts', 'items', 'project', 'payments');
+        $invoice->loadMissing('contact', 'company.contacts', 'items', 'payments');
 
-        // The invoice's own contact_id is only set when someone picked a
-        // specific person to bill; "no specific contact" (the default) is a
-        // normal, common state that still needs a real recipient. Fall back
-        // to the company's billing contact, then its primary contact --
-        // same precedence the rest of the app uses when defaulting a
-        // company-level contact (e.g. Projects/Proposals pick the primary
-        // contact when nothing more specific is chosen).
-        $recipient = $invoice->contact
-            ?? $invoice->company->contacts->firstWhere('is_billing', true)
-            ?? $invoice->company->contacts->firstWhere('is_primary', true);
+        $method = $data['method'];
+        $scheduledFor = ($data['schedule'] ?? 'now') === 'later' ? Carbon::parse($data['scheduled_for']) : null;
 
-        abort_if(! $recipient?->email, 422, 'This invoice has no billing contact with an email address.');
+        $issues = $invoice->sendBlockingIssues();
+        if ($method === 'email' && $invoice->contact_email_missing) {
+            $issues[] = 'The invoice contact has no email address. Update the contact on the invoice to send by email.';
+        }
+        abort_if($issues !== [], 422, implode(' ', $issues));
 
-        DB::transaction(function () use ($invoice, $recipient) {
-            $recipient->notify(new InvoiceSent($invoice));
+        if ($invoice->needs_issue_date_update && ($data['update_issue_date'] ?? false)) {
+            $newIssuedOn = $scheduledFor ? $scheduledFor->copy()->timezone('America/New_York')->startOfDay() : today();
+            $invoice->update([
+                'issued_on' => $newIssuedOn,
+                'due_on' => $invoice->payment_terms->dueDateFrom($newIssuedOn) ?? $invoice->due_on,
+            ]);
+        }
 
-            $invoice->update(['status' => 'sent']);
+        if (array_key_exists('reminders_enabled', $data)) {
+            $invoice->update(['reminders_enabled' => $data['reminders_enabled']]);
+        }
+
+        return $method === 'link'
+            ? $this->sendViaLink($request, $invoice, $data)
+            : $this->sendViaEmail($request, $invoice, $data, $scheduledFor);
+    }
+
+    private function sendViaLink(Request $request, Invoice $invoice, array $data)
+    {
+        DB::transaction(function () use ($request, $invoice, $data) {
+            $invoice->invoiceSends()->create([
+                'type' => InvoiceSend::TYPE_LINK,
+                'status' => InvoiceSend::STATUS_SENT,
+                'sent_at' => now(),
+                'sent_by_user_id' => $request->user()->id,
+                'recipients' => [],
+            ]);
+
+            if ($data['mark_as_sent'] ?? true) {
+                $invoice->update([
+                    'status' => $invoice->status === 'draft' ? 'sent' : $invoice->status,
+                    'sent_at' => $invoice->sent_at ?? now(),
+                ]);
+            }
         });
 
-        return $invoice;
+        return $this->freshWithSendAppends($invoice);
+    }
+
+    private function sendViaEmail(Request $request, Invoice $invoice, array $data, ?Carbon $scheduledFor)
+    {
+        $cc = collect($data['cc'] ?? [])->filter()->values()->all();
+        if ($data['send_copy_to_self'] ?? false) {
+            $cc[] = $request->user()->email;
+        }
+
+        $invoiceSend = $invoice->invoiceSends()->create([
+            'type' => InvoiceSend::TYPE_EMAIL,
+            'status' => $scheduledFor ? InvoiceSend::STATUS_SCHEDULED : InvoiceSend::STATUS_QUEUED,
+            'scheduled_for' => $scheduledFor,
+            'sent_by_user_id' => $request->user()->id,
+            'recipients' => [$invoice->billingContact()->email],
+            'cc' => $cc,
+            'subject' => $data['subject'],
+            'message' => $data['message'],
+        ]);
+
+        if (! $scheduledFor) {
+            SendInvoiceEmailJob::dispatch($invoiceSend->id);
+        }
+
+        return $this->freshWithSendAppends($invoice);
+    }
+
+    private function freshWithSendAppends(Invoice $invoice): Invoice
+    {
+        return $invoice->fresh(['items', 'invoiceSends', 'company.contacts', 'contact', 'payments'])
+            ->append(['send_blocking_issues', 'contact_email_missing', 'needs_issue_date_update', 'remaining_balance', 'effective_reminders_enabled', 'public_url']);
+    }
+
+    // Renders the exact HTML a client would receive for the modal's "Show
+    // Email Preview" link -- the subject/message come straight from the
+    // modal's current (unsaved) form state, not anything stored yet.
+    public function emailPreview(Request $request, Invoice $invoice)
+    {
+        $data = $request->validate([
+            'subject' => ['required', 'string', 'max:255'],
+            'message' => ['required', 'string'],
+        ]);
+
+        $invoice->loadMissing('company', 'contact', 'items', 'payments');
+
+        $mail = new InvoiceEmail($invoice, $data['subject'], $data['message']);
+
+        return ['html' => $mail->render()];
+    }
+
+    public function regenerateToken(Invoice $invoice)
+    {
+        $invoice->regenerateToken();
+
+        return $invoice->fresh();
+    }
+
+    // Pre-empts one specific upcoming reminder rule for this invoice by
+    // creating its (invoice_id, reminder_rule) row already cancelled -- the
+    // same unique index that keeps a rule from firing twice then makes the
+    // daily reminders command's own create() call collide and skip it when
+    // that day arrives, with no separate "skip list" needed.
+    public function skipReminder(Request $request, Invoice $invoice)
+    {
+        $data = $request->validate(['rule' => ['required', 'string']]);
+
+        $invoiceSend = $invoice->invoiceSends()->firstOrCreate(
+            ['reminder_rule' => $data['rule'], 'type' => InvoiceSend::TYPE_REMINDER],
+            ['status' => InvoiceSend::STATUS_CANCELLED, 'failure_reason' => 'Skipped by a team member.']
+        );
+
+        if ($invoiceSend->wasRecentlyCreated === false && $invoiceSend->status !== InvoiceSend::STATUS_CANCELLED) {
+            abort(422, 'This reminder has already gone out and can no longer be skipped.');
+        }
+
+        return $invoiceSend;
+    }
+
+    public function cancelSend(Invoice $invoice, InvoiceSend $invoiceSend)
+    {
+        abort_unless($invoiceSend->invoice_id === $invoice->id, 404);
+        abort_unless($invoiceSend->status === InvoiceSend::STATUS_SCHEDULED, 422, 'Only a pending scheduled send can be cancelled.');
+
+        $invoiceSend->update(['status' => InvoiceSend::STATUS_CANCELLED, 'failure_reason' => 'Cancelled by a team member.']);
+
+        return $invoiceSend;
+    }
+
+    public function rescheduleSend(Request $request, Invoice $invoice, InvoiceSend $invoiceSend)
+    {
+        abort_unless($invoiceSend->invoice_id === $invoice->id, 404);
+        abort_unless($invoiceSend->status === InvoiceSend::STATUS_SCHEDULED, 422, 'Only a pending scheduled send can be rescheduled.');
+
+        $data = $request->validate(['scheduled_for' => ['required', 'date']]);
+
+        $invoiceSend->update(['scheduled_for' => Carbon::parse($data['scheduled_for'])]);
+
+        return $invoiceSend;
+    }
+
+    public function sendNow(Invoice $invoice, InvoiceSend $invoiceSend)
+    {
+        abort_unless($invoiceSend->invoice_id === $invoice->id, 404);
+        abort_unless($invoiceSend->status === InvoiceSend::STATUS_SCHEDULED, 422, 'Only a pending scheduled send can be sent now.');
+
+        $invoiceSend->update(['status' => InvoiceSend::STATUS_QUEUED, 'scheduled_for' => null]);
+        SendInvoiceEmailJob::dispatch($invoiceSend->id);
+
+        return $invoiceSend;
     }
 
     // Manual, manager-only -- for payments that never touch Stripe (check,

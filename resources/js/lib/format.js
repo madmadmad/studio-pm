@@ -110,6 +110,17 @@ export function isOverdue(invoice) {
     return invoice.status === 'sent' && invoice.due_on && invoice.due_on.slice(0, 10) < todayInAppTimezone();
 }
 
+// invoice.status itself never becomes 'scheduled' (that's tracked via its
+// invoice_sends rows, not the invoice's own status column) -- this reports
+// it as a display-only status derived from whichever of the two shapes the
+// current page loaded: the Index page's lightweight has_pending_scheduled_send
+// boolean, or the Show page's full invoice_sends array.
+function hasPendingScheduledSend(invoice) {
+    if (invoice.has_pending_scheduled_send !== undefined) return invoice.has_pending_scheduled_send;
+    return (invoice.invoice_sends || []).some((s) => s.type === 'email' && s.status === 'scheduled');
+}
+
 export function displayInvoiceStatus(invoice) {
+    if (invoice.status === 'draft' && hasPendingScheduledSend(invoice)) return 'scheduled';
     return isOverdue(invoice) ? 'overdue' : invoice.status;
 }

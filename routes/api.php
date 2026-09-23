@@ -8,6 +8,7 @@ use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\MessageAttachmentController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\NoteController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Portal\MessageAttachmentController as PortalMessageAttachmentController;
 use App\Http\Controllers\Portal\MessageController as PortalMessageController;
 use App\Http\Controllers\Portal\ProfileController as PortalProfileController;
@@ -47,6 +48,9 @@ Route::middleware('auth:sanctum')->name('api.')->group(function () {
     Route::post('profile/avatar', [ProfileController::class, 'updateAvatar']);
     Route::delete('profile/avatar', [ProfileController::class, 'destroyAvatar']);
 
+    Route::get('notifications', [NotificationController::class, 'index']);
+    Route::post('notifications/{notification}/read', [NotificationController::class, 'markRead']);
+
     Route::get('time-entries', [TimeEntryController::class, 'index']);
     Route::post('time-entries', [TimeEntryController::class, 'store']);
     Route::patch('time-entries/{timeEntry}', [TimeEntryController::class, 'update']);
@@ -64,7 +68,13 @@ Route::middleware('auth:sanctum')->name('api.')->group(function () {
         Route::apiResource('services', ServiceController::class);
 
         Route::apiResource('companies.invoices', InvoiceController::class)->shallow()->only(['index', 'store', 'update', 'destroy']);
-        Route::post('invoices/{invoice}/send', [InvoiceController::class, 'send']);
+        Route::post('invoices/{invoice}/send', [InvoiceController::class, 'send'])->middleware('throttle:invoice-send');
+        Route::post('invoices/{invoice}/email-preview', [InvoiceController::class, 'emailPreview']);
+        Route::post('invoices/{invoice}/regenerate-token', [InvoiceController::class, 'regenerateToken']);
+        Route::post('invoices/{invoice}/reminders/skip', [InvoiceController::class, 'skipReminder']);
+        Route::post('invoices/{invoice}/sends/{invoiceSend}/cancel', [InvoiceController::class, 'cancelSend']);
+        Route::post('invoices/{invoice}/sends/{invoiceSend}/reschedule', [InvoiceController::class, 'rescheduleSend']);
+        Route::post('invoices/{invoice}/sends/{invoiceSend}/send-now', [InvoiceController::class, 'sendNow']);
         Route::post('invoices/{invoice}/mark-paid', [InvoiceController::class, 'markPaid']);
 
         Route::apiResource('companies.proposals', ProposalController::class)->shallow()->only(['index', 'store', 'update', 'destroy']);

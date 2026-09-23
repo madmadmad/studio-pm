@@ -1,5 +1,6 @@
 import { Link, router, usePage } from '@inertiajs/react';
 import Avatar from '../Components/Avatar';
+import NotificationBell from '../Components/NotificationBell';
 
 const NAV_ITEMS = [
     { href: '/', label: 'Overview' },
@@ -35,9 +36,12 @@ export default function AppLayout({ children }) {
     return (
         <div className="flex min-h-screen bg-porcelain text-gunmetal">
             <aside className="w-56 flex-shrink-0 p-5 flex flex-col gap-1 bg-gunmetal">
-                <div className="mb-6">
-                    <div className="text-lg font-semibold text-porcelain">Studio PM</div>
-                    <div className="text-xs text-porcelain/50">Client and billing workspace</div>
+                <div className="mb-6 flex items-start justify-between">
+                    <div>
+                        <div className="text-lg font-semibold text-porcelain">Studio PM</div>
+                        <div className="text-xs text-porcelain/50">Client and billing workspace</div>
+                    </div>
+                    {isManager && <NotificationBell />}
                 </div>
                 {navItems.map((item) => (
                     <Link
