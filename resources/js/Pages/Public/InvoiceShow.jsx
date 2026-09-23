@@ -1,6 +1,7 @@
 import { Head } from '@inertiajs/react';
 import { useState } from 'react';
 import { formatCurrency, formatDate, invoiceSubtotal, invoiceTotal } from '../../lib/format';
+import { paymentTermsLabel } from '../../lib/paymentTerms';
 import { api } from '../../lib/api';
 
 // No card-fee row here on purpose -- that fee only exists between the
@@ -88,6 +89,7 @@ export default function InvoiceShow({ invoice, studio }) {
                 </h1>
                 <div className="text-sm text-shadow-grey pb-8 mb-8 border-b border-border">
                     Issued {formatDate(invoice.issued_on)} &middot; Due {formatDate(invoice.due_on)}
+                    {paymentTermsLabel(invoice.payment_terms) !== 'Custom' && ` (${paymentTermsLabel(invoice.payment_terms)})`}
                     {invoice.contact && <> &middot; Billed to {invoice.contact.name}</>}
                 </div>
 

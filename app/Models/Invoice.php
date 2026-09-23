@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\PaymentTerms;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -9,12 +10,13 @@ use Illuminate\Support\Str;
 
 class Invoice extends Model
 {
-    protected $fillable = ['company_id', 'project_id', 'contact_id', 'status', 'surcharge', 'issued_on', 'due_on', 'stripe_checkout_session_id'];
+    protected $fillable = ['company_id', 'project_id', 'contact_id', 'status', 'surcharge', 'issued_on', 'due_on', 'payment_terms', 'stripe_checkout_session_id'];
 
     protected $casts = [
         'surcharge' => 'boolean',
         'issued_on' => 'date',
         'due_on' => 'date',
+        'payment_terms' => PaymentTerms::class,
     ];
 
     protected static function booted(): void
@@ -33,6 +35,28 @@ class Invoice extends Model
     public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class);
+    }
+
+    // The one place issued_on/due_on get formatted for display (PDF, invoice
+    // emails) so a future format change never has to happen in more than
+    // one spot. The public/internal web views use their own JS formatDate()
+    // helper instead, which is already the single shared spot on that side.
+    public function formattedIssuedOn(): string
+    {
+        return $this->issued_on->format('M j, Y');
+    }
+
+    public function formattedDueOn(): string
+    {
+        return $this->due_on->format('M j, Y');
+    }
+
+    // "Net 30" etc. next to the due date, omitted entirely for Custom since
+    // there's no fixed term to name -- the date itself already says
+    // everything a Custom term needs to.
+    public function paymentTermsLabel(): ?string
+    {
+        return $this->payment_terms === PaymentTerms::Custom ? null : $this->payment_terms->label();
     }
 
     public function contact(): BelongsTo

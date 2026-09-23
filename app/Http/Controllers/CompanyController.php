@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\PaymentTerms;
 use App\Models\Company;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class CompanyController extends Controller
 {
@@ -21,7 +23,15 @@ class CompanyController extends Controller
             'city' => ['nullable', 'string', 'max:255'],
             'state' => ['nullable', 'string', 'max:255'],
             'postal_code' => ['nullable', 'string', 'max:20'],
+            // Custom isn't a valid firm-wide-default choice -- it only ever
+            // makes sense picked per-invoice.
+            'default_payment_terms' => ['nullable', Rule::enum(PaymentTerms::class)->except(PaymentTerms::Custom)],
         ]);
+
+        // The "use the firm default" option in the dropdown submits an
+        // empty string, not the field's absence -- nullable only stops the
+        // enum rule from rejecting it, it doesn't turn "" into null itself.
+        $data['default_payment_terms'] = ($data['default_payment_terms'] ?? '') ?: null;
 
         return Company::create($data);
     }
@@ -41,7 +51,12 @@ class CompanyController extends Controller
             'state' => ['nullable', 'string', 'max:255'],
             'postal_code' => ['nullable', 'string', 'max:20'],
             'status' => ['sometimes', 'in:active,inactive'],
+            'default_payment_terms' => ['nullable', Rule::enum(PaymentTerms::class)->except(PaymentTerms::Custom)],
         ]);
+
+        if (array_key_exists('default_payment_terms', $data)) {
+            $data['default_payment_terms'] = ($data['default_payment_terms'] ?? '') ?: null;
+        }
 
         $company->update($data);
 

@@ -69,7 +69,8 @@
 
     <h1>Invoice #{{ $invoice->invoice_number }}</h1>
     <div class="meta">
-        Issued {{ $invoice->issued_on->format('M j, Y') }} &middot; Due {{ $invoice->due_on->format('M j, Y') }}
+        Issued {{ $invoice->formattedIssuedOn() }} &middot; Due {{ $invoice->formattedDueOn() }}
+        @if ($invoice->paymentTermsLabel()) ({{ $invoice->paymentTermsLabel() }}) @endif
         @if ($invoice->contact) &middot; Billed to {{ $invoice->contact->name }} @endif
     </div>
 

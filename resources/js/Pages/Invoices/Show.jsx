@@ -4,8 +4,10 @@ import { ArrowLeft, Check, Copy, DownloadSimple, Eye } from '@phosphor-icons/rea
 import AppLayout from '../../Layouts/AppLayout';
 import Button from '../../Components/Button';
 import Toggle from '../../Components/Toggle';
+import InvoiceDateFields from '../../Components/InvoiceDateFields';
 import { InvoiceStatusBadge } from '../../Components/StatusBadges';
 import { formatCurrency, formatDate, invoiceSubtotal, invoiceTotal } from '../../lib/format';
+import { paymentTermsLabel } from '../../lib/paymentTerms';
 import { api } from '../../lib/api';
 import { copyToClipboard } from '../../lib/clipboard';
 
@@ -13,6 +15,8 @@ function editFormFrom(invoice) {
     return {
         contact_id: invoice.contact_id ? String(invoice.contact_id) : '',
         surcharge: invoice.surcharge,
+        issued_on: invoice.issued_on ? invoice.issued_on.slice(0, 10) : '',
+        payment_terms: invoice.payment_terms,
         due_on: invoice.due_on ? invoice.due_on.slice(0, 10) : '',
         items: invoice.items.map((item) => ({ description: item.description, details: item.details ?? '', amount: item.amount })),
     };
@@ -97,7 +101,9 @@ export default function InvoicesShow({ invoice }) {
             await api.patch(`/api/invoices/${invoice.id}`, {
                 contact_id: form.contact_id || null,
                 surcharge: form.surcharge,
-                due_on: form.due_on || null,
+                issued_on: form.issued_on,
+                payment_terms: form.payment_terms,
+                due_on: form.due_on,
                 items: validItems,
             });
             setEditing(false);
@@ -140,13 +146,14 @@ export default function InvoicesShow({ invoice }) {
             </div>
             <p className="text-sm text-shadow-grey mb-6">
                 Invoice #{invoice.invoice_number} &middot; Issued {formatDate(invoice.issued_on)} &middot; Due {formatDate(invoice.due_on)}
+                {paymentTermsLabel(invoice.payment_terms) !== 'Custom' && ` (${paymentTermsLabel(invoice.payment_terms)})`}
                 {invoice.contact && <> &middot; Billed to {invoice.contact.name}</>}
                 {invoice.project?.po_number && <> &middot; PO #{invoice.project.po_number}</>}
             </p>
 
             {editing ? (
                 <div className="card card-padded mb-6">
-                    <div className="grid grid-cols-2 gap-3 mb-4">
+                    <div className="mb-4">
                         <select
                             value={form.contact_id}
                             onChange={(e) => setForm({ ...form, contact_id: e.target.value })}
@@ -159,12 +166,10 @@ export default function InvoicesShow({ invoice }) {
                                 </option>
                             ))}
                         </select>
-                        <input
-                            type="date"
-                            value={form.due_on}
-                            onChange={(e) => setForm({ ...form, due_on: e.target.value })}
-                            className="field"
-                        />
+                    </div>
+
+                    <div className="mb-4">
+                        <InvoiceDateFields values={form} onChange={(patch) => setForm((current) => ({ ...current, ...patch }))} />
                     </div>
 
                     <div className="mb-3">

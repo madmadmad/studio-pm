@@ -97,8 +97,17 @@ export function invoiceTotal(items, _surcharge) {
     return invoiceSubtotal(items);
 }
 
+// "Today" here means today in the firm's own timezone, not the viewer's --
+// due_on is a plain 'YYYY-MM-DD' date (no time component), so comparing it
+// against `new Date()` would judge overdue-ness by whatever timezone the
+// browser happens to be in. en-CA conveniently formats as YYYY-MM-DD, which
+// compares correctly as a plain string against due_on.
+function todayInAppTimezone() {
+    return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(new Date());
+}
+
 export function isOverdue(invoice) {
-    return invoice.status === 'sent' && invoice.due_on && new Date(invoice.due_on) < new Date();
+    return invoice.status === 'sent' && invoice.due_on && invoice.due_on.slice(0, 10) < todayInAppTimezone();
 }
 
 export function displayInvoiceStatus(invoice) {

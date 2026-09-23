@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\PaymentTerms;
 use App\Models\Company;
 use App\Models\Expense;
 use App\Models\Invoice;
@@ -9,7 +10,9 @@ use App\Models\TimeEntry;
 use App\Notifications\InvoiceSent;
 use App\Services\StripeCheckoutService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 
 class InvoiceController extends Controller
@@ -21,11 +24,9 @@ class InvoiceController extends Controller
 
     public function store(Request $request, Company $company)
     {
-        $data = $request->validate([
+        $data = $this->validateInvoice($request, [
             'project_id' => ['nullable', Rule::exists('projects', 'id')->where('company_id', $company->id)],
             'contact_id' => ['nullable', Rule::exists('contacts', 'id')->where('company_id', $company->id)],
-            'surcharge' => ['boolean'],
-            'due_on' => ['nullable', 'date'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.description' => ['required', 'string'],
             'items.*.details' => ['nullable', 'string'],
@@ -35,14 +36,17 @@ class InvoiceController extends Controller
             'items.*.time_entry_ids.*' => ['integer', 'exists:time_entries,id'],
         ]);
 
-        $invoice = DB::transaction(function () use ($data, $company) {
+        [$issuedOn, $dueOn, $terms] = $this->resolveDates($data, today(), $company->effectivePaymentTerms());
+
+        $invoice = DB::transaction(function () use ($data, $company, $issuedOn, $dueOn, $terms) {
             $invoice = $company->invoices()->create([
                 'project_id' => $data['project_id'] ?? null,
                 'contact_id' => $data['contact_id'] ?? null,
                 'status' => 'draft',
                 'surcharge' => $data['surcharge'] ?? false,
-                'issued_on' => now(),
-                'due_on' => $data['due_on'] ?? now()->addDays(30), // Net 30 by default
+                'issued_on' => $issuedOn,
+                'due_on' => $dueOn,
+                'payment_terms' => $terms,
             ]);
 
             foreach ($data['items'] as $item) {
@@ -73,10 +77,8 @@ class InvoiceController extends Controller
     {
         abort_unless($invoice->status === 'draft', 422, 'Only draft invoices can be edited.');
 
-        $data = $request->validate([
+        $data = $this->validateInvoice($request, [
             'contact_id' => ['nullable', Rule::exists('contacts', 'id')->where('company_id', $invoice->company_id)],
-            'surcharge' => ['boolean'],
-            'due_on' => ['nullable', 'date'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.description' => ['required', 'string'],
             'items.*.details' => ['nullable', 'string'],
@@ -84,11 +86,15 @@ class InvoiceController extends Controller
             'items.*.service_id' => ['nullable', 'exists:services,id'],
         ]);
 
-        DB::transaction(function () use ($data, $invoice) {
+        [$issuedOn, $dueOn, $terms] = $this->resolveDates($data, $invoice->issued_on, $invoice->payment_terms, $invoice->due_on);
+
+        DB::transaction(function () use ($data, $invoice, $issuedOn, $dueOn, $terms) {
             $invoice->update([
                 'contact_id' => $data['contact_id'] ?? null,
                 'surcharge' => $data['surcharge'] ?? false,
-                'due_on' => $data['due_on'] ?? $invoice->due_on,
+                'issued_on' => $issuedOn,
+                'due_on' => $dueOn,
+                'payment_terms' => $terms,
             ]);
 
             // Replacing items wholesale (simplest, matches how proposal items
@@ -196,5 +202,53 @@ class InvoiceController extends Controller
         $invoice->update(['stripe_checkout_session_id' => $session->id]);
 
         return ['url' => $session->url];
+    }
+
+    // Shared by store() and update() so the two never disagree on what a
+    // date/terms payload means. due_on's relationship to issued_on is
+    // checked here regardless of payment_terms, since it should never make
+    // sense even for a value that later gets overridden by resolveDates().
+    private function validateInvoice(Request $request, array $extraRules): array
+    {
+        $rules = array_merge([
+            'surcharge' => ['boolean'],
+            'issued_on' => ['nullable', 'date'],
+            'payment_terms' => ['nullable', Rule::enum(PaymentTerms::class)],
+            'due_on' => ['nullable', 'date'],
+        ], $extraRules);
+
+        $validator = Validator::make($request->all(), $rules);
+
+        $validator->after(function ($validator) use ($request) {
+            if (! $request->filled('due_on')) {
+                return;
+            }
+
+            $issuedOn = $request->input('issued_on') ?: today()->toDateString();
+
+            if ($request->input('due_on') < $issuedOn) {
+                $validator->errors()->add('due_on', 'The due date must be on or after the issue date.');
+            }
+        });
+
+        return $validator->validate();
+    }
+
+    // The one place a due date gets computed from issued_on + payment_terms
+    // -- the server always recomputes it for any non-Custom term (ignoring
+    // whatever due_on the client sent), and only trusts a client-submitted
+    // due_on when the term is genuinely Custom. $fallbackDueOn is only
+    // relevant for that Custom case; on create there's nothing to fall back
+    // to yet, so it defaults to the issue date itself.
+    private function resolveDates(array $data, Carbon|string $fallbackIssuedOn, PaymentTerms $fallbackTerms, Carbon|string|null $fallbackDueOn = null): array
+    {
+        $issuedOn = isset($data['issued_on']) ? Carbon::parse($data['issued_on']) : Carbon::parse($fallbackIssuedOn);
+        $terms = isset($data['payment_terms']) ? PaymentTerms::from($data['payment_terms']) : $fallbackTerms;
+
+        $dueOn = $terms === PaymentTerms::Custom
+            ? (isset($data['due_on']) ? Carbon::parse($data['due_on']) : Carbon::parse($fallbackDueOn ?? $issuedOn))
+            : $terms->dueDateFrom($issuedOn);
+
+        return [$issuedOn, $dueOn, $terms];
     }
 }

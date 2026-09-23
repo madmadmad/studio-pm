@@ -57,6 +57,7 @@ class InvoiceUpdateTest extends TestCase
         $response = $this->actingAs($user)->patchJson("/api/invoices/{$invoice->id}", [
             'contact_id' => $contact->id,
             'surcharge' => true,
+            'payment_terms' => 'custom',
             'due_on' => '2026-11-01',
             'items' => [['description' => 'Design work', 'amount' => 1000]],
         ]);

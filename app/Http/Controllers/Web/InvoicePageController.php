@@ -18,7 +18,10 @@ class InvoicePageController extends Controller
 
         return Inertia::render('Invoices/Index', [
             'invoices' => $invoices,
-            'companies' => Company::with('contacts')->orderBy('name')->get(['id', 'name']),
+            // default_payment_terms has to be selected explicitly -- it
+            // backs the effective_payment_terms appended accessor the
+            // new-invoice form's client picker relies on.
+            'companies' => Company::with('contacts')->orderBy('name')->get(['id', 'name', 'default_payment_terms']),
         ]);
     }
 

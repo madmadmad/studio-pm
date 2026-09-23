@@ -23,10 +23,16 @@ class InvoiceSent extends Notification
     {
         $pdf = InvoicePdfRenderer::render($this->invoice);
 
+        $dueLine = "Due {$this->invoice->formattedDueOn()}";
+        if ($termsLabel = $this->invoice->paymentTermsLabel()) {
+            $dueLine .= " ({$termsLabel})";
+        }
+
         return (new MailMessage)
             ->subject("Invoice #{$this->invoice->invoice_number} from {$this->invoice->company->name}")
             ->greeting('Hi '.$notifiable->name.',')
             ->line("A new invoice for \${$this->formattedTotal()} is ready.")
+            ->line($dueLine)
             ->action('View invoice', url('/i/'.$this->invoice->public_token))
             ->line('The invoice is also attached to this email as a PDF.')
             ->attachData($pdf->output(), "invoice-{$this->invoice->invoice_number}.pdf", [

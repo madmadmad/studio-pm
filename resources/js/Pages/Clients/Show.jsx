@@ -7,6 +7,7 @@ import EmptyState from '../../Components/EmptyState';
 import Badge from '../../Components/Badge';
 import { InvoiceStatusBadge, ProposalStatusBadge, ProjectStatusBadge, TaskStatusBadge, CompanyStatusBadge } from '../../Components/StatusBadges';
 import { formatCurrency, formatDate, invoiceTotal } from '../../lib/format';
+import { PAYMENT_TERMS, paymentTermsLabel } from '../../lib/paymentTerms';
 import { api } from '../../lib/api';
 
 function reload() {
@@ -31,6 +32,7 @@ function DetailsCard({ company }) {
         state: company.state ?? '',
         postal_code: company.postal_code ?? '',
         status: company.status,
+        default_payment_terms: company.default_payment_terms ?? '',
     });
 
     async function submit(e) {
@@ -59,6 +61,9 @@ function DetailsCard({ company }) {
                 <p className="text-sm text-shadow-grey">
                     {company.phone}{address ? `${company.phone ? ' · ' : ''}${address}` : ''}
                 </p>
+                <p className="text-sm text-shadow-grey mt-1">
+                    Default payment terms: {company.default_payment_terms ? paymentTermsLabel(company.default_payment_terms) : `${paymentTermsLabel(company.effective_payment_terms)} (firm default)`}
+                </p>
             </div>
         );
     }
@@ -71,6 +76,19 @@ function DetailsCard({ company }) {
                 <option value="active">Active</option>
                 <option value="inactive">Inactive</option>
             </select>
+            <div className="col-span-2">
+                <label className="field-label">Default payment terms</label>
+                <select
+                    value={form.default_payment_terms}
+                    onChange={(e) => setForm({ ...form, default_payment_terms: e.target.value })}
+                    className="field"
+                >
+                    <option value="">Use firm default</option>
+                    {PAYMENT_TERMS.filter((t) => t.value !== 'custom').map((t) => (
+                        <option key={t.value} value={t.value}>{t.label}</option>
+                    ))}
+                </select>
+            </div>
             <input placeholder="Street address" value={form.address_line1} onChange={(e) => setForm({ ...form, address_line1: e.target.value })} className="field col-span-2" />
             <div className="col-span-2 grid grid-cols-[2fr_1fr_1fr] gap-3">
                 <input placeholder="City" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} className="field" />

@@ -8,8 +8,10 @@ import Badge from '../../Components/Badge';
 import RichTextEditor from '../../Components/RichTextEditor';
 import Toggle from '../../Components/Toggle';
 import MessagesPanel from '../../Components/MessagesPanel';
+import InvoiceDateFields from '../../Components/InvoiceDateFields';
 import { ProjectStatusBadge, TaskStatusBadge, InvoiceStatusBadge, ProposalStatusBadge, ExpenseStatusBadge } from '../../Components/StatusBadges';
 import { formatCurrency, formatDate, formatFileSize, invoiceSubtotal, invoiceTotal } from '../../lib/format';
+import { calculateDueDate, todayLocal } from '../../lib/paymentTerms';
 import { api } from '../../lib/api';
 import { copyToClipboard } from '../../lib/clipboard';
 
@@ -1042,13 +1044,19 @@ function proposalToInvoiceItems(proposal, remaining) {
     return items.map((item) => ({ ...item, amount: (item.amount * scale).toFixed(2) }));
 }
 
-function emptyInvoiceForm() {
-    return { proposal_id: '', items: [{ description: '', amount: '' }], surcharge: true };
+function emptyInvoiceForm(defaultTerms) {
+    const issuedOn = todayLocal();
+    const terms = defaultTerms || 'net_30';
+    return {
+        proposal_id: '', items: [{ description: '', amount: '' }], surcharge: true,
+        issued_on: issuedOn, payment_terms: terms, due_on: calculateDueDate(issuedOn, terms),
+    };
 }
 
 function BillingTab({ project }) {
+    const defaultTerms = project.company.effective_payment_terms;
     const [showForm, setShowForm] = useState(false);
-    const [form, setForm] = useState(emptyInvoiceForm());
+    const [form, setForm] = useState(() => emptyInvoiceForm(defaultTerms));
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
     const [copiedInvoiceId, setCopiedInvoiceId] = useState(null);
@@ -1070,9 +1078,9 @@ function BillingTab({ project }) {
         // there's exactly one to choose from -- otherwise let the user pick.
         const accepted = proposalsWithItems.filter((p) => p.status === 'accepted');
         if (accepted.length === 1) {
-            setForm({ proposal_id: String(accepted[0].id), items: proposalToInvoiceItems(accepted[0], remaining), surcharge: true });
+            setForm({ ...emptyInvoiceForm(defaultTerms), proposal_id: String(accepted[0].id), items: proposalToInvoiceItems(accepted[0], remaining) });
         } else {
-            setForm(emptyInvoiceForm());
+            setForm(emptyInvoiceForm(defaultTerms));
         }
         setError('');
         setShowForm(true);
@@ -1115,9 +1123,12 @@ function BillingTab({ project }) {
             await api.post(`/api/companies/${project.company_id}/invoices`, {
                 project_id: project.id,
                 surcharge: form.surcharge,
+                issued_on: form.issued_on,
+                payment_terms: form.payment_terms,
+                due_on: form.due_on,
                 items: validItems,
             });
-            setForm(emptyInvoiceForm());
+            setForm(emptyInvoiceForm(defaultTerms));
             setShowForm(false);
             reload();
         } catch (err) {
@@ -1206,6 +1217,10 @@ function BillingTab({ project }) {
                             )}
                         </div>
                     )}
+
+                    <div className="mb-4">
+                        <InvoiceDateFields values={form} onChange={(patch) => setForm((current) => ({ ...current, ...patch }))} />
+                    </div>
 
                     <div className="mb-3">
                         {form.items.map((item, idx) => (

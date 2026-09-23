@@ -5,14 +5,20 @@ import AppLayout from '../../Layouts/AppLayout';
 import Button from '../../Components/Button';
 import EmptyState from '../../Components/EmptyState';
 import Toggle from '../../Components/Toggle';
+import InvoiceDateFields, { useInvoiceDateFields } from '../../Components/InvoiceDateFields';
 import { InvoiceStatusBadge } from '../../Components/StatusBadges';
 import { formatCurrency, formatDate, invoiceSubtotal, invoiceTotal } from '../../lib/format';
+import { calculateDueDate, todayLocal } from '../../lib/paymentTerms';
 import { api } from '../../lib/api';
 import { getTray, clearTray } from '../../lib/tray';
 import { copyToClipboard } from '../../lib/clipboard';
 
 function emptyDraft() {
-    return { company_id: '', contact_id: '', items: [{ description: '', amount: '' }], surcharge: true };
+    const issuedOn = todayLocal();
+    return {
+        company_id: '', contact_id: '', items: [{ description: '', amount: '' }], surcharge: true,
+        issued_on: issuedOn, payment_terms: 'net_30', due_on: calculateDueDate(issuedOn, 'net_30'),
+    };
 }
 
 export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
@@ -23,6 +29,7 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
     const [saving, setSaving] = useState(false);
     const [copiedId, setCopiedId] = useState(null);
     const [deletingId, setDeletingId] = useState(null);
+    const [dueSort, setDueSort] = useState(null); // null | 'asc' | 'desc'
 
     // Keeps local state in sync whenever a router.reload() elsewhere in this
     // component brings in a fresh copy of the prop.
@@ -46,9 +53,16 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
     }
     const contactsForCompany = companies.find((c) => String(c.id) === String(draft.company_id))?.contacts || [];
 
+    const dateFields = useInvoiceDateFields(draft, (patch) => setDraft((current) => ({ ...current, ...patch })));
+
     function handleCompanyChange(value) {
         const billingContact = billingContactFor(value);
         setDraft({ ...draft, company_id: value, contact_id: billingContact ? String(billingContact.id) : '' });
+
+        const company = companies.find((c) => String(c.id) === String(value));
+        if (company) {
+            dateFields.applyClientDefaultTerms(company.effective_payment_terms);
+        }
     }
 
     useEffect(() => {
@@ -58,6 +72,9 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
                 const companyIds = [...new Set(tray.map((t) => t.company_id))];
                 const singleCompanyId = companyIds.length === 1 ? String(companyIds[0]) : '';
                 const billingContact = singleCompanyId ? billingContactFor(singleCompanyId) : null;
+                const company = singleCompanyId ? companies.find((c) => String(c.id) === singleCompanyId) : null;
+                const issuedOn = todayLocal();
+                const terms = company?.effective_payment_terms || 'net_30';
                 setDraft({
                     company_id: singleCompanyId,
                     contact_id: billingContact ? String(billingContact.id) : '',
@@ -67,6 +84,9 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
                         time_entry_ids: [t.time_entry_id],
                     })),
                     surcharge: true,
+                    issued_on: issuedOn,
+                    payment_terms: terms,
+                    due_on: calculateDueDate(issuedOn, terms),
                 });
                 setShowForm(true);
             }
@@ -80,6 +100,14 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
     const outstandingTotal = invoices
         .filter((i) => i.status === 'sent')
         .reduce((s, i) => s + invoiceTotal(i.items, i.surcharge), 0);
+
+    const visibleInvoices = dueSort
+        ? [...invoices].sort((a, b) => (dueSort === 'asc' ? 1 : -1) * (new Date(a.due_on) - new Date(b.due_on)))
+        : invoices;
+
+    function toggleDueSort() {
+        setDueSort((current) => (current === 'asc' ? 'desc' : current === 'desc' ? null : 'asc'));
+    }
 
     function updateItem(idx, field, value) {
         const items = draft.items.map((it, i) => (i === idx ? { ...it, [field]: value } : it));
@@ -115,6 +143,9 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
             const invoice = await api.post(`/api/companies/${draft.company_id}/invoices`, {
                 contact_id: draft.contact_id || null,
                 surcharge: draft.surcharge,
+                issued_on: draft.issued_on,
+                payment_terms: draft.payment_terms,
+                due_on: draft.due_on,
                 items: validItems,
             });
             if (status === 'sent') {
@@ -200,6 +231,10 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
                         </select>
                     </div>
 
+                    <div className="mb-4">
+                        <InvoiceDateFields values={draft} onChange={(patch) => setDraft((current) => ({ ...current, ...patch }))} />
+                    </div>
+
                     <div className="mb-3">
                         {draft.items.map((item, idx) => (
                             <div key={idx} className="mb-2 pb-2 border-b border-border last:border-b-0">
@@ -274,14 +309,19 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
                                 <th>#</th>
                                 <th>Client</th>
                                 <th>Issued</th>
-                                <th>Due</th>
+                                <th>
+                                    <button onClick={toggleDueSort} className="inline-flex items-center gap-1 hover:text-gunmetal">
+                                        Due
+                                        {dueSort && <span className="text-xs">{dueSort === 'asc' ? '↑' : '↓'}</span>}
+                                    </button>
+                                </th>
                                 <th>Total</th>
                                 <th>Status</th>
                                 <th></th>
                             </tr>
                         </thead>
                         <tbody>
-                            {invoices.map((invoice) => (
+                            {visibleInvoices.map((invoice) => (
                                 <tr key={invoice.id}>
                                     <td className="tabular-nums text-shadow-grey">{invoice.invoice_number}</td>
                                     <td className="font-medium">

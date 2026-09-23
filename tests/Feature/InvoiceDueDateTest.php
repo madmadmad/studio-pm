@@ -26,12 +26,16 @@ class InvoiceDueDateTest extends TestCase
         $this->assertTrue($dueOn->isSameDay(now()->addDays(30)));
     }
 
+    // Overriding the due date at creation now means Custom terms -- a
+    // non-Custom term always has the server recompute its own due date
+    // regardless of what's submitted (see InvoicePaymentTermsTest).
     public function test_the_due_date_can_be_overridden_at_creation(): void
     {
         $user = User::factory()->create();
         $company = Company::create(['name' => 'Alder & Finch Design']);
 
         $response = $this->actingAs($user)->postJson("/api/companies/{$company->id}/invoices", [
+            'payment_terms' => 'custom',
             'due_on' => '2026-12-01',
             'items' => [['description' => 'Design work', 'amount' => 1000]],
         ]);
@@ -45,11 +49,12 @@ class InvoiceDueDateTest extends TestCase
         $user = User::factory()->create();
         $company = Company::create(['name' => 'Alder & Finch Design']);
         $invoice = $company->invoices()->create([
-            'status' => 'draft', 'surcharge' => false, 'issued_on' => now(), 'due_on' => now()->addDays(30),
+            'status' => 'draft', 'surcharge' => false, 'issued_on' => now(), 'due_on' => now()->addDays(30), 'payment_terms' => 'net_30',
         ]);
         $invoice->items()->create(['description' => 'Design work', 'amount' => 1000]);
 
         $response = $this->actingAs($user)->patchJson("/api/invoices/{$invoice->id}", [
+            'payment_terms' => 'custom',
             'due_on' => '2026-11-15',
             'items' => [['description' => 'Design work', 'amount' => 1000]],
         ]);
