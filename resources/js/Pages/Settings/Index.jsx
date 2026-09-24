@@ -38,40 +38,40 @@ export default function SettingsIndex({ studioProfile }) {
                 subtitle="This is how your studio appears on proposals sent to clients."
             />
 
-            <form onSubmit={submit} className="card card-padded max-w-lg">
+            <form onSubmit={submit} className="card card--padded max-w-lg">
                 <div className="text-xs font-semibold text-shadow-grey mb-2">Studio information</div>
                 <input
                     required
                     placeholder="Studio name"
                     value={form.name}
                     onChange={(e) => setForm({ ...form, name: e.target.value })}
-                    className="field mb-2"
+                    className="input mb-2"
                 />
                 <textarea
                     placeholder="Address"
                     value={form.address}
                     onChange={(e) => setForm({ ...form, address: e.target.value })}
                     rows={3}
-                    className="field mb-2"
+                    className="input mb-2"
                 />
                 <input
                     type="email"
                     placeholder="Email"
                     value={form.email}
                     onChange={(e) => setForm({ ...form, email: e.target.value })}
-                    className="field mb-2"
+                    className="input mb-2"
                 />
                 <input
                     placeholder="Phone"
                     value={form.phone}
                     onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                    className="field mb-2"
+                    className="input mb-2"
                 />
                 <input
                     placeholder="Website"
                     value={form.website}
                     onChange={(e) => setForm({ ...form, website: e.target.value })}
-                    className="field mb-4"
+                    className="input mb-4"
                 />
 
                 <div className="text-xs font-semibold text-shadow-grey mb-2">Payment instructions</div>
@@ -83,7 +83,7 @@ export default function SettingsIndex({ studioProfile }) {
                     value={form.payment_instructions}
                     onChange={(e) => setForm({ ...form, payment_instructions: e.target.value })}
                     rows={3}
-                    className="field mb-3"
+                    className="input mb-3"
                 />
                 <div className="flex items-center justify-end gap-3">
                     {saved && <span className="text-sm text-fern">Saved</span>}

@@ -1,0 +1,46 @@
+// A bare Phosphor icon as a click target -- row actions (preview, copy,
+// download, edit, mark paid, send, delete). No box; the glyph carries the
+// meaning and the modifier supplies the color.
+
+.icon-btn {
+    display: inline-flex;
+    align-items: center;
+    color: var(--color-shadow-grey);
+    transition:
+        color var(--duration-fast) var(--ease-standard),
+        opacity var(--duration-fast) var(--ease-standard);
+
+    &:disabled {
+        opacity: 0.5;
+    }
+
+    // Neutral actions that don't change anything (Preview, Copy, Download).
+    &--secondary:hover {
+        color: var(--color-gunmetal);
+    }
+
+    // Affirmative row actions (Edit, Mark paid). Lightens on hover -- a
+    // small glyph reads better going lighter than darker.
+    &--confirm {
+        color: var(--color-fern);
+
+        &:hover {
+            opacity: 0.7;
+        }
+    }
+
+    // A watermelon-flagged action (Send).
+    &--accent {
+        color: var(--color-watermelon);
+
+        &:hover {
+            opacity: 0.7;
+        }
+    }
+
+    // Destructive (Delete): neutral until hovered, so a row of actions
+    // doesn't read as alarming until you're about to click it.
+    &--danger:hover {
+        color: var(--color-watermelon);
+    }
+}

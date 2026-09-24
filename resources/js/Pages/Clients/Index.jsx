@@ -44,19 +44,19 @@ export default function ClientsIndex({ companies }) {
             />
 
             {showForm && (
-                <form onSubmit={handleSubmit} className="card card-padded mb-6 grid grid-cols-2 gap-3">
+                <form onSubmit={handleSubmit} className="card card--padded mb-6 grid grid-cols-2 gap-3">
                     <input
                         required
                         placeholder="Client or company name"
                         value={form.name}
                         onChange={(e) => setForm({ ...form, name: e.target.value })}
-                        className="field col-span-2"
+                        className="input col-span-2"
                     />
                     <input
                         placeholder="Phone"
                         value={form.phone}
                         onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                        className="field col-span-2"
+                        className="input col-span-2"
                     />
                     {error && <div className="text-sm text-watermelon col-span-2">{error}</div>}
                     <div className="flex gap-2 col-span-2 justify-end">
@@ -98,7 +98,7 @@ export default function ClientsIndex({ companies }) {
                                         <CompanyStatusBadge company={c} />
                                     </td>
                                     <td className="text-right">
-                                        <Link href={`/clients/${c.id}`} className="btn-link">
+                                        <Link href={`/clients/${c.id}`} className="link-btn">
                                             Edit
                                         </Link>
                                     </td>

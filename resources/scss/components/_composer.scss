@@ -1,0 +1,68 @@
+// Writing a message: the new-thread form (recipients + subject) and the
+// reply box. Both share the auto-growing textarea and attach/send footer.
+
+.composer {
+    &--new {
+        margin-bottom: var(--space-4);
+    }
+
+    &__label {
+        margin-bottom: var(--space-2);
+        font-size: var(--font-size-xs);
+        line-height: var(--line-height-xs);
+        font-weight: var(--font-weight-semibold);
+        color: var(--color-shadow-grey);
+        text-transform: uppercase;
+    }
+
+    &__recipients {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-2);
+        margin-bottom: var(--space-3);
+    }
+
+    &__empty {
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+        color: var(--color-shadow-grey);
+    }
+
+    &__field {
+        margin-bottom: var(--space-2);
+    }
+
+    &__textarea {
+        max-height: 16rem; // one-off: grows with content, then scrolls
+        margin-bottom: var(--space-2);
+        overflow-y: auto;
+        resize: none;
+    }
+
+    &__error {
+        margin-bottom: var(--space-2);
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+        color: var(--color-watermelon);
+    }
+
+    &__progress {
+        margin-bottom: var(--space-2);
+    }
+
+    &__footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    // The paperclip is a <label> wrapping a hidden file input.
+    &__attach {
+        cursor: pointer;
+    }
+
+    &__actions {
+        display: flex;
+        gap: var(--space-2);
+    }
+}

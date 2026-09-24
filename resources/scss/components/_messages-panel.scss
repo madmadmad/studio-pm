@@ -1,0 +1,10 @@
+// Top level of a project's Messages tab: the "New message" toolbar above
+// the thread list. Used by Components/MessagesPanel.jsx.
+
+.messages-panel {
+    &__toolbar {
+        display: flex;
+        justify-content: flex-end;
+        margin-bottom: var(--space-4);
+    }
+}

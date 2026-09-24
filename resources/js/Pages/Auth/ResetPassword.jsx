@@ -19,39 +19,39 @@ export default function ResetPassword({ email, token }) {
         <AuthLayout title="Studio PM" subtitle="Set a new password">
             <form onSubmit={submit} className="card auth-shell__card">
                 <div>
-                    <label className="field-label">Email</label>
+                    <label className="label">Email</label>
                     <input
                         type="email"
                         value={data.email}
                         onChange={(e) => setData('email', e.target.value)}
-                        className="field"
+                        className="input"
                     />
-                    {errors.email && <div className="text-xs text-watermelon mt-1">{errors.email}</div>}
+                    {errors.email && <div className="form-error">{errors.email}</div>}
                 </div>
 
                 <div>
-                    <label className="field-label">New password</label>
+                    <label className="label">New password</label>
                     <input
                         type="password"
                         autoFocus
                         value={data.password}
                         onChange={(e) => setData('password', e.target.value)}
-                        className="field"
+                        className="input"
                     />
-                    {errors.password && <div className="text-xs text-watermelon mt-1">{errors.password}</div>}
+                    {errors.password && <div className="form-error">{errors.password}</div>}
                 </div>
 
                 <div>
-                    <label className="field-label">Confirm password</label>
+                    <label className="label">Confirm password</label>
                     <input
                         type="password"
                         value={data.password_confirmation}
                         onChange={(e) => setData('password_confirmation', e.target.value)}
-                        className="field"
+                        className="input"
                     />
                 </div>
 
-                <Button type="submit" disabled={processing} className="btn-lg mt-2">
+                <Button type="submit" disabled={processing} className="btn--lg mt-2">
                     Reset password
                 </Button>
             </form>

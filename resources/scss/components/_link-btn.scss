@@ -1,0 +1,24 @@
+// Inline text action with no button box ("Edit", "Remove", "Send").
+// Fern by default; --accent for watermelon (accent and destructive
+// actions share it -- the palette has no separate danger color).
+// Used by Components/Button.jsx (variant="link" / "link-accent").
+
+.link-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    padding: 0;
+    background: none;
+    border: none;
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-fern);
+
+    &:not(:disabled):hover {
+        text-decoration: underline;
+    }
+
+    &--accent {
+        color: var(--color-watermelon);
+    }
+}

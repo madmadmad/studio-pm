@@ -1,10 +1,8 @@
 /*
- * BASE -- legacy leftovers. Element defaults, fonts, and the reset now
- * live in resources/scss/base/. The classes remaining here move into
- * Sass components (and get BEM names) in the shared-components phase.
- */
-
-/*
+ * BASE -- legacy leftover. Element defaults, fonts, the reset, and all
+ * shared components now live in resources/scss/. .font-display stays
+ * here only until the pages that still use it are migrated.
+ *
  * Headlines: heavier weight and tighter tracking than body text.
  * Unlayered, so it wins over Tailwind's layered font-semibold/font-medium
  * utility on the same element without having to edit every page's class.
@@ -12,54 +10,4 @@
 .font-display {
     font-weight: 800;
     letter-spacing: -0.03rem;
-}
-
-.proposal-body {
-    line-height: 1.6;
-}
-.proposal-body p {
-    margin-bottom: 0.75em;
-}
-.proposal-body ul,
-.proposal-body ol {
-    margin: 0.5em 0 0.75em 1.25em;
-}
-.proposal-body ul {
-    list-style: disc;
-}
-.proposal-body ol {
-    list-style: decimal;
-}
-.proposal-body h1,
-.proposal-body h2,
-.proposal-body h3,
-.proposal-body h4 {
-    font-family: var(--font-display);
-    font-weight: 800;
-    letter-spacing: -0.03rem;
-    margin: 0.75em 0 0.4em;
-}
-
-@keyframes drawer-slide-in {
-    from {
-        transform: translateX(100%);
-    }
-    to {
-        transform: translateX(0);
-    }
-}
-.drawer-panel {
-    animation: drawer-slide-in 200ms ease-out;
-}
-
-@keyframes drawer-fade-in {
-    from {
-        opacity: 0;
-    }
-    to {
-        opacity: 1;
-    }
-}
-.drawer-overlay {
-    animation: drawer-fade-in 200ms ease-out;
 }

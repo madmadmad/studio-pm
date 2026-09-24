@@ -4,12 +4,8 @@
 @source '../../storage/framework/views/*.php';
 
 /*
- * The stylesheet is split by concern -- see each file's banner comment:
- *   tokens.css      design tokens (colors, radius, fonts, scale)
- *   base.css        global element defaults (body, a, button, input...)
- *   components.css  the shared UI vocabulary (buttons, cards, fields, tables)
- * A live, rendered reference of components.css lives at /style-guide.
+ * Temporary Tailwind entry, kept only while pages still carry utility
+ * classes. Everything else lives in resources/scss/ (see /style-guide).
  */
 @import './tokens.css';
 @import './base.css';
-@import './components.css';

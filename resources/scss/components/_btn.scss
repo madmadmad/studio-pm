@@ -1,0 +1,103 @@
+// Buttons. .btn is the shared shape; pair it with exactly one color
+// modifier. For inline text actions with no box, use .link-btn instead.
+// Used by Components/Button.jsx, or directly on a <Link> styled as a button.
+@use '../abstracts' as *;
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-1-5);
+    padding: var(--space-1-5) var(--space-3);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-bold);
+    line-height: var(--line-height-sm);
+    border: var(--border-width) solid transparent;
+    border-radius: var(--radius-base);
+    white-space: nowrap;
+    transition:
+        background-color var(--duration-fast) var(--ease-standard),
+        color var(--duration-fast) var(--ease-standard),
+        border-color var(--duration-fast) var(--ease-standard),
+        opacity var(--duration-fast) var(--ease-standard);
+
+    &:disabled {
+        opacity: 0.5;
+    }
+
+    &:focus-visible {
+        @include focus-ring;
+    }
+
+    // The single full-emphasis submit on a standalone auth form.
+    &--lg {
+        padding-block: var(--space-2);
+    }
+
+    // A compact CTA sitting inline in a row that already has content.
+    &--sm {
+        padding: var(--space-1) var(--space-2-5);
+        font-size: var(--font-size-xs);
+    }
+
+    // The default prominent action on a page ("Add client").
+    &--primary {
+        background-color: var(--color-gunmetal);
+        color: var(--color-white);
+
+        &:not(:disabled):hover {
+            background-color: var(--color-gunmetal-light);
+        }
+    }
+
+    // The affirmative action inside a form (Save, Send, Record...).
+    &--confirm {
+        background-color: var(--color-fern);
+        color: var(--color-white);
+
+        &:not(:disabled):hover {
+            background-color: var(--color-fern-hover);
+        }
+    }
+
+    // A watermelon-flagged "in progress" flow (the time-entry tray). Rare.
+    &--accent {
+        background-color: var(--color-watermelon);
+        color: var(--color-white);
+
+        &:not(:disabled):hover {
+            background-color: var(--color-watermelon-hover);
+        }
+    }
+
+    // Low emphasis, next to a primary action (Cancel).
+    &--secondary {
+        background-color: transparent;
+        color: var(--color-shadow-grey);
+
+        &:not(:disabled):hover {
+            color: var(--color-gunmetal);
+        }
+    }
+
+    // An alternative to confirm for a secondary form action (Save as draft).
+    &--outline {
+        background-color: transparent;
+        color: var(--color-fern);
+        border-color: var(--color-fern);
+
+        &:not(:disabled):hover {
+            background-color: var(--color-fern-soft);
+        }
+    }
+
+    // Destructive actions (Remove, Delete).
+    &--danger {
+        background-color: transparent;
+        color: var(--color-watermelon);
+
+        &:not(:disabled):hover {
+            background-color: var(--color-watermelon-soft);
+        }
+    }
+}

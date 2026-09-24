@@ -1,0 +1,22 @@
+// Shared keyframes. Overlays (drawer, modal, lightbox) reference these by
+// name so every overlay enters the same way.
+
+@keyframes overlay-fade-in {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes panel-slide-in {
+    from {
+        transform: translateX(100%);
+    }
+
+    to {
+        transform: translateX(0);
+    }
+}

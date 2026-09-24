@@ -88,14 +88,14 @@ export default function ServicesIndex({ services: servicesProp }) {
             />
 
             {showForm && (
-                <form onSubmit={submit} className="card card-padded mb-6 grid grid-cols-2 gap-3">
-                    <input required placeholder="Service name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="field col-span-2" />
-                    <input required type="number" min="0" step="0.01" placeholder="Default rate ($)" value={form.default_rate} onChange={(e) => setForm({ ...form, default_rate: e.target.value })} className="field tabular-nums" />
-                    <select value={form.unit} onChange={(e) => setForm({ ...form, unit: e.target.value })} className="field">
+                <form onSubmit={submit} className="card card--padded mb-6 grid grid-cols-2 gap-3">
+                    <input required placeholder="Service name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="input col-span-2" />
+                    <input required type="number" min="0" step="0.01" placeholder="Default rate ($)" value={form.default_rate} onChange={(e) => setForm({ ...form, default_rate: e.target.value })} className="input tabular-nums" />
+                    <select value={form.unit} onChange={(e) => setForm({ ...form, unit: e.target.value })} className="input">
                         <option value="hourly">Hourly</option>
                         <option value="fixed">Fixed</option>
                     </select>
-                    <input placeholder="Description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="field col-span-2" />
+                    <input placeholder="Description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="input col-span-2" />
                     <div className="flex gap-2 col-span-2 justify-end">
                         <Button type="button" variant="secondary" onClick={cancel}>Cancel</Button>
                         <Button type="submit" variant="confirm" disabled={saving}>Save</Button>
@@ -124,14 +124,14 @@ export default function ServicesIndex({ services: servicesProp }) {
                                     <td className="text-shadow-grey capitalize">{service.unit}</td>
                                     <td className="text-right">
                                         <div className="flex items-center justify-end gap-3">
-                                            <button onClick={() => startEdit(service)} title="Edit" className="icon-btn icon-btn-confirm">
+                                            <button onClick={() => startEdit(service)} title="Edit" className="icon-btn icon-btn--confirm">
                                                 <PencilSimple />
                                             </button>
                                             <button
                                                 onClick={() => remove(service)}
                                                 disabled={deletingId === service.id}
                                                 title="Delete"
-                                                className="icon-btn icon-btn-danger"
+                                                className="icon-btn icon-btn--danger"
                                             >
                                                 <Trash />
                                             </button>

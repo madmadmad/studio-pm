@@ -124,10 +124,10 @@ export default function UsersIndex({ users: usersProp }) {
             />
 
             {showForm && (
-                <form onSubmit={submit} className="card card-padded mb-6 grid grid-cols-2 gap-3">
-                    <input required placeholder="Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="field" />
-                    <input required type="email" placeholder="Email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="field" />
-                    <select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })} className="field col-span-2">
+                <form onSubmit={submit} className="card card--padded mb-6 grid grid-cols-2 gap-3">
+                    <input required placeholder="Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="input" />
+                    <input required type="email" placeholder="Email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="input" />
+                    <select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })} className="input col-span-2">
                         <option value="team_member">Team Member</option>
                         <option value="manager">Manager</option>
                     </select>
@@ -163,7 +163,7 @@ export default function UsersIndex({ users: usersProp }) {
                                             value={user.role}
                                             disabled={busyId === user.id || !!user.deactivated_at}
                                             onChange={(e) => changeRole(user, e.target.value)}
-                                            className="field field-xs w-auto disabled:opacity-50"
+                                            className="input input--xs w-auto disabled:opacity-50"
                                         >
                                             <option value="team_member">Team Member</option>
                                             <option value="manager">Manager</option>
@@ -178,7 +178,7 @@ export default function UsersIndex({ users: usersProp }) {
                                     <td className="text-right">
                                         <div className="flex items-center justify-end gap-3">
                                             {user.has_pending_invite && !user.deactivated_at && (
-                                                <button onClick={() => resendInvite(user)} disabled={busyId === user.id} title="Resend invite" className="icon-btn icon-btn-secondary">
+                                                <button onClick={() => resendInvite(user)} disabled={busyId === user.id} title="Resend invite" className="icon-btn icon-btn--secondary">
                                                     <EnvelopeSimple />
                                                 </button>
                                             )}
@@ -187,12 +187,12 @@ export default function UsersIndex({ users: usersProp }) {
                                                     <ArrowCounterClockwise size={16} />
                                                 </button>
                                             ) : (
-                                                <button onClick={() => deactivate(user)} disabled={busyId === user.id} title="Deactivate" className="icon-btn icon-btn-danger">
+                                                <button onClick={() => deactivate(user)} disabled={busyId === user.id} title="Deactivate" className="icon-btn icon-btn--danger">
                                                     <UserMinus />
                                                 </button>
                                             )}
                                             {user.id !== currentUserId && (
-                                                <button onClick={() => deleteUser(user)} disabled={busyId === user.id} title="Delete permanently" className="icon-btn icon-btn-danger">
+                                                <button onClick={() => deleteUser(user)} disabled={busyId === user.id} title="Delete permanently" className="icon-btn icon-btn--danger">
                                                     <Trash />
                                                 </button>
                                             )}

@@ -18,24 +18,24 @@ export default function Login() {
         <AuthLayout title="Studio PM" subtitle="Sign in to your workspace">
             <form onSubmit={submit} className="card auth-shell__card">
                 <div>
-                    <label className="field-label">Email</label>
+                    <label className="label">Email</label>
                     <input
                         type="email"
                         autoFocus
                         value={data.email}
                         onChange={(e) => setData('email', e.target.value)}
-                        className="field"
+                        className="input"
                     />
-                    {errors.email && <div className="text-xs text-watermelon mt-1">{errors.email}</div>}
+                    {errors.email && <div className="form-error">{errors.email}</div>}
                 </div>
 
                 <div>
-                    <label className="field-label">Password</label>
+                    <label className="label">Password</label>
                     <input
                         type="password"
                         value={data.password}
                         onChange={(e) => setData('password', e.target.value)}
-                        className="field"
+                        className="input"
                     />
                 </div>
 
@@ -53,7 +53,7 @@ export default function Login() {
                     </Link>
                 </div>
 
-                <Button type="submit" disabled={processing} className="btn-lg mt-2">
+                <Button type="submit" disabled={processing} className="btn--lg mt-2">
                     Sign in
                 </Button>
             </form>

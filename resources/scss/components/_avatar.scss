@@ -1,0 +1,34 @@
+// A person's photo, or their initials on a curated fill. Width, height,
+// font size, and fill are inline styles set by Components/Avatar.jsx
+// (they come from its `size` prop and the author's id).
+@use '../abstracts' as *;
+
+.avatar {
+    flex-shrink: 0;
+    border-radius: var(--radius-pill);
+
+    &--photo {
+        object-fit: cover;
+    }
+
+    &--initials {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: var(--font-weight-semibold);
+        color: var(--color-gunmetal);
+    }
+
+    // Size set here instead of inline: compact on phones, full size from
+    // `sm` up (message threads).
+    &--responsive {
+        width: var(--space-8);
+        height: var(--space-8);
+        font-size: var(--font-size-base);
+
+        @include respond-to('sm') {
+            width: var(--space-10);
+            height: var(--space-10);
+        }
+    }
+}

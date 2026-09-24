@@ -1,0 +1,50 @@
+// Data tables. Apply .table to the <table>; header/row/cell styling
+// follows automatically, no per-cell classes needed.
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--font-size-sm);
+    text-align: left;
+
+    thead tr {
+        border-bottom: var(--border-width) solid var(--color-border);
+        color: var(--color-shadow-grey);
+    }
+
+    th {
+        padding: var(--space-2) var(--space-4);
+        font-weight: var(--font-weight-semibold);
+    }
+
+    td {
+        padding: var(--space-3) var(--space-4);
+    }
+
+    tbody tr {
+        border-bottom: var(--border-width) solid var(--color-border);
+
+        &:last-child {
+            border-bottom: none;
+        }
+    }
+
+    // A cell holding an inline editable control, where the default cell
+    // padding is too generous. Qualified by .table to outrank `td` above.
+    & &__cell--tight {
+        padding: var(--space-1) var(--space-2);
+    }
+
+    // Nested inside an already-padded .card: no horizontal cell padding
+    // (the card supplies it) and tighter rows.
+    &--flush {
+        th,
+        td {
+            padding-inline: 0;
+        }
+
+        td {
+            padding-block: var(--space-2);
+        }
+    }
+}

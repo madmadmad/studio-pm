@@ -1,0 +1,75 @@
+// One open message thread: back link, the thread card (subject header,
+// day-separated messages), then the reply composer or a join prompt.
+
+.thread {
+    &__back,
+    &__load-earlier {
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+        color: var(--color-shadow-grey);
+
+        &:hover {
+            color: var(--color-gunmetal);
+        }
+    }
+
+    &__back {
+        margin-bottom: var(--space-3);
+    }
+
+    &__card {
+        margin-bottom: var(--space-4);
+        overflow: hidden;
+    }
+
+    &__header {
+        padding: var(--space-3) var(--space-4);
+        border-bottom: var(--border-width) solid var(--color-border);
+    }
+
+    &__subject {
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+        font-weight: var(--font-weight-semibold);
+    }
+
+    &__participants {
+        margin-top: var(--space-1);
+        font-size: var(--font-size-xs);
+        line-height: var(--line-height-xs);
+        color: var(--color-shadow-grey);
+    }
+
+    &__body {
+        padding: var(--space-4);
+    }
+
+    &__load-earlier {
+        display: block;
+        margin-bottom: var(--space-4);
+        text-decoration: underline;
+    }
+
+    // "Yesterday" / "Sep 12" between messages from different days.
+    &__day {
+        margin-bottom: var(--space-4);
+        font-size: var(--font-size-xs);
+        line-height: var(--line-height-xs);
+        font-weight: var(--font-weight-medium);
+        color: var(--color-shadow-grey);
+        text-align: center;
+    }
+
+    // Shown instead of the composer to someone not in the thread.
+    &__join {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    &__join-text {
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+        color: var(--color-shadow-grey);
+    }
+}

@@ -1,1 +1,42 @@
+// Order matters: primitives first, composites after. When a composite's
+// element is mixed onto a primitive (`input send-invoice__trigger`), both
+// are single-class selectors, so the later one -- the composite -- wins.
+
+// Primitives
+@forward 'btn';
+@forward 'link-btn';
+@forward 'icon-btn';
+@forward 'card';
+@forward 'input';
+@forward 'label';
+@forward 'form-error';
+@forward 'choice';
+@forward 'table';
+@forward 'badge';
+@forward 'avatar';
+@forward 'toggle';
+@forward 'progress';
+@forward 'popover';
+@forward 'alert';
+@forward 'empty-state';
+@forward 'prose';
+
+// Composites
 @forward 'back-link';
+@forward 'tabs';
+@forward 'metric-card';
+@forward 'attachment-chip';
+@forward 'rich-text-editor';
+@forward 'invoice-date-fields';
+@forward 'drawer';
+@forward 'modal';
+@forward 'lightbox';
+@forward 'notification-bell';
+@forward 'messages-panel';
+@forward 'thread-list';
+@forward 'thread';
+@forward 'message';
+@forward 'composer';
+@forward 'recipient-chip';
+@forward 'pending-attachments';
+@forward 'send-invoice';

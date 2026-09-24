@@ -1,0 +1,9 @@
+// "Nothing here yet" line inside an empty list or card.
+
+.empty-state {
+    padding: var(--space-8) var(--space-4);
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-sm);
+    color: var(--color-shadow-grey);
+    text-align: center;
+}

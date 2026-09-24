@@ -15,30 +15,14 @@ import { calculateDueDate, todayLocal } from '../../lib/paymentTerms';
 import { api } from '../../lib/api';
 import { copyToClipboard } from '../../lib/clipboard';
 import PageHeader from '../../Components/PageHeader';
+import Drawer from '../../Components/Drawer';
+import TabBar from '../../Components/TabBar';
 
 const ALL_TABS = ['Overview', 'Tasks', 'Notes', 'Messages', 'Time', 'Proposals', 'Billing', 'Expenses', 'Team'];
 const MANAGER_ONLY_TABS = ['Proposals', 'Billing', 'Expenses'];
 
 function reload() {
     router.reload({ only: ['project'] });
-}
-
-function TabBar({ tab, setTab, tabs }) {
-    return (
-        <div className="flex gap-1 border-b border-border mb-6 overflow-x-auto">
-            {tabs.map((t) => (
-                <button
-                    key={t}
-                    onClick={() => setTab(t)}
-                    className={`text-sm font-medium px-3 py-2 border-b-2 -mb-px whitespace-nowrap ${
-                        tab === t ? 'border-gunmetal text-gunmetal' : 'border-transparent text-shadow-grey'
-                    }`}
-                >
-                    {t}
-                </button>
-            ))}
-        </div>
-    );
 }
 
 function PoNumberField({ project }) {
@@ -65,7 +49,7 @@ function PoNumberField({ project }) {
                     value={value}
                     onChange={(e) => setValue(e.target.value)}
                     placeholder="PO number"
-                    className="field field-sm"
+                    className="input input--sm"
                 />
                 <Button variant="link" onClick={save} disabled={saving}>Save</Button>
                 <button onClick={() => setEditing(false)} className="text-sm text-shadow-grey">Cancel</button>
@@ -107,7 +91,7 @@ function ContactField({ project }) {
                     autoFocus
                     value={value}
                     onChange={(e) => setValue(e.target.value)}
-                    className="field field-sm"
+                    className="input input--sm"
                 >
                     <option value="">No contact</option>
                     {contacts.map((contact) => (
@@ -146,29 +130,29 @@ function OverviewTab({ project }) {
             <ContactField project={project} />
             <PoNumberField project={project} />
             <div className={`grid gap-4 mb-6 ${budget > 0 ? 'grid-cols-6' : 'grid-cols-4'}`}>
-                <div className="card card-padded">
+                <div className="card card--padded">
                     <div className="text-xs text-shadow-grey mb-1">Tasks</div>
                     <div className="tabular-nums text-xl">{doneTasks}/{project.tasks.length}</div>
                 </div>
-                <div className="card card-padded">
+                <div className="card card--padded">
                     <div className="text-xs text-shadow-grey mb-1">Hours logged</div>
                     <div className="tabular-nums text-xl">{totalHours}h</div>
                 </div>
-                <div className="card card-padded">
+                <div className="card card--padded">
                     <div className="text-xs text-shadow-grey mb-1">Unbilled hours</div>
                     <div className="tabular-nums text-xl">{unbilledHours}h</div>
                 </div>
-                <div className="card card-padded">
+                <div className="card card--padded">
                     <div className="text-xs text-shadow-grey mb-1">Total invoiced</div>
                     <div className="tabular-nums text-xl">{formatCurrency(totalInvoiced)}</div>
                 </div>
                 {budget > 0 && (
                     <>
-                        <div className="card card-padded">
+                        <div className="card card--padded">
                             <div className="text-xs text-shadow-grey mb-1">Budget</div>
                             <div className="tabular-nums text-xl">{formatCurrency(budget)}</div>
                         </div>
-                        <div className="card card-padded">
+                        <div className="card card--padded">
                             <div className="text-xs text-shadow-grey mb-1">Remaining</div>
                             <div className={`tabular-nums text-xl ${remaining < 0 ? 'text-watermelon' : ''}`}>{formatCurrency(remaining)}</div>
                         </div>
@@ -316,7 +300,7 @@ function SubtaskRow({ subtask, onChange, isDragging, onDragStart, onDragOver, on
                     subtask.status === 'done' ? 'line-through text-shadow-grey' : ''
                 }`}
             />
-            <button onClick={remove} className="icon-btn icon-btn-danger mt-0.5 opacity-0 group-hover:opacity-100 flex-shrink-0 px-1">
+            <button onClick={remove} className="icon-btn icon-btn--danger mt-0.5 opacity-0 group-hover:opacity-100 flex-shrink-0 px-1">
                 <X />
             </button>
         </div>
@@ -372,9 +356,9 @@ function SubtasksSection({ task, onChange }) {
                     placeholder="Add subtask"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    className="field flex-1"
+                    className="input flex-1"
                 />
-                <Button type="submit" variant="confirm" className="btn-lg flex-shrink-0">
+                <Button type="submit" variant="confirm" className="btn--lg flex-shrink-0">
                     Add
                 </Button>
             </form>
@@ -430,13 +414,13 @@ function FilesSection({ task, onChange }) {
                                 <div className="text-xs text-shadow-grey">{formatFileSize(file.size)}</div>
                             </div>
                             <div className="flex items-center gap-1 flex-shrink-0">
-                                <a href={file.url} download={file.filename} title="Download" className="icon-btn icon-btn-secondary p-1.5">
+                                <a href={file.url} download={file.filename} title="Download" className="icon-btn icon-btn--secondary p-1.5">
                                     <DownloadSimple />
                                 </a>
                                 <button
                                     onClick={() => remove(file)}
                                     title="Remove"
-                                    className="icon-btn icon-btn-danger p-1.5 opacity-0 group-hover:opacity-100"
+                                    className="icon-btn icon-btn--danger p-1.5 opacity-0 group-hover:opacity-100"
                                 >
                                     <X />
                                 </button>
@@ -474,72 +458,65 @@ function TaskDrawer({ task, teamNames, onClose, onChange }) {
     }
 
     return (
-        <div className="fixed inset-0 z-50">
-            <div className="absolute inset-0 bg-gunmetal/20 drawer-overlay" onClick={onClose} />
-            <div className="absolute right-0 top-0 h-full w-[600px] max-w-[95vw] bg-white shadow-xl flex flex-col drawer-panel">
-                <div className="flex items-center justify-between px-6 py-4 border-b border-border">
-                    <select
-                        value={task.status}
-                        onChange={(e) => updateField('status', e.target.value)}
-                        className="field field-xs font-medium w-auto"
-                    >
-                        {TASK_STATUS_OPTIONS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
-                    </select>
-                    <button onClick={onClose} className="icon-btn icon-btn-secondary px-1">
-                        <X />
-                    </button>
-                </div>
+        <Drawer
+            onClose={onClose}
+            header={
+                <select
+                    value={task.status}
+                    onChange={(e) => updateField('status', e.target.value)}
+                    className="input input--xs font-medium w-auto"
+                >
+                    {TASK_STATUS_OPTIONS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
+                </select>
+            }
+        >
+            <input
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                onBlur={() => title !== task.title && updateField('title', title)}
+                className="text-xl font-semibold w-full mb-4 border border-transparent hover:border-border focus:border-border rounded px-1 -mx-1 focus:outline-none"
+            />
 
-                <div className="flex-1 overflow-y-auto px-6 py-4">
-                    <input
-                        value={title}
-                        onChange={(e) => setTitle(e.target.value)}
-                        onBlur={() => title !== task.title && updateField('title', title)}
-                        className="text-xl font-semibold w-full mb-4 border border-transparent hover:border-border focus:border-border rounded px-1 -mx-1 focus:outline-none"
-                    />
-
-                    <div className="text-sm mb-6 pb-4 border-b border-border">
-                        <div className="text-xs font-semibold text-shadow-grey mb-1">Assignee</div>
-                        <select
-                            value={task.assignee ?? ''}
-                            onChange={(e) => updateField('assignee', e.target.value)}
-                            className="field field-xs w-auto"
-                        >
-                            <option value="">Unassigned</option>
-                            {teamNames.map((name) => <option key={name} value={name}>{name}</option>)}
-                        </select>
-                    </div>
-
-                    <div className="mb-6">
-                        <div className="text-xs font-semibold text-shadow-grey mb-2">Description</div>
-                        <textarea
-                            value={description}
-                            onChange={(e) => setDescription(e.target.value)}
-                            onBlur={() => description !== (task.description ?? '') && updateField('description', description)}
-                            rows={6}
-                            placeholder="Add a description…"
-                            className="field"
-                        />
-                    </div>
-
-                    <SubtasksSection task={task} onChange={onChange} />
-
-                    <FilesSection task={task} onChange={onChange} />
-
-                    <div className="mb-6">
-                        <div className="text-xs font-semibold text-shadow-grey mb-2">Due date</div>
-                        <input
-                            type="date"
-                            value={task.due_date ? task.due_date.slice(0, 10) : ''}
-                            onChange={(e) => updateField('due_date', e.target.value)}
-                            className="field"
-                        />
-                    </div>
-
-                    <div className="text-xs text-shadow-grey">Created {formatDate(task.created_at)}</div>
-                </div>
+            <div className="text-sm mb-6 pb-4 border-b border-border">
+                <div className="text-xs font-semibold text-shadow-grey mb-1">Assignee</div>
+                <select
+                    value={task.assignee ?? ''}
+                    onChange={(e) => updateField('assignee', e.target.value)}
+                    className="input input--xs w-auto"
+                >
+                    <option value="">Unassigned</option>
+                    {teamNames.map((name) => <option key={name} value={name}>{name}</option>)}
+                </select>
             </div>
-        </div>
+
+            <div className="mb-6">
+                <div className="text-xs font-semibold text-shadow-grey mb-2">Description</div>
+                <textarea
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    onBlur={() => description !== (task.description ?? '') && updateField('description', description)}
+                    rows={6}
+                    placeholder="Add a description…"
+                    className="input"
+                />
+            </div>
+
+            <SubtasksSection task={task} onChange={onChange} />
+
+            <FilesSection task={task} onChange={onChange} />
+
+            <div className="mb-6">
+                <div className="text-xs font-semibold text-shadow-grey mb-2">Due date</div>
+                <input
+                    type="date"
+                    value={task.due_date ? task.due_date.slice(0, 10) : ''}
+                    onChange={(e) => updateField('due_date', e.target.value)}
+                    className="input"
+                />
+            </div>
+
+            <div className="text-xs text-shadow-grey">Created {formatDate(task.created_at)}</div>
+        </Drawer>
     );
 }
 
@@ -571,7 +548,7 @@ function TasksTab({ project }) {
                     placeholder="New task"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    className="field flex-1"
+                    className="input flex-1"
                 />
                 <Button type="submit" variant="confirm">Add</Button>
             </form>
@@ -673,34 +650,25 @@ function NoteDrawer({ note, onClose, onChange }) {
     }
 
     return (
-        <div className="fixed inset-0 z-50">
-            <div className="absolute inset-0 bg-gunmetal/20 drawer-overlay" onClick={onClose} />
-            <div className="absolute right-0 top-0 h-full w-[600px] max-w-[95vw] bg-white shadow-xl flex flex-col drawer-panel">
-                <div className="flex items-center justify-between px-6 py-4 border-b border-border">
-                    <span className="text-xs text-shadow-grey">Edited {formatDate(note.updated_at)}</span>
-                    <div className="flex items-center gap-3">
-                        <button onClick={remove} title="Delete note" className="icon-btn icon-btn-danger px-1">
-                            <Trash />
-                        </button>
-                        <button onClick={onClose} className="icon-btn icon-btn-secondary px-1">
-                            <X />
-                        </button>
-                    </div>
-                </div>
+        <Drawer
+            onClose={onClose}
+            header={<span className="text-xs text-shadow-grey">Edited {formatDate(note.updated_at)}</span>}
+            actions={
+                <button onClick={remove} title="Delete note" className="icon-btn icon-btn--danger drawer__action">
+                    <Trash />
+                </button>
+            }
+        >
+            <input
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                onBlur={() => title !== (note.title ?? '') && updateField('title', title)}
+                placeholder="Untitled note"
+                className="text-xl font-semibold w-full mb-4 border border-transparent hover:border-border focus:border-border rounded px-1 -mx-1 focus:outline-none"
+            />
 
-                <div className="flex-1 overflow-y-auto px-6 py-4">
-                    <input
-                        value={title}
-                        onChange={(e) => setTitle(e.target.value)}
-                        onBlur={() => title !== (note.title ?? '') && updateField('title', title)}
-                        placeholder="Untitled note"
-                        className="text-xl font-semibold w-full mb-4 border border-transparent hover:border-border focus:border-border rounded px-1 -mx-1 focus:outline-none"
-                    />
-
-                    <RichTextEditor value={body} onChange={handleBodyChange} />
-                </div>
-            </div>
-        </div>
+            <RichTextEditor value={body} onChange={handleBodyChange} />
+        </Drawer>
     );
 }
 
@@ -837,81 +805,72 @@ function TimeEntryDrawer({ entry, tasks, onClose, onChange }) {
     }
 
     return (
-        <div className="fixed inset-0 z-50">
-            <div className="absolute inset-0 bg-gunmetal/20 drawer-overlay" onClick={onClose} />
-            <div className="absolute right-0 top-0 h-full w-[600px] max-w-[95vw] bg-white shadow-xl flex flex-col drawer-panel">
-                <div className="flex items-center justify-between px-6 py-4 border-b border-border">
-                    {entry.billed ? <Badge tone="fern" label="Billed" /> : <Badge tone="neutral" label="Unbilled" />}
-                    <div className="flex items-center gap-3">
-                        <button onClick={remove} title="Delete entry" className="icon-btn icon-btn-danger px-1">
-                            <Trash />
-                        </button>
-                        <button onClick={onClose} className="icon-btn icon-btn-secondary px-1">
-                            <X />
-                        </button>
-                    </div>
+        <Drawer
+            onClose={onClose}
+            header={entry.billed ? <Badge tone="fern" label="Billed" /> : <Badge tone="neutral" label="Unbilled" />}
+            actions={
+                <button onClick={remove} title="Delete entry" className="icon-btn icon-btn--danger drawer__action">
+                    <Trash />
+                </button>
+            }
+        >
+            <div className="grid grid-cols-2 gap-3 mb-6 pb-4 border-b border-border">
+                <div>
+                    <div className="text-xs font-semibold text-shadow-grey mb-1">Date</div>
+                    <input
+                        type="date"
+                        value={entry.date.slice(0, 10)}
+                        onChange={(e) => updateField('date', e.target.value)}
+                        className="input input--xs w-full"
+                    />
                 </div>
-
-                <div className="flex-1 overflow-y-auto px-6 py-4">
-                    <div className="grid grid-cols-2 gap-3 mb-6 pb-4 border-b border-border">
-                        <div>
-                            <div className="text-xs font-semibold text-shadow-grey mb-1">Date</div>
-                            <input
-                                type="date"
-                                value={entry.date.slice(0, 10)}
-                                onChange={(e) => updateField('date', e.target.value)}
-                                className="field field-xs w-full"
-                            />
-                        </div>
-                        <div>
-                            <div className="text-xs font-semibold text-shadow-grey mb-1">Hours</div>
-                            <input
-                                type="number"
-                                min="0.25"
-                                step="0.25"
-                                value={hours}
-                                onChange={(e) => setHours(e.target.value)}
-                                onBlur={() => Number(hours) !== Number(entry.hours) && updateField('hours', hours)}
-                                className="field field-xs w-full tabular-nums"
-                            />
-                        </div>
-                    </div>
-
-                    <div className="mb-6">
-                        <div className="text-xs font-semibold text-shadow-grey mb-1">Task</div>
-                        <select
-                            value={entry.task_id ?? ''}
-                            onChange={(e) => updateField('task_id', e.target.value || null)}
-                            className="field field-xs w-full"
-                        >
-                            <option value="">No task</option>
-                            {tasks.map((t) => <option key={t.id} value={t.id}>{t.title}</option>)}
-                        </select>
-                    </div>
-
-                    <div className="mb-6">
-                        <div className="text-xs font-semibold text-shadow-grey mb-2">Note</div>
-                        <AutoResizeTextarea
-                            value={note}
-                            onChange={(e) => setNote(e.target.value)}
-                            onBlur={() => note !== (entry.note ?? '') && updateField('note', note)}
-                            placeholder="Add a note…"
-                            className="field"
-                        />
-                    </div>
-
-                    <label className="flex items-center gap-2 text-sm">
-                        <input
-                            type="checkbox"
-                            checked={entry.billable}
-                            disabled={entry.billed}
-                            onChange={(e) => updateField('billable', e.target.checked)}
-                        />
-                        Billable
-                    </label>
+                <div>
+                    <div className="text-xs font-semibold text-shadow-grey mb-1">Hours</div>
+                    <input
+                        type="number"
+                        min="0.25"
+                        step="0.25"
+                        value={hours}
+                        onChange={(e) => setHours(e.target.value)}
+                        onBlur={() => Number(hours) !== Number(entry.hours) && updateField('hours', hours)}
+                        className="input input--xs w-full tabular-nums"
+                    />
                 </div>
             </div>
-        </div>
+
+            <div className="mb-6">
+                <div className="text-xs font-semibold text-shadow-grey mb-1">Task</div>
+                <select
+                    value={entry.task_id ?? ''}
+                    onChange={(e) => updateField('task_id', e.target.value || null)}
+                    className="input input--xs w-full"
+                >
+                    <option value="">No task</option>
+                    {tasks.map((t) => <option key={t.id} value={t.id}>{t.title}</option>)}
+                </select>
+            </div>
+
+            <div className="mb-6">
+                <div className="text-xs font-semibold text-shadow-grey mb-2">Note</div>
+                <AutoResizeTextarea
+                    value={note}
+                    onChange={(e) => setNote(e.target.value)}
+                    onBlur={() => note !== (entry.note ?? '') && updateField('note', note)}
+                    placeholder="Add a note…"
+                    className="input"
+                />
+            </div>
+
+            <label className="choice">
+                <input
+                    type="checkbox"
+                    checked={entry.billable}
+                    disabled={entry.billed}
+                    onChange={(e) => updateField('billable', e.target.checked)}
+                />
+                Billable
+            </label>
+        </Drawer>
     );
 }
 
@@ -943,14 +902,14 @@ function TimeTab({ project }) {
 
     return (
         <div>
-            <form onSubmit={logTime} className="card card-padded mb-4 grid grid-cols-4 gap-2">
-                <input required type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className="field" />
-                <select value={form.task_id} onChange={(e) => setForm({ ...form, task_id: e.target.value })} className="field">
+            <form onSubmit={logTime} className="card card--padded mb-4 grid grid-cols-4 gap-2">
+                <input required type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className="input" />
+                <select value={form.task_id} onChange={(e) => setForm({ ...form, task_id: e.target.value })} className="input">
                     <option value="">No task</option>
                     {project.tasks.map((t) => <option key={t.id} value={t.id}>{t.title}</option>)}
                 </select>
-                <input required type="number" min="0.25" step="0.25" placeholder="Hours" value={form.hours} onChange={(e) => setForm({ ...form, hours: e.target.value })} className="field" />
-                <input placeholder="Note" value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} className="field" />
+                <input required type="number" min="0.25" step="0.25" placeholder="Hours" value={form.hours} onChange={(e) => setForm({ ...form, hours: e.target.value })} className="input" />
+                <input placeholder="Note" value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} className="input" />
                 <Button type="submit" variant="confirm" disabled={saving} className="col-span-4 justify-self-end w-fit">Log time</Button>
             </form>
             <div className="card overflow-hidden">
@@ -989,7 +948,7 @@ function ProposalsTab({ project }) {
             <div className="flex justify-end mb-4">
                 <Link
                     href={`/proposals/create?company_id=${project.company_id}&project_id=${project.id}`}
-                    className="btn btn-primary"
+                    className="btn btn--primary"
                 >
                     New proposal
                 </Link>
@@ -1192,13 +1151,13 @@ function BillingTab({ project }) {
             </div>
 
             {showForm && (
-                <form onSubmit={createInvoice} className="card card-padded mb-4">
+                <form onSubmit={createInvoice} className="card card--padded mb-4">
                     {proposalsWithItems.length > 0 && (
                         <div className="mb-3">
                             <select
                                 value={form.proposal_id}
                                 onChange={(e) => copyFromProposal(e.target.value)}
-                                className="field"
+                                className="input"
                             >
                                 <option value="">Copy line items from a proposal…</option>
                                 {proposalsWithItems.map((p) => (
@@ -1207,7 +1166,7 @@ function BillingTab({ project }) {
                             </select>
                             {wasScaledToRemaining && (
                                 remaining <= 0 ? (
-                                    <div className="text-xs text-watermelon mt-1">
+                                    <div className="form-error">
                                         This project's budget is already fully invoiced, so these line items scaled to $0.00 — increase the budget or edit the amounts below.
                                     </div>
                                 ) : (
@@ -1231,7 +1190,7 @@ function BillingTab({ project }) {
                                         placeholder="Line item description (required)"
                                         value={item.description}
                                         onChange={(e) => updateItem(idx, 'description', e.target.value)}
-                                        className="field flex-1"
+                                        className="input flex-1"
                                     />
                                     <input
                                         type="number"
@@ -1240,10 +1199,10 @@ function BillingTab({ project }) {
                                         placeholder="Amount"
                                         value={item.amount}
                                         onChange={(e) => updateItem(idx, 'amount', e.target.value)}
-                                        className="field tabular-nums w-28"
+                                        className="input tabular-nums w-28"
                                     />
                                     {form.items.length > 1 && (
-                                        <Button type="button" variant="link-danger" onClick={() => removeItemRow(idx)}>Remove</Button>
+                                        <Button type="button" variant="link-accent" onClick={() => removeItemRow(idx)}>Remove</Button>
                                     )}
                                 </div>
                                 <textarea
@@ -1251,7 +1210,7 @@ function BillingTab({ project }) {
                                     value={item.details || ''}
                                     onChange={(e) => updateItem(idx, 'details', e.target.value)}
                                     rows={2}
-                                    className="field text-xs text-shadow-grey"
+                                    className="input text-xs text-shadow-grey"
                                 />
                             </div>
                         ))}
@@ -1310,31 +1269,31 @@ function BillingTab({ project }) {
                                     <td><InvoiceStatusBadge invoice={invoice} /></td>
                                     <td className="text-right">
                                         <div className="flex items-center justify-end gap-3">
-                                            <a href={`/i/${invoice.public_token}`} target="_blank" rel="noopener noreferrer" title="Preview" className="icon-btn icon-btn-secondary">
+                                            <a href={`/i/${invoice.public_token}`} target="_blank" rel="noopener noreferrer" title="Preview" className="icon-btn icon-btn--secondary">
                                                 <Eye />
                                             </a>
                                             {invoice.status === 'draft' && (
-                                                <Link href={`/invoices/${invoice.id}`} title="Edit" className="icon-btn icon-btn-confirm">
+                                                <Link href={`/invoices/${invoice.id}`} title="Edit" className="icon-btn icon-btn--confirm">
                                                     <PencilSimple />
                                                 </Link>
                                             )}
                                             {invoice.status === 'draft' && (
-                                                <button onClick={() => sendInvoice(invoice)} title="Send" className="icon-btn icon-btn-accent">
+                                                <button onClick={() => sendInvoice(invoice)} title="Send" className="icon-btn icon-btn--accent">
                                                     <PaperPlaneTilt />
                                                 </button>
                                             )}
                                             {invoice.status !== 'draft' && (
-                                                <button onClick={() => copyInvoiceLink(invoice)} title={copiedInvoiceId === invoice.id ? 'Copied!' : 'Copy link'} className="icon-btn icon-btn-secondary">
+                                                <button onClick={() => copyInvoiceLink(invoice)} title={copiedInvoiceId === invoice.id ? 'Copied!' : 'Copy link'} className="icon-btn icon-btn--secondary">
                                                     {copiedInvoiceId === invoice.id ? <Check /> : <Copy />}
                                                 </button>
                                             )}
                                             {invoice.status !== 'draft' && (
-                                                <a href={`/invoices/${invoice.id}/pdf`} title="Download PDF" className="icon-btn icon-btn-secondary">
+                                                <a href={`/invoices/${invoice.id}/pdf`} title="Download PDF" className="icon-btn icon-btn--secondary">
                                                     <DownloadSimple />
                                                 </a>
                                             )}
                                             {invoice.status === 'sent' && (
-                                                <button onClick={() => markInvoicePaid(invoice)} title="Mark paid (check)" className="icon-btn icon-btn-confirm">
+                                                <button onClick={() => markInvoicePaid(invoice)} title="Mark paid (check)" className="icon-btn icon-btn--confirm">
                                                     <CheckCircle />
                                                 </button>
                                             )}
@@ -1343,7 +1302,7 @@ function BillingTab({ project }) {
                                                     onClick={() => deleteInvoice(invoice)}
                                                     disabled={deletingInvoiceId === invoice.id}
                                                     title="Delete"
-                                                    className="icon-btn icon-btn-danger"
+                                                    className="icon-btn icon-btn--danger"
                                                 >
                                                     <Trash />
                                                 </button>
@@ -1388,11 +1347,11 @@ function ExpensesTab({ project }) {
 
     return (
         <div>
-            <form onSubmit={addExpense} className="card card-padded mb-4 grid grid-cols-2 gap-2">
-                <input required placeholder="Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="field col-span-2" />
-                <input required type="number" min="0.01" step="0.01" placeholder="Amount" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} className="field tabular-nums" />
-                <input required type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className="field" />
-                <label className="flex items-center gap-2 text-sm">
+            <form onSubmit={addExpense} className="card card--padded mb-4 grid grid-cols-2 gap-2">
+                <input required placeholder="Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="input col-span-2" />
+                <input required type="number" min="0.01" step="0.01" placeholder="Amount" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} className="input tabular-nums" />
+                <input required type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className="input" />
+                <label className="choice">
                     <input type="checkbox" checked={form.is_billable} onChange={(e) => setForm({ ...form, is_billable: e.target.checked })} />
                     Billable to this project
                 </label>
@@ -1401,7 +1360,7 @@ function ExpensesTab({ project }) {
                     value={form.markup_percent}
                     disabled={!form.is_billable}
                     onChange={(e) => setForm({ ...form, markup_percent: e.target.value })}
-                    className="field tabular-nums disabled:opacity-50"
+                    className="input tabular-nums disabled:opacity-50"
                 />
                 <Button type="submit" variant="confirm" disabled={saving} className="col-span-2 justify-self-end w-fit">Add expense</Button>
             </form>
@@ -1429,7 +1388,7 @@ function ExpensesTab({ project }) {
                                     <td className="text-right tabular-nums text-watermelon">{formatCurrency(e.amount)}</td>
                                     <td className="text-right">
                                         {e.billing_status === 'unbilled' && (
-                                            <button onClick={() => remove(e)} className="icon-btn icon-btn-danger">
+                                            <button onClick={() => remove(e)} className="icon-btn icon-btn--danger">
                                                 <Trash />
                                             </button>
                                         )}
@@ -1483,7 +1442,7 @@ function AssignedStaff({ project, canManageTeam, assignableStaff }) {
                     <select
                         value={pickId}
                         onChange={(e) => setPickId(e.target.value)}
-                        className="field flex-1"
+                        className="input flex-1"
                     >
                         <option value="">Assign staff&hellip;</option>
                         {available.map((staffer) => (
@@ -1501,7 +1460,7 @@ function AssignedStaff({ project, canManageTeam, assignableStaff }) {
                         <span key={user.id} className="inline-flex items-center gap-2 bg-white border border-border rounded-full px-3 py-1 text-sm">
                             {user.name}
                             {canManageTeam && (
-                                <button onClick={() => unassign(user)} className="icon-btn icon-btn-danger">
+                                <button onClick={() => unassign(user)} className="icon-btn icon-btn--danger">
                                     <X />
                                 </button>
                             )}
@@ -1550,7 +1509,7 @@ function TeamTab({ project, canManageTeam, assignableStaff }) {
                     placeholder="Add team member name"
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
-                    className="field flex-1"
+                    className="input flex-1"
                 />
                 <Button type="submit" variant="confirm" disabled={saving}>Add</Button>
             </form>
@@ -1561,7 +1520,7 @@ function TeamTab({ project, canManageTeam, assignableStaff }) {
                     {names.map((name) => (
                         <span key={name} className="inline-flex items-center gap-2 bg-white border border-border rounded-full px-3 py-1 text-sm">
                             {name}
-                            <button onClick={() => remove(name)} className="icon-btn icon-btn-danger">
+                            <button onClick={() => remove(name)} className="icon-btn icon-btn--danger">
                                 <X />
                             </button>
                         </span>

@@ -1,0 +1,155 @@
+// /style-guide -- the live component reference (Pages/Dev/StyleGuide.jsx).
+// Layout for the demo page itself; the components it shows are styled by
+// their own partials.
+@use '../abstracts' as *;
+
+.style-guide {
+    // Demo column widths, so examples don't stretch across the page.
+    --style-guide-demo-width: 32rem;
+    --style-guide-demo-width-narrow: 28rem;
+
+    &__section {
+        margin-bottom: var(--space-10);
+    }
+
+    &__heading {
+        margin-bottom: var(--space-1);
+        font-family: var(--font-family-display);
+        font-size: var(--font-size-lg);
+        line-height: var(--line-height-lg);
+        font-weight: var(--font-weight-extrabold);
+        letter-spacing: var(--letter-spacing-display);
+    }
+
+    &__description {
+        margin-bottom: var(--space-4);
+    }
+
+    &__description,
+    &__note {
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+        color: var(--color-shadow-grey);
+    }
+
+    &__note {
+        margin-bottom: var(--space-2);
+
+        &--after-block {
+            margin-top: var(--space-4);
+        }
+
+        &--after-table {
+            margin-top: var(--space-6);
+        }
+    }
+
+    &__caption {
+        font-size: var(--font-size-xs);
+        line-height: var(--line-height-xs);
+        color: var(--color-shadow-grey);
+    }
+
+    &__swatches {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: var(--space-4);
+
+        @include respond-to('md') {
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+    }
+
+    &__swatch {
+        display: flex;
+        align-items: center;
+        gap: var(--space-3);
+    }
+
+    &__swatch-chip {
+        width: var(--space-10);
+        height: var(--space-10);
+        border: var(--border-width) solid var(--color-border);
+        border-radius: var(--radius-base);
+    }
+
+    &__swatch-name {
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+        font-weight: var(--font-weight-medium);
+    }
+
+    &__row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: var(--space-3);
+
+        &--spaced {
+            margin-bottom: var(--space-3);
+        }
+
+        &--tight {
+            gap: var(--space-2);
+            margin-bottom: var(--space-4);
+        }
+
+        &--compact {
+            gap: var(--space-2);
+        }
+
+        &--loose {
+            gap: var(--space-4);
+        }
+    }
+
+    &__icon-examples {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-start;
+        gap: var(--space-6);
+    }
+
+    &__icon-example {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: var(--space-2);
+        text-align: center;
+    }
+
+    &__grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: var(--space-4);
+        max-width: var(--style-guide-demo-width);
+
+        &--narrow {
+            max-width: var(--style-guide-demo-width-narrow);
+        }
+    }
+
+    &__unpadded {
+        padding: var(--space-4);
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+        color: var(--color-shadow-grey);
+    }
+
+    &__table {
+        max-width: var(--style-guide-demo-width);
+    }
+
+    &__strong {
+        font-weight: var(--font-weight-medium);
+    }
+
+    &__numeric {
+        text-align: right;
+    }
+
+    &__message {
+        max-width: var(--style-guide-demo-width-narrow);
+        margin-bottom: var(--space-3);
+    }
+}

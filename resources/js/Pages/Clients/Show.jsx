@@ -80,19 +80,19 @@ function DetailsCard({ company }) {
     }
 
     return (
-        <form onSubmit={submit} className="card card-padded mb-6 grid grid-cols-2 gap-3">
-            <input required placeholder="Client or company name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="field col-span-2" />
-            <input placeholder="Phone" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className="field" />
-            <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })} className="field">
+        <form onSubmit={submit} className="card card--padded mb-6 grid grid-cols-2 gap-3">
+            <input required placeholder="Client or company name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="input col-span-2" />
+            <input placeholder="Phone" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className="input" />
+            <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })} className="input">
                 <option value="active">Active</option>
                 <option value="inactive">Inactive</option>
             </select>
             <div className="col-span-2">
-                <label className="field-label">Default payment terms</label>
+                <label className="label">Default payment terms</label>
                 <select
                     value={form.default_payment_terms}
                     onChange={(e) => setForm({ ...form, default_payment_terms: e.target.value })}
-                    className="field"
+                    className="input"
                 >
                     <option value="">Use firm default</option>
                     {PAYMENT_TERMS.filter((t) => t.value !== 'custom').map((t) => (
@@ -101,22 +101,22 @@ function DetailsCard({ company }) {
                 </select>
             </div>
             <div className="col-span-2">
-                <label className="field-label">Automatic reminders</label>
+                <label className="label">Automatic reminders</label>
                 <select
                     value={form.reminders_enabled}
                     onChange={(e) => setForm({ ...form, reminders_enabled: e.target.value })}
-                    className="field"
+                    className="input"
                 >
                     <option value="">Use app default</option>
                     <option value="1">On</option>
                     <option value="0">Off</option>
                 </select>
             </div>
-            <input placeholder="Street address" value={form.address_line1} onChange={(e) => setForm({ ...form, address_line1: e.target.value })} className="field col-span-2" />
+            <input placeholder="Street address" value={form.address_line1} onChange={(e) => setForm({ ...form, address_line1: e.target.value })} className="input col-span-2" />
             <div className="col-span-2 grid grid-cols-[2fr_1fr_1fr] gap-3">
-                <input placeholder="City" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} className="field" />
-                <input placeholder="State" value={form.state} onChange={(e) => setForm({ ...form, state: e.target.value })} className="field" />
-                <input placeholder="Zip" value={form.postal_code} onChange={(e) => setForm({ ...form, postal_code: e.target.value })} className="field" />
+                <input placeholder="City" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} className="input" />
+                <input placeholder="State" value={form.state} onChange={(e) => setForm({ ...form, state: e.target.value })} className="input" />
+                <input placeholder="Zip" value={form.postal_code} onChange={(e) => setForm({ ...form, postal_code: e.target.value })} className="input" />
             </div>
             <div className="flex gap-2 col-span-2 justify-end">
                 <Button type="button" variant="secondary" onClick={() => setEditing(false)}>Cancel</Button>
@@ -181,7 +181,7 @@ function ContactsCard({ company }) {
     }
 
     return (
-        <div className="card card-padded mb-6">
+        <div className="card card--padded mb-6">
             <div className="flex items-center justify-between mb-3">
                 <h2 className="text-sm font-semibold text-shadow-grey">Contacts</h2>
                 <Button variant="link-accent" onClick={() => setShowForm(!showForm)}>
@@ -191,15 +191,15 @@ function ContactsCard({ company }) {
 
             {showForm && (
                 <form onSubmit={submit} className="grid grid-cols-2 gap-2 mb-4">
-                    <input required placeholder="Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="field" />
-                    <input placeholder="Role" value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })} className="field" />
-                    <input type="email" placeholder="Email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="field" />
-                    <input placeholder="Phone" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className="field" />
-                    <label className="flex items-center gap-2 text-sm">
+                    <input required placeholder="Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="input" />
+                    <input placeholder="Role" value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })} className="input" />
+                    <input type="email" placeholder="Email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="input" />
+                    <input placeholder="Phone" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className="input" />
+                    <label className="choice">
                         <input type="checkbox" checked={form.is_primary} onChange={(e) => setForm({ ...form, is_primary: e.target.checked })} />
                         Primary contact
                     </label>
-                    <label className="flex items-center gap-2 text-sm">
+                    <label className="choice">
                         <input type="checkbox" checked={form.is_billing} onChange={(e) => setForm({ ...form, is_billing: e.target.checked })} />
                         Billing contact
                     </label>
@@ -289,7 +289,7 @@ function ProjectsCard({ company }) {
     }
 
     return (
-        <div className="card card-padded mb-6">
+        <div className="card card--padded mb-6">
             <div className="flex items-center justify-between mb-3">
                 <h2 className="text-sm font-semibold text-shadow-grey">Projects</h2>
                 <Button variant="link-accent" onClick={() => setShowForm(!showForm)}>
@@ -299,7 +299,7 @@ function ProjectsCard({ company }) {
 
             {showForm && (
                 <form onSubmit={submit} className="flex gap-2 mb-4">
-                    <input required placeholder="Project name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="field flex-1" />
+                    <input required placeholder="Project name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="input flex-1" />
                     <Button type="submit" variant="confirm">Save</Button>
                 </form>
             )}
@@ -340,7 +340,7 @@ function ProjectsCard({ company }) {
 
 function InvoicesCard({ company }) {
     return (
-        <div className="card card-padded mb-6">
+        <div className="card card--padded mb-6">
             <h2 className="text-sm font-semibold text-shadow-grey mb-3">Invoices</h2>
             {company.invoices.length === 0 ? (
                 <EmptyState text="No invoices yet." />
@@ -365,7 +365,7 @@ function InvoicesCard({ company }) {
 
 function ProposalsCard({ company }) {
     return (
-        <div className="card card-padded">
+        <div className="card card--padded">
             <h2 className="text-sm font-semibold text-shadow-grey mb-3">Proposals</h2>
             {company.proposals.length === 0 ? (
                 <EmptyState text="No proposals yet." />

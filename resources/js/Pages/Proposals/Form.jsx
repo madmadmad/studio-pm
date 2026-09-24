@@ -207,7 +207,7 @@ export default function ProposalsForm({ proposal, companies, services, presetCom
                 actions={isEditing && (
                     <>
                         <ProposalStatusBadge proposal={proposal} />
-                        <a href={`/p/${proposal.accept_token}`} target="_blank" rel="noopener noreferrer" title="Preview" className="icon-btn icon-btn-secondary">
+                        <a href={`/p/${proposal.accept_token}`} target="_blank" rel="noopener noreferrer" title="Preview" className="icon-btn icon-btn--secondary">
                             <Eye />
                         </a>
                         {proposal.status === 'draft' ? (
@@ -215,12 +215,12 @@ export default function ProposalsForm({ proposal, companies, services, presetCom
                                 {sending ? 'Sending…' : 'Send'}
                             </Button>
                         ) : (
-                            <button type="button" onClick={copyLink} title={copied ? 'Copied!' : 'Copy link'} className="icon-btn icon-btn-secondary">
+                            <button type="button" onClick={copyLink} title={copied ? 'Copied!' : 'Copy link'} className="icon-btn icon-btn--secondary">
                                 {copied ? <Check /> : <Copy />}
                             </button>
                         )}
                         {proposal.status === 'accepted' && (
-                            <Button variant="link-danger" disabled={unaccepting} onClick={unacceptProposal}>
+                            <Button variant="link-accent" disabled={unaccepting} onClick={unacceptProposal}>
                                 {unaccepting ? 'Reverting…' : 'Unaccept'}
                             </Button>
                         )}
@@ -228,13 +228,13 @@ export default function ProposalsForm({ proposal, companies, services, presetCom
                 )}
             />
 
-            <div className="card card-padded">
+            <div className="card card--padded">
                 <div className="grid grid-cols-2 gap-3 mb-3">
                     <select
                         value={form.company_id}
                         disabled={isEditing || contextLocked}
                         onChange={(e) => handleCompanyChange(e.target.value)}
-                        className="field"
+                        className="input"
                     >
                         <option value="">Select client</option>
                         {companies.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -243,7 +243,7 @@ export default function ProposalsForm({ proposal, companies, services, presetCom
                         value={form.contact_id}
                         disabled={!form.company_id}
                         onChange={(e) => setForm({ ...form, contact_id: e.target.value })}
-                        className="field"
+                        className="input"
                     >
                         <option value="">
                             {form.company_id ? 'Send to (no specific contact)' : 'Select a client first'}
@@ -257,7 +257,7 @@ export default function ProposalsForm({ proposal, companies, services, presetCom
                 </div>
                 <div className="mb-3">
                     {isEditing ? (
-                        <div className="field field-static">
+                        <div className="input input--static">
                             Project: {proposal.project?.name ?? '—'}
                         </div>
                     ) : (
@@ -266,7 +266,7 @@ export default function ProposalsForm({ proposal, companies, services, presetCom
                                 value={form.company_id ? (form.project_id || NEW_PROJECT) : ''}
                                 disabled={!form.company_id || contextLocked}
                                 onChange={(e) => handleProjectChange(e.target.value)}
-                                className="field"
+                                className="input"
                             >
                                 {!form.company_id ? (
                                     <option value="">Select a client first</option>
@@ -283,7 +283,7 @@ export default function ProposalsForm({ proposal, companies, services, presetCom
                                     value={form.new_project_name}
                                     disabled={!form.company_id}
                                     onChange={(e) => setForm({ ...form, new_project_name: e.target.value })}
-                                    className="field"
+                                    className="input"
                                 />
                             )}
                         </div>
@@ -297,10 +297,10 @@ export default function ProposalsForm({ proposal, companies, services, presetCom
                             placeholder="Estimate amount ($)"
                             value={form.estimate_amount}
                             onChange={(e) => setForm({ ...form, estimate_amount: e.target.value })}
-                            className="field tabular-nums"
+                            className="input tabular-nums"
                         />
                     ) : (
-                        <div className="field field-static tabular-nums">
+                        <div className="input input--static tabular-nums">
                             Estimate: {formatCurrency(itemsTotal)} (from line items)
                         </div>
                     )}
@@ -309,7 +309,7 @@ export default function ProposalsForm({ proposal, companies, services, presetCom
                     placeholder="Proposal title"
                     value={form.title}
                     onChange={(e) => setForm({ ...form, title: e.target.value })}
-                    className="field mb-3"
+                    className="input mb-3"
                 />
                 <div className="mb-4">
                     <RichTextEditor value={form.body} onChange={(body) => setForm({ ...form, body })} />
@@ -343,7 +343,7 @@ export default function ProposalsForm({ proposal, companies, services, presetCom
                                     <select
                                         value={item.service_id}
                                         onChange={(e) => updateItem(idx, 'service_id', e.target.value)}
-                                        className="field field-xs h-9 col-span-5"
+                                        className="input input--xs h-9 col-span-5"
                                     >
                                         <option value="">Custom</option>
                                         {services.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
@@ -355,7 +355,7 @@ export default function ProposalsForm({ proposal, companies, services, presetCom
                                         placeholder="Qty"
                                         value={item.quantity}
                                         onChange={(e) => updateItem(idx, 'quantity', e.target.value)}
-                                        className="field field-xs h-9 tabular-nums col-span-2"
+                                        className="input input--xs h-9 tabular-nums col-span-2"
                                     />
                                     <input
                                         type="number"
@@ -364,7 +364,7 @@ export default function ProposalsForm({ proposal, companies, services, presetCom
                                         placeholder="Rate"
                                         value={item.rate}
                                         onChange={(e) => updateItem(idx, 'rate', e.target.value)}
-                                        className="field field-xs h-9 tabular-nums col-span-2"
+                                        className="input input--xs h-9 tabular-nums col-span-2"
                                     />
                                     <div className="col-span-3 h-9 flex items-center justify-end text-sm tabular-nums">
                                         {formatCurrency(lineAmount(item))}
@@ -376,7 +376,7 @@ export default function ProposalsForm({ proposal, companies, services, presetCom
                                         value={item.details}
                                         onChange={(e) => updateItem(idx, 'details', e.target.value)}
                                         rows={2}
-                                        className="field field-xs text-xs text-shadow-grey col-span-9"
+                                        className="input input--xs text-xs text-shadow-grey col-span-9"
                                     />
                                 </div>
                                 <button
@@ -403,7 +403,7 @@ export default function ProposalsForm({ proposal, companies, services, presetCom
                 {error && <div className="text-sm mb-3 text-watermelon">{error}</div>}
 
                 <div className="flex gap-2 justify-end">
-                    <Link href="/proposals" className="btn btn-secondary">Cancel</Link>
+                    <Link href="/proposals" className="btn btn--secondary">Cancel</Link>
                     <Button type="button" variant="confirm" disabled={saving} onClick={save}>
                         {isEditing ? 'Save changes' : 'Save draft'}
                     </Button>

@@ -20,18 +20,18 @@ export default function ForgotPassword({ status }) {
                 {status && <div className="text-sm text-fern">{status}</div>}
 
                 <div>
-                    <label className="field-label">Email</label>
+                    <label className="label">Email</label>
                     <input
                         type="email"
                         autoFocus
                         value={data.email}
                         onChange={(e) => setData('email', e.target.value)}
-                        className="field"
+                        className="input"
                     />
-                    {errors.email && <div className="text-xs text-watermelon mt-1">{errors.email}</div>}
+                    {errors.email && <div className="form-error">{errors.email}</div>}
                 </div>
 
-                <Button type="submit" disabled={processing} className="btn-lg mt-2">
+                <Button type="submit" disabled={processing} className="btn--lg mt-2">
                     Email password reset link
                 </Button>
 

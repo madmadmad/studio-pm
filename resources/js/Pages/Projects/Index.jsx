@@ -130,12 +130,12 @@ export default function ProjectsIndex({ projects, companies, archivedView = fals
             )}
 
             {showForm && (
-                <form onSubmit={submit} className="card card-padded mb-6 grid grid-cols-2 gap-3">
+                <form onSubmit={submit} className="card card--padded mb-6 grid grid-cols-2 gap-3">
                     <select
                         required
                         value={form.company_id}
                         onChange={(e) => handleCompanyChange(e.target.value)}
-                        className="field"
+                        className="input"
                     >
                         <option value="">Select client</option>
                         {companies.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -144,7 +144,7 @@ export default function ProjectsIndex({ projects, companies, archivedView = fals
                         value={form.contact_id}
                         disabled={!form.company_id}
                         onChange={(e) => setForm({ ...form, contact_id: e.target.value })}
-                        className="field"
+                        className="input"
                     >
                         <option value="">
                             {form.company_id ? 'No contact' : 'Select a client first'}
@@ -160,13 +160,13 @@ export default function ProjectsIndex({ projects, companies, archivedView = fals
                         placeholder="Project name"
                         value={form.name}
                         onChange={(e) => setForm({ ...form, name: e.target.value })}
-                        className="field col-span-2"
+                        className="input col-span-2"
                     />
                     <input
                         placeholder="Description"
                         value={form.description}
                         onChange={(e) => setForm({ ...form, description: e.target.value })}
-                        className="field col-span-2"
+                        className="input col-span-2"
                     />
                     {error && <div className="text-sm text-watermelon col-span-2">{error}</div>}
                     <div className="flex gap-2 col-span-2 justify-end">

@@ -51,7 +51,7 @@ export default function ProfileIndex({ profileUser }) {
                 subtitle="Your photo shows up next to your messages and throughout the app."
             />
 
-            <div className="card card-padded max-w-md">
+            <div className="card card--padded max-w-md">
                 <div className="flex items-center gap-4 mb-4">
                     <Avatar name={user.name} avatarUrl={user.avatar_url} id={user.id} size={72} />
                     <div>

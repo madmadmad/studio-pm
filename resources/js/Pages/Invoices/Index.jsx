@@ -206,13 +206,13 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
             />
 
             {showForm && (
-                <div className="card card-padded mb-6">
+                <div className="card card--padded mb-6">
                     <div className="grid grid-cols-2 gap-3 mb-4">
                         <select
                             required
                             value={draft.company_id}
                             onChange={(e) => handleCompanyChange(e.target.value)}
-                            className="field"
+                            className="input"
                         >
                             <option value="">Select client</option>
                             {companies.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -221,7 +221,7 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
                             value={draft.contact_id}
                             disabled={!draft.company_id}
                             onChange={(e) => setDraft({ ...draft, contact_id: e.target.value })}
-                            className="field"
+                            className="input"
                         >
                             <option value="">
                                 {draft.company_id ? 'Bill to (no specific contact)' : 'Select a client first'}
@@ -246,7 +246,7 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
                                         placeholder="Line item description (required)"
                                         value={item.description}
                                         onChange={(e) => updateItem(idx, 'description', e.target.value)}
-                                        className="field flex-1"
+                                        className="input flex-1"
                                     />
                                     <input
                                         placeholder="Amount"
@@ -255,10 +255,10 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
                                         step="0.01"
                                         value={item.amount}
                                         onChange={(e) => updateItem(idx, 'amount', e.target.value)}
-                                        className="field tabular-nums w-28"
+                                        className="input tabular-nums w-28"
                                     />
                                     {draft.items.length > 1 && (
-                                        <Button variant="link-danger" onClick={() => removeItemRow(idx)}>Remove</Button>
+                                        <Button variant="link-accent" onClick={() => removeItemRow(idx)}>Remove</Button>
                                     )}
                                 </div>
                                 <textarea
@@ -266,7 +266,7 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
                                     value={item.details || ''}
                                     onChange={(e) => updateItem(idx, 'details', e.target.value)}
                                     rows={2}
-                                    className="field text-xs text-shadow-grey"
+                                    className="input text-xs text-shadow-grey"
                                 />
                             </div>
                         ))}
@@ -338,31 +338,31 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
                                     <td><InvoiceStatusBadge invoice={invoice} /></td>
                                     <td className="text-right">
                                         <div className="flex items-center justify-end gap-3">
-                                            <a href={`/i/${invoice.public_token}`} target="_blank" rel="noopener noreferrer" title="Preview" className="icon-btn icon-btn-secondary">
+                                            <a href={`/i/${invoice.public_token}`} target="_blank" rel="noopener noreferrer" title="Preview" className="icon-btn icon-btn--secondary">
                                                 <Eye />
                                             </a>
                                             {invoice.status === 'draft' && (
-                                                <Link href={`/invoices/${invoice.id}`} title="Edit" className="icon-btn icon-btn-confirm">
+                                                <Link href={`/invoices/${invoice.id}`} title="Edit" className="icon-btn icon-btn--confirm">
                                                     <PencilSimple />
                                                 </Link>
                                             )}
                                             {invoice.status === 'draft' && (
-                                                <button onClick={() => sendInvoice(invoice)} title="Send" className="icon-btn icon-btn-accent">
+                                                <button onClick={() => sendInvoice(invoice)} title="Send" className="icon-btn icon-btn--accent">
                                                     <PaperPlaneTilt />
                                                 </button>
                                             )}
                                             {invoice.status !== 'draft' && (
-                                                <button onClick={() => copyLink(invoice)} title={copiedId === invoice.id ? 'Copied!' : 'Copy link'} className="icon-btn icon-btn-secondary">
+                                                <button onClick={() => copyLink(invoice)} title={copiedId === invoice.id ? 'Copied!' : 'Copy link'} className="icon-btn icon-btn--secondary">
                                                     {copiedId === invoice.id ? <Check /> : <Copy />}
                                                 </button>
                                             )}
                                             {invoice.status !== 'draft' && (
-                                                <a href={`/invoices/${invoice.id}/pdf`} title="Download PDF" className="icon-btn icon-btn-secondary">
+                                                <a href={`/invoices/${invoice.id}/pdf`} title="Download PDF" className="icon-btn icon-btn--secondary">
                                                     <DownloadSimple />
                                                 </a>
                                             )}
                                             {invoice.status === 'sent' && (
-                                                <button onClick={() => markPaid(invoice)} title="Mark paid (check)" className="icon-btn icon-btn-confirm">
+                                                <button onClick={() => markPaid(invoice)} title="Mark paid (check)" className="icon-btn icon-btn--confirm">
                                                     <CheckCircle />
                                                 </button>
                                             )}
@@ -371,7 +371,7 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
                                                     onClick={() => deleteInvoice(invoice)}
                                                     disabled={deletingId === invoice.id}
                                                     title="Delete"
-                                                    className="icon-btn icon-btn-danger"
+                                                    className="icon-btn icon-btn--danger"
                                                 >
                                                     <Trash />
                                                 </button>

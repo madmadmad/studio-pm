@@ -8,6 +8,7 @@ import { ProjectStatusBadge, TaskStatusBadge, InvoiceStatusBadge, ProposalStatus
 import { formatCurrency, formatDate, invoiceTotal } from '../../../lib/format';
 import { api } from '../../../lib/api';
 import PageHeader from '../../../Components/PageHeader';
+import TabBar from '../../../Components/TabBar';
 
 const TABS = ['Overview', 'Tasks', 'Messages', 'Proposals', 'Invoices', 'Team'];
 
@@ -15,27 +16,9 @@ function reload() {
     router.reload({ only: ['project'] });
 }
 
-function TabBar({ tab, setTab }) {
-    return (
-        <div className="flex gap-1 border-b border-border mb-6 overflow-x-auto">
-            {TABS.map((t) => (
-                <button
-                    key={t}
-                    onClick={() => setTab(t)}
-                    className={`text-sm font-medium px-3 py-2 border-b-2 -mb-px whitespace-nowrap ${
-                        tab === t ? 'border-gunmetal text-gunmetal' : 'border-transparent text-shadow-grey'
-                    }`}
-                >
-                    {t}
-                </button>
-            ))}
-        </div>
-    );
-}
-
 function OverviewTab({ project }) {
     return (
-        <div className="card card-padded">
+        <div className="card card--padded">
             <div className="text-sm text-shadow-grey mb-1">Status</div>
             <ProjectStatusBadge project={project} />
             {project.description && (
@@ -68,7 +51,7 @@ function NewTaskForm({ project }) {
                 placeholder="New task title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="field flex-1"
+                className="input flex-1"
             />
             <Button type="submit" variant="confirm" disabled={saving}>Add task</Button>
         </form>
@@ -163,7 +146,7 @@ function ProposalsTab({ project }) {
                                 href={`/p/${proposal.accept_token}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="btn btn-confirm btn-sm"
+                                className="btn btn--confirm btn--sm"
                             >
                                 Client view
                             </a>
@@ -194,7 +177,7 @@ function InvoicesTab({ project }) {
                                 href={`/i/${invoice.public_token}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="btn btn-confirm btn-sm"
+                                className="btn btn--confirm btn--sm"
                             >
                                 Client view
                             </a>
@@ -236,7 +219,7 @@ export default function PortalProjectShow({ project }) {
                 subtitle={project.company.name}
             />
 
-            <TabBar tab={tab} setTab={setTab} />
+            <TabBar tabs={TABS} tab={tab} setTab={setTab} />
 
             {tab === 'Overview' && <OverviewTab project={project} />}
             {tab === 'Tasks' && <TasksTab project={project} />}

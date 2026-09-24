@@ -1,0 +1,75 @@
+// Bell in the dark sidebar with an unread count and a dropdown list.
+// Used by Components/NotificationBell.jsx; the list mixes in .popover.
+
+.notification-bell {
+    position: relative;
+
+    &__trigger {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        color: var(--color-on-dark-subtle);
+        transition: color var(--duration-fast) var(--ease-standard);
+
+        &:hover {
+            color: var(--color-on-dark);
+        }
+    }
+
+    &__count {
+        position: absolute;
+        top: calc(var(--space-1) * -1);
+        right: calc(var(--space-1) * -1);
+        min-width: var(--space-4);
+        height: var(--space-4);
+        padding-inline: var(--space-1);
+        font-size: var(--font-size-2xs);
+        line-height: var(--line-height-2xs);
+        color: var(--color-white);
+        text-align: center;
+        background-color: var(--color-watermelon);
+        border-radius: var(--radius-pill);
+    }
+
+    &__panel {
+        top: 100%;
+        right: 0;
+        width: var(--size-popover);
+        max-height: 24rem; // one-off: scroll past ~10 notifications
+        overflow-y: auto;
+        color: var(--color-gunmetal);
+    }
+
+    &__empty {
+        padding: var(--space-4);
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+        color: var(--color-shadow-grey);
+    }
+
+    &__entry + &__entry {
+        border-top: var(--border-width) solid var(--color-border);
+    }
+
+    &__item {
+        width: 100%;
+        padding: var(--space-2) var(--space-3);
+        font-size: var(--font-size-xs);
+        line-height: var(--line-height-xs);
+        text-align: left;
+
+        &:hover {
+            background-color: var(--color-porcelain);
+        }
+
+        &--read {
+            color: var(--color-shadow-grey);
+        }
+    }
+
+    &__time {
+        margin-top: var(--space-0-5);
+        font-weight: var(--font-weight-normal);
+        color: var(--color-shadow-grey);
+    }
+}

@@ -4,6 +4,15 @@
     outline-offset: var(--focus-ring-offset);
 }
 
+// Vertical rhythm between direct children in normal (block/inline) flow.
+// Unlike a flex column with `gap`, children keep their natural width and
+// inline-level children (text buttons) stay inline.
+@mixin stack($gap) {
+    > * + * {
+        margin-top: $gap;
+    }
+}
+
 // Single line, clipped with an ellipsis.
 @mixin truncate {
     overflow: hidden;

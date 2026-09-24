@@ -51,7 +51,7 @@ export default function PortalProfileIndex({ profileContact }) {
                 subtitle="Your photo shows up next to your messages."
             />
 
-            <div className="card card-padded max-w-md">
+            <div className="card card--padded max-w-md">
                 <div className="flex items-center gap-4 mb-4">
                     <Avatar name={contact.name} avatarUrl={contact.avatar_url} id={contact.id} size={72} />
                     <div>

@@ -1,0 +1,18 @@
+// A single headline number with its caption, on a .card.
+// Used by Components/MetricCard.jsx.
+
+.metric-card {
+    &__label {
+        margin-bottom: var(--space-1);
+        font-size: var(--font-size-xs);
+        line-height: var(--line-height-xs);
+        color: var(--color-shadow-grey);
+    }
+
+    &__value {
+        font-size: var(--font-size-2xl);
+        line-height: var(--line-height-2xl);
+        font-weight: var(--font-weight-medium);
+        font-variant-numeric: tabular-nums;
+    }
+}

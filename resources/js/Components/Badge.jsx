@@ -1,12 +1,8 @@
-const TONES = {
-    neutral: 'bg-mist text-shadow-grey',
-    watermelon: 'bg-watermelon-soft text-watermelon',
-    fern: 'bg-fern-soft text-fern',
-};
+const TONES = ['neutral', 'watermelon', 'fern'];
 
 export default function Badge({ tone = 'neutral', label }) {
     return (
-        <span className={`text-xs font-medium px-2 py-0.5 rounded ${TONES[tone] || TONES.neutral}`}>
+        <span className={`badge badge--${TONES.includes(tone) ? tone : 'neutral'}`}>
             {label}
         </span>
     );

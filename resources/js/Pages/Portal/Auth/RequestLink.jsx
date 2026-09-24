@@ -20,17 +20,17 @@ export default function RequestLink() {
                     Enter your email and we&rsquo;ll send you a link to sign in &mdash; no password needed.
                 </p>
                 <div>
-                    <label className="field-label">Email</label>
+                    <label className="label">Email</label>
                     <input
                         type="email"
                         autoFocus
                         value={data.email}
                         onChange={(e) => setData('email', e.target.value)}
-                        className="field"
+                        className="input"
                     />
-                    {errors.email && <div className="text-xs text-watermelon mt-1">{errors.email}</div>}
+                    {errors.email && <div className="form-error">{errors.email}</div>}
                 </div>
-                <Button type="submit" disabled={processing} className="btn-lg mt-2">
+                <Button type="submit" disabled={processing} className="btn--lg mt-2">
                     Email me a sign-in link
                 </Button>
             </form>

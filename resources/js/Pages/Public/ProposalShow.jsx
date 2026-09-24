@@ -81,7 +81,7 @@ export default function ProposalShow({ proposal, token, studio }) {
                 )}
 
                 <div
-                    className="proposal-body pb-6 mb-6 border-b border-border"
+                    className="prose pb-6 mb-6 border-b border-border"
                     dangerouslySetInnerHTML={{ __html: proposal.body }}
                 />
 

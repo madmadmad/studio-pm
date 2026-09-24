@@ -1,0 +1,55 @@
+// Full-screen image viewer with close, download, and prev/next controls.
+// Used by Components/Lightbox.jsx.
+
+.lightbox {
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-overlay);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-6);
+    background-color: var(--color-scrim-heavy);
+    animation: overlay-fade-in var(--duration-base) var(--ease-enter);
+
+    &__control {
+        position: absolute;
+        color: var(--color-white);
+
+        &:hover {
+            opacity: 0.7;
+        }
+
+        &--close {
+            top: var(--space-4);
+            right: var(--space-4);
+        }
+
+        // One control-width left of the close button.
+        &--download {
+            top: var(--space-4);
+            right: var(--space-16);
+        }
+
+        &--prev,
+        &--next {
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        &--prev {
+            left: var(--space-4);
+        }
+
+        &--next {
+            right: var(--space-4);
+        }
+    }
+
+    &__image {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+        border-radius: var(--radius-base);
+    }
+}

@@ -42,22 +42,22 @@ export default function InvoiceDateFields({ values, onChange }) {
     const { setIssuedOn, setTerms, setDueOn } = useInvoiceDateFields(values, onChange);
 
     return (
-        <div className="grid grid-cols-3 gap-3">
+        <div className="invoice-date-fields">
             <div>
-                <label className="field-label">Issue date</label>
-                <input type="date" value={values.issued_on} onChange={(e) => setIssuedOn(e.target.value)} className="field" />
+                <label className="label">Issue date</label>
+                <input type="date" value={values.issued_on} onChange={(e) => setIssuedOn(e.target.value)} className="input" />
             </div>
             <div>
-                <label className="field-label">Payment terms</label>
-                <select value={values.payment_terms} onChange={(e) => setTerms(e.target.value)} className="field">
+                <label className="label">Payment terms</label>
+                <select value={values.payment_terms} onChange={(e) => setTerms(e.target.value)} className="input">
                     {PAYMENT_TERMS.map((t) => (
                         <option key={t.value} value={t.value}>{t.label}</option>
                     ))}
                 </select>
             </div>
             <div>
-                <label className="field-label">Due date</label>
-                <input type="date" value={values.due_on} onChange={(e) => setDueOn(e.target.value)} className="field" />
+                <label className="label">Due date</label>
+                <input type="date" value={values.due_on} onChange={(e) => setDueOn(e.target.value)} className="input" />
             </div>
         </div>
     );

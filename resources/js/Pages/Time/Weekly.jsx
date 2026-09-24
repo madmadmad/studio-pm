@@ -53,7 +53,7 @@ export default function TimeWeekly({ weekStart, weekEnd, entries, companies }) {
             <PageHeader
                 title="Timesheets"
                 actions={
-                    <div className="flex items-center gap-2 text-sm">
+                    <div className="choice">
                         <button onClick={() => goToWeek(addDays(weekStart, -7))} className="px-2 py-1.5 rounded border border-border flex items-center">
                             <CaretLeft size={14} />
                         </button>
@@ -88,10 +88,10 @@ export default function TimeWeekly({ weekStart, weekEnd, entries, companies }) {
                                 <tr key={entry.id}>
                                     <td>{formatDate(entry.date)}</td>
                                     <td className="text-shadow-grey">{entry.company?.name ?? '—'}</td>
-                                    <td className="cell-tight tabular-nums w-24">
+                                    <td className="table__cell--tight tabular-nums w-24">
                                         <EditableCell entry={entry} field="hours" type="number" />
                                     </td>
-                                    <td className="cell-tight">
+                                    <td className="table__cell--tight">
                                         <EditableCell entry={entry} field="note" />
                                     </td>
                                 </tr>

@@ -25,16 +25,19 @@ function initials(name) {
     return (letters || name[0] || '?').toUpperCase();
 }
 
-export default function Avatar({ name, avatarUrl, id, size = 40, className = '' }) {
-    const dimension = `${size}px`;
+// `responsive` hands sizing to CSS (.avatar--responsive: smaller on
+// phones) instead of the fixed inline `size`.
+export default function Avatar({ name, avatarUrl, id, size = 40, responsive = false }) {
+    const dimensions = responsive ? {} : { width: `${size}px`, height: `${size}px` };
+    const sizeClass = responsive ? ' avatar--responsive' : '';
 
     if (avatarUrl) {
         return (
             <img
                 src={avatarUrl}
                 alt={name || ''}
-                className={`rounded-full object-cover flex-shrink-0 ${className}`}
-                style={{ width: dimension, height: dimension }}
+                className={`avatar avatar--photo${sizeClass}`}
+                style={dimensions}
             />
         );
     }
@@ -42,8 +45,8 @@ export default function Avatar({ name, avatarUrl, id, size = 40, className = '' 
     return (
         <div
             title={name}
-            className={`rounded-full flex items-center justify-center flex-shrink-0 font-semibold text-gunmetal ${className}`}
-            style={{ width: dimension, height: dimension, backgroundColor: PALETTE[hashToIndex(id)], fontSize: size * 0.4 }}
+            className={`avatar avatar--initials${sizeClass}`}
+            style={{ ...dimensions, backgroundColor: PALETTE[hashToIndex(id)], ...(responsive ? {} : { fontSize: size * 0.4 }) }}
         >
             {initials(name)}
         </div>

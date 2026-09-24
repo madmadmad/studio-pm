@@ -1,0 +1,9 @@
+// A checkbox or radio with its text, wrapped in one <label>.
+
+.choice {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-sm);
+}

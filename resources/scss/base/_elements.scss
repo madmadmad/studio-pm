@@ -40,11 +40,9 @@ button {
 // that popup is native OS chrome and ignores background-color, rendering
 // dark on a dark-mode system unless told this app is light-only.
 //
-// The chained :not()s (rather than one :not(a, b, c, d)) are kept for
-// their specificity, (0,4,1) -- collapsing them would change which rules
-// this beats.
-input:not([type='checkbox']):not([type='radio']):not([type='color']):not([type='file']),
-select {
+// Wrapped in :where() for zero specificity, so any class can override it
+// (e.g. .input--static, or a disabled/read-only .input going porcelain).
+:where(input:not([type='checkbox'], [type='radio'], [type='color'], [type='file']), select) {
     background-color: var(--color-white);
     color-scheme: light;
 }

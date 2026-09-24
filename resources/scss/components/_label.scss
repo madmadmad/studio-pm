@@ -1,0 +1,9 @@
+// The caption above a form field.
+
+.label {
+    display: block;
+    margin-bottom: var(--space-1);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-shadow-grey);
+}

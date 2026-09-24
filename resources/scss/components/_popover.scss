@@ -1,0 +1,17 @@
+// Floating panel anchored under a trigger (a dropdown's options, the
+// notification list). Position it from a `position: relative` parent;
+// the owning block sets width and horizontal placement.
+
+.popover {
+    position: absolute;
+    z-index: var(--z-dropdown);
+    margin-top: var(--space-1);
+    background-color: var(--color-white);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-base);
+    box-shadow: var(--shadow-popover);
+
+    &--padded {
+        padding: var(--space-3);
+    }
+}

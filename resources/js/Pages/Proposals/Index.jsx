@@ -61,7 +61,7 @@ export default function ProposalsIndex({ proposals: proposalsProp }) {
             <PageHeader
                 title="Proposals"
                 actions={
-                    <Link href="/proposals/create" className="btn btn-primary">
+                    <Link href="/proposals/create" className="btn btn--primary">
                         New proposal
                     </Link>
                 }
@@ -111,14 +111,14 @@ export default function ProposalsIndex({ proposals: proposalsProp }) {
                                     <td><ProposalStatusBadge proposal={proposal} /></td>
                                     <td className="text-right">
                                         <div className="flex items-center justify-end gap-3">
-                                            <a href={`/p/${proposal.accept_token}`} target="_blank" rel="noopener noreferrer" title="Preview" className="icon-btn icon-btn-secondary">
+                                            <a href={`/p/${proposal.accept_token}`} target="_blank" rel="noopener noreferrer" title="Preview" className="icon-btn icon-btn--secondary">
                                                 <Eye />
                                             </a>
-                                            <Link href={`/proposals/${proposal.id}/edit`} title="Edit" className="icon-btn icon-btn-confirm">
+                                            <Link href={`/proposals/${proposal.id}/edit`} title="Edit" className="icon-btn icon-btn--confirm">
                                                 <PencilSimple />
                                             </Link>
                                             {proposal.status === 'draft' && (
-                                                <button onClick={() => sendProposal(proposal)} title="Send" className="icon-btn icon-btn-accent">
+                                                <button onClick={() => sendProposal(proposal)} title="Send" className="icon-btn icon-btn--accent">
                                                     <PaperPlaneTilt />
                                                 </button>
                                             )}
@@ -126,7 +126,7 @@ export default function ProposalsIndex({ proposals: proposalsProp }) {
                                                 <button
                                                     onClick={() => copyLink(proposal)}
                                                     title={copiedId === proposal.id ? 'Copied!' : 'Copy link'}
-                                                    className="icon-btn icon-btn-secondary"
+                                                    className="icon-btn icon-btn--secondary"
                                                 >
                                                     {copiedId === proposal.id ? <Check /> : <Copy />}
                                                 </button>
@@ -139,7 +139,7 @@ export default function ProposalsIndex({ proposals: proposalsProp }) {
                                                     onClick={() => deleteProposal(proposal)}
                                                     disabled={deletingId === proposal.id}
                                                     title="Delete"
-                                                    className="icon-btn icon-btn-danger"
+                                                    className="icon-btn icon-btn--danger"
                                                 >
                                                     <Trash />
                                                 </button>

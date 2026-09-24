@@ -160,14 +160,14 @@ export default function InvoicesShow({ invoice: initialInvoice, studio, invoicin
                 actions={
                     <>
                         <InvoiceStatusBadge invoice={invoice} />
-                        <a href={`/i/${invoice.public_token}`} target="_blank" rel="noopener noreferrer" title="Preview" className="icon-btn icon-btn-secondary">
+                        <a href={`/i/${invoice.public_token}`} target="_blank" rel="noopener noreferrer" title="Preview" className="icon-btn icon-btn--secondary">
                             <Eye />
                         </a>
-                        <button onClick={copyLink} title={copied ? 'Copied!' : 'Copy link'} className="icon-btn icon-btn-secondary">
+                        <button onClick={copyLink} title={copied ? 'Copied!' : 'Copy link'} className="icon-btn icon-btn--secondary">
                             {copied ? <Check /> : <Copy />}
                         </button>
                         {invoice.status !== 'draft' && (
-                            <a href={`/invoices/${invoice.id}/pdf`} title="Download PDF" className="icon-btn icon-btn-secondary">
+                            <a href={`/invoices/${invoice.id}/pdf`} title="Download PDF" className="icon-btn icon-btn--secondary">
                                 <DownloadSimple />
                             </a>
                         )}
@@ -176,7 +176,7 @@ export default function InvoicesShow({ invoice: initialInvoice, studio, invoicin
                                 onClick={() => setSendModalOpen(true)}
                                 disabled={editing}
                                 title={editing ? 'Save or cancel your edits first' : invoice.sent_at ? 'Resend' : 'Send invoice'}
-                                className="icon-btn icon-btn-accent"
+                                className="icon-btn icon-btn--accent"
                             >
                                 <PaperPlaneTilt />
                             </button>
@@ -209,12 +209,12 @@ export default function InvoicesShow({ invoice: initialInvoice, studio, invoicin
             )}
 
             {editing ? (
-                <div className="card card-padded mb-6">
+                <div className="card card--padded mb-6">
                     <div className="mb-4">
                         <select
                             value={form.contact_id}
                             onChange={(e) => setForm({ ...form, contact_id: e.target.value })}
-                            className="field"
+                            className="input"
                         >
                             <option value="">Bill to (no specific contact)</option>
                             {invoice.company.contacts.map((contact) => (
@@ -237,7 +237,7 @@ export default function InvoicesShow({ invoice: initialInvoice, studio, invoicin
                                         placeholder="Line item description (required)"
                                         value={item.description}
                                         onChange={(e) => updateItem(idx, 'description', e.target.value)}
-                                        className="field flex-1"
+                                        className="input flex-1"
                                     />
                                     <input
                                         type="number"
@@ -246,10 +246,10 @@ export default function InvoicesShow({ invoice: initialInvoice, studio, invoicin
                                         placeholder="Amount"
                                         value={item.amount}
                                         onChange={(e) => updateItem(idx, 'amount', e.target.value)}
-                                        className="field tabular-nums w-28"
+                                        className="input tabular-nums w-28"
                                     />
                                     {form.items.length > 1 && (
-                                        <Button variant="link-danger" onClick={() => removeItemRow(idx)}>Remove</Button>
+                                        <Button variant="link-accent" onClick={() => removeItemRow(idx)}>Remove</Button>
                                     )}
                                 </div>
                                 <textarea
@@ -257,7 +257,7 @@ export default function InvoicesShow({ invoice: initialInvoice, studio, invoicin
                                     value={item.details || ''}
                                     onChange={(e) => updateItem(idx, 'details', e.target.value)}
                                     rows={2}
-                                    className="field text-xs text-shadow-grey"
+                                    className="input text-xs text-shadow-grey"
                                 />
                             </div>
                         ))}
@@ -291,8 +291,8 @@ export default function InvoicesShow({ invoice: initialInvoice, studio, invoicin
                     </div>
                 </div>
             ) : (
-                <div className="card card-padded mb-6">
-                    <table className="table table-flush mb-4">
+                <div className="card card--padded mb-6">
+                    <table className="table table--flush mb-4">
                         <thead>
                             <tr>
                                 <th>Description</th>
@@ -328,7 +328,7 @@ export default function InvoicesShow({ invoice: initialInvoice, studio, invoicin
             )}
 
             {invoice.payments.length > 0 && (
-                <div className="card card-padded mb-6">
+                <div className="card card--padded mb-6">
                     <h2 className="text-sm font-semibold text-shadow-grey mb-3">Payments</h2>
                     <ul className="text-sm divide-y divide-border">
                         {invoice.payments.map((payment) => (
@@ -342,7 +342,7 @@ export default function InvoicesShow({ invoice: initialInvoice, studio, invoicin
             )}
 
             {pendingScheduledSend && (
-                <div className="card card-padded mb-6">
+                <div className="card card--padded mb-6">
                     <div className="flex items-center justify-between">
                         <span className="text-sm">
                             Scheduled for <strong>{formatDateTimeEastern(pendingScheduledSend.scheduled_for)}</strong>
@@ -350,13 +350,13 @@ export default function InvoicesShow({ invoice: initialInvoice, studio, invoicin
                         <div className="flex items-center gap-2">
                             <Button variant="link" onClick={() => sendScheduledNow(pendingScheduledSend)}>Send now</Button>
                             <Button variant="link" onClick={() => startRescheduling(pendingScheduledSend)}>Reschedule</Button>
-                            <Button variant="link-danger" onClick={() => cancelScheduledSend(pendingScheduledSend)}>Cancel</Button>
+                            <Button variant="link-accent" onClick={() => cancelScheduledSend(pendingScheduledSend)}>Cancel</Button>
                         </div>
                     </div>
                     {reschedulingId === pendingScheduledSend.id && (
                         <div className="flex items-center gap-2 mt-3">
-                            <input type="date" value={rescheduleDate} onChange={(e) => setRescheduleDate(e.target.value)} className="field field-sm" />
-                            <input type="time" value={rescheduleTime} onChange={(e) => setRescheduleTime(e.target.value)} className="field field-sm" />
+                            <input type="date" value={rescheduleDate} onChange={(e) => setRescheduleDate(e.target.value)} className="input input--sm" />
+                            <input type="time" value={rescheduleTime} onChange={(e) => setRescheduleTime(e.target.value)} className="input input--sm" />
                             <Button variant="confirm" onClick={() => confirmReschedule(pendingScheduledSend)}>Save</Button>
                             <Button variant="secondary" onClick={() => setReschedulingId(null)}>Cancel</Button>
                         </div>
@@ -365,7 +365,7 @@ export default function InvoicesShow({ invoice: initialInvoice, studio, invoicin
             )}
 
             {invoice.status !== 'draft' && invoice.status !== 'paid' && (
-                <div className="card card-padded mb-6">
+                <div className="card card--padded mb-6">
                     <h2 className="text-sm font-semibold text-shadow-grey mb-3">Reminders</h2>
                     <ul className="text-sm divide-y divide-border">
                         {reminderRows(invoice).map((row) => (
@@ -377,7 +377,7 @@ export default function InvoicesShow({ invoice: initialInvoice, studio, invoicin
                                     {row.status === 'failed' && <span className="text-watermelon"> &middot; Failed</span>}
                                 </span>
                                 {row.status === 'upcoming' && (
-                                    <Button variant="link-danger" onClick={() => skipReminder(row.rule)}>Skip</Button>
+                                    <Button variant="link-accent" onClick={() => skipReminder(row.rule)}>Skip</Button>
                                 )}
                             </li>
                         ))}
@@ -386,7 +386,7 @@ export default function InvoicesShow({ invoice: initialInvoice, studio, invoicin
             )}
 
             {invoice.invoice_sends?.length > 0 && (
-                <div className="card card-padded mb-6">
+                <div className="card card--padded mb-6">
                     <h2 className="text-sm font-semibold text-shadow-grey mb-3">History</h2>
                     <ul className="text-sm divide-y divide-border">
                         {invoice.invoice_sends.map((send) => (
@@ -412,7 +412,7 @@ export default function InvoicesShow({ invoice: initialInvoice, studio, invoicin
                     <select
                         value={paymentMethod}
                         onChange={(e) => setPaymentMethod(e.target.value)}
-                        className="field field-sm w-auto"
+                        className="input input--sm w-auto"
                     >
                         <option value="check">Check</option>
                         <option value="other">Other</option>

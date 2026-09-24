@@ -93,13 +93,13 @@ function CategoryAndTaxManager({ categories, setCategories, taxes, setTaxes }) {
             </button>
             {open && (
                 <div className="mt-3 grid grid-cols-2 gap-4">
-                    <div className="card card-padded">
+                    <div className="card card--padded">
                         <h3 className="text-sm font-semibold mb-3">Categories</h3>
                         <div className="flex flex-col gap-2 mb-3">
                             {categories.map((category) => (
                                 <div key={category.id} className="flex items-center justify-between text-sm">
                                     <CategoryPill category={category} />
-                                    <button onClick={() => removeCategory(category)} className="icon-btn icon-btn-danger">
+                                    <button onClick={() => removeCategory(category)} className="icon-btn icon-btn--danger">
                                         <X />
                                     </button>
                                 </div>
@@ -107,25 +107,25 @@ function CategoryAndTaxManager({ categories, setCategories, taxes, setTaxes }) {
                         </div>
                         <form onSubmit={addCategory} className="flex gap-2">
                             <input type="color" value={categoryForm.color} onChange={(e) => setCategoryForm({ ...categoryForm, color: e.target.value })} className="w-9 h-9 border border-border rounded" />
-                            <input placeholder="New category" value={categoryForm.name} onChange={(e) => setCategoryForm({ ...categoryForm, name: e.target.value })} className="field flex-1" />
+                            <input placeholder="New category" value={categoryForm.name} onChange={(e) => setCategoryForm({ ...categoryForm, name: e.target.value })} className="input flex-1" />
                             <Button type="submit">Add</Button>
                         </form>
                     </div>
-                    <div className="card card-padded">
+                    <div className="card card--padded">
                         <h3 className="text-sm font-semibold mb-3">Taxes</h3>
                         <div className="flex flex-col gap-2 mb-3">
                             {taxes.map((tax) => (
                                 <div key={tax.id} className="flex items-center justify-between text-sm">
                                     <span>{tax.name} <span className="text-shadow-grey tabular-nums">({tax.rate}%)</span></span>
-                                    <button onClick={() => removeTax(tax)} className="icon-btn icon-btn-danger">
+                                    <button onClick={() => removeTax(tax)} className="icon-btn icon-btn--danger">
                                         <X />
                                     </button>
                                 </div>
                             ))}
                         </div>
                         <form onSubmit={addTax} className="flex gap-2">
-                            <input placeholder="Tax name" value={taxForm.name} onChange={(e) => setTaxForm({ ...taxForm, name: e.target.value })} className="field flex-1" />
-                            <input type="number" min="0" max="100" step="0.01" placeholder="Rate %" value={taxForm.rate} onChange={(e) => setTaxForm({ ...taxForm, rate: e.target.value })} className="field w-24 tabular-nums" />
+                            <input placeholder="Tax name" value={taxForm.name} onChange={(e) => setTaxForm({ ...taxForm, name: e.target.value })} className="input flex-1" />
+                            <input type="number" min="0" max="100" step="0.01" placeholder="Rate %" value={taxForm.rate} onChange={(e) => setTaxForm({ ...taxForm, rate: e.target.value })} className="input w-24 tabular-nums" />
                             <Button type="submit">Add</Button>
                         </form>
                     </div>
@@ -274,27 +274,27 @@ export default function ExpensesIndex({ expenses: expensesProp, categories: cate
             <CategoryAndTaxManager categories={categories} setCategories={setCategories} taxes={taxes} setTaxes={setTaxes} />
 
             {showForm && (
-                <form onSubmit={submit} className="card card-padded mb-6">
+                <form onSubmit={submit} className="card card--padded mb-6">
                     {error && <div className="text-sm text-watermelon mb-3">{error}</div>}
                     <div className="grid grid-cols-2 gap-3">
-                        <input required placeholder="Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="field col-span-2" />
-                        <select value={form.category_id} onChange={(e) => setForm({ ...form, category_id: e.target.value })} className="field">
+                        <input required placeholder="Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="input col-span-2" />
+                        <select value={form.category_id} onChange={(e) => setForm({ ...form, category_id: e.target.value })} className="input">
                             <option value="">Category&hellip;</option>
                             {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                         </select>
-                        <input required type="number" min="0.01" step="0.01" placeholder="Amount" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} className="field tabular-nums" />
-                        <select value={form.tax_id} onChange={(e) => setForm({ ...form, tax_id: e.target.value })} className="field">
+                        <input required type="number" min="0.01" step="0.01" placeholder="Amount" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} className="input tabular-nums" />
+                        <select value={form.tax_id} onChange={(e) => setForm({ ...form, tax_id: e.target.value })} className="input">
                             <option value="">No tax</option>
                             {taxes.map((t) => <option key={t.id} value={t.id}>{t.name} ({t.rate}%)</option>)}
                         </select>
-                        <input required type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className="field" />
+                        <input required type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className="input" />
 
-                        <select value={form.project_id} onChange={(e) => setForm({ ...form, project_id: e.target.value })} className="field col-span-2">
+                        <select value={form.project_id} onChange={(e) => setForm({ ...form, project_id: e.target.value })} className="input col-span-2">
                             <option value="">No project</option>
                             {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
                         </select>
 
-                        <label className="flex items-center gap-2 text-sm">
+                        <label className="choice">
                             <input type="checkbox" checked={form.is_billable} onChange={(e) => setForm({ ...form, is_billable: e.target.checked })} />
                             Billable to project
                         </label>
@@ -303,7 +303,7 @@ export default function ExpensesIndex({ expenses: expensesProp, categories: cate
                             value={form.markup_percent}
                             disabled={!form.is_billable}
                             onChange={(e) => setForm({ ...form, markup_percent: e.target.value })}
-                            className="field tabular-nums disabled:opacity-50"
+                            className="input tabular-nums disabled:opacity-50"
                         />
 
                         <label className="col-span-2 flex items-center gap-2 text-sm cursor-pointer">
@@ -319,14 +319,14 @@ export default function ExpensesIndex({ expenses: expensesProp, categories: cate
                     </button>
                     {showAdditional && (
                         <div className="grid grid-cols-2 gap-3">
-                            <select value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value })} className="field">
+                            <select value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value })} className="input">
                                 <option value="USD">USD</option>
                                 <option value="CAD">CAD</option>
                                 <option value="EUR">EUR</option>
                                 <option value="GBP">GBP</option>
                             </select>
-                            <input placeholder="Source label (e.g. bank/card name)" value={form.source_label} onChange={(e) => setForm({ ...form, source_label: e.target.value })} className="field" />
-                            <label className="flex items-center gap-2 text-sm">
+                            <input placeholder="Source label (e.g. bank/card name)" value={form.source_label} onChange={(e) => setForm({ ...form, source_label: e.target.value })} className="input" />
+                            <label className="choice">
                                 <input type="checkbox" checked={form.is_recurring} onChange={(e) => setForm({ ...form, is_recurring: e.target.checked })} />
                                 Recurring expense
                             </label>
@@ -334,7 +334,7 @@ export default function ExpensesIndex({ expenses: expensesProp, categories: cate
                                 value={form.recurrence_interval}
                                 disabled={!form.is_recurring}
                                 onChange={(e) => setForm({ ...form, recurrence_interval: e.target.value })}
-                                className="field disabled:opacity-50"
+                                className="input disabled:opacity-50"
                             >
                                 <option value="weekly">Weekly</option>
                                 <option value="monthly">Monthly</option>
@@ -356,12 +356,12 @@ export default function ExpensesIndex({ expenses: expensesProp, categories: cate
                     placeholder="Search expenses by name&hellip;"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    className="field w-full max-w-sm"
+                    className="input w-full max-w-sm"
                 />
                 <select
                     value={categoryFilter}
                     onChange={(e) => setCategoryFilter(e.target.value)}
-                    className="field"
+                    className="input"
                 >
                     <option value="">All categories</option>
                     <option value="uncategorized">Uncategorized</option>
@@ -394,7 +394,7 @@ export default function ExpensesIndex({ expenses: expensesProp, categories: cate
                                             <div className="font-medium flex items-center gap-2">
                                                 {expense.name}
                                                 {expense.receipt_url && (
-                                                    <a href={expense.receipt_url} target="_blank" rel="noreferrer" title="View receipt" className="icon-btn icon-btn-secondary">
+                                                    <a href={expense.receipt_url} target="_blank" rel="noreferrer" title="View receipt" className="icon-btn icon-btn--secondary">
                                                         <PaperclipHorizontal />
                                                     </a>
                                                 )}
@@ -429,10 +429,10 @@ export default function ExpensesIndex({ expenses: expensesProp, categories: cate
                                                 )}
                                                 {expense.billing_status === 'unbilled' && (
                                                     <>
-                                                        <button onClick={() => startEdit(expense)} title="Edit" className="icon-btn icon-btn-confirm">
+                                                        <button onClick={() => startEdit(expense)} title="Edit" className="icon-btn icon-btn--confirm">
                                                             <PencilSimple />
                                                         </button>
-                                                        <button onClick={() => remove(expense)} title="Delete" className="icon-btn icon-btn-danger">
+                                                        <button onClick={() => remove(expense)} title="Delete" className="icon-btn icon-btn--danger">
                                                             <Trash />
                                                         </button>
                                                     </>

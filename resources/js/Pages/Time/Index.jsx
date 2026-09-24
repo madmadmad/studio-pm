@@ -78,12 +78,12 @@ export default function TimeIndex({ timeEntries, companies, projects }) {
             />
 
             {showForm && (
-                <form onSubmit={submitTimeEntry} className="card card-padded mb-6 grid grid-cols-2 gap-3">
+                <form onSubmit={submitTimeEntry} className="card card--padded mb-6 grid grid-cols-2 gap-3">
                     <select
                         required
                         value={form.company_id}
                         onChange={(e) => setForm({ ...form, company_id: e.target.value, project_id: '' })}
-                        className="field"
+                        className="input"
                     >
                         <option value="">Select client</option>
                         {companies.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -91,15 +91,15 @@ export default function TimeIndex({ timeEntries, companies, projects }) {
                     <select
                         value={form.project_id}
                         onChange={(e) => setForm({ ...form, project_id: e.target.value })}
-                        className="field"
+                        className="input"
                         disabled={!form.company_id}
                     >
                         <option value="">No project</option>
                         {projectsForCompany.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
                     </select>
-                    <input required type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className="field" />
-                    <input required type="number" min="0.25" step="0.25" placeholder="Hours" value={form.hours} onChange={(e) => setForm({ ...form, hours: e.target.value })} className="field" />
-                    <input placeholder="What did you work on?" value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} className="field col-span-2" />
+                    <input required type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className="input" />
+                    <input required type="number" min="0.25" step="0.25" placeholder="Hours" value={form.hours} onChange={(e) => setForm({ ...form, hours: e.target.value })} className="input" />
+                    <input placeholder="What did you work on?" value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} className="input col-span-2" />
                     <div className="flex gap-2 col-span-2 justify-end">
                         <Button type="button" variant="secondary" onClick={() => setShowForm(false)}>Cancel</Button>
                         <Button type="submit" variant="confirm" disabled={saving}>Log time</Button>

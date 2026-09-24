@@ -56,11 +56,11 @@ export default function BookkeepingIndex({ transactions, summary }) {
             </div>
 
             {showForm && (
-                <form onSubmit={submit} className="card card-padded mb-6 grid grid-cols-2 gap-3">
-                    <input required type="number" min="0.01" step="0.01" placeholder="Amount" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} className="field tabular-nums" />
-                    <input placeholder="Category" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} className="field" />
-                    <input required type="date" value={form.occurred_on} onChange={(e) => setForm({ ...form, occurred_on: e.target.value })} className="field" />
-                    <input placeholder="Description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="field" />
+                <form onSubmit={submit} className="card card--padded mb-6 grid grid-cols-2 gap-3">
+                    <input required type="number" min="0.01" step="0.01" placeholder="Amount" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} className="input tabular-nums" />
+                    <input placeholder="Category" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} className="input" />
+                    <input required type="date" value={form.occurred_on} onChange={(e) => setForm({ ...form, occurred_on: e.target.value })} className="input" />
+                    <input placeholder="Description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="input" />
                     <div className="flex gap-2 col-span-2 justify-end">
                         <Button type="button" variant="secondary" onClick={() => setShowForm(false)}>Cancel</Button>
                         <Button type="submit" variant="confirm" disabled={saving}>Save</Button>
