@@ -3,13 +3,16 @@ import AppLayout from '../../Layouts/AppLayout';
 import MetricCard from '../../Components/MetricCard';
 import EmptyState from '../../Components/EmptyState';
 import { ProjectStatusBadge } from '../../Components/StatusBadges';
+import PageHeader from '../../Components/PageHeader';
 
 export default function TeamMemberDashboard({ projects, weekHours }) {
     return (
         <AppLayout>
             <Head title="Overview" />
-            <h1 className="font-display text-2xl font-semibold mb-1">Overview</h1>
-            <p className="text-sm text-shadow-grey mb-6">Your projects and hours this week.</p>
+            <PageHeader
+                title="Overview"
+                subtitle="Your projects and hours this week."
+            />
 
             <div className="grid grid-cols-2 gap-4 mb-8">
                 <MetricCard label="Hours this week" value={`${weekHours}h`} />

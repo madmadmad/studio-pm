@@ -3,6 +3,7 @@ import { useState } from 'react';
 import AppLayout from '../../Layouts/AppLayout';
 import Button from '../../Components/Button';
 import { api } from '../../lib/api';
+import PageHeader from '../../Components/PageHeader';
 
 export default function SettingsIndex({ studioProfile }) {
     const [form, setForm] = useState({
@@ -32,8 +33,10 @@ export default function SettingsIndex({ studioProfile }) {
     return (
         <AppLayout>
             <Head title="Settings" />
-            <h1 className="font-display text-2xl font-semibold mb-1">Settings</h1>
-            <p className="text-sm text-shadow-grey mb-6">This is how your studio appears on proposals sent to clients.</p>
+            <PageHeader
+                title="Settings"
+                subtitle="This is how your studio appears on proposals sent to clients."
+            />
 
             <form onSubmit={submit} className="card card-padded max-w-lg">
                 <div className="text-xs font-semibold text-shadow-grey mb-2">Studio information</div>

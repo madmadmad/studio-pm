@@ -4,13 +4,16 @@ import MetricCard from '../../Components/MetricCard';
 import EmptyState from '../../Components/EmptyState';
 import { InvoiceStatusBadge } from '../../Components/StatusBadges';
 import { formatCurrency, formatDate } from '../../lib/format';
+import PageHeader from '../../Components/PageHeader';
 
 export default function DashboardIndex({ metrics, recentInvoices }) {
     return (
         <AppLayout>
             <Head title="Overview" />
-            <h1 className="font-display text-2xl font-semibold mb-1">Overview</h1>
-            <p className="text-sm text-shadow-grey mb-6">Snapshot of billing and client activity.</p>
+            <PageHeader
+                title="Overview"
+                subtitle="Snapshot of billing and client activity."
+            />
 
             <div className="grid grid-cols-3 gap-4 mb-8">
                 <MetricCard label="Outstanding" value={formatCurrency(metrics.outstanding)} />

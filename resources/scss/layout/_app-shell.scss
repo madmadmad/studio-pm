@@ -1,0 +1,111 @@
+// The staff app frame: dark sidebar (brand, nav, account) + main area.
+// Used by Layouts/AppLayout.jsx.
+@use '../abstracts' as *;
+
+.app-shell {
+    display: flex;
+    min-height: 100vh;
+
+    &__sidebar {
+        display: flex;
+        flex-direction: column;
+        flex-shrink: 0;
+        gap: var(--space-1);
+        width: var(--size-sidebar);
+        padding: var(--space-panel-lg);
+        background-color: var(--color-gunmetal);
+    }
+
+    &__brand {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        margin-bottom: var(--space-section);
+    }
+
+    &__brand-name {
+        font-size: var(--font-size-lg);
+        line-height: var(--line-height-lg);
+        font-weight: var(--font-weight-semibold);
+        color: var(--color-on-dark);
+    }
+
+    &__brand-tagline {
+        font-size: var(--font-size-xs);
+        line-height: var(--line-height-xs);
+        color: var(--color-on-dark-subtle);
+    }
+
+    &__nav-link {
+        padding: var(--space-2) var(--space-3);
+        border-radius: var(--radius-base);
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+        font-weight: var(--font-weight-semibold);
+        color: var(--color-on-dark-subtle);
+        transition:
+            color var(--duration-fast) var(--ease-standard),
+            background-color var(--duration-fast) var(--ease-standard);
+
+        &:hover {
+            color: var(--color-on-dark);
+        }
+
+        &--active,
+        &--active:hover {
+            background-color: var(--color-gunmetal-light);
+            color: var(--color-white);
+        }
+    }
+
+    &__footer {
+        margin-top: auto;
+        padding-top: var(--space-4);
+        border-top: var(--border-width) solid var(--color-on-dark-border);
+    }
+
+    &__user {
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
+        margin-bottom: var(--space-3);
+    }
+
+    &__user-details {
+        min-width: 0;
+    }
+
+    &__user-name {
+        @include truncate;
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+        color: var(--color-on-dark-muted);
+
+        .app-shell__user:hover & {
+            color: var(--color-on-dark);
+        }
+    }
+
+    &__user-email {
+        @include truncate;
+        font-size: var(--font-size-xs);
+        line-height: var(--line-height-xs);
+        color: var(--color-on-dark-subtle);
+    }
+
+    &__logout {
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+        color: var(--color-on-dark-subtle);
+
+        &:hover {
+            color: var(--color-on-dark);
+        }
+    }
+
+    &__main {
+        flex: 1;
+        min-width: 0;
+        padding: var(--space-page);
+    }
+}

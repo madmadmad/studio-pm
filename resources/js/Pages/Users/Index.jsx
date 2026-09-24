@@ -7,6 +7,7 @@ import Button from '../../Components/Button';
 import EmptyState from '../../Components/EmptyState';
 import { formatDate } from '../../lib/format';
 import { api } from '../../lib/api';
+import PageHeader from '../../Components/PageHeader';
 
 function emptyForm() {
     return { name: '', email: '', role: 'team_member' };
@@ -116,11 +117,11 @@ export default function UsersIndex({ users: usersProp }) {
     return (
         <AppLayout>
             <Head title="Team" />
-            <div className="flex items-center justify-between mb-1">
-                <h1 className="font-display text-2xl font-semibold">Team</h1>
-                <Button onClick={() => setShowForm(true)}>Invite staff</Button>
-            </div>
-            <p className="text-sm text-shadow-grey mb-6">Managers see and edit everything. Team Members only see projects they're assigned to.</p>
+            <PageHeader
+                title="Team"
+                actions={<Button onClick={() => setShowForm(true)}>Invite staff</Button>}
+                subtitle="Managers see and edit everything. Team Members only see projects they're assigned to."
+            />
 
             {showForm && (
                 <form onSubmit={submit} className="card card-padded mb-6 grid grid-cols-2 gap-3">

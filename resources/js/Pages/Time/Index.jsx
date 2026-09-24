@@ -7,6 +7,7 @@ import Badge from '../../Components/Badge';
 import { formatCurrency, formatDate } from '../../lib/format';
 import { api } from '../../lib/api';
 import { getTray, addToTray, setTray } from '../../lib/tray';
+import PageHeader from '../../Components/PageHeader';
 
 export default function TimeIndex({ timeEntries, companies, projects }) {
     const [showForm, setShowForm] = useState(false);
@@ -66,11 +67,15 @@ export default function TimeIndex({ timeEntries, companies, projects }) {
     return (
         <AppLayout>
             <Head title="Time" />
-            <div className="flex items-center justify-between mb-1">
-                <h1 className="font-display text-2xl font-semibold">Time</h1>
-                <Button onClick={() => setShowForm(true)}>Log time</Button>
-            </div>
-            <p className="text-sm text-shadow-grey mb-6">{unbilledHours}h unbilled across {companies.length} clients.</p>
+            <PageHeader
+                title="Time"
+                actions={<Button onClick={() => setShowForm(true)}>Log time</Button>}
+                subtitle={
+                    <>
+                        {unbilledHours}h unbilled across {companies.length} clients.
+                    </>
+                }
+            />
 
             {showForm && (
                 <form onSubmit={submitTimeEntry} className="card card-padded mb-6 grid grid-cols-2 gap-3">

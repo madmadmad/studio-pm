@@ -5,6 +5,7 @@ import Button from '../../Components/Button';
 import EmptyState from '../../Components/EmptyState';
 import { CompanyStatusBadge } from '../../Components/StatusBadges';
 import { api } from '../../lib/api';
+import PageHeader from '../../Components/PageHeader';
 
 export default function ClientsIndex({ companies }) {
     const [showForm, setShowForm] = useState(false);
@@ -32,13 +33,15 @@ export default function ClientsIndex({ companies }) {
     return (
         <AppLayout>
             <Head title="Clients" />
-            <div className="flex items-center justify-between mb-1">
-                <h1 className="font-display text-2xl font-semibold">Clients</h1>
-                <Button onClick={() => setShowForm(true)}>Add client</Button>
-            </div>
-            <p className="text-sm text-shadow-grey mb-6">
-                {companies.length} client{companies.length !== 1 ? 's' : ''} on file.
-            </p>
+            <PageHeader
+                title="Clients"
+                actions={<Button onClick={() => setShowForm(true)}>Add client</Button>}
+                subtitle={
+                    <>
+                        {companies.length} client{companies.length !== 1 ? 's' : ''} on file.
+                    </>
+                }
+            />
 
             {showForm && (
                 <form onSubmit={handleSubmit} className="card card-padded mb-6 grid grid-cols-2 gap-3">

@@ -4,6 +4,7 @@ import AppLayout from '../../Layouts/AppLayout';
 import Avatar from '../../Components/Avatar';
 import Button from '../../Components/Button';
 import { api } from '../../lib/api';
+import PageHeader from '../../Components/PageHeader';
 
 export default function ProfileIndex({ profileUser }) {
     const [user, setUser] = useState(profileUser);
@@ -45,8 +46,10 @@ export default function ProfileIndex({ profileUser }) {
     return (
         <AppLayout>
             <Head title="My profile" />
-            <h1 className="font-display text-2xl font-semibold mb-1">My profile</h1>
-            <p className="text-sm text-shadow-grey mb-6">Your photo shows up next to your messages and throughout the app.</p>
+            <PageHeader
+                title="My profile"
+                subtitle="Your photo shows up next to your messages and throughout the app."
+            />
 
             <div className="card card-padded max-w-md">
                 <div className="flex items-center gap-4 mb-4">

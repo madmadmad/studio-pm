@@ -1,0 +1,46 @@
+// Centered single-card screen for sign-in, password reset, invitations,
+// and portal magic links. Used by Layouts/AuthLayout.jsx; each page's
+// form carries `card auth-shell__card`.
+
+.auth-shell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding-inline: var(--space-4);
+
+    &__inner {
+        width: 100%;
+        max-width: var(--size-auth-card);
+    }
+
+    &__header {
+        margin-bottom: var(--space-8);
+        text-align: center;
+    }
+
+    &__title {
+        font-size: var(--font-size-xl);
+        line-height: var(--line-height-xl);
+        font-weight: var(--font-weight-semibold);
+    }
+
+    &__subtitle {
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+        color: var(--color-shadow-grey);
+    }
+
+    &__card {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-3);
+        padding: var(--space-panel-lg);
+
+        // A card holding only a message and one action (expired or
+        // invalid link) rather than a form.
+        &--message {
+            text-align: center;
+        }
+    }
+}

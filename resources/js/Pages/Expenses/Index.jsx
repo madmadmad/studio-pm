@@ -8,6 +8,7 @@ import Badge from '../../Components/Badge';
 import { ExpenseStatusBadge } from '../../Components/StatusBadges';
 import { formatCurrency, formatDate } from '../../lib/format';
 import { api } from '../../lib/api';
+import PageHeader from '../../Components/PageHeader';
 
 function emptyForm() {
     return {
@@ -264,11 +265,11 @@ export default function ExpensesIndex({ expenses: expensesProp, categories: cate
     return (
         <AppLayout>
             <Head title="Expenses" />
-            <div className="flex items-center justify-between mb-1">
-                <h1 className="font-display text-2xl font-semibold">Expenses</h1>
-                <Button onClick={startCreate}>New expense</Button>
-            </div>
-            <p className="text-sm text-shadow-grey mb-4">Track costs, mark them billable to a project, and attach them to an invoice with markup applied.</p>
+            <PageHeader
+                title="Expenses"
+                actions={<Button onClick={startCreate}>New expense</Button>}
+                subtitle="Track costs, mark them billable to a project, and attach them to an invoice with markup applied."
+            />
 
             <CategoryAndTaxManager categories={categories} setCategories={setCategories} taxes={taxes} setTaxes={setTaxes} />
 

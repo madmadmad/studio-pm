@@ -1,0 +1,57 @@
+// The client portal frame: dark top bar + centered content column.
+// Used by Layouts/PortalLayout.jsx.
+
+.portal-shell {
+    min-height: 100vh;
+
+    &__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: var(--space-4) var(--space-6);
+        background-color: var(--color-gunmetal);
+        color: var(--color-on-dark);
+    }
+
+    &__brand {
+        font-weight: var(--font-weight-semibold);
+    }
+
+    &__account {
+        display: flex;
+        align-items: center;
+        gap: var(--space-4);
+    }
+
+    &__user {
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
+    }
+
+    &__user-name {
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+        color: var(--color-on-dark-muted);
+
+        .portal-shell__user:hover & {
+            color: var(--color-on-dark);
+        }
+    }
+
+    &__logout {
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+        color: var(--color-on-dark-subtle);
+
+        &:hover {
+            color: var(--color-on-dark);
+        }
+    }
+
+    &__main {
+        max-width: var(--size-portal);
+        margin-inline: auto;
+        padding: var(--space-page);
+    }
+}

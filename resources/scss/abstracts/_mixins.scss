@@ -4,6 +4,13 @@
     outline-offset: var(--focus-ring-offset);
 }
 
+// Single line, clipped with an ellipsis.
+@mixin truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 // Hidden visually but still announced by screen readers.
 @mixin visually-hidden {
     position: absolute;

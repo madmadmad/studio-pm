@@ -6,6 +6,7 @@ import MetricCard from '../../Components/MetricCard';
 import EmptyState from '../../Components/EmptyState';
 import { formatCurrency, formatDate } from '../../lib/format';
 import { api } from '../../lib/api';
+import PageHeader from '../../Components/PageHeader';
 
 function emptyForm() {
     return { amount: '', category: '', occurred_on: new Date().toISOString().slice(0, 10), description: '' };
@@ -37,14 +38,16 @@ export default function BookkeepingIndex({ transactions, summary }) {
     return (
         <AppLayout>
             <Head title="Bookkeeping" />
-            <div className="flex items-center justify-between mb-1">
-                <h1 className="font-display text-2xl font-semibold">Bookkeeping</h1>
-                <Button onClick={() => setShowForm(true)}>Add income</Button>
-            </div>
-            <p className="text-sm text-shadow-grey mb-6">
-                Income, month by month &mdash; not double-entry accounting. Expenses are tracked on the{' '}
-                <Link href="/expenses" className="underline">Expenses</Link> page.
-            </p>
+            <PageHeader
+                title="Bookkeeping"
+                actions={<Button onClick={() => setShowForm(true)}>Add income</Button>}
+                subtitle={
+                    <>
+                        Income, month by month &mdash; not double-entry accounting. Expenses are tracked on the{' '}
+                        <Link href="/expenses" className="underline">Expenses</Link> page.
+                    </>
+                }
+            />
 
             <div className="grid grid-cols-3 gap-4 mb-8">
                 <MetricCard label={`Income (${summary.month})`} value={formatCurrency(summary.income)} />

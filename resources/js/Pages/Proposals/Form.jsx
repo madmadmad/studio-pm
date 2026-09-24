@@ -1,6 +1,6 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
-import { ArrowLeft, Check, Copy, DotsSixVertical, Eye } from '@phosphor-icons/react';
+import { Check, Copy, DotsSixVertical, Eye } from '@phosphor-icons/react';
 import AppLayout from '../../Layouts/AppLayout';
 import Button from '../../Components/Button';
 import RichTextEditor from '../../Components/RichTextEditor';
@@ -8,6 +8,7 @@ import { ProposalStatusBadge } from '../../Components/StatusBadges';
 import { formatCurrency } from '../../lib/format';
 import { api } from '../../lib/api';
 import { copyToClipboard } from '../../lib/clipboard';
+import PageHeader from '../../Components/PageHeader';
 
 const NEW_PROJECT = '__new__';
 
@@ -200,15 +201,11 @@ export default function ProposalsForm({ proposal, companies, services, presetCom
         <AppLayout>
             <Head title={isEditing ? `Edit — ${proposal.title}` : 'New proposal'} />
             <div className="max-w-4xl">
-            <div className="mb-1">
-                <Link href="/proposals" className="text-sm text-shadow-grey hover:underline inline-flex items-center gap-1">
-                    <ArrowLeft size={14} /> Proposals
-                </Link>
-            </div>
-            <div className="flex items-center justify-between mb-6">
-                <h1 className="font-display text-2xl font-semibold">{isEditing ? 'Edit proposal' : 'New proposal'}</h1>
-                {isEditing && (
-                    <div className="flex items-center gap-3">
+            <PageHeader
+                back={{ href: '/proposals', label: 'Proposals' }}
+                title={isEditing ? 'Edit proposal' : 'New proposal'}
+                actions={isEditing && (
+                    <>
                         <ProposalStatusBadge proposal={proposal} />
                         <a href={`/p/${proposal.accept_token}`} target="_blank" rel="noopener noreferrer" title="Preview" className="icon-btn icon-btn-secondary">
                             <Eye />
@@ -227,9 +224,9 @@ export default function ProposalsForm({ proposal, companies, services, presetCom
                                 {unaccepting ? 'Reverting…' : 'Unaccept'}
                             </Button>
                         )}
-                    </div>
+                    </>
                 )}
-            </div>
+            />
 
             <div className="card card-padded">
                 <div className="grid grid-cols-2 gap-3 mb-3">

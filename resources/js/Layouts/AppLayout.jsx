@@ -34,12 +34,12 @@ export default function AppLayout({ children }) {
     }
 
     return (
-        <div className="flex min-h-screen bg-porcelain text-gunmetal">
-            <aside className="w-56 flex-shrink-0 p-5 flex flex-col gap-1 bg-gunmetal">
-                <div className="mb-6 flex items-start justify-between">
+        <div className="app-shell">
+            <aside className="app-shell__sidebar">
+                <div className="app-shell__brand">
                     <div>
-                        <div className="text-lg font-semibold text-porcelain">Studio PM</div>
-                        <div className="text-xs text-porcelain/50">Client and billing workspace</div>
+                        <div className="app-shell__brand-name">Studio PM</div>
+                        <div className="app-shell__brand-tagline">Client and billing workspace</div>
                     </div>
                     {isManager && <NotificationBell />}
                 </div>
@@ -47,30 +47,28 @@ export default function AppLayout({ children }) {
                     <Link
                         key={item.href}
                         href={item.href}
-                        className={`text-left px-3 py-2 rounded text-sm font-semibold transition-colors ${
-                            isActive(item.href) ? 'bg-gunmetal-light text-white' : 'text-porcelain/60 hover:text-porcelain'
-                        }`}
+                        className={`app-shell__nav-link${isActive(item.href) ? ' app-shell__nav-link--active' : ''}`}
                     >
                         {item.label}
                     </Link>
                 ))}
-                <div className="mt-auto pt-4 border-t border-porcelain/15">
+                <div className="app-shell__footer">
                     {user && (
-                        <Link href="/profile" className="flex items-center gap-2 mb-3 group">
+                        <Link href="/profile" className="app-shell__user">
                             <Avatar name={user.name} avatarUrl={user.avatar_url} id={user.id} size={28} />
-                            <div className="min-w-0">
-                                <div className="text-sm text-porcelain/80 truncate group-hover:text-porcelain">{user.name}</div>
-                                <div className="text-xs text-porcelain/50 truncate">{user.email}</div>
+                            <div className="app-shell__user-details">
+                                <div className="app-shell__user-name">{user.name}</div>
+                                <div className="app-shell__user-email">{user.email}</div>
                             </div>
                         </Link>
                     )}
-                    <a href="/logout" onClick={handleLogout} className="text-sm text-porcelain/60 hover:text-porcelain">
+                    <a href="/logout" onClick={handleLogout} className="app-shell__logout">
                         Log out
                     </a>
                 </div>
             </aside>
 
-            <main className="flex-1 min-w-0 p-8">{children}</main>
+            <main className="app-shell__main">{children}</main>
         </div>
     );
 }

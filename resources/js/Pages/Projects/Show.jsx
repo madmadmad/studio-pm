@@ -1,6 +1,6 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
-import { ArrowLeft, CaretRight, Check, CheckCircle, Copy, DotsSixVertical, DownloadSimple, Eye, Paperclip, PaperPlaneTilt, PencilSimple, Trash, X } from '@phosphor-icons/react';
+import { CaretRight, Check, CheckCircle, Copy, DotsSixVertical, DownloadSimple, Eye, Paperclip, PaperPlaneTilt, PencilSimple, Trash, X } from '@phosphor-icons/react';
 import AppLayout from '../../Layouts/AppLayout';
 import Button from '../../Components/Button';
 import EmptyState from '../../Components/EmptyState';
@@ -14,6 +14,7 @@ import { formatCurrency, formatDate, formatFileSize, invoiceSubtotal, invoiceTot
 import { calculateDueDate, todayLocal } from '../../lib/paymentTerms';
 import { api } from '../../lib/api';
 import { copyToClipboard } from '../../lib/clipboard';
+import PageHeader from '../../Components/PageHeader';
 
 const ALL_TABS = ['Overview', 'Tasks', 'Notes', 'Messages', 'Time', 'Proposals', 'Billing', 'Expenses', 'Team'];
 const MANAGER_ONLY_TABS = ['Proposals', 'Billing', 'Expenses'];
@@ -1578,18 +1579,12 @@ export default function ProjectsShow({ project, canManageTeam, assignableStaff }
     return (
         <AppLayout>
             <Head title={project.name} />
-            <div className="mb-1">
-                <Link href="/projects" className="text-sm text-shadow-grey hover:underline inline-flex items-center gap-1">
-                    <ArrowLeft size={14} /> Projects
-                </Link>
-            </div>
-            <div className="flex items-center justify-between mb-1">
-                <h1 className="font-display text-2xl font-semibold">{project.name}</h1>
-                <ProjectStatusBadge project={project} />
-            </div>
-            <p className="text-sm text-shadow-grey mb-6">
-                <Link href={`/clients/${project.company.id}`} className="hover:underline">{project.company.name}</Link>
-            </p>
+            <PageHeader
+                back={{ href: '/projects', label: 'Projects' }}
+                title={project.name}
+                actions={<ProjectStatusBadge project={project} />}
+                subtitle={<Link href={`/clients/${project.company.id}`} className="hover:underline">{project.company.name}</Link>}
+            />
 
             <TabBar tab={tab} setTab={setTab} tabs={tabs} />
 

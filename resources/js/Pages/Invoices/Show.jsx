@@ -1,6 +1,6 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
-import { ArrowLeft, Check, Copy, DownloadSimple, Eye, PaperPlaneTilt } from '@phosphor-icons/react';
+import { Check, Copy, DownloadSimple, Eye, PaperPlaneTilt } from '@phosphor-icons/react';
 import AppLayout from '../../Layouts/AppLayout';
 import Button from '../../Components/Button';
 import Toggle from '../../Components/Toggle';
@@ -13,6 +13,7 @@ import { reminderRows } from '../../lib/reminders';
 import { paymentTermsLabel } from '../../lib/paymentTerms';
 import { api } from '../../lib/api';
 import { copyToClipboard } from '../../lib/clipboard';
+import PageHeader from '../../Components/PageHeader';
 
 function editFormFrom(invoice) {
     return {
@@ -153,47 +154,47 @@ export default function InvoicesShow({ invoice: initialInvoice, studio, invoicin
         <AppLayout>
             <Head title={`Invoice — ${invoice.company.name}`} />
             <div className="max-w-4xl">
-            <div className="mb-1">
-                <Link href="/invoices" className="text-sm text-shadow-grey hover:underline inline-flex items-center gap-1">
-                    <ArrowLeft size={14} /> Invoices
-                </Link>
-            </div>
-            <div className="flex items-center justify-between mb-1">
-                <h1 className="font-display text-2xl font-semibold">{invoice.company.name}</h1>
-                <div className="flex items-center gap-3">
-                    <InvoiceStatusBadge invoice={invoice} />
-                    <a href={`/i/${invoice.public_token}`} target="_blank" rel="noopener noreferrer" title="Preview" className="icon-btn icon-btn-secondary">
-                        <Eye />
-                    </a>
-                    <button onClick={copyLink} title={copied ? 'Copied!' : 'Copy link'} className="icon-btn icon-btn-secondary">
-                        {copied ? <Check /> : <Copy />}
-                    </button>
-                    {invoice.status !== 'draft' && (
-                        <a href={`/invoices/${invoice.id}/pdf`} title="Download PDF" className="icon-btn icon-btn-secondary">
-                            <DownloadSimple />
+            <PageHeader
+                back={{ href: '/invoices', label: 'Invoices' }}
+                title={invoice.company.name}
+                actions={
+                    <>
+                        <InvoiceStatusBadge invoice={invoice} />
+                        <a href={`/i/${invoice.public_token}`} target="_blank" rel="noopener noreferrer" title="Preview" className="icon-btn icon-btn-secondary">
+                            <Eye />
                         </a>
-                    )}
-                    {invoice.status !== 'paid' && (
-                        <button
-                            onClick={() => setSendModalOpen(true)}
-                            disabled={editing}
-                            title={editing ? 'Save or cancel your edits first' : invoice.sent_at ? 'Resend' : 'Send invoice'}
-                            className="icon-btn icon-btn-accent"
-                        >
-                            <PaperPlaneTilt />
+                        <button onClick={copyLink} title={copied ? 'Copied!' : 'Copy link'} className="icon-btn icon-btn-secondary">
+                            {copied ? <Check /> : <Copy />}
                         </button>
-                    )}
-                    {invoice.status === 'draft' && !editing && (
-                        <Button variant="link" onClick={startEditing}>Edit</Button>
-                    )}
-                </div>
-            </div>
-            <p className="text-sm text-shadow-grey mb-6">
-                Invoice #{invoice.invoice_number} &middot; Issued {formatDate(invoice.issued_on)} &middot; Due {formatDate(invoice.due_on)}
-                {paymentTermsLabel(invoice.payment_terms) !== 'Custom' && ` (${paymentTermsLabel(invoice.payment_terms)})`}
-                {invoice.contact && <> &middot; Billed to {invoice.contact.name}</>}
-                {invoice.project?.po_number && <> &middot; PO #{invoice.project.po_number}</>}
-            </p>
+                        {invoice.status !== 'draft' && (
+                            <a href={`/invoices/${invoice.id}/pdf`} title="Download PDF" className="icon-btn icon-btn-secondary">
+                                <DownloadSimple />
+                            </a>
+                        )}
+                        {invoice.status !== 'paid' && (
+                            <button
+                                onClick={() => setSendModalOpen(true)}
+                                disabled={editing}
+                                title={editing ? 'Save or cancel your edits first' : invoice.sent_at ? 'Resend' : 'Send invoice'}
+                                className="icon-btn icon-btn-accent"
+                            >
+                                <PaperPlaneTilt />
+                            </button>
+                        )}
+                        {invoice.status === 'draft' && !editing && (
+                            <Button variant="link" onClick={startEditing}>Edit</Button>
+                        )}
+                    </>
+                }
+                subtitle={
+                    <>
+                        Invoice #{invoice.invoice_number} &middot; Issued {formatDate(invoice.issued_on)} &middot; Due {formatDate(invoice.due_on)}
+                        {paymentTermsLabel(invoice.payment_terms) !== 'Custom' && ` (${paymentTermsLabel(invoice.payment_terms)})`}
+                        {invoice.contact && <> &middot; Billed to {invoice.contact.name}</>}
+                        {invoice.project?.po_number && <> &middot; PO #{invoice.project.po_number}</>}
+                    </>
+                }
+            />
 
             {successMessage && (
                 <div role="status" aria-live="polite" className="text-sm text-fern bg-fern-soft rounded px-3 py-2 mb-4">

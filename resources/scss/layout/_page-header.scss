@@ -1,0 +1,34 @@
+// Top of every app/portal page: optional back link, the page title with
+// its actions on the right, and one or more lines of muted context.
+// Used by Components/PageHeader.jsx.
+
+.page-header {
+    margin-bottom: var(--space-section);
+
+    &__row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    &__title {
+        font-family: var(--font-family-display);
+        font-size: var(--font-size-2xl);
+        line-height: var(--line-height-2xl);
+        font-weight: var(--font-weight-extrabold);
+        letter-spacing: var(--letter-spacing-display);
+    }
+
+    &__actions {
+        display: flex;
+        align-items: center;
+        gap: var(--space-3);
+    }
+
+    &__subtitle {
+        margin-top: var(--space-1);
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+        color: var(--color-shadow-grey);
+    }
+}

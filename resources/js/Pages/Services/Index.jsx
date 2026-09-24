@@ -6,6 +6,7 @@ import Button from '../../Components/Button';
 import EmptyState from '../../Components/EmptyState';
 import { formatCurrency } from '../../lib/format';
 import { api } from '../../lib/api';
+import PageHeader from '../../Components/PageHeader';
 
 function emptyForm() {
     return { name: '', description: '', default_rate: '', unit: 'hourly' };
@@ -80,11 +81,11 @@ export default function ServicesIndex({ services: servicesProp }) {
     return (
         <AppLayout>
             <Head title="Services" />
-            <div className="flex items-center justify-between mb-1">
-                <h1 className="font-display text-2xl font-semibold">Services</h1>
-                <Button onClick={startCreate}>Add service</Button>
-            </div>
-            <p className="text-sm text-shadow-grey mb-6">Your rate catalog &mdash; used as defaults when building invoice line items.</p>
+            <PageHeader
+                title="Services"
+                actions={<Button onClick={startCreate}>Add service</Button>}
+                subtitle="Your rate catalog &mdash; used as defaults when building invoice line items."
+            />
 
             {showForm && (
                 <form onSubmit={submit} className="card card-padded mb-6 grid grid-cols-2 gap-3">

@@ -7,6 +7,7 @@ import { ProposalStatusBadge } from '../../Components/StatusBadges';
 import { formatCurrency, formatDate } from '../../lib/format';
 import { api } from '../../lib/api';
 import { copyToClipboard } from '../../lib/clipboard';
+import PageHeader from '../../Components/PageHeader';
 
 export default function ProposalsIndex({ proposals: proposalsProp }) {
     const [proposals, setProposals] = useState(proposalsProp);
@@ -57,13 +58,19 @@ export default function ProposalsIndex({ proposals: proposalsProp }) {
     return (
         <AppLayout>
             <Head title="Proposals" />
-            <div className="flex items-center justify-between mb-1">
-                <h1 className="font-display text-2xl font-semibold">Proposals</h1>
-                <Link href="/proposals/create" className="btn btn-primary">
-                    New proposal
-                </Link>
-            </div>
-            <p className="text-sm text-shadow-grey mb-6">{proposals.length} proposal{proposals.length !== 1 ? 's' : ''} on file.</p>
+            <PageHeader
+                title="Proposals"
+                actions={
+                    <Link href="/proposals/create" className="btn btn-primary">
+                        New proposal
+                    </Link>
+                }
+                subtitle={
+                    <>
+                        {proposals.length} proposal{proposals.length !== 1 ? 's' : ''} on file.
+                    </>
+                }
+            />
 
             <div className="card overflow-hidden">
                 {proposals.length === 0 ? (

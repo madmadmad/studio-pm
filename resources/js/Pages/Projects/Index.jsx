@@ -5,6 +5,7 @@ import Button from '../../Components/Button';
 import EmptyState from '../../Components/EmptyState';
 import { ProjectStatusBadge } from '../../Components/StatusBadges';
 import { api } from '../../lib/api';
+import PageHeader from '../../Components/PageHeader';
 
 const STATUS_FILTERS = [
     { value: 'all', label: 'All' },
@@ -89,21 +90,23 @@ export default function ProjectsIndex({ projects, companies, archivedView = fals
     return (
         <AppLayout>
             <Head title={archivedView ? 'Archived Projects' : 'Projects'} />
-            <div className="flex items-center justify-between mb-1">
-                <h1 className="font-display text-2xl font-semibold">{archivedView ? 'Archived Projects' : 'Projects'}</h1>
-                {archivedView ? (
+            <PageHeader
+                title={archivedView ? 'Archived Projects' : 'Projects'}
+                actions={archivedView ? (
                     <Link href="/projects" className="text-sm font-medium text-shadow-grey hover:underline">
                         All Projects
                     </Link>
                 ) : (
                     <Button onClick={() => setShowForm(true)}>New project</Button>
                 )}
-            </div>
-            <p className="text-sm text-shadow-grey mb-4">
-                {archivedView
-                    ? `${projects.length} archived project${projects.length !== 1 ? 's' : ''}.`
-                    : `${projects.length} project${projects.length !== 1 ? 's' : ''} across all clients.`}
-            </p>
+                subtitle={
+                    <>
+                        {archivedView
+                            ? `${projects.length} archived project${projects.length !== 1 ? 's' : ''}.`
+                            : `${projects.length} project${projects.length !== 1 ? 's' : ''} across all clients.`}
+                    </>
+                }
+            />
 
             {archivedView ? null : (
                 <div className="flex items-center justify-between mb-6">

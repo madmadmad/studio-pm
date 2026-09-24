@@ -1,6 +1,5 @@
-import { Head, Link, router, usePage } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
-import { ArrowLeft } from '@phosphor-icons/react';
 import PortalLayout from '../../../Layouts/PortalLayout';
 import Button from '../../../Components/Button';
 import EmptyState from '../../../Components/EmptyState';
@@ -8,6 +7,7 @@ import MessagesPanel from '../../../Components/MessagesPanel';
 import { ProjectStatusBadge, TaskStatusBadge, InvoiceStatusBadge, ProposalStatusBadge } from '../../../Components/StatusBadges';
 import { formatCurrency, formatDate, invoiceTotal } from '../../../lib/format';
 import { api } from '../../../lib/api';
+import PageHeader from '../../../Components/PageHeader';
 
 const TABS = ['Overview', 'Tasks', 'Messages', 'Proposals', 'Invoices', 'Team'];
 
@@ -229,16 +229,12 @@ export default function PortalProjectShow({ project }) {
     return (
         <PortalLayout>
             <Head title={project.name} />
-            <div className="mb-1">
-                <Link href="/portal" className="text-sm text-shadow-grey hover:underline inline-flex items-center gap-1">
-                    <ArrowLeft size={14} /> Your projects
-                </Link>
-            </div>
-            <div className="flex items-center justify-between mb-1">
-                <h1 className="font-display text-2xl font-semibold">{project.name}</h1>
-                <ProjectStatusBadge project={project} />
-            </div>
-            <p className="text-sm text-shadow-grey mb-6">{project.company.name}</p>
+            <PageHeader
+                back={{ href: '/portal', label: 'Your projects' }}
+                title={project.name}
+                actions={<ProjectStatusBadge project={project} />}
+                subtitle={project.company.name}
+            />
 
             <TabBar tab={tab} setTab={setTab} />
 

@@ -1,4 +1,5 @@
 import { Link } from '@inertiajs/react';
+import AuthLayout from '../../../Layouts/AuthLayout';
 
 const MESSAGES = {
     used: 'This sign-in link has already been used. Request a new one to sign in.',
@@ -8,16 +9,13 @@ const MESSAGES = {
 
 export default function LinkInvalid({ reason }) {
     return (
-        <div className="min-h-screen flex items-center justify-center bg-porcelain text-gunmetal px-4">
-            <div className="w-full max-w-sm text-center">
-                <div className="text-xl font-semibold mb-2">Client Hub</div>
-                <div className="card p-6 flex flex-col gap-4">
-                    <p className="text-sm text-shadow-grey">{MESSAGES[reason] ?? MESSAGES.invalid}</p>
-                    <Link href="/portal/login" className="btn btn-primary btn-lg">
-                        Request a new link
-                    </Link>
-                </div>
+        <AuthLayout title="Client Hub">
+            <div className="card auth-shell__card auth-shell__card--message">
+                <p className="text-sm text-shadow-grey">{MESSAGES[reason] ?? MESSAGES.invalid}</p>
+                <Link href="/portal/login" className="btn btn-primary btn-lg">
+                    Request a new link
+                </Link>
             </div>
-        </div>
+        </AuthLayout>
     );
 }

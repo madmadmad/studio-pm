@@ -6,6 +6,7 @@ import Card from '../../Components/Card';
 import Badge from '../../Components/Badge';
 import Avatar from '../../Components/Avatar';
 import AttachmentChip from '../../Components/AttachmentChip';
+import PageHeader from '../../Components/PageHeader';
 
 function Section({ title, description, children }) {
     return (
@@ -57,12 +58,16 @@ export default function StyleGuide() {
     return (
         <AppLayout>
             <Head title="Style Guide" />
-            <h1 className="font-display text-2xl font-semibold mb-1">Style guide</h1>
-            <p className="text-sm text-shadow-grey mb-8">
-                A live reference of the shared UI classes in resources/css/components.css and resources/css/tokens.css.
-                Every element below is rendered from the real, app-wide CSS -- edit those files and this page updates
-                with everything else.
-            </p>
+            <PageHeader
+                title="Style guide"
+                subtitle={
+                    <>
+                        A live reference of the shared UI classes in resources/css/components.css and resources/css/tokens.css.
+                        Every element below is rendered from the real, app-wide CSS -- edit those files and this page updates
+                        with everything else.
+                    </>
+                }
+            />
 
             <Section title="Colors" description="Defined in tokens.css, consumed everywhere via var(--color-...).">
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

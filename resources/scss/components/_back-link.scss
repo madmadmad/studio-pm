@@ -1,0 +1,19 @@
+// "← Projects" link above a detail page's header.
+// Used by Components/BackLink.jsx.
+
+.back-link {
+    margin-bottom: var(--space-1);
+
+    &__anchor {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--space-1);
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+        color: var(--color-shadow-grey);
+
+        &:hover {
+            text-decoration: underline;
+        }
+    }
+}

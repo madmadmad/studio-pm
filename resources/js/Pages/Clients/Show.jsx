@@ -1,6 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
-import { ArrowLeft } from '@phosphor-icons/react';
 import AppLayout from '../../Layouts/AppLayout';
 import Button from '../../Components/Button';
 import EmptyState from '../../Components/EmptyState';
@@ -9,6 +8,8 @@ import { InvoiceStatusBadge, ProposalStatusBadge, ProjectStatusBadge, TaskStatus
 import { formatCurrency, formatDate, invoiceTotal } from '../../lib/format';
 import { PAYMENT_TERMS, paymentTermsLabel } from '../../lib/paymentTerms';
 import { api } from '../../lib/api';
+import PageHeader from '../../Components/PageHeader';
+import BackLink from '../../Components/BackLink';
 
 function reload() {
     router.reload({ only: ['company'] });
@@ -57,26 +58,24 @@ function DetailsCard({ company }) {
     if (!editing) {
         const address = formatAddress(company);
         return (
-            <div className="mb-6">
-                <div className="flex items-center justify-between mb-1">
-                    <h1 className="font-display text-2xl font-semibold">{company.name}</h1>
-                    <div className="flex items-center gap-3">
+            <PageHeader
+                title={company.name}
+                actions={
+                    <>
                         <CompanyStatusBadge company={company} />
                         <Button variant="link" onClick={() => setEditing(true)}>Edit</Button>
-                    </div>
-                </div>
-                <p className="text-sm text-shadow-grey">
-                    {company.phone}{address ? `${company.phone ? ' · ' : ''}${address}` : ''}
-                </p>
-                <p className="text-sm text-shadow-grey mt-1">
-                    Default payment terms: {company.default_payment_terms ? paymentTermsLabel(company.default_payment_terms) : `${paymentTermsLabel(company.effective_payment_terms)} (firm default)`}
-                </p>
-                <p className="text-sm text-shadow-grey mt-1">
-                    Automatic reminders: {company.reminders_enabled === null
-                        ? `${company.effective_reminders_enabled ? 'On' : 'Off'} (app default)`
-                        : (company.reminders_enabled ? 'On' : 'Off')}
-                </p>
-            </div>
+                    </>
+                }
+                subtitle={[
+                    <>{company.phone}{address ? `${company.phone ? ' · ' : ''}${address}` : ''}</>,
+                    <>Default payment terms: {company.default_payment_terms ? paymentTermsLabel(company.default_payment_terms) : `${paymentTermsLabel(company.effective_payment_terms)} (firm default)`}</>,
+                    <>
+                        Automatic reminders: {company.reminders_enabled === null
+                            ? `${company.effective_reminders_enabled ? 'On' : 'Off'} (app default)`
+                            : (company.reminders_enabled ? 'On' : 'Off')}
+                    </>,
+                ]}
+            />
         );
     }
 
@@ -393,11 +392,7 @@ export default function ClientsShow({ company }) {
     return (
         <AppLayout>
             <Head title={company.name} />
-            <div className="mb-1">
-                <Link href="/clients" className="text-sm text-shadow-grey hover:underline inline-flex items-center gap-1">
-                    <ArrowLeft size={14} /> Clients
-                </Link>
-            </div>
+            <BackLink href="/clients" label="Clients" />
             <DetailsCard company={company} />
 
             <ContactsCard company={company} />

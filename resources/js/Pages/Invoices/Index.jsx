@@ -12,6 +12,7 @@ import { calculateDueDate, todayLocal } from '../../lib/paymentTerms';
 import { api } from '../../lib/api';
 import { getTray, clearTray } from '../../lib/tray';
 import { copyToClipboard } from '../../lib/clipboard';
+import PageHeader from '../../Components/PageHeader';
 
 function emptyDraft() {
     const issuedOn = todayLocal();
@@ -194,13 +195,15 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
     return (
         <AppLayout>
             <Head title="Invoices" />
-            <div className="flex items-center justify-between mb-1">
-                <h1 className="font-display text-2xl font-semibold">Invoices</h1>
-                <Button onClick={openNewInvoice}>New invoice</Button>
-            </div>
-            <p className="text-sm text-shadow-grey mb-6">
-                {formatCurrency(outstandingTotal)} outstanding across {invoices.filter((i) => i.status === 'sent').length} sent invoices.
-            </p>
+            <PageHeader
+                title="Invoices"
+                actions={<Button onClick={openNewInvoice}>New invoice</Button>}
+                subtitle={
+                    <>
+                        {formatCurrency(outstandingTotal)} outstanding across {invoices.filter((i) => i.status === 'sent').length} sent invoices.
+                    </>
+                }
+            />
 
             {showForm && (
                 <div className="card card-padded mb-6">

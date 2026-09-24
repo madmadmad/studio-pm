@@ -11,22 +11,22 @@ export default function PortalLayout({ children }) {
     }
 
     return (
-        <div className="min-h-screen bg-porcelain text-gunmetal">
-            <header className="bg-gunmetal text-porcelain px-6 py-4 flex items-center justify-between">
-                <Link href="/portal" className="font-semibold">Client Hub</Link>
-                <div className="flex items-center gap-4">
+        <div className="portal-shell">
+            <header className="portal-shell__header">
+                <Link href="/portal" className="portal-shell__brand">Client Hub</Link>
+                <div className="portal-shell__account">
                     {contact && (
-                        <Link href="/portal/profile" className="flex items-center gap-2 group">
+                        <Link href="/portal/profile" className="portal-shell__user">
                             <Avatar name={contact.name} avatarUrl={contact.avatar_url} id={contact.id} size={28} />
-                            <span className="text-sm text-porcelain/80 group-hover:text-porcelain">{contact.name}</span>
+                            <span className="portal-shell__user-name">{contact.name}</span>
                         </Link>
                     )}
-                    <a href="/portal/logout" onClick={handleLogout} className="text-sm text-porcelain/60 hover:text-porcelain">
+                    <a href="/portal/logout" onClick={handleLogout} className="portal-shell__logout">
                         Sign out
                     </a>
                 </div>
             </header>
-            <main className="max-w-4xl mx-auto p-8">{children}</main>
+            <main className="portal-shell__main">{children}</main>
         </div>
     );
 }
