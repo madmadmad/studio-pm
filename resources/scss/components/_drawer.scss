@@ -51,4 +51,21 @@
         overflow-y: auto;
         padding: var(--space-4) var(--space-6);
     }
+
+    // One group of fields/details in the body.
+    &__section {
+        margin-bottom: var(--space-6);
+
+        &--divided {
+            padding-bottom: var(--space-4);
+            border-bottom: var(--border-width) solid var(--color-border);
+        }
+    }
+
+    // Small print ("Edited Sep 3", "Created Aug 30").
+    &__meta {
+        font-size: var(--font-size-xs);
+        line-height: var(--line-height-xs);
+        color: var(--color-shadow-grey);
+    }
 }

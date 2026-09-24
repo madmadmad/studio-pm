@@ -11,7 +11,18 @@
         gap: var(--space-2);
     }
 
+    &--4 {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
     &__full {
         grid-column: 1 / -1;
+    }
+
+    // The submit button on its own row, at the right edge.
+    &__submit {
+        grid-column: 1 / -1;
+        justify-self: end;
+        width: fit-content;
     }
 }

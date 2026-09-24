@@ -1,0 +1,7 @@
+// A wrapping row of small items (badges, person chips).
+
+.cluster {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+}

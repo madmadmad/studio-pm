@@ -3,4 +3,9 @@
 
 .page-section {
     margin-bottom: var(--space-section);
+
+    // Less room below: a toolbar or add-form directly above its list.
+    &--tight {
+        margin-bottom: var(--space-4);
+    }
 }

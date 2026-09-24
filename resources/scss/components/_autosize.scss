@@ -1,0 +1,7 @@
+// A textarea whose height tracks its content (set from JS), so it never
+// scrolls or shows a resize handle.
+
+.autosize {
+    overflow: hidden;
+    resize: none;
+}

@@ -1,0 +1,19 @@
+// Projects/Show Billing tab: the budget summary above the invoice list.
+
+.project-billing {
+    &__budget {
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+        color: var(--color-shadow-grey);
+    }
+
+    &__figure {
+        font-weight: var(--font-weight-medium);
+        color: var(--color-gunmetal);
+        font-variant-numeric: tabular-nums;
+
+        &--negative {
+            color: var(--color-watermelon);
+        }
+    }
+}

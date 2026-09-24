@@ -1,0 +1,34 @@
+// Projects/Show Time tab: the log form and time entry rows (.grid-row).
+@use '../abstracts' as *;
+
+.time-list {
+    &__date,
+    &__hours,
+    &__status {
+        grid-column: span 2;
+    }
+
+    &__date {
+        color: var(--color-shadow-grey);
+    }
+
+    &__hours {
+        font-variant-numeric: tabular-nums;
+    }
+
+    &__detail {
+        display: flex;
+        grid-column: span 6;
+        align-items: center;
+        gap: var(--space-2);
+    }
+
+    &__text {
+        @include truncate;
+        color: var(--color-shadow-grey);
+    }
+
+    &__status {
+        text-align: right;
+    }
+}

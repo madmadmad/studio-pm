@@ -1,0 +1,64 @@
+// Task drawer: attached files with download/remove actions.
+@use '../abstracts' as *;
+
+.task-files {
+    &__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: var(--space-2);
+    }
+
+    &__list {
+        overflow: hidden;
+        border: var(--border-width) solid var(--color-border);
+        border-radius: var(--radius-base);
+    }
+
+    &__item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: var(--space-2) var(--space-3);
+        border-bottom: var(--border-width) solid var(--color-border);
+
+        &:last-child {
+            border-bottom: none;
+        }
+    }
+
+    &__info {
+        min-width: 0;
+    }
+
+    &__name {
+        @include truncate;
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+    }
+
+    &__size {
+        font-size: var(--font-size-xs);
+        line-height: var(--line-height-xs);
+        color: var(--color-shadow-grey);
+    }
+
+    &__actions {
+        display: flex;
+        flex-shrink: 0;
+        align-items: center;
+        gap: var(--space-1);
+    }
+
+    &__action {
+        padding: var(--space-1-5);
+
+        &--reveal {
+            opacity: 0;
+
+            .task-files__item:hover & {
+                opacity: 1;
+            }
+        }
+    }
+}

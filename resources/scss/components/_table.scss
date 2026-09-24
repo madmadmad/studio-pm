@@ -77,6 +77,10 @@
             color: var(--color-fern);
         }
 
+        &--negative {
+            color: var(--color-watermelon);
+        }
+
         &--capitalize {
             text-transform: capitalize;
         }

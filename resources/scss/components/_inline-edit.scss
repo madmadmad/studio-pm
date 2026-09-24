@@ -12,6 +12,21 @@
         border-color: var(--color-border);
     }
 
+    // A drawer's big editable title. Pulled out by its own padding so the
+    // text lines up with the content below until the border appears.
+    &--title {
+        margin-bottom: var(--space-4);
+        margin-inline: calc(var(--space-1) * -1);
+        padding-inline: var(--space-1);
+        font-size: var(--font-size-xl);
+        line-height: var(--line-height-xl);
+        font-weight: var(--font-weight-semibold);
+
+        &:focus {
+            outline: none;
+        }
+    }
+
     &--cell {
         padding: var(--space-1) var(--space-2);
         font-size: var(--font-size-sm);

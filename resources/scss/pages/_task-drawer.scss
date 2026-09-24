@@ -1,0 +1,12 @@
+// Projects/Show task drawer: status picker and the assignee section.
+
+.task-drawer {
+    &__status {
+        font-weight: var(--font-weight-medium);
+    }
+
+    &__assignee {
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+    }
+}

@@ -14,5 +14,10 @@
         line-height: var(--line-height-2xl);
         font-weight: var(--font-weight-medium);
         font-variant-numeric: tabular-nums;
+
+        // Over budget.
+        &--negative {
+            color: var(--color-watermelon);
+        }
     }
 }

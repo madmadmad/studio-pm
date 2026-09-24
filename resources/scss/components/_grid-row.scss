@@ -1,0 +1,25 @@
+// Rows of a card-based list laid out on a 12-column grid, so columns line
+// up across rows without a <table>. The owning list's elements set each
+// column's span. --head is the column-label row.
+
+.grid-row {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: var(--space-2);
+    align-items: center;
+    padding: var(--space-2) var(--space-4);
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-sm);
+    border-bottom: var(--border-width) solid var(--color-border);
+
+    &:last-child {
+        border-bottom: none;
+    }
+
+    &--head {
+        font-size: var(--font-size-xs);
+        line-height: var(--line-height-xs);
+        font-weight: var(--font-weight-medium);
+        color: var(--color-shadow-grey);
+    }
+}

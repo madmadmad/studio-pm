@@ -1,0 +1,30 @@
+// Projects/Show Notes tab: one clickable row per note (a .list-row).
+@use '../abstracts' as *;
+
+.note-list {
+    &__row {
+        gap: var(--space-2);
+        width: 100%;
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+        text-align: left;
+    }
+
+    &__title {
+        @include truncate;
+        font-weight: var(--font-weight-medium);
+    }
+
+    &__meta {
+        display: flex;
+        flex-shrink: 0;
+        align-items: center;
+        gap: var(--space-2);
+    }
+
+    &__date {
+        font-size: var(--font-size-xs);
+        line-height: var(--line-height-xs);
+        color: var(--color-shadow-grey);
+    }
+}

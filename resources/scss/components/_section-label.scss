@@ -6,4 +6,13 @@
     line-height: var(--line-height-xs);
     font-weight: var(--font-weight-semibold);
     color: var(--color-shadow-grey);
+
+    &--tight {
+        margin-bottom: var(--space-1);
+    }
+
+    // Sharing a row with an action, so the row sets the spacing.
+    &--flush {
+        margin-bottom: 0;
+    }
 }
