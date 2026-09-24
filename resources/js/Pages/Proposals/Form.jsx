@@ -200,7 +200,7 @@ export default function ProposalsForm({ proposal, companies, services, presetCom
     return (
         <AppLayout>
             <Head title={isEditing ? `Edit — ${proposal.title}` : 'New proposal'} />
-            <div className="max-w-4xl">
+            <div className="page-column">
             <PageHeader
                 back={{ href: '/proposals', label: 'Proposals' }}
                 title={isEditing ? 'Edit proposal' : 'New proposal'}
@@ -228,8 +228,8 @@ export default function ProposalsForm({ proposal, companies, services, presetCom
                 )}
             />
 
-            <div className="card card--padded">
-                <div className="grid grid-cols-2 gap-3 mb-3">
+            <div className="card card--padded proposal-form">
+                <div className="form-grid proposal-form__field">
                     <select
                         value={form.company_id}
                         disabled={isEditing || contextLocked}
@@ -255,13 +255,13 @@ export default function ProposalsForm({ proposal, companies, services, presetCom
                         ))}
                     </select>
                 </div>
-                <div className="mb-3">
+                <div className="proposal-form__field">
                     {isEditing ? (
                         <div className="input input--static">
                             Project: {proposal.project?.name ?? '—'}
                         </div>
                     ) : (
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="form-grid">
                             <select
                                 value={form.company_id ? (form.project_id || NEW_PROJECT) : ''}
                                 disabled={!form.company_id || contextLocked}
@@ -289,7 +289,7 @@ export default function ProposalsForm({ proposal, companies, services, presetCom
                         </div>
                     )}
                 </div>
-                <div className="mb-3">
+                <div className="proposal-form__field">
                     {form.items.length === 0 ? (
                         <input
                             type="number"
@@ -297,10 +297,10 @@ export default function ProposalsForm({ proposal, companies, services, presetCom
                             placeholder="Estimate amount ($)"
                             value={form.estimate_amount}
                             onChange={(e) => setForm({ ...form, estimate_amount: e.target.value })}
-                            className="input tabular-nums"
+                            className="input u-tabular-nums"
                         />
                     ) : (
-                        <div className="input input--static tabular-nums">
+                        <div className="input input--static u-tabular-nums">
                             Estimate: {formatCurrency(itemsTotal)} (from line items)
                         </div>
                     )}
@@ -309,14 +309,14 @@ export default function ProposalsForm({ proposal, companies, services, presetCom
                     placeholder="Proposal title"
                     value={form.title}
                     onChange={(e) => setForm({ ...form, title: e.target.value })}
-                    className="input mb-3"
+                    className="input proposal-form__field"
                 />
-                <div className="mb-4">
+                <div className="proposal-form__group">
                     <RichTextEditor value={form.body} onChange={(body) => setForm({ ...form, body })} />
                 </div>
 
-                <div className="mb-4">
-                    <div className="text-xs font-semibold text-shadow-grey mb-2">Services</div>
+                <div className="proposal-form__group">
+                    <div className="section-label">Services</div>
                     {form.items.map((item, idx) => (
                         <div
                             key={idx}
@@ -328,22 +328,20 @@ export default function ProposalsForm({ proposal, companies, services, presetCom
                                 setDragIndex(null);
                             }}
                             onDragEnd={() => setDragIndex(null)}
-                            className={`flex gap-2 mb-3 pb-3 border-b border-border last:border-b-0 ${
-                                dragIndex === idx ? 'opacity-40' : ''
-                            }`}
+                            className={`proposal-form__item${dragIndex === idx ? ' proposal-form__item--dragging' : ''}`}
                         >
                             <div
-                                className="pt-3 text-shadow-grey cursor-grab"
+                                className="proposal-form__handle"
                                 title="Drag to reorder"
                             >
                                 <DotsSixVertical size={14} weight="bold" />
                             </div>
-                            <div className="flex-1 min-w-0">
-                                <div className="grid grid-cols-12 gap-2 mb-2">
+                            <div className="proposal-form__item-body">
+                                <div className="proposal-form__item-fields">
                                     <select
                                         value={item.service_id}
                                         onChange={(e) => updateItem(idx, 'service_id', e.target.value)}
-                                        className="input input--xs h-9 col-span-5"
+                                        className="input input--xs proposal-form__service"
                                     >
                                         <option value="">Custom</option>
                                         {services.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
@@ -355,7 +353,7 @@ export default function ProposalsForm({ proposal, companies, services, presetCom
                                         placeholder="Qty"
                                         value={item.quantity}
                                         onChange={(e) => updateItem(idx, 'quantity', e.target.value)}
-                                        className="input input--xs h-9 tabular-nums col-span-2"
+                                        className="input input--xs proposal-form__qty"
                                     />
                                     <input
                                         type="number"
@@ -364,25 +362,25 @@ export default function ProposalsForm({ proposal, companies, services, presetCom
                                         placeholder="Rate"
                                         value={item.rate}
                                         onChange={(e) => updateItem(idx, 'rate', e.target.value)}
-                                        className="input input--xs h-9 tabular-nums col-span-2"
+                                        className="input input--xs proposal-form__rate"
                                     />
-                                    <div className="col-span-3 h-9 flex items-center justify-end text-sm tabular-nums">
+                                    <div className="proposal-form__line-total">
                                         {formatCurrency(lineAmount(item))}
                                     </div>
                                 </div>
-                                <div className="grid grid-cols-12 gap-2 mb-1">
+                                <div className="proposal-form__item-notes">
                                     <textarea
                                         placeholder="Description shown to the client"
                                         value={item.details}
                                         onChange={(e) => updateItem(idx, 'details', e.target.value)}
                                         rows={2}
-                                        className="input input--xs text-xs text-shadow-grey col-span-9"
+                                        className="input input--xs proposal-form__details"
                                     />
                                 </div>
                                 <button
                                     type="button"
                                     onClick={() => removeItem(idx)}
-                                    className="text-xs text-watermelon"
+                                    className="proposal-form__remove"
                                 >
                                     Remove
                                 </button>
@@ -392,17 +390,17 @@ export default function ProposalsForm({ proposal, companies, services, presetCom
                     <Button variant="link-accent" onClick={addItem}>+ Add line item</Button>
 
                     {form.items.length > 0 && (
-                        <div className="flex justify-end mt-3 pt-3 border-t border-border">
-                            <div className="text-sm font-semibold">
-                                Total: <span className="tabular-nums">{formatCurrency(itemsTotal)}</span>
+                        <div className="proposal-form__total">
+                            <div className="proposal-form__total-value">
+                                Total: <span className="u-tabular-nums">{formatCurrency(itemsTotal)}</span>
                             </div>
                         </div>
                     )}
                 </div>
 
-                {error && <div className="text-sm mb-3 text-watermelon">{error}</div>}
+                {error && <div className="form-message form-message--error form-message--spaced">{error}</div>}
 
-                <div className="flex gap-2 justify-end">
+                <div className="form-actions">
                     <Link href="/proposals" className="btn btn--secondary">Cancel</Link>
                     <Button type="button" variant="confirm" disabled={saving} onClick={save}>
                         {isEditing ? 'Save changes' : 'Save draft'}

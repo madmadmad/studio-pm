@@ -208,7 +208,7 @@ export default function SendInvoiceModal({ invoice, studio, invoicingDefaults, o
 
                 <div className="modal__body" onClick={closeDropdowns}>
                     {alreadySent && (
-                        <div className="alert alert--info">
+                        <div className="alert alert--info alert--compact">
                             This invoice has already been sent. The client won&rsquo;t see changes in their original email until you resend it; the online link always shows the latest version.
                         </div>
                     )}
@@ -220,7 +220,7 @@ export default function SendInvoiceModal({ invoice, studio, invoicingDefaults, o
                     )}
 
                     {invoice.needs_issue_date_update && blockingIssues.length === 0 && (
-                        <label className="alert alert--info alert--choice">
+                        <label className="alert alert--info alert--compact alert--choice">
                             <input
                                 type="checkbox"
                                 checked={updateIssueDate}

@@ -21,4 +21,9 @@
     &--accent {
         color: var(--color-watermelon);
     }
+
+    &--xs {
+        font-size: var(--font-size-xs);
+        line-height: var(--line-height-xs);
+    }
 }

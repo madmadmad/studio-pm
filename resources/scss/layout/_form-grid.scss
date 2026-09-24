@@ -6,6 +6,11 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: var(--space-3);
 
+    // Tighter gutter for a small form nested inside a card.
+    &--tight {
+        gap: var(--space-2);
+    }
+
     &__full {
         grid-column: 1 / -1;
     }

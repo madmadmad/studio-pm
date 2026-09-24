@@ -1,0 +1,32 @@
+// Subtotal / total summary rows under a list of line items.
+@use '../abstracts' as *;
+
+.totals {
+    @include stack(var(--space-1));
+
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-sm);
+
+    // Pushed to the right edge at a fixed width, under a table.
+    &--aside {
+        max-width: 20rem; // one-off: a narrow summary column
+        margin-left: auto;
+    }
+
+    &__row {
+        display: flex;
+        justify-content: space-between;
+
+        &--muted {
+            color: var(--color-shadow-grey);
+        }
+
+        &--strong {
+            font-weight: var(--font-weight-semibold);
+        }
+    }
+
+    &__value {
+        font-variant-numeric: tabular-nums;
+    }
+}

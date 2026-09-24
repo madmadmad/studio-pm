@@ -1,0 +1,5 @@
+// Caps a detail or editor page at a readable width (invoice, proposal).
+
+.page-column {
+    max-width: var(--size-content);
+}

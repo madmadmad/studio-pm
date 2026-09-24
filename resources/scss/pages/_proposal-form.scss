@@ -1,0 +1,107 @@
+// Proposals/Form: the proposal editor and its draggable service lines.
+
+.proposal-form {
+    --proposal-form-control-height: 2.25rem; // line-item controls share one height
+
+    &__field {
+        margin-bottom: var(--space-3);
+    }
+
+    &__group {
+        margin-bottom: var(--space-4);
+    }
+
+    &__item {
+        display: flex;
+        gap: var(--space-2);
+        margin-bottom: var(--space-3);
+        padding-bottom: var(--space-3);
+        border-bottom: var(--border-width) solid var(--color-border);
+
+        // The line currently being dragged.
+        &--dragging {
+            opacity: 0.4;
+        }
+    }
+
+    &__handle {
+        padding-top: var(--space-3);
+        color: var(--color-shadow-grey);
+        cursor: grab;
+    }
+
+    &__item-body {
+        flex: 1;
+        min-width: 0;
+    }
+
+    // 12-column rows so the controls line up across every line item.
+    &__item-fields,
+    &__item-notes {
+        display: grid;
+        grid-template-columns: repeat(12, minmax(0, 1fr));
+        gap: var(--space-2);
+    }
+
+    &__item-fields {
+        margin-bottom: var(--space-2);
+    }
+
+    &__item-notes {
+        margin-bottom: var(--space-1);
+    }
+
+    &__service,
+    &__qty,
+    &__rate,
+    &__line-total {
+        height: var(--proposal-form-control-height);
+    }
+
+    &__service {
+        grid-column: span 5;
+    }
+
+    &__qty,
+    &__rate {
+        grid-column: span 2;
+        font-variant-numeric: tabular-nums;
+    }
+
+    &__line-total {
+        display: flex;
+        grid-column: span 3;
+        align-items: center;
+        justify-content: flex-end;
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+        font-variant-numeric: tabular-nums;
+    }
+
+    &__details {
+        grid-column: span 9;
+        font-size: var(--font-size-xs);
+        line-height: var(--line-height-xs);
+        color: var(--color-shadow-grey);
+    }
+
+    &__remove {
+        font-size: var(--font-size-xs);
+        line-height: var(--line-height-xs);
+        color: var(--color-watermelon);
+    }
+
+    &__total {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: var(--space-3);
+        padding-top: var(--space-3);
+        border-top: var(--border-width) solid var(--color-border);
+    }
+
+    &__total-value {
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+        font-weight: var(--font-weight-semibold);
+    }
+}

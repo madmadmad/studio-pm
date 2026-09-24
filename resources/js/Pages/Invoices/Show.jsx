@@ -153,7 +153,7 @@ export default function InvoicesShow({ invoice: initialInvoice, studio, invoicin
     return (
         <AppLayout>
             <Head title={`Invoice — ${invoice.company.name}`} />
-            <div className="max-w-4xl">
+            <div className="page-column">
             <PageHeader
                 back={{ href: '/invoices', label: 'Invoices' }}
                 title={invoice.company.name}
@@ -197,20 +197,20 @@ export default function InvoicesShow({ invoice: initialInvoice, studio, invoicin
             />
 
             {successMessage && (
-                <div role="status" aria-live="polite" className="text-sm text-fern bg-fern-soft rounded px-3 py-2 mb-4">
+                <div role="status" aria-live="polite" className="alert alert--success">
                     {successMessage}
                 </div>
             )}
 
             {editing && invoice.sent_at && (
-                <div className="text-sm text-shadow-grey bg-porcelain rounded px-3 py-2 mb-4">
+                <div className="alert alert--info">
                     This invoice has already been sent. The client won&rsquo;t see changes in their original email until you resend it; the online link always shows the latest version.
                 </div>
             )}
 
             {editing ? (
-                <div className="card card--padded mb-6">
-                    <div className="mb-4">
+                <div className="card card--padded page-section invoice-form">
+                    <div className="invoice-form__section">
                         <select
                             value={form.contact_id}
                             onChange={(e) => setForm({ ...form, contact_id: e.target.value })}
@@ -225,19 +225,19 @@ export default function InvoicesShow({ invoice: initialInvoice, studio, invoicin
                         </select>
                     </div>
 
-                    <div className="mb-4">
+                    <div className="invoice-form__section">
                         <InvoiceDateFields values={form} onChange={(patch) => setForm((current) => ({ ...current, ...patch }))} />
                     </div>
 
-                    <div className="mb-3">
+                    <div className="invoice-form__items">
                         {form.items.map((item, idx) => (
-                            <div key={idx} className="mb-2 pb-2 border-b border-border last:border-b-0">
-                                <div className="flex gap-2 mb-1">
+                            <div key={idx} className="invoice-form__item">
+                                <div className="invoice-form__item-row">
                                     <input
                                         placeholder="Line item description (required)"
                                         value={item.description}
                                         onChange={(e) => updateItem(idx, 'description', e.target.value)}
-                                        className="input flex-1"
+                                        className="input invoice-form__description"
                                     />
                                     <input
                                         type="number"
@@ -246,7 +246,7 @@ export default function InvoicesShow({ invoice: initialInvoice, studio, invoicin
                                         placeholder="Amount"
                                         value={item.amount}
                                         onChange={(e) => updateItem(idx, 'amount', e.target.value)}
-                                        className="input tabular-nums w-28"
+                                        className="input invoice-form__amount"
                                     />
                                     {form.items.length > 1 && (
                                         <Button variant="link-accent" onClick={() => removeItemRow(idx)}>Remove</Button>
@@ -257,25 +257,25 @@ export default function InvoicesShow({ invoice: initialInvoice, studio, invoicin
                                     value={item.details || ''}
                                     onChange={(e) => updateItem(idx, 'details', e.target.value)}
                                     rows={2}
-                                    className="input text-xs text-shadow-grey"
+                                    className="input invoice-form__details"
                                 />
                             </div>
                         ))}
                         <Button variant="link-accent" onClick={addItemRow}>+ Add line item</Button>
                     </div>
 
-                    <div className="text-sm mb-4 space-y-1">
-                        <div className="flex justify-between text-shadow-grey">
+                    <div className="invoice-form__section totals">
+                        <div className="totals__row totals__row--muted">
                             <span>Subtotal</span>
-                            <span className="tabular-nums">{formatCurrency(formSubtotal)}</span>
+                            <span className="totals__value">{formatCurrency(formSubtotal)}</span>
                         </div>
-                        <div className="flex justify-between font-semibold">
+                        <div className="totals__row totals__row--strong">
                             <span>Total</span>
-                            <span className="tabular-nums">{formatCurrency(formTotal)}</span>
+                            <span className="totals__value">{formatCurrency(formTotal)}</span>
                         </div>
                     </div>
 
-                    <div className="mb-4">
+                    <div className="invoice-form__section">
                         <Toggle
                             checked={form.surcharge}
                             onChange={(value) => setForm({ ...form, surcharge: value })}
@@ -283,20 +283,20 @@ export default function InvoicesShow({ invoice: initialInvoice, studio, invoicin
                         />
                     </div>
 
-                    {error && <div className="text-sm text-watermelon mb-3">{error}</div>}
+                    {error && <div className="form-message form-message--error form-message--spaced">{error}</div>}
 
-                    <div className="flex gap-2 justify-end">
+                    <div className="form-actions">
                         <Button variant="secondary" onClick={() => setEditing(false)}>Cancel</Button>
                         <Button variant="confirm" disabled={saving} onClick={save}>Save</Button>
                     </div>
                 </div>
             ) : (
-                <div className="card card--padded mb-6">
-                    <table className="table table--flush mb-4">
+                <div className="card card--padded page-section">
+                    <table className="table table--flush card__section">
                         <thead>
                             <tr>
                                 <th>Description</th>
-                                <th className="text-right">Amount</th>
+                                <th className="table__cell--end">Amount</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -305,36 +305,36 @@ export default function InvoicesShow({ invoice: initialInvoice, studio, invoicin
                                     <td>
                                         {item.description}
                                         {item.details && item.details !== item.description && (
-                                            <div className="text-xs text-shadow-grey mt-1 whitespace-pre-wrap">{item.details}</div>
+                                            <div className="table__meta table__meta--multiline">{item.details}</div>
                                         )}
                                     </td>
-                                    <td className="text-right tabular-nums align-top">{formatCurrency(item.amount)}</td>
+                                    <td className="table__cell--end table__cell--numeric table__cell--top">{formatCurrency(item.amount)}</td>
                                 </tr>
                             ))}
                         </tbody>
                     </table>
 
-                    <div className="text-sm space-y-1 ml-auto max-w-xs">
-                        <div className="flex justify-between text-shadow-grey">
+                    <div className="totals totals--aside">
+                        <div className="totals__row totals__row--muted">
                             <span>Subtotal</span>
-                            <span className="tabular-nums">{formatCurrency(subtotal)}</span>
+                            <span className="totals__value">{formatCurrency(subtotal)}</span>
                         </div>
-                        <div className="flex justify-between font-semibold">
+                        <div className="totals__row totals__row--strong">
                             <span>Total</span>
-                            <span className="tabular-nums">{formatCurrency(total)}</span>
+                            <span className="totals__value">{formatCurrency(total)}</span>
                         </div>
                     </div>
                 </div>
             )}
 
             {invoice.payments.length > 0 && (
-                <div className="card card--padded mb-6">
-                    <h2 className="text-sm font-semibold text-shadow-grey mb-3">Payments</h2>
-                    <ul className="text-sm divide-y divide-border">
+                <div className="card card--padded page-section">
+                    <h2 className="section-heading">Payments</h2>
+                    <ul className="detail-list">
                         {invoice.payments.map((payment) => (
-                            <li key={payment.id} className="py-2 flex justify-between">
+                            <li key={payment.id} className="detail-list__item detail-list__item--split">
                                 <span>{formatDate(payment.paid_at)}{payment.method ? ` · ${payment.method}` : ''}</span>
-                                <span className="tabular-nums">{formatCurrency(parseFloat(payment.amount) + parseFloat(payment.surcharge_amount))}</span>
+                                <span className="detail-list__amount">{formatCurrency(parseFloat(payment.amount) + parseFloat(payment.surcharge_amount))}</span>
                             </li>
                         ))}
                     </ul>
@@ -342,19 +342,19 @@ export default function InvoicesShow({ invoice: initialInvoice, studio, invoicin
             )}
 
             {pendingScheduledSend && (
-                <div className="card card--padded mb-6">
-                    <div className="flex items-center justify-between">
-                        <span className="text-sm">
+                <div className="card card--padded page-section">
+                    <div className="invoice-detail__schedule">
+                        <span className="invoice-detail__schedule-text">
                             Scheduled for <strong>{formatDateTimeEastern(pendingScheduledSend.scheduled_for)}</strong>
                         </span>
-                        <div className="flex items-center gap-2">
+                        <div className="invoice-detail__schedule-actions">
                             <Button variant="link" onClick={() => sendScheduledNow(pendingScheduledSend)}>Send now</Button>
                             <Button variant="link" onClick={() => startRescheduling(pendingScheduledSend)}>Reschedule</Button>
                             <Button variant="link-accent" onClick={() => cancelScheduledSend(pendingScheduledSend)}>Cancel</Button>
                         </div>
                     </div>
                     {reschedulingId === pendingScheduledSend.id && (
-                        <div className="flex items-center gap-2 mt-3">
+                        <div className="invoice-detail__reschedule">
                             <input type="date" value={rescheduleDate} onChange={(e) => setRescheduleDate(e.target.value)} className="input input--sm" />
                             <input type="time" value={rescheduleTime} onChange={(e) => setRescheduleTime(e.target.value)} className="input input--sm" />
                             <Button variant="confirm" onClick={() => confirmReschedule(pendingScheduledSend)}>Save</Button>
@@ -365,16 +365,16 @@ export default function InvoicesShow({ invoice: initialInvoice, studio, invoicin
             )}
 
             {invoice.status !== 'draft' && invoice.status !== 'paid' && (
-                <div className="card card--padded mb-6">
-                    <h2 className="text-sm font-semibold text-shadow-grey mb-3">Reminders</h2>
-                    <ul className="text-sm divide-y divide-border">
+                <div className="card card--padded page-section">
+                    <h2 className="section-heading">Reminders</h2>
+                    <ul className="detail-list">
                         {reminderRows(invoice).map((row) => (
-                            <li key={row.rule} className="py-2 flex items-center justify-between">
+                            <li key={row.rule} className="detail-list__item detail-list__item--split">
                                 <span>
                                     {row.label} &middot; {formatDate(row.date.toISOString())}
-                                    {row.status === 'sent' && <span className="text-fern"> &middot; Sent</span>}
-                                    {row.status === 'cancelled' && <span className="text-shadow-grey"> &middot; Skipped</span>}
-                                    {row.status === 'failed' && <span className="text-watermelon"> &middot; Failed</span>}
+                                    {row.status === 'sent' && <span className="detail-list__status--success"> &middot; Sent</span>}
+                                    {row.status === 'cancelled' && <span className="detail-list__status--muted"> &middot; Skipped</span>}
+                                    {row.status === 'failed' && <span className="detail-list__status--error"> &middot; Failed</span>}
                                 </span>
                                 {row.status === 'upcoming' && (
                                     <Button variant="link-accent" onClick={() => skipReminder(row.rule)}>Skip</Button>
@@ -386,33 +386,33 @@ export default function InvoicesShow({ invoice: initialInvoice, studio, invoicin
             )}
 
             {invoice.invoice_sends?.length > 0 && (
-                <div className="card card--padded mb-6">
-                    <h2 className="text-sm font-semibold text-shadow-grey mb-3">History</h2>
-                    <ul className="text-sm divide-y divide-border">
+                <div className="card card--padded page-section">
+                    <h2 className="section-heading">History</h2>
+                    <ul className="detail-list">
                         {invoice.invoice_sends.map((send) => (
-                            <li key={send.id} className="py-2">
+                            <li key={send.id} className="detail-list__item">
                                 {send.type === 'link' && <>Link copied{send.sent_by ? ` by ${send.sent_by.name}` : ''}, {formatDateTimeEastern(send.sent_at)}</>}
                                 {send.type === 'email' && send.status === 'sent' && <>Sent to {(send.recipients || []).join(', ')}, {formatDateTimeEastern(send.sent_at)}</>}
                                 {send.type === 'email' && send.status === 'scheduled' && <>Scheduled for {formatDateTimeEastern(send.scheduled_for)}</>}
                                 {send.type === 'email' && send.status === 'cancelled' && <>Scheduled send cancelled{send.failure_reason ? `: ${send.failure_reason}` : ''}</>}
-                                {send.type === 'email' && send.status === 'failed' && <span className="text-watermelon">Send failed{send.failure_reason ? `: ${send.failure_reason}` : ''}</span>}
+                                {send.type === 'email' && send.status === 'failed' && <span className="detail-list__status--error">Send failed{send.failure_reason ? `: ${send.failure_reason}` : ''}</span>}
                                 {send.type === 'reminder' && send.status === 'sent' && <>Reminder sent to {(send.recipients || []).join(', ')}, {formatDateTimeEastern(send.sent_at)}</>}
                                 {send.type === 'reminder' && send.status === 'cancelled' && <>Reminder skipped{send.failure_reason ? `: ${send.failure_reason}` : ''}</>}
-                                {send.type === 'reminder' && send.status === 'failed' && <span className="text-watermelon">Reminder failed{send.failure_reason ? `: ${send.failure_reason}` : ''}</span>}
+                                {send.type === 'reminder' && send.status === 'failed' && <span className="detail-list__status--error">Reminder failed{send.failure_reason ? `: ${send.failure_reason}` : ''}</span>}
                             </li>
                         ))}
                     </ul>
                 </div>
             )}
 
-            {!editing && error && <div className="text-sm text-watermelon mb-3">{error}</div>}
+            {!editing && error && <div className="form-message form-message--error form-message--spaced">{error}</div>}
 
             {!editing && invoice.status === 'sent' && (
-                <div className="flex items-center gap-2">
+                <div className="invoice-detail__payment">
                     <select
                         value={paymentMethod}
                         onChange={(e) => setPaymentMethod(e.target.value)}
-                        className="input input--sm w-auto"
+                        className="input input--sm input--inline"
                     >
                         <option value="check">Check</option>
                         <option value="other">Other</option>

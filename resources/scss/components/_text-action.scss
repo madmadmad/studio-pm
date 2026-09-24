@@ -13,6 +13,10 @@
         color: var(--color-watermelon);
     }
 
+    &--underline {
+        text-decoration: underline;
+    }
+
     &--xs {
         font-size: var(--font-size-xs);
         line-height: var(--line-height-xs);

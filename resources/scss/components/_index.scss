@@ -30,6 +30,11 @@
 @forward 'section-label';
 @forward 'section-heading';
 @forward 'list-row';
+@forward 'detail-list';
+@forward 'totals';
+@forward 'inline-form';
+@forward 'disclosure';
+@forward 'address-fields';
 
 // Composites
 @forward 'back-link';
@@ -40,6 +45,7 @@
 @forward 'attachment-chip';
 @forward 'rich-text-editor';
 @forward 'invoice-date-fields';
+@forward 'invoice-form';
 @forward 'drawer';
 @forward 'modal';
 @forward 'lightbox';

@@ -1,0 +1,58 @@
+// A divided list of records inside a card (contacts, payments, reminders,
+// send history). --split lays an item out as label left, details right.
+
+.detail-list {
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-sm);
+
+    &__item {
+        padding-block: var(--space-2);
+
+        & + & {
+            border-top: var(--border-width) solid var(--color-border);
+        }
+
+        &--split {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+    }
+
+    &__title {
+        font-weight: var(--font-weight-medium);
+    }
+
+    &__meta {
+        color: var(--color-shadow-grey);
+    }
+
+    &__aside {
+        display: flex;
+        align-items: center;
+        gap: var(--space-3);
+
+        &--tight {
+            gap: var(--space-2);
+        }
+    }
+
+    &__amount {
+        font-variant-numeric: tabular-nums;
+    }
+
+    // Inline outcome after an item ("· Sent", "· Failed").
+    &__status {
+        &--success {
+            color: var(--color-fern);
+        }
+
+        &--muted {
+            color: var(--color-shadow-grey);
+        }
+
+        &--error {
+            color: var(--color-watermelon);
+        }
+    }
+}

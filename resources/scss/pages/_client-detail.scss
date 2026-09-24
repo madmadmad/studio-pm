@@ -1,0 +1,58 @@
+// Clients/Show: the Projects card's per-project mini task lists.
+
+.client-detail {
+    &__project {
+        padding-block: var(--space-3);
+
+        & + & {
+            border-top: var(--border-width) solid var(--color-border);
+        }
+    }
+
+    &__project-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: var(--space-2);
+    }
+
+    &__project-name {
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+        font-weight: var(--font-weight-medium);
+    }
+
+    &__tasks {
+        padding-left: var(--space-2);
+    }
+
+    &__task {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding-block: var(--space-1-5);
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+    }
+
+    &__add-task {
+        display: flex;
+        gap: var(--space-2);
+        margin-top: var(--space-2);
+    }
+
+    &__task-input {
+        flex: 1;
+        padding: var(--space-1) var(--space-2);
+        font-size: var(--font-size-xs);
+        line-height: var(--line-height-xs);
+        border: var(--border-width) solid var(--color-border);
+        border-radius: var(--radius-base);
+    }
+
+    &__task-submit {
+        font-size: var(--font-size-xs);
+        line-height: var(--line-height-xs);
+        color: var(--color-fern);
+    }
+}

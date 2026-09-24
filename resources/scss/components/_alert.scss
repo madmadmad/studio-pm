@@ -3,22 +3,32 @@
 .alert {
     margin-bottom: var(--space-4);
     padding: var(--space-2) var(--space-3);
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-sm);
     border-radius: var(--radius-base);
 
     // Neutral context ("this invoice has already been sent").
     &--info {
-        font-size: var(--font-size-xs);
-        line-height: var(--line-height-xs);
         color: var(--color-shadow-grey);
         background-color: var(--color-porcelain);
     }
 
     // Something blocking the action.
     &--danger {
-        font-size: var(--font-size-sm);
-        line-height: var(--line-height-sm);
         color: var(--color-watermelon);
         background-color: var(--color-watermelon-soft);
+    }
+
+    // Confirmation that an action went through.
+    &--success {
+        color: var(--color-fern);
+        background-color: var(--color-fern-soft);
+    }
+
+    // Smaller type, for alerts inside a dialog.
+    &--compact {
+        font-size: var(--font-size-xs);
+        line-height: var(--line-height-xs);
     }
 
     // The whole alert is a <label> around a checkbox and its text.

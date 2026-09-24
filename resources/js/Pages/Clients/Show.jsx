@@ -80,14 +80,14 @@ function DetailsCard({ company }) {
     }
 
     return (
-        <form onSubmit={submit} className="card card--padded mb-6 grid grid-cols-2 gap-3">
-            <input required placeholder="Client or company name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="input col-span-2" />
+        <form onSubmit={submit} className="card card--padded form-grid page-section">
+            <input required placeholder="Client or company name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="input form-grid__full" />
             <input placeholder="Phone" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className="input" />
             <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })} className="input">
                 <option value="active">Active</option>
                 <option value="inactive">Inactive</option>
             </select>
-            <div className="col-span-2">
+            <div className="form-grid__full">
                 <label className="label">Default payment terms</label>
                 <select
                     value={form.default_payment_terms}
@@ -100,7 +100,7 @@ function DetailsCard({ company }) {
                     ))}
                 </select>
             </div>
-            <div className="col-span-2">
+            <div className="form-grid__full">
                 <label className="label">Automatic reminders</label>
                 <select
                     value={form.reminders_enabled}
@@ -112,13 +112,13 @@ function DetailsCard({ company }) {
                     <option value="0">Off</option>
                 </select>
             </div>
-            <input placeholder="Street address" value={form.address_line1} onChange={(e) => setForm({ ...form, address_line1: e.target.value })} className="input col-span-2" />
-            <div className="col-span-2 grid grid-cols-[2fr_1fr_1fr] gap-3">
+            <input placeholder="Street address" value={form.address_line1} onChange={(e) => setForm({ ...form, address_line1: e.target.value })} className="input form-grid__full" />
+            <div className="form-grid__full address-fields">
                 <input placeholder="City" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} className="input" />
                 <input placeholder="State" value={form.state} onChange={(e) => setForm({ ...form, state: e.target.value })} className="input" />
                 <input placeholder="Zip" value={form.postal_code} onChange={(e) => setForm({ ...form, postal_code: e.target.value })} className="input" />
             </div>
-            <div className="flex gap-2 col-span-2 justify-end">
+            <div className="form-actions form-grid__full">
                 <Button type="button" variant="secondary" onClick={() => setEditing(false)}>Cancel</Button>
                 <Button type="submit" variant="confirm" disabled={saving}>Save</Button>
             </div>
@@ -181,16 +181,16 @@ function ContactsCard({ company }) {
     }
 
     return (
-        <div className="card card--padded mb-6">
-            <div className="flex items-center justify-between mb-3">
-                <h2 className="text-sm font-semibold text-shadow-grey">Contacts</h2>
+        <div className="card card--padded page-section">
+            <div className="card__header">
+                <h2 className="card__title">Contacts</h2>
                 <Button variant="link-accent" onClick={() => setShowForm(!showForm)}>
                     {showForm ? 'Cancel' : '+ Add contact'}
                 </Button>
             </div>
 
             {showForm && (
-                <form onSubmit={submit} className="grid grid-cols-2 gap-2 mb-4">
+                <form onSubmit={submit} className="form-grid form-grid--tight card__section">
                     <input required placeholder="Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="input" />
                     <input placeholder="Role" value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })} className="input" />
                     <input type="email" placeholder="Email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="input" />
@@ -203,38 +203,38 @@ function ContactsCard({ company }) {
                         <input type="checkbox" checked={form.is_billing} onChange={(e) => setForm({ ...form, is_billing: e.target.checked })} />
                         Billing contact
                     </label>
-                    <Button type="submit" variant="confirm" className="col-span-2">Save contact</Button>
+                    <Button type="submit" variant="confirm" className="form-grid__full">Save contact</Button>
                 </form>
             )}
 
             {company.contacts.length === 0 ? (
                 <EmptyState text="No contacts yet." />
             ) : (
-                <ul className="text-sm divide-y divide-border">
+                <ul className="detail-list">
                     {company.contacts.map((contact) => (
-                        <li key={contact.id} className="py-2 flex items-center justify-between">
+                        <li key={contact.id} className="detail-list__item detail-list__item--split">
                             <div>
-                                <div className="font-medium">
+                                <div className="detail-list__title">
                                     {contact.name}{contact.role ? ` · ${contact.role}` : ''}
                                 </div>
-                                <div className="text-shadow-grey">{contact.email}</div>
+                                <div className="detail-list__meta">{contact.email}</div>
                             </div>
-                            <div className="flex items-center gap-2">
+                            <div className="detail-list__aside detail-list__aside--tight">
                                 <ContactRoleBadges contact={contact} />
-                                <button onClick={() => toggleFlag(contact, 'is_primary')} className="text-xs text-shadow-grey hover:text-gunmetal">
+                                <button onClick={() => toggleFlag(contact, 'is_primary')} className="text-action text-action--xs">
                                     {contact.is_primary ? 'Unset primary' : 'Make primary'}
                                 </button>
-                                <button onClick={() => toggleFlag(contact, 'is_billing')} className="text-xs text-shadow-grey hover:text-gunmetal">
+                                <button onClick={() => toggleFlag(contact, 'is_billing')} className="text-action text-action--xs">
                                     {contact.is_billing ? 'Unset billing' : 'Make billing'}
                                 </button>
                                 {contact.has_portal_access ? (
                                     <Badge tone="sage" label="Portal access" />
                                 ) : (
-                                    <button onClick={() => inviteToPortal(contact)} className="text-xs text-watermelon hover:underline">
+                                    <button onClick={() => inviteToPortal(contact)} className="link-btn link-btn--accent link-btn--xs">
                                         Invite to portal
                                     </button>
                                 )}
-                                <button onClick={() => deleteContact(contact)} className="text-xs text-watermelon hover:underline">
+                                <button onClick={() => deleteContact(contact)} className="link-btn link-btn--accent link-btn--xs">
                                     Delete
                                 </button>
                             </div>
@@ -257,7 +257,7 @@ function TaskRow({ task }) {
     }
 
     return (
-        <li className="py-1.5 flex items-center justify-between text-sm">
+        <li className="client-detail__task">
             <span>{task.title}</span>
             <button onClick={cycleStatus}>
                 <TaskStatusBadge task={{ ...task, status }} />
@@ -289,17 +289,17 @@ function ProjectsCard({ company }) {
     }
 
     return (
-        <div className="card card--padded mb-6">
-            <div className="flex items-center justify-between mb-3">
-                <h2 className="text-sm font-semibold text-shadow-grey">Projects</h2>
+        <div className="card card--padded page-section">
+            <div className="card__header">
+                <h2 className="card__title">Projects</h2>
                 <Button variant="link-accent" onClick={() => setShowForm(!showForm)}>
                     {showForm ? 'Cancel' : '+ Add project'}
                 </Button>
             </div>
 
             {showForm && (
-                <form onSubmit={submit} className="flex gap-2 mb-4">
-                    <input required placeholder="Project name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="input flex-1" />
+                <form onSubmit={submit} className="inline-form card__section">
+                    <input required placeholder="Project name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="input inline-form__grow" />
                     <Button type="submit" variant="confirm">Save</Button>
                 </form>
             )}
@@ -307,28 +307,28 @@ function ProjectsCard({ company }) {
             {company.projects.length === 0 ? (
                 <EmptyState text="No projects yet." />
             ) : (
-                <div className="divide-y divide-border">
+                <div>
                     {company.projects.map((project) => (
-                        <div key={project.id} className="py-3">
-                            <div className="flex items-center justify-between mb-2">
-                                <Link href={`/projects/${project.id}`} className="text-sm font-medium hover:underline">
+                        <div key={project.id} className="client-detail__project">
+                            <div className="client-detail__project-header">
+                                <Link href={`/projects/${project.id}`} className="link client-detail__project-name">
                                     {project.name}
                                 </Link>
                                 <ProjectStatusBadge project={project} />
                             </div>
-                            <ul className="pl-2">
+                            <ul className="client-detail__tasks">
                                 {project.tasks.map((task) => (
                                     <TaskRow key={task.id} task={task} />
                                 ))}
                             </ul>
-                            <div className="flex gap-2 mt-2">
+                            <div className="client-detail__add-task">
                                 <input
                                     placeholder="New task"
                                     value={taskInputs[project.id] || ''}
                                     onChange={(e) => setTaskInputs({ ...taskInputs, [project.id]: e.target.value })}
-                                    className="border border-border rounded px-2 py-1 text-xs flex-1"
+                                    className="client-detail__task-input"
                                 />
-                                <button onClick={() => addTask(project.id)} className="text-xs font-medium text-fern">Add</button>
+                                <button onClick={() => addTask(project.id)} className="client-detail__task-submit">Add</button>
                             </div>
                         </div>
                     ))}
@@ -340,19 +340,19 @@ function ProjectsCard({ company }) {
 
 function InvoicesCard({ company }) {
     return (
-        <div className="card card--padded mb-6">
-            <h2 className="text-sm font-semibold text-shadow-grey mb-3">Invoices</h2>
+        <div className="card card--padded page-section">
+            <h2 className="section-heading">Invoices</h2>
             {company.invoices.length === 0 ? (
                 <EmptyState text="No invoices yet." />
             ) : (
-                <ul className="text-sm divide-y divide-border">
+                <ul className="detail-list">
                     {company.invoices.map((invoice) => (
-                        <li key={invoice.id} className="py-2 flex items-center justify-between">
-                            <Link href={`/invoices/${invoice.id}`} className="hover:underline">
+                        <li key={invoice.id} className="detail-list__item detail-list__item--split">
+                            <Link href={`/invoices/${invoice.id}`} className="link">
                                 {formatDate(invoice.issued_on)}
                             </Link>
-                            <div className="flex items-center gap-3">
-                                <span className="tabular-nums">{formatCurrency(invoiceTotal(invoice.items, invoice.surcharge))}</span>
+                            <div className="detail-list__aside">
+                                <span className="detail-list__amount">{formatCurrency(invoiceTotal(invoice.items, invoice.surcharge))}</span>
                                 <InvoiceStatusBadge invoice={invoice} />
                             </div>
                         </li>
@@ -366,17 +366,17 @@ function InvoicesCard({ company }) {
 function ProposalsCard({ company }) {
     return (
         <div className="card card--padded">
-            <h2 className="text-sm font-semibold text-shadow-grey mb-3">Proposals</h2>
+            <h2 className="section-heading">Proposals</h2>
             {company.proposals.length === 0 ? (
                 <EmptyState text="No proposals yet." />
             ) : (
-                <ul className="text-sm divide-y divide-border">
+                <ul className="detail-list">
                     {company.proposals.map((proposal) => (
-                        <li key={proposal.id} className="py-2 flex items-center justify-between">
+                        <li key={proposal.id} className="detail-list__item detail-list__item--split">
                             <span>{proposal.title}</span>
-                            <div className="flex items-center gap-3">
+                            <div className="detail-list__aside">
                                 {proposal.estimate_amount && (
-                                    <span className="tabular-nums">{formatCurrency(proposal.estimate_amount)}</span>
+                                    <span className="detail-list__amount">{formatCurrency(proposal.estimate_amount)}</span>
                                 )}
                                 <ProposalStatusBadge proposal={proposal} />
                             </div>
