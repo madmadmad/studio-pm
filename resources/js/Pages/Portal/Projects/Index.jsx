@@ -25,9 +25,9 @@ export default function PortalProjectsIndex({ projects }) {
                         <Link
                             key={project.id}
                             href={`/portal/projects/${project.id}`}
-                            className="flex items-center justify-between px-4 py-3 border-b border-border last:border-b-0 hover:bg-porcelain"
+                            className="list-row"
                         >
-                            <div className="text-sm font-medium">{project.name}</div>
+                            <div className="list-row__title">{project.name}</div>
                             <ProjectStatusBadge project={project} />
                         </Link>
                     ))

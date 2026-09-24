@@ -1,0 +1,17 @@
+// Portal/Projects/Show Overview tab: status and description.
+
+.portal-project {
+    &__label {
+        margin-bottom: var(--space-1);
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+        color: var(--color-shadow-grey);
+    }
+
+    &__description {
+        margin-top: var(--space-4);
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+        white-space: pre-wrap;
+    }
+}

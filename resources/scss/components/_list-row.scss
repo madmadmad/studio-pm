@@ -16,6 +16,11 @@
         background-color: var(--color-porcelain);
     }
 
+    // A row that isn't clickable: no hover highlight.
+    &--static:hover {
+        background-color: transparent;
+    }
+
     &__title {
         font-size: var(--font-size-sm);
         line-height: var(--line-height-sm);
@@ -26,6 +31,10 @@
         font-size: var(--font-size-xs);
         line-height: var(--line-height-xs);
         color: var(--color-shadow-grey);
+
+        &--capitalize {
+            text-transform: capitalize;
+        }
     }
 
     &__aside {

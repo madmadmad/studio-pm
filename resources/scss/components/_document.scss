@@ -1,0 +1,251 @@
+// The client-facing paper sheet for a public invoice or proposal: studio
+// letterhead, parties, title, line items, totals, and the call to action.
+@use '../abstracts' as *;
+
+// Full-page backdrop the sheet sits on.
+.document-page {
+    min-height: 100vh;
+    padding: var(--space-10) var(--space-4);
+}
+
+.document {
+    max-width: var(--size-document);
+    margin-inline: auto;
+    padding: var(--space-15);
+    background-color: var(--color-white);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-base);
+
+    &__logo {
+        width: 11.25rem; // one-off: the lockup's display width (180px)
+        height: auto;
+        margin-bottom: var(--space-8);
+    }
+
+    // Header blocks that end in a rule: parties, the invoice meta line.
+    &__parties,
+    &__meta {
+        margin-bottom: var(--space-8);
+        padding-bottom: var(--space-8);
+        border-bottom: var(--border-width) solid var(--color-border);
+    }
+
+    &__parties {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: var(--space-4);
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+    }
+
+    &__from,
+    &__muted {
+        color: var(--color-shadow-grey);
+    }
+
+    &__to {
+        padding-left: var(--space-5);
+        border-left: var(--border-width) solid var(--color-border);
+    }
+
+    &__party-name {
+        font-weight: var(--font-weight-medium);
+        color: var(--color-gunmetal);
+    }
+
+    &__address {
+        white-space: pre-line;
+    }
+
+    &__title {
+        padding-bottom: var(--space-2);
+        font-family: var(--font-family-display);
+        font-size: var(--font-size-2xl);
+        line-height: var(--line-height-2xl);
+        font-weight: var(--font-weight-extrabold);
+        letter-spacing: var(--letter-spacing-display);
+
+        // No meta line below it (proposals), so more room.
+        &--spaced {
+            padding-bottom: var(--space-5);
+        }
+    }
+
+    // "Invoice " / "Proposal: " before the title, in body type.
+    &__title-prefix {
+        font-family: var(--font-family-sans);
+        font-weight: var(--font-weight-normal);
+        color: var(--color-shadow-grey);
+    }
+
+    &__meta {
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+        color: var(--color-shadow-grey);
+    }
+
+    &__estimate {
+        margin-bottom: var(--space-6);
+        color: var(--color-shadow-grey);
+        font-variant-numeric: tabular-nums;
+    }
+
+    &__body {
+        margin-bottom: var(--space-6);
+        padding-bottom: var(--space-6);
+        border-bottom: var(--border-width) solid var(--color-border);
+    }
+
+    &__items {
+        margin-bottom: var(--space-6);
+    }
+
+    &__section-title {
+        padding-bottom: var(--space-4);
+    }
+
+    &__section-title,
+    &__total-label {
+        font-family: var(--font-family-display);
+        font-size: var(--font-size-lg);
+        line-height: var(--line-height-lg);
+        font-weight: var(--font-weight-extrabold);
+        letter-spacing: var(--letter-spacing-display);
+    }
+
+    // Description | Amount, two-thirds / one-third.
+    &__items-head,
+    &__item {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+    }
+
+    &__items-head {
+        padding-block: var(--space-3);
+        font-size: var(--font-size-xs);
+        line-height: var(--line-height-xs);
+        font-weight: var(--font-weight-medium);
+        color: var(--color-shadow-grey);
+        border-bottom: var(--border-width) solid var(--color-border);
+    }
+
+    &__item {
+        padding-block: var(--space-4);
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+    }
+
+    &__item-name {
+        font-weight: var(--font-weight-medium);
+    }
+
+    &__item-details {
+        margin-top: var(--space-2);
+        font-size: var(--font-size-xs);
+        line-height: var(--line-height-xs);
+        color: var(--color-shadow-grey);
+        white-space: pre-wrap;
+    }
+
+    &__item-amount {
+        text-align: right;
+    }
+
+    &__amount {
+        font-variant-numeric: tabular-nums;
+    }
+
+    &__totals {
+        @include stack(var(--space-1));
+
+        padding-top: var(--space-4);
+        border-top: var(--border-width) solid var(--color-border);
+    }
+
+    &__total-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+
+        &--muted {
+            font-size: var(--font-size-sm);
+            line-height: var(--line-height-sm);
+            color: var(--color-shadow-grey);
+        }
+
+        &--grand {
+            padding-top: var(--space-2);
+        }
+
+        // A lone total with its own rule above (proposal estimate).
+        &--ruled {
+            padding-top: var(--space-4);
+            border-top: var(--border-width) solid var(--color-border);
+        }
+    }
+
+    &__total-value {
+        font-size: var(--font-size-lg);
+        line-height: var(--line-height-lg);
+        font-weight: var(--font-weight-semibold);
+        font-variant-numeric: tabular-nums;
+    }
+
+    // "Paid on Sep 3. Thank you!" / "Accepted..."
+    &__notice {
+        padding: var(--space-4);
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+        font-weight: var(--font-weight-medium);
+        color: var(--color-fern);
+        background-color: var(--color-fern-soft);
+        border-radius: var(--radius-base);
+    }
+
+    &__pay-label {
+        margin-bottom: var(--space-2);
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+    }
+
+    &__pay-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-3);
+    }
+
+    &__pay-error {
+        margin-top: var(--space-2);
+    }
+
+    &__instructions {
+        margin-top: var(--space-6);
+        padding-top: var(--space-6);
+        border-top: var(--border-width) solid var(--color-border);
+    }
+
+    &__instructions-title {
+        margin-bottom: var(--space-1);
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+        font-weight: var(--font-weight-semibold);
+    }
+
+    &__instructions-text,
+    &__note {
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+        color: var(--color-shadow-grey);
+    }
+
+    &__instructions-text {
+        white-space: pre-wrap;
+    }
+
+    &__due {
+        margin-top: var(--space-4);
+        font-size: var(--font-size-xs);
+        line-height: var(--line-height-xs);
+        color: var(--color-shadow-grey);
+    }
+}

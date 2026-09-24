@@ -12,32 +12,32 @@ function InvoiceItems({ invoice }) {
     const total = invoiceTotal(invoice.items, invoice.surcharge);
 
     return (
-        <div className="mb-6">
-            <div className="py-3 grid grid-cols-12 text-xs font-medium text-shadow-grey border-b border-border">
-                <div className="col-span-8">Description</div>
-                <div className="col-span-4 text-right">Amount</div>
+        <div className="document__items">
+            <div className="document__items-head">
+                <div>Description</div>
+                <div className="document__item-amount">Amount</div>
             </div>
 
             {invoice.items.map((item) => (
-                <div key={item.id} className="py-4 grid grid-cols-12 text-sm">
-                    <div className="col-span-8">
-                        <div className="font-medium">{item.description}</div>
+                <div key={item.id} className="document__item">
+                    <div>
+                        <div className="document__item-name">{item.description}</div>
                         {item.details && item.details !== item.description && (
-                            <div className="text-xs text-shadow-grey mt-2 whitespace-pre-wrap">{item.details}</div>
+                            <div className="document__item-details">{item.details}</div>
                         )}
                     </div>
-                    <div className="col-span-4 text-right tabular-nums">{formatCurrency(item.amount)}</div>
+                    <div className="document__item-amount document__amount">{formatCurrency(item.amount)}</div>
                 </div>
             ))}
 
-            <div className="pt-4 border-t border-border space-y-1">
-                <div className="flex items-center justify-between text-sm text-shadow-grey">
+            <div className="document__totals">
+                <div className="document__total-row document__total-row--muted">
                     <div>Subtotal</div>
-                    <div className="tabular-nums">{formatCurrency(subtotal)}</div>
+                    <div className="document__amount">{formatCurrency(subtotal)}</div>
                 </div>
-                <div className="flex items-center justify-between pt-2">
-                    <div className="font-display text-lg font-semibold">Total</div>
-                    <div className="tabular-nums text-lg font-semibold">{formatCurrency(total)}</div>
+                <div className="document__total-row document__total-row--grand">
+                    <div className="document__total-label">Total</div>
+                    <div className="document__total-value">{formatCurrency(total)}</div>
                 </div>
             </div>
         </div>
@@ -62,32 +62,32 @@ export default function InvoiceShow({ invoice, studio }) {
     }
 
     return (
-        <div className="min-h-screen bg-porcelain text-gunmetal px-4 py-10">
+        <div className="document-page">
             <Head title={`Invoice — ${invoice.company.name}`} />
-            <div className="max-w-[800px] mx-auto p-[60px] rounded-[6px] bg-white border border-border">
-                <img src="/images/studio-lockup.svg" alt="Studio" className="w-[180px] h-auto mb-8" />
+            <div className="document">
+                <img src="/images/studio-lockup.svg" alt="Studio" className="document__logo" />
 
-                <div className="grid grid-cols-2 gap-4 pb-8 mb-8 border-b border-border text-sm">
-                    <div className="text-shadow-grey">
-                        <div className="font-medium text-gunmetal">{studio.name}</div>
-                        {studio.address && <div className="whitespace-pre-line">{studio.address}</div>}
+                <div className="document__parties">
+                    <div className="document__from">
+                        <div className="document__party-name">{studio.name}</div>
+                        {studio.address && <div className="document__address">{studio.address}</div>}
                         {studio.email && <div>{studio.email}</div>}
                         {studio.phone && <div>{studio.phone}</div>}
                         {studio.website && <div>{studio.website}</div>}
                     </div>
-                    <div className="border-l border-border pl-5">
-                        <div className="text-xs font-semibold text-shadow-grey mb-2">Client</div>
-                        <div className="font-medium text-gunmetal">{invoice.company.name}</div>
-                        {invoice.project && <div className="text-shadow-grey">{invoice.project.name}</div>}
-                        {invoice.project?.po_number && <div className="text-shadow-grey">PO #{invoice.project.po_number}</div>}
+                    <div className="document__to">
+                        <div className="section-label">Client</div>
+                        <div className="document__party-name">{invoice.company.name}</div>
+                        {invoice.project && <div className="document__muted">{invoice.project.name}</div>}
+                        {invoice.project?.po_number && <div className="document__muted">PO #{invoice.project.po_number}</div>}
                     </div>
                 </div>
 
-                <h1 className="font-display text-2xl font-semibold pb-2">
-                    <span className="font-sans font-normal text-shadow-grey">Invoice </span>
+                <h1 className="document__title">
+                    <span className="document__title-prefix">Invoice </span>
                     #{invoice.invoice_number}
                 </h1>
-                <div className="text-sm text-shadow-grey pb-8 mb-8 border-b border-border">
+                <div className="document__meta">
                     Issued {formatDate(invoice.issued_on)} &middot; Due {formatDate(invoice.due_on)}
                     {paymentTermsLabel(invoice.payment_terms) !== 'Custom' && ` (${paymentTermsLabel(invoice.payment_terms)})`}
                     {invoice.contact && <> &middot; Billed to {invoice.contact.name}</>}
@@ -96,18 +96,18 @@ export default function InvoiceShow({ invoice, studio }) {
                 <InvoiceItems invoice={invoice} />
 
                 {invoice.status === 'paid' ? (
-                    <div className="rounded-lg p-4 bg-fern-soft text-fern text-sm font-medium">
+                    <div className="document__notice">
                         Paid{paidAt ? ` on ${formatDate(paidAt)}` : ''}. Thank you!
                     </div>
                 ) : invoice.status === 'sent' ? (
                     <div>
-                        <div className="mb-2 text-sm text-gunmetal">Pay online</div>
-                        <div className="flex flex-wrap gap-3">
+                        <div className="document__pay-label">Pay online</div>
+                        <div className="document__pay-actions">
                             {invoice.surcharge && (
                                 <button
                                     onClick={() => pay('card')}
                                     disabled={paying !== null}
-                                    className="bg-watermelon text-white text-sm font-medium px-4 py-2 rounded hover:bg-watermelon/90 transition-colors disabled:opacity-50"
+                                    className="btn btn--lg btn--accent"
                                 >
                                     {paying === 'card' ? 'Redirecting…' : 'Pay by card — 3% fee applies'}
                                 </button>
@@ -115,24 +115,24 @@ export default function InvoiceShow({ invoice, studio }) {
                             <button
                                 onClick={() => pay('ach')}
                                 disabled={paying !== null}
-                                className="bg-gunmetal text-white text-sm font-medium px-4 py-2 rounded hover:bg-gunmetal/90 transition-colors disabled:opacity-50"
+                                className="btn btn--lg btn--primary"
                             >
                                 {paying === 'ach' ? 'Redirecting…' : 'Pay by ACH — no fee'}
                             </button>
                         </div>
-                        {error && <div className="text-sm text-watermelon mt-2">{error}</div>}
+                        {error && <div className="form-message form-message--error document__pay-error">{error}</div>}
 
                         {studio.payment_instructions && (
-                            <div className="mt-6 pt-6 border-t border-border">
-                                <div className="mb-1 text-sm font-semibold text-gunmetal">Prefer to pay by check?</div>
-                                <div className="text-sm text-shadow-grey whitespace-pre-wrap">{studio.payment_instructions}</div>
+                            <div className="document__instructions">
+                                <div className="document__instructions-title">Prefer to pay by check?</div>
+                                <div className="document__instructions-text">{studio.payment_instructions}</div>
                             </div>
                         )}
 
-                        <div className="text-xs text-shadow-grey mt-4">Due {formatDate(invoice.due_on)}</div>
+                        <div className="document__due">Due {formatDate(invoice.due_on)}</div>
                     </div>
                 ) : (
-                    <div className="text-sm text-shadow-grey">Due {formatDate(invoice.due_on)}.</div>
+                    <div className="document__note">Due {formatDate(invoice.due_on)}.</div>
                 )}
             </div>
         </div>
