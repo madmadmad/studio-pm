@@ -1,12 +1,12 @@
-// Row of MetricCards at the top of a dashboard.
+// A row of MetricCards (dashboards, bookkeeping, a project's overview).
+// Responsive on its own: as many columns as fit at --size-metric-card-min
+// or wider, stretching to fill the row, so it wraps as space runs out.
+// min() lets a single card shrink below the minimum on a very narrow screen
+// instead of overflowing.
 
 .metric-grid {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(var(--size-metric-card-min), 100%), 1fr));
     gap: var(--space-4);
     margin-bottom: var(--space-section);
-
-    &--3 {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
 }

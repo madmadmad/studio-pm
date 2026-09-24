@@ -134,7 +134,7 @@
 
     // Single knob for corner rounding app-wide. --radius-pill is a shape
     // (pills, circles), not an amount, so it's deliberately separate.
-    --radius-base: 0.22rem;
+    --radius-base: 0.35rem;
     --radius-pill: 9999px;
 
     // Shell layers only (content panel, drawer) -- large-scale rounding
@@ -185,6 +185,7 @@
     --size-content: 56rem; // detail/editor page column
     --size-portal: 56rem;
     --size-row-action: 1.75rem; // the square "open" button ending a list row
+    --size-metric-card-min: 13.75rem; // 220px: narrowest a metric card gets before the grid wraps
 
     // Icons. The default size (18px) is set app-wide in JS -- the
     // IconContext in app.jsx -- because Phosphor sizes via SVG attributes.

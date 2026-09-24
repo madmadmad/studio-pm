@@ -49,7 +49,7 @@ export default function BookkeepingIndex({ transactions, summary }) {
                 }
             />
 
-            <div className="metric-grid metric-grid--3">
+            <div className="metric-grid">
                 <MetricCard label={`Income (${summary.month})`} value={formatCurrency(summary.income)} />
                 <MetricCard label="Expenses" value={formatCurrency(summary.expenses)} />
                 <MetricCard label="Net" value={formatCurrency(summary.net)} />

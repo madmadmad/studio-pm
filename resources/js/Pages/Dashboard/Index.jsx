@@ -15,7 +15,7 @@ export default function DashboardIndex({ metrics, recentInvoices }) {
                 subtitle="Snapshot of billing and client activity."
             />
 
-            <div className="metric-grid metric-grid--3">
+            <div className="metric-grid">
                 <MetricCard label="Outstanding" value={formatCurrency(metrics.outstanding)} />
                 <MetricCard label="Unbilled hours" value={`${metrics.unbilled_hours}h`} />
                 <MetricCard label="Active clients" value={metrics.active_clients} />

@@ -4,6 +4,7 @@ import { CaretRight, Check, DotsSixVertical, DownloadSimple, Paperclip, PencilSi
 import AppLayout from '../../Layouts/AppLayout';
 import Button from '../../Components/Button';
 import EmptyState from '../../Components/EmptyState';
+import MetricCard from '../../Components/MetricCard';
 import Badge from '../../Components/Badge';
 import RichTextEditor from '../../Components/RichTextEditor';
 import RichTextView from '../../Components/RichTextView';
@@ -184,33 +185,15 @@ function OverviewTab({ project }) {
             {project.description && <p className="project-overview__description page-section">{project.description}</p>}
             <ContactField project={project} />
             <PoNumberField project={project} />
-            <div className={`project-overview__stats${budget > 0 ? ' project-overview__stats--wide' : ''}`}>
-                <div className="card card--padded metric-card">
-                    <div className="metric-card__label">Tasks</div>
-                    <div className="metric-card__value">{doneTasks}/{project.tasks.length}</div>
-                </div>
-                <div className="card card--padded metric-card">
-                    <div className="metric-card__label">Hours logged</div>
-                    <div className="metric-card__value">{totalHours}h</div>
-                </div>
-                <div className="card card--padded metric-card">
-                    <div className="metric-card__label">Unbilled hours</div>
-                    <div className="metric-card__value">{unbilledHours}h</div>
-                </div>
-                <div className="card card--padded metric-card">
-                    <div className="metric-card__label">Total invoiced</div>
-                    <div className="metric-card__value">{formatCurrency(totalInvoiced)}</div>
-                </div>
+            <div className="metric-grid">
+                <MetricCard label="Tasks" value={`${doneTasks}/${project.tasks.length}`} />
+                <MetricCard label="Hours logged" value={`${totalHours}h`} />
+                <MetricCard label="Unbilled hours" value={`${unbilledHours}h`} />
+                <MetricCard label="Total invoiced" value={formatCurrency(totalInvoiced)} />
                 {budget > 0 && (
                     <>
-                        <div className="card card--padded metric-card">
-                            <div className="metric-card__label">Budget</div>
-                            <div className="metric-card__value">{formatCurrency(budget)}</div>
-                        </div>
-                        <div className="card card--padded metric-card">
-                            <div className="metric-card__label">Remaining</div>
-                            <div className={`metric-card__value${remaining < 0 ? ' metric-card__value--negative' : ''}`}>{formatCurrency(remaining)}</div>
-                        </div>
+                        <MetricCard label="Budget" value={formatCurrency(budget)} />
+                        <MetricCard label="Remaining" value={formatCurrency(remaining)} negative={remaining < 0} />
                     </>
                 )}
             </div>

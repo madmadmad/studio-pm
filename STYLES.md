@@ -43,7 +43,7 @@ Every design value is a custom property on `:root`, defined in `base/_tokens.scs
 | Elevation | `--shadow-popover`, `--shadow-overlay`, `--shadow-drawer`, `--z-overlay` | |
 | Motion | `--duration-fast`, `--ease-standard`, `--ease-enter`, `--ease-exit` | |
 | Shell motion | `--duration-panel`, `--duration-drawer`, `--motion-panel-offset` | Page-change slide and drawer slide in/out; enter with `--ease-enter`, exit with `--ease-exit` |
-| Sizes | `--size-sidebar`, `--size-drawer`, `--size-drawer-wide`, `--size-form`, `--size-row-action` | Recurring container widths. Drawers come in two widths: standard, and wide (`<Drawer size="wide">`) for proposals and invoices |
+| Sizes | `--size-sidebar`, `--size-drawer`, `--size-drawer-wide`, `--size-form`, `--size-row-action`, `--size-metric-card-min` | Recurring container widths. Drawers come in two widths: standard, and wide (`<Drawer size="wide">`) for proposals and invoices |
 | Icon sizes | `--size-icon-sm`, `--size-icon-lg` | Override the 18px default (set by `IconContext` in `app.jsx`) for an icon given a class; `.icon-btn--lg` applies the large size |
 
 Breakpoints can't be custom properties, because `var()` doesn't work in media queries. They live in a Sass map in `abstracts/_breakpoints.scss` (`sm` 40rem, `md` 48rem, `lg` 64rem, `xl` 80rem):

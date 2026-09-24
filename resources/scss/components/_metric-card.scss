@@ -1,7 +1,10 @@
-// A single headline number with its caption, on a .card.
-// Used by Components/MetricCard.jsx.
+// A single headline number with its caption, on a .card -- filled
+// porcelain rather than the card's white. Used by Components/MetricCard.jsx.
+// (Loaded after .card, so this background wins at equal specificity.)
 
 .metric-card {
+    background-color: var(--color-porcelain);
+
     &__label {
         margin-bottom: var(--space-1);
         font-size: var(--font-size-xs);
