@@ -118,6 +118,21 @@
         box-shadow: var(--shadow-drawer);
     }
 
+    // Tracking samples: one line per type size, its measured tracking beside it.
+    &__tracking {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-3);
+    }
+
+    &__tracking-row {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: var(--space-4);
+        max-width: var(--style-guide-demo-width);
+    }
+
     &__row {
         display: flex;
         flex-wrap: wrap;

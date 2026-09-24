@@ -109,6 +109,13 @@
         gap: var(--space-2);
     }
 
+    // A line item's title (invoice detail), above its details in
+    // .table__meta.
+    &__item-name {
+        font-size: var(--font-size-xs);
+        font-weight: var(--font-weight-medium);
+    }
+
     // Small secondary line under a cell's main value ("Invited Sep 2").
     &__meta {
         margin-top: var(--space-1);
@@ -117,6 +124,7 @@
     // Keeps the line breaks a user typed (line-item details).
     &__meta--multiline {
         white-space: pre-wrap;
+        max-width: 80%;
     }
 
     &__meta,

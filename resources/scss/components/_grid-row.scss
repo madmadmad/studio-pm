@@ -4,8 +4,8 @@
 //
 // The project list pattern (every tab of Projects/Show): rows are
 // --link (the whole row opens the item's drawer) and --action (a fixed
-// trailing column for the .row-action caret; give the --head row an empty
-// cell there so the columns stay aligned).
+// trailing column for the row's delete and .row-action caret; give the
+// --head row an empty cell there so the columns stay aligned).
 
 .grid-row {
     display: grid;
@@ -21,8 +21,26 @@
         border-bottom: none;
     }
 
+    // The trailing column holds delete + open, both --size-row-action
+    // squares, at a fixed width so rows line up whether or not a row
+    // offers delete.
     &--action {
-        grid-template-columns: repeat(12, minmax(0, 1fr)) var(--size-row-action);
+        grid-template-columns: repeat(12, minmax(0, 1fr)) calc(var(--size-row-action) * 2 + var(--space-2));
+    }
+
+    &__actions {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: var(--space-2);
+    }
+
+    // The row's trash icon, centered in a --size-row-action square so it
+    // matches the open caret beside it.
+    &__delete {
+        justify-content: center;
+        width: var(--size-row-action);
+        height: var(--size-row-action);
     }
 
     &--link {

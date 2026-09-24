@@ -310,7 +310,7 @@ export default function InvoiceDetail({ invoice: initialInvoice, studio, invoici
                                 {invoice.items.map((item) => (
                                     <tr key={item.id}>
                                         <td>
-                                            {item.description}
+                                            <div className="table__item-name">{item.description}</div>
                                             {item.details && item.details !== item.description && (
                                                 <div className="table__meta table__meta--multiline">{item.details}</div>
                                             )}

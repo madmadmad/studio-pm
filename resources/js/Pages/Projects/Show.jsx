@@ -243,14 +243,40 @@ function TabToolbar({ summary, addLabel, onAdd, disabled }) {
     );
 }
 
-// The trailing "open" caret on a list row. No handler of its own: its
-// click bubbles to the row, which opens the drawer -- it's here as the
-// keyboard-reachable way in.
-function RowOpen({ label }) {
+// The end of a list row: a delete button (when the item can be deleted)
+// and the "open" caret. The caret has no handler of its own -- its click
+// bubbles to the row, which opens the drawer; it's the keyboard-reachable
+// way in. Delete stops its click there, asks first with `confirmMessage`,
+// then runs `onDelete` (which should refresh the list). Pass no onDelete
+// for an item the API won't delete (accepted, paid, billed), and the
+// column keeps its width so rows stay aligned.
+function RowActions({ openLabel, deleteLabel, confirmMessage, onDelete }) {
+    const [deleting, setDeleting] = useState(false);
+
+    async function remove(e) {
+        e.stopPropagation();
+        if (deleting || !confirm(confirmMessage)) return;
+        setDeleting(true);
+        try {
+            await onDelete();
+        } catch (err) {
+            alert(err.message || 'Could not delete this.');
+        } finally {
+            setDeleting(false);
+        }
+    }
+
     return (
-        <button title={label} className="row-action">
-            <CaretRight size={14} weight="bold" />
-        </button>
+        <div className="grid-row__actions">
+            {onDelete && (
+                <button onClick={remove} disabled={deleting} title={deleteLabel} className="icon-btn icon-btn--danger grid-row__delete">
+                    <Trash />
+                </button>
+            )}
+            <button title={openLabel} className="row-action">
+                <CaretRight size={14} weight="bold" />
+            </button>
+        </div>
     );
 }
 
@@ -298,7 +324,15 @@ function TaskRow({ task, teamNames, onChange, onOpen }) {
                     <TaskStatusBadge task={task} />
                 </button>
             </div>
-            <RowOpen label="Open task" />
+            <RowActions
+                openLabel="Open task"
+                deleteLabel="Delete task"
+                confirmMessage={`Delete the task "${task.title}"? This can't be undone.`}
+                onDelete={async () => {
+                    await api.delete(`/api/tasks/${task.id}`);
+                    onChange();
+                }}
+            />
         </div>
     );
 }
@@ -756,7 +790,15 @@ function NoteRow({ note, onOpen }) {
             </div>
             <div className="note-list__author">{note.user?.name ?? '—'}</div>
             <div className="note-list__date">{formatDate(note.updated_at)}</div>
-            <RowOpen label="Open note" />
+            <RowActions
+                openLabel="Open note"
+                deleteLabel="Delete note"
+                confirmMessage={`Delete the note "${note.title || 'Untitled note'}"? This can't be undone.`}
+                onDelete={async () => {
+                    await api.delete(`/api/notes/${note.id}`);
+                    reload();
+                }}
+            />
         </div>
     );
 }
@@ -922,7 +964,7 @@ function MessageThreadRow({ thread, currentUserId, onOpen }) {
             </div>
             <div className="project-messages__participants">{participants.map((p) => p.name).join(', ') || '—'}</div>
             <div className="project-messages__date" title={formatDateTime(lastActivity)}>{formatDate(lastActivity)}</div>
-            <RowOpen label="Open thread" />
+            <RowActions openLabel="Open thread" />
         </div>
     );
 }
@@ -1013,7 +1055,7 @@ function MessagesTab({ project }) {
     );
 }
 
-function TimeEntryRow({ entry, onOpen }) {
+function TimeEntryRow({ entry, canDelete, onOpen }) {
     return (
         <div onClick={() => onOpen(entry.id)} className="grid-row grid-row--action grid-row--link">
             <div className="time-list__date">{formatDate(entry.date)}</div>
@@ -1024,7 +1066,15 @@ function TimeEntryRow({ entry, onOpen }) {
             <div className="time-list__status">
                 {entry.billed ? <Badge tone="fern" label="Billed" /> : <Badge tone="neutral" label="Unbilled" />}
             </div>
-            <RowOpen label="Open entry" />
+            <RowActions
+                openLabel="Open entry"
+                deleteLabel="Delete entry"
+                confirmMessage={`Delete the ${entry.hours}h entry from ${formatDate(entry.date)}? This can't be undone.`}
+                onDelete={canDelete ? async () => {
+                    await api.delete(`/api/time-entries/${entry.id}`);
+                    reload();
+                } : null}
+            />
         </div>
     );
 }
@@ -1214,6 +1264,7 @@ function NewTimeEntryDrawer({ project, onClose }) {
 }
 
 function TimeTab({ project }) {
+    const currentUser = usePage().props.auth?.user;
     const [creating, setCreating] = useState(false);
     const [selectedEntryId, setSelectedEntryId] = useState(null);
     const selectedEntry = project.time_entries.find((e) => e.id === selectedEntryId) || null;
@@ -1234,7 +1285,13 @@ function TimeTab({ project }) {
                             <div />
                         </div>
                         {project.time_entries.map((entry) => (
-                            <TimeEntryRow key={entry.id} entry={entry} onOpen={setSelectedEntryId} />
+                            <TimeEntryRow
+                                key={entry.id}
+                                entry={entry}
+                                // Same rule as the API: a manager, or the person who logged it.
+                                canDelete={currentUser?.role === 'manager' || entry.user_id === currentUser?.id}
+                                onOpen={setSelectedEntryId}
+                            />
                         ))}
                     </>
                 )}
@@ -1262,7 +1319,16 @@ function ProposalRow({ proposal, onOpen }) {
                 {proposal.estimate_amount ? formatCurrency(proposal.estimate_amount) : '—'}
             </div>
             <div className="project-proposals__status"><ProposalStatusBadge proposal={proposal} /></div>
-            <RowOpen label="Open proposal" />
+            <RowActions
+                openLabel="Open proposal"
+                deleteLabel="Delete proposal"
+                confirmMessage={`Delete the proposal "${proposal.title}"? This can't be undone.`}
+                // Accepted proposals can't be deleted -- unaccept first.
+                onDelete={proposal.status !== 'accepted' ? async () => {
+                    await api.delete(`/api/proposals/${proposal.id}`);
+                    reload();
+                } : null}
+            />
         </div>
     );
 }
@@ -1617,7 +1683,16 @@ function InvoiceRow({ invoice, onOpen, loading }) {
             <div className="project-billing__issued">{formatDate(invoice.issued_on)}</div>
             <div className="project-billing__total">{formatCurrency(invoiceTotal(invoice.items, invoice.surcharge))}</div>
             <div className="project-billing__status"><InvoiceStatusBadge invoice={invoice} /></div>
-            <RowOpen label="Open invoice" />
+            <RowActions
+                openLabel="Open invoice"
+                deleteLabel="Delete invoice"
+                confirmMessage={`Delete invoice #${invoice.invoice_number} (${formatCurrency(invoiceTotal(invoice.items, invoice.surcharge))})? Its time and expenses go back to unbilled. This can't be undone.`}
+                // Paid invoices can't be deleted.
+                onDelete={invoice.status !== 'paid' ? async () => {
+                    await api.delete(`/api/invoices/${invoice.id}`);
+                    reload();
+                } : null}
+            />
         </div>
     );
 }
@@ -1918,7 +1993,16 @@ function ExpenseRow({ expense, onOpen }) {
             <div className="project-expenses__name">{expense.name}</div>
             <div className="project-expenses__status"><ExpenseStatusBadge expense={expense} /></div>
             <div className="project-expenses__amount">{formatCurrency(expense.amount)}</div>
-            <RowOpen label="Open expense" />
+            <RowActions
+                openLabel="Open expense"
+                deleteLabel="Delete expense"
+                confirmMessage={`Delete the expense "${expense.name}"? This can't be undone.`}
+                // Billed expenses can't be deleted -- detach from the invoice first.
+                onDelete={expense.billing_status === 'unbilled' ? async () => {
+                    await api.delete(`/api/expenses/${expense.id}`);
+                    reload();
+                } : null}
+            />
         </div>
     );
 }

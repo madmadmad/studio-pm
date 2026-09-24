@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Head } from '@inertiajs/react';
 import { CheckCircle, Copy, DownloadSimple, Eye, PaperPlaneTilt, PencilSimple, Trash } from '@phosphor-icons/react';
 import AppLayout from '../../Layouts/AppLayout';
@@ -103,6 +103,44 @@ function ShellTokenTable() {
     );
 }
 
+const TYPE_SIZES = ['2xs', 'xs', 'sm', 'base', 'lg', 'xl', '2xl'];
+
+// One sample line per type size, with the tracking the letter-spacing
+// curve gives it -- read back from the rendered text, so this shows what
+// the real CSS produces as the two tokens are tuned.
+function TrackingSamples() {
+    const refs = useRef({});
+    const [measured, setMeasured] = useState({});
+
+    useEffect(() => {
+        setMeasured(Object.fromEntries(TYPE_SIZES.map((size) => {
+            const style = getComputedStyle(refs.current[size]);
+            const fontSize = parseFloat(style.fontSize);
+            const spacing = parseFloat(style.letterSpacing) || 0;
+            return [size, { fontSize, spacing, em: spacing / fontSize }];
+        })));
+    }, []);
+
+    return (
+        <div className="style-guide__tracking">
+            {TYPE_SIZES.map((size) => (
+                <div key={size} className="style-guide__tracking-row">
+                    <span
+                        ref={(el) => { refs.current[size] = el; }}
+                        style={{ fontSize: `var(--font-size-${size})`, lineHeight: `var(--line-height-${size})` }}
+                    >
+                        Studio operations
+                    </span>
+                    <span className="style-guide__caption">
+                        --font-size-{size}
+                        {measured[size] && ` · ${measured[size].fontSize}px · ${measured[size].spacing.toFixed(2)}px (${measured[size].em.toFixed(3)}em)`}
+                    </span>
+                </div>
+            ))}
+        </div>
+    );
+}
+
 export default function StyleGuide() {
     return (
         <AppLayout>
@@ -119,6 +157,10 @@ export default function StyleGuide() {
                             <Swatch key={varName} name={name} varName={varName} />
                         ))}
                     </div>
+                </Section>
+
+                <Section title="Tracking" description="Letter-spacing follows font size: scale × size + offset, set on every element in base/_elements.scss. Tune the curve with --letter-spacing-scale and --letter-spacing-offset in base/_tokens.scss. Display headings opt out with --letter-spacing-display.">
+                    <TrackingSamples />
                 </Section>
 
                 <Section title="Shell" description="The app frame's three layers, back to front: canvas, content panel, drawer. Tokens in base/_tokens.scss; used by layout/_app-shell.scss and components/_drawer.scss only.">

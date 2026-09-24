@@ -85,7 +85,17 @@
     --font-weight-bold: 700; // buttons
     --font-weight-extrabold: 700; // display headings
 
-    // One tracking value for body text everywhere, one for display.
+    // Tracking follows font size: every element gets
+    //   letter-spacing = scale * its font size + offset
+    // (see base/_elements.scss). A negative scale with a small positive
+    // offset tightens larger text more than smaller -- about -0.009em at
+    // 12px, -0.014em at 16px, -0.021em at 28px, close to Inter's own
+    // recommended tracking. These two are the knobs for the whole curve.
+    --letter-spacing-scale: -0.03em;
+    --letter-spacing-offset: 0.015625rem; // 0.25px
+
+    // Fixed tracking, for the few places that opt out of the curve: the
+    // display headings, and the totals figures.
     --letter-spacing-body: -0.018em;
     --letter-spacing-display: -0.05rem;
 

@@ -35,6 +35,7 @@ Every design value is a custom property on `:root`, defined in `base/_tokens.scs
 | Color | `--color-gunmetal`, `--color-watermelon-soft`, `--color-scrim` | Brand palette names, plus on-dark text, scrims and hover shades |
 | Shell color | `--color-canvas`, `--color-panel` | The dark frame and the light surface each page sits in |
 | Type | `--font-size-sm` + `--line-height-sm`, `--font-weight-semibold` | Sizes come in pairs; set both |
+| Tracking | `--letter-spacing-scale`, `--letter-spacing-offset` | Letter-spacing follows font size automatically (scale × size + offset, on every element), so don't set it per rule. Opt out with `--letter-spacing-display` (display headings) or `--letter-spacing-body` |
 | Spacing | `--space-1` … `--space-16` | Step numbers follow the old 4px scale (`--space-3` = 0.75rem) |
 | Semantic spacing | `--space-panel`, `--space-section`, `--space-page` | Reach for these first |
 | Radius | `--radius-base`, `--radius-pill` | One knob for all component corner rounding |
