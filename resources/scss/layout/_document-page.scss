@@ -1,0 +1,6 @@
+// Full-page backdrop the public invoice/proposal .document sheet sits on.
+
+.document-page {
+    min-height: 100vh;
+    padding: var(--space-10) var(--space-4);
+}

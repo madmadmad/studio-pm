@@ -2,12 +2,6 @@
 // letterhead, parties, title, line items, totals, and the call to action.
 @use '../abstracts' as *;
 
-// Full-page backdrop the sheet sits on.
-.document-page {
-    min-height: 100vh;
-    padding: var(--space-10) var(--space-4);
-}
-
 .document {
     max-width: var(--size-document);
     margin-inline: auto;

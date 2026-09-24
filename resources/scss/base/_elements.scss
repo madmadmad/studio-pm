@@ -1,11 +1,7 @@
 // ELEMENTS -- global defaults for bare HTML elements (body, a, button,
 // input...), applied without a class on every instance. Anything tied to
-// a specific UI piece belongs in components/ instead.
-//
-// Unlayered for now, like the old base.css: these intentionally beat any
-// Tailwind utility on the same element (e.g. `button` stays bold even
-// where a leftover `font-medium` sits on it). They move into the `base`
-// layer once Tailwind is removed.
+// a specific UI piece belongs in components/ instead. Loaded into the
+// `base` cascade layer by app.scss, so any component class overrides it.
 
 body {
     background-color: var(--color-porcelain);
