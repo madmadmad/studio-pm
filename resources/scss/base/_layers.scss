@@ -1,0 +1,7 @@
+// Cascade layer order -- forwarded first so it's the first rule emitted.
+//
+// While Tailwind still runs as its own Vite entry, this mirrors Tailwind's
+// layer order so both stylesheets agree on it regardless of load order.
+// The reset sits in `base`, below Tailwind's `utilities`; unlayered rules
+// (elements, components) beat every layer.
+@layer theme, base, components, utilities;

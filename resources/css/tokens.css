@@ -1,7 +1,9 @@
 /*
- * DESIGN TOKENS -- the knobs. Change a value here and it applies app-wide.
- * Nothing in this file renders anything on its own; base.css and
- * components.css consume these via var(--...).
+ * TAILWIND THEME -- temporary. The source of truth for tokens is now
+ * resources/scss/base/_tokens.scss. This @theme block stays only so the
+ * Tailwind utilities still in the markup (text-shadow-grey, bg-porcelain,
+ * font-display...) keep generating until Tailwind is removed. Keep the
+ * values here identical to the Sass tokens.
  */
 
 @theme {
@@ -50,104 +52,4 @@
     --radius-sm: var(--radius-app);
     --radius-md: var(--radius-app);
     --radius-lg: var(--radius-app);
-}
-
-/*
- * Type scale in use app-wide (documented, not enforced -- these are
- * ordinary Tailwind size utilities, listed here so the convention lives
- * in one place instead of being guessed from existing pages):
- *   text-xs    meta text, field labels, badges, table captions
- *   text-sm    body copy, form controls, table cells, buttons
- *   text-base  rarely used -- prefer text-sm for UI, font-display for headings
- *   font-display (+ a size utility) headings and headline numerals
- *
- * Spacing scale in use app-wide (also Tailwind defaults, documented for
- * the same reason):
- *   p-4 / p-5   card and panel padding
- *   px-3 py-1.5 / px-3 py-2   button / field padding (see components.css)
- *   gap-2 / gap-3   spacing between controls in a row (buttons, filters)
- */
-
-/*
- * Self-hosted, served from /public/webfonts (NOT /public/build) so it
- * survives `npm run build` -- Vite empties its whole outDir every build.
- * Inter for all body/UI text; Inter Display (a distinct cut tuned for
- * larger sizes) for headlines.
- */
-@font-face {
-    font-family: 'Inter';
-    src: url('/webfonts/Inter/Inter-Regular.woff2') format('woff2');
-    font-weight: 400;
-    font-style: normal;
-    font-display: swap;
-}
-@font-face {
-    font-family: 'Inter';
-    src: url('/webfonts/Inter/Inter-Medium.woff2') format('woff2');
-    font-weight: 500;
-    font-style: normal;
-    font-display: swap;
-}
-@font-face {
-    font-family: 'Inter';
-    src: url('/webfonts/Inter/Inter-SemiBold.woff2') format('woff2');
-    font-weight: 600;
-    font-style: normal;
-    font-display: swap;
-}
-@font-face {
-    font-family: 'Inter Display';
-    src: url('/webfonts/InterDisplay/InterDisplay-Medium.woff2') format('woff2');
-    font-weight: 500;
-    font-style: normal;
-    font-display: swap;
-    unicode-range: U+0-2F, U+3A-10FFFF;
-}
-@font-face {
-    font-family: 'Inter Display';
-    src: url('/webfonts/InterDisplay/InterDisplay-SemiBold.woff2') format('woff2');
-    font-weight: 600;
-    font-style: normal;
-    font-display: swap;
-    unicode-range: U+0-2F, U+3A-10FFFF;
-}
-@font-face {
-    font-family: 'Inter Display';
-    src: url('/webfonts/InterDisplay/InterDisplay-Bold.woff2') format('woff2');
-    font-weight: 700;
-    font-style: normal;
-    font-display: swap;
-    unicode-range: U+0-2F, U+3A-10FFFF;
-}
-@font-face {
-    font-family: 'Inter Display';
-    src: url('/webfonts/InterDisplay/InterDisplay-ExtraBold.woff2') format('woff2');
-    font-weight: 800;
-    font-style: normal;
-    font-display: swap;
-    unicode-range: U+0-2F, U+3A-10FFFF;
-}
-/*
- * Digits (0-9) always render with Inter's numeral shapes, even inside
- * Inter Display text, so numbers look identical everywhere in the app.
- * The unicode-range above carves digits out of the Inter Display faces;
- * these faces fill that range from Inter instead. No 700/800 Inter cut
- * is self-hosted, so SemiBold covers that range too -- close enough
- * that only the surrounding letters read as bolder.
- */
-@font-face {
-    font-family: 'Inter Display';
-    src: url('/webfonts/Inter/Inter-Medium.woff2') format('woff2');
-    font-weight: 500;
-    font-style: normal;
-    font-display: swap;
-    unicode-range: U+30-39;
-}
-@font-face {
-    font-family: 'Inter Display';
-    src: url('/webfonts/Inter/Inter-SemiBold.woff2') format('woff2');
-    font-weight: 600 800;
-    font-style: normal;
-    font-display: swap;
-    unicode-range: U+30-39;
 }

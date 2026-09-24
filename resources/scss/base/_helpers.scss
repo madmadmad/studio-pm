@@ -1,0 +1,21 @@
+// HELPERS -- the deliberately tiny set of single-purpose classes, each
+// prefixed `u-`. Only for behavior that recurs across unrelated blocks
+// and has no better home as a BEM element. Don't grow this list lightly.
+@use '../abstracts' as *;
+
+// Screen-reader-only text (e.g. a live-region status message).
+.u-sr-only {
+    @include visually-hidden;
+}
+
+// Fixed-width digits so columns of amounts and times line up.
+.u-tabular-nums {
+    font-variant-numeric: tabular-nums;
+}
+
+// Single line, clipped with an ellipsis.
+.u-truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}

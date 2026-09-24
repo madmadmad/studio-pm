@@ -1,0 +1,152 @@
+// DESIGN TOKENS -- the knobs. Change a value here and it applies app-wide.
+// Nothing here renders on its own; every other partial consumes these via
+// var(--...). Breakpoints are the one exception -- see abstracts/_breakpoints.
+
+:root {
+    // -----------------------------------------------------------------
+    // Color -- brand palette: Porcelain / Fern / Shadow Grey / Gunmetal /
+    // Watermelon. Shadow Grey -> secondary text. Gunmetal -> navigation
+    // and primary text. Porcelain -> workspace background. Watermelon ->
+    // accent (links, active nav, "in progress") and danger/overdue; the
+    // palette has no separate danger color. Fern -> edit/save and "done".
+    // -----------------------------------------------------------------
+    --color-white: #fff;
+    --color-gunmetal: #23262e;
+    --color-gunmetal-light: #373b45; // nav row highlight + primary button hover
+    --color-porcelain: #f7f7f7;
+    --color-border: #eee;
+    --color-mist: #e7e7e9; // neutral badge/chip fill, a hair darker than porcelain
+    --color-shadow-grey: #595f64;
+    --color-watermelon: #f41347;
+    --color-watermelon-soft: #fce2e8;
+    --color-fern: #5aa329;
+    --color-fern-soft: #e7efe3;
+
+    // Hover shades for filled fern/watermelon controls -- the same 8%
+    // darkening the old brightness(0.92) filter produced, now as a color.
+    --color-fern-hover: color-mix(in srgb, var(--color-fern) 92%, black);
+    --color-watermelon-hover: color-mix(in srgb, var(--color-watermelon) 92%, black);
+
+    // Text and rules on the dark gunmetal sidebar/header.
+    --color-on-dark: var(--color-porcelain);
+    --color-on-dark-muted: color-mix(in srgb, var(--color-porcelain) 80%, transparent);
+    --color-on-dark-subtle: color-mix(in srgb, var(--color-porcelain) 60%, transparent);
+    --color-on-dark-border: color-mix(in srgb, var(--color-porcelain) 15%, transparent);
+
+    // Backdrops behind overlays, lightest to heaviest.
+    --color-scrim: color-mix(in srgb, var(--color-gunmetal) 20%, transparent); // drawer, modal
+    --color-scrim-strong: color-mix(in srgb, var(--color-gunmetal) 40%, transparent); // modal stacked on a modal
+    --color-scrim-heavy: color-mix(in srgb, var(--color-gunmetal) 80%, transparent); // lightbox
+
+    // Avatar fills -- a small curated set so an initials avatar always
+    // harmonizes with the palette. Avatar.jsx references these by name.
+    --color-avatar-1: #dce8f5;
+    --color-avatar-2: #f5e8d3;
+    --color-avatar-3: #e6dcf5;
+
+    // -----------------------------------------------------------------
+    // Typography
+    // -----------------------------------------------------------------
+    --font-family-sans: 'Inter', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+        'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-family-display: 'Inter Display', 'Inter', ui-sans-serif, system-ui, sans-serif;
+    --font-family-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
+        monospace;
+
+    // Each size is paired with its line height.
+    --font-size-2xs: 0.625rem; // count bubbles only
+    --line-height-2xs: 1rem;
+    --font-size-xs: 0.75rem; // meta text, field labels, badges
+    --line-height-xs: 1rem;
+    --font-size-sm: 0.875rem; // body copy, controls, table cells, buttons
+    --line-height-sm: 1.25rem;
+    --font-size-base: 1rem;
+    --line-height-base: 1.5rem;
+    --font-size-lg: 1.125rem;
+    --line-height-lg: 1.75rem;
+    --font-size-xl: 1.25rem;
+    --line-height-xl: 1.75rem;
+    --font-size-2xl: 1.5rem; // page titles, headline numerals
+    --line-height-2xl: 2rem;
+
+    --line-height-body: 1.5;
+    --line-height-prose: 1.6; // long-form rich text (proposals)
+
+    --font-weight-normal: 400;
+    --font-weight-medium: 500;
+    --font-weight-semibold: 600;
+    --font-weight-bold: 700; // buttons
+    --font-weight-extrabold: 800; // display headings
+
+    // One tracking value for body text everywhere, one for display.
+    --letter-spacing-body: -0.011em;
+    --letter-spacing-display: -0.03rem;
+
+    // -----------------------------------------------------------------
+    // Spacing -- step names match the old Tailwind scale (1 = 0.25rem) so
+    // a migrated value is a direct lookup.
+    // -----------------------------------------------------------------
+    --space-0-5: 0.125rem;
+    --space-1: 0.25rem;
+    --space-1-5: 0.375rem;
+    --space-2: 0.5rem;
+    --space-2-5: 0.625rem;
+    --space-3: 0.75rem;
+    --space-4: 1rem;
+    --space-5: 1.25rem;
+    --space-6: 1.5rem;
+    --space-8: 2rem;
+    --space-10: 2.5rem;
+    --space-15: 3.75rem;
+
+    // Semantic spacing -- reach for these first.
+    --space-panel: var(--space-4); // card padding
+    --space-panel-lg: var(--space-6); // modal, drawer, auth card padding
+    --space-section: var(--space-6); // gap below a page section
+    --space-page: var(--space-8); // main content padding
+
+    // -----------------------------------------------------------------
+    // Borders and radii
+    // -----------------------------------------------------------------
+    --border-width: 1px;
+    --border-width-thick: 2px; // active tab underline
+    --focus-ring-width: 2px;
+    --focus-ring-offset: 1px;
+
+    // Single knob for corner rounding app-wide. --radius-pill is a shape
+    // (pills, circles), not an amount, so it's deliberately separate.
+    --radius-base: 0.22rem;
+    --radius-pill: 9999px;
+
+    // -----------------------------------------------------------------
+    // Elevation
+    // -----------------------------------------------------------------
+    --shadow-raised: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1); // toggle knob
+    --shadow-popover: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1); // dropdowns
+    --shadow-overlay: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1); // drawer, modal
+
+    --z-dropdown: 10;
+    --z-overlay: 50;
+    --z-overlay-nested: 60; // a modal opened from inside a modal
+
+    // -----------------------------------------------------------------
+    // Motion
+    // -----------------------------------------------------------------
+    --duration-fast: 150ms; // hover/color changes
+    --duration-base: 200ms; // overlays entering
+    --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+    --ease-enter: ease-out;
+
+    // -----------------------------------------------------------------
+    // Sizes -- fixed widths for recurring containers.
+    // -----------------------------------------------------------------
+    --size-sidebar: 14rem;
+    --size-popover-sm: 16rem;
+    --size-popover: 18rem;
+    --size-auth-card: 24rem;
+    --size-modal: 32rem;
+    --size-modal-wide: 42rem;
+    --size-drawer: 37.5rem;
+    --size-document: 50rem; // public invoice/proposal sheet
+    --size-portal: 56rem;
+}

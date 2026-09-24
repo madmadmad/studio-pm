@@ -1,0 +1,64 @@
+// ELEMENTS -- global defaults for bare HTML elements (body, a, button,
+// input...), applied without a class on every instance. Anything tied to
+// a specific UI piece belongs in components/ instead.
+//
+// Unlayered for now, like the old base.css: these intentionally beat any
+// Tailwind utility on the same element (e.g. `button` stays bold even
+// where a leftover `font-medium` sits on it). They move into the `base`
+// layer once Tailwind is removed.
+
+body {
+    background-color: var(--color-porcelain);
+    color: var(--color-gunmetal);
+    // One tracking value everywhere, headlines included.
+    letter-spacing: var(--letter-spacing-body);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+// Every link and button reads as clickable. Buttons default to
+// `cursor: default` in browsers, unlike links.
+a,
+button:not(:disabled) {
+    cursor: pointer;
+}
+
+button:disabled {
+    cursor: not-allowed;
+}
+
+button {
+    font-weight: var(--font-weight-bold);
+}
+
+// Text inputs and dropdowns get a white fill app-wide so they stand out
+// against the porcelain page (the reset strips the native background).
+// Checkbox/radio/color/file inputs are excluded -- a background on them
+// does nothing or looks wrong.
+//
+// color-scheme: light makes a <select>'s open dropdown list white too --
+// that popup is native OS chrome and ignores background-color, rendering
+// dark on a dark-mode system unless told this app is light-only.
+//
+// The chained :not()s (rather than one :not(a, b, c, d)) are kept for
+// their specificity, (0,4,1) -- collapsing them would change which rules
+// this beats.
+input:not([type='checkbox']):not([type='radio']):not([type='color']):not([type='file']),
+select {
+    background-color: var(--color-white);
+    color-scheme: light;
+}
+
+// appearance: none removes a <select>'s native shading (which made it
+// read as a slightly different white next to a text input) along with
+// the native arrow -- the background-image below replaces the arrow.
+select {
+    appearance: none;
+    // Data URIs can't read custom properties: the stroke is
+    // --color-shadow-grey (#595f64), hard-coded and URL-encoded.
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23595F64' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right var(--space-2-5) center;
+    background-size: var(--space-3); // arrow glyph size, 12px
+    padding-right: var(--space-8); // room for the arrow
+}
