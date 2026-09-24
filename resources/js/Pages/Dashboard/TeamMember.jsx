@@ -14,12 +14,12 @@ export default function TeamMemberDashboard({ projects, weekHours }) {
                 subtitle="Your projects and hours this week."
             />
 
-            <div className="grid grid-cols-2 gap-4 mb-8">
+            <div className="metric-grid">
                 <MetricCard label="Hours this week" value={`${weekHours}h`} />
                 <MetricCard label="Assigned projects" value={projects.length} />
             </div>
 
-            <h2 className="text-sm font-semibold mb-3 text-shadow-grey">Your projects</h2>
+            <h2 className="section-heading">Your projects</h2>
             <div className="card">
                 {projects.length === 0 ? (
                     <EmptyState text="You're not assigned to any projects yet." />
@@ -28,11 +28,11 @@ export default function TeamMemberDashboard({ projects, weekHours }) {
                         <Link
                             key={project.id}
                             href={`/projects/${project.id}`}
-                            className="flex items-center justify-between px-4 py-3 border-b border-border last:border-b-0 hover:bg-porcelain"
+                            className="list-row"
                         >
                             <div>
-                                <div className="text-sm font-medium">{project.name}</div>
-                                <div className="text-xs text-shadow-grey">{project.company.name}</div>
+                                <div className="list-row__title">{project.name}</div>
+                                <div className="list-row__meta">{project.company.name}</div>
                             </div>
                             <ProjectStatusBadge project={project} />
                         </Link>

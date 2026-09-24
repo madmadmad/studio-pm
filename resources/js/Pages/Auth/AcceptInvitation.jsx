@@ -18,7 +18,7 @@ export default function AcceptInvitation({ token, email, valid }) {
         return (
             <AuthLayout title="Studio PM">
                 <div className="card auth-shell__card auth-shell__card--message">
-                    <p className="text-sm text-shadow-grey">
+                    <p className="auth-shell__text">
                         This invite link is invalid or has expired. Ask a manager to resend your invite.
                     </p>
                 </div>
@@ -62,7 +62,7 @@ export default function AcceptInvitation({ token, email, valid }) {
                     />
                 </div>
 
-                <Button type="submit" disabled={processing} className="btn--lg mt-2">
+                <Button type="submit" disabled={processing} className="btn--lg auth-shell__submit">
                     Set password and sign in
                 </Button>
             </form>

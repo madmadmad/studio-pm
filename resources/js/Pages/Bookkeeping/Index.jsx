@@ -44,31 +44,31 @@ export default function BookkeepingIndex({ transactions, summary }) {
                 subtitle={
                     <>
                         Income, month by month &mdash; not double-entry accounting. Expenses are tracked on the{' '}
-                        <Link href="/expenses" className="underline">Expenses</Link> page.
+                        <Link href="/expenses" className="link link--inline">Expenses</Link> page.
                     </>
                 }
             />
 
-            <div className="grid grid-cols-3 gap-4 mb-8">
+            <div className="metric-grid metric-grid--3">
                 <MetricCard label={`Income (${summary.month})`} value={formatCurrency(summary.income)} />
                 <MetricCard label="Expenses" value={formatCurrency(summary.expenses)} />
                 <MetricCard label="Net" value={formatCurrency(summary.net)} />
             </div>
 
             {showForm && (
-                <form onSubmit={submit} className="card card--padded mb-6 grid grid-cols-2 gap-3">
-                    <input required type="number" min="0.01" step="0.01" placeholder="Amount" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} className="input tabular-nums" />
+                <form onSubmit={submit} className="card card--padded form-grid page-section">
+                    <input required type="number" min="0.01" step="0.01" placeholder="Amount" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} className="input u-tabular-nums" />
                     <input placeholder="Category" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} className="input" />
                     <input required type="date" value={form.occurred_on} onChange={(e) => setForm({ ...form, occurred_on: e.target.value })} className="input" />
                     <input placeholder="Description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="input" />
-                    <div className="flex gap-2 col-span-2 justify-end">
+                    <div className="form-actions form-grid__full">
                         <Button type="button" variant="secondary" onClick={() => setShowForm(false)}>Cancel</Button>
                         <Button type="submit" variant="confirm" disabled={saving}>Save</Button>
                     </div>
                 </form>
             )}
 
-            <div className="card overflow-hidden">
+            <div className="card card--flush">
                 {transactions.length === 0 ? (
                     <EmptyState text="No income logged yet." />
                 ) : (
@@ -78,7 +78,7 @@ export default function BookkeepingIndex({ transactions, summary }) {
                                 <th>Date</th>
                                 <th>Category</th>
                                 <th>Description</th>
-                                <th className="text-right">Amount</th>
+                                <th className="table__cell--end">Amount</th>
                                 <th></th>
                             </tr>
                         </thead>
@@ -86,11 +86,11 @@ export default function BookkeepingIndex({ transactions, summary }) {
                             {transactions.map((t) => (
                                 <tr key={t.id}>
                                     <td>{formatDate(t.occurred_on)}</td>
-                                    <td className="text-shadow-grey">{t.category ?? '—'}</td>
-                                    <td className="text-shadow-grey">{t.description}</td>
-                                    <td className="text-right tabular-nums text-fern">+{formatCurrency(t.amount)}</td>
-                                    <td className="text-right">
-                                        <button onClick={() => remove(t)} className="text-xs text-shadow-grey hover:text-watermelon">Remove</button>
+                                    <td className="table__cell--muted">{t.category ?? '—'}</td>
+                                    <td className="table__cell--muted">{t.description}</td>
+                                    <td className="table__cell--end table__cell--numeric table__cell--positive">+{formatCurrency(t.amount)}</td>
+                                    <td className="table__cell--end">
+                                        <button onClick={() => remove(t)} className="text-action text-action--danger text-action--xs">Remove</button>
                                     </td>
                                 </tr>
                             ))}

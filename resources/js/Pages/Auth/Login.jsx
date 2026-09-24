@@ -39,8 +39,8 @@ export default function Login() {
                     />
                 </div>
 
-                <div className="flex items-center justify-between">
-                    <label className="flex items-center gap-2 text-sm text-shadow-grey">
+                <div className="auth-shell__row">
+                    <label className="choice choice--muted">
                         <input
                             type="checkbox"
                             checked={data.remember}
@@ -48,12 +48,12 @@ export default function Login() {
                         />
                         Remember me
                     </label>
-                    <Link href="/forgot-password" className="text-sm text-shadow-grey hover:text-gunmetal">
+                    <Link href="/forgot-password" className="text-action text-action--sm">
                         Forgot password?
                     </Link>
                 </div>
 
-                <Button type="submit" disabled={processing} className="btn--lg mt-2">
+                <Button type="submit" disabled={processing} className="btn--lg auth-shell__submit">
                     Sign in
                 </Button>
             </form>

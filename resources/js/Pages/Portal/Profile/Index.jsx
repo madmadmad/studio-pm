@@ -51,18 +51,18 @@ export default function PortalProfileIndex({ profileContact }) {
                 subtitle="Your photo shows up next to your messages."
             />
 
-            <div className="card card--padded max-w-md">
-                <div className="flex items-center gap-4 mb-4">
+            <div className="card card--padded card--narrow profile-card">
+                <div className="profile-card__identity">
                     <Avatar name={contact.name} avatarUrl={contact.avatar_url} id={contact.id} size={72} />
                     <div>
-                        <div className="font-semibold">{contact.name}</div>
-                        <div className="text-sm text-shadow-grey">{contact.email}</div>
+                        <div className="profile-card__name">{contact.name}</div>
+                        <div className="profile-card__email">{contact.email}</div>
                     </div>
                 </div>
 
-                {error && <div className="text-sm text-watermelon mb-3">{error}</div>}
+                {error && <div className="form-message form-message--error profile-card__error">{error}</div>}
 
-                <div className="flex gap-2">
+                <div className="profile-card__actions">
                     <Button variant="secondary" onClick={() => inputRef.current.click()} disabled={saving}>
                         {contact.avatar_url ? 'Change photo' : 'Upload photo'}
                     </Button>
@@ -70,7 +70,7 @@ export default function PortalProfileIndex({ profileContact }) {
                         <Button variant="danger" onClick={removeAvatar} disabled={saving}>Remove photo</Button>
                     )}
                 </div>
-                <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={uploadAvatar} />
+                <input ref={inputRef} type="file" accept="image/*" hidden onChange={uploadAvatar} />
             </div>
         </PortalLayout>
     );

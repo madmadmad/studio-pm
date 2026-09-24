@@ -1,0 +1,15 @@
+// Form-level feedback line ("Saved", a request error) -- as opposed to
+// .form-error, which sits under one field.
+
+.form-message {
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-sm);
+
+    &--success {
+        color: var(--color-fern);
+    }
+
+    &--error {
+        color: var(--color-watermelon);
+    }
+}

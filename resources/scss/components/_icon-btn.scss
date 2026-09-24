@@ -38,6 +38,11 @@
         }
     }
 
+    // Undo a removal (Reactivate): neutral until hovered, then fern.
+    &--restore:hover {
+        color: var(--color-fern);
+    }
+
     // Destructive (Delete): neutral until hovered, so a row of actions
     // doesn't read as alarming until you're about to click it.
     &--danger:hover {

@@ -1,0 +1,25 @@
+// Quiet text button or link: shadow grey, darkening on hover ("Forgot
+// password?", "Mark billing"). --danger turns watermelon instead.
+
+.text-action {
+    color: var(--color-shadow-grey);
+    transition: color var(--duration-fast) var(--ease-standard);
+
+    &:hover {
+        color: var(--color-gunmetal);
+    }
+
+    &--danger:hover {
+        color: var(--color-watermelon);
+    }
+
+    &--xs {
+        font-size: var(--font-size-xs);
+        line-height: var(--line-height-xs);
+    }
+
+    &--sm {
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+    }
+}

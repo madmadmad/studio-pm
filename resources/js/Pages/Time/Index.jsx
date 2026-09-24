@@ -78,7 +78,7 @@ export default function TimeIndex({ timeEntries, companies, projects }) {
             />
 
             {showForm && (
-                <form onSubmit={submitTimeEntry} className="card card--padded mb-6 grid grid-cols-2 gap-3">
+                <form onSubmit={submitTimeEntry} className="card card--padded form-grid page-section">
                     <select
                         required
                         value={form.company_id}
@@ -99,15 +99,15 @@ export default function TimeIndex({ timeEntries, companies, projects }) {
                     </select>
                     <input required type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className="input" />
                     <input required type="number" min="0.25" step="0.25" placeholder="Hours" value={form.hours} onChange={(e) => setForm({ ...form, hours: e.target.value })} className="input" />
-                    <input placeholder="What did you work on?" value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} className="input col-span-2" />
-                    <div className="flex gap-2 col-span-2 justify-end">
+                    <input placeholder="What did you work on?" value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} className="input form-grid__full" />
+                    <div className="form-actions form-grid__full">
                         <Button type="button" variant="secondary" onClick={() => setShowForm(false)}>Cancel</Button>
                         <Button type="submit" variant="confirm" disabled={saving}>Log time</Button>
                     </div>
                 </form>
             )}
 
-            <div className="card overflow-hidden mb-4">
+            <div className="card card--flush page-section">
                 {timeEntries.length === 0 ? (
                     <EmptyState text="No time logged yet. Track hours against a client to start building an invoice." />
                 ) : (
@@ -127,14 +127,14 @@ export default function TimeIndex({ timeEntries, companies, projects }) {
                                 <tr key={entry.id}>
                                     <td>{formatDate(entry.date)}</td>
                                     <td>
-                                        <Link href={`/clients/${entry.company_id}`} className="hover:underline">
+                                        <Link href={`/clients/${entry.company_id}`} className="link">
                                             {entry.company?.name ?? '—'}
                                         </Link>
                                     </td>
-                                    <td className="text-shadow-grey">{entry.project?.name ?? '—'}</td>
-                                    <td className="tabular-nums">{entry.hours}h</td>
-                                    <td className="text-shadow-grey">{entry.note}</td>
-                                    <td className="text-right">
+                                    <td className="table__cell--muted">{entry.project?.name ?? '—'}</td>
+                                    <td className="table__cell--numeric">{entry.hours}h</td>
+                                    <td className="table__cell--muted">{entry.note}</td>
+                                    <td className="table__cell--end">
                                         {entry.billed ? (
                                             <Badge tone="fern" label="Billed" />
                                         ) : queuedIds.has(entry.id) ? (
@@ -153,10 +153,10 @@ export default function TimeIndex({ timeEntries, companies, projects }) {
             </div>
 
             {tray.length > 0 && (
-                <div className="rounded-lg p-4 flex items-center justify-between bg-watermelon-soft">
-                    <div className="text-sm">
+                <div className="billing-tray">
+                    <div className="billing-tray__summary">
                         {tray.length} {tray.length === 1 ? 'entry' : 'entries'} ready to bill &mdash;{' '}
-                        <span className="tabular-nums">{formatCurrency(traySubtotal)}</span>
+                        <span className="u-tabular-nums">{formatCurrency(traySubtotal)}</span>
                     </div>
                     <Button variant="accent" onClick={createInvoiceFromTray}>Create invoice</Button>
                 </div>

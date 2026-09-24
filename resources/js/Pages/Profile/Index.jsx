@@ -51,18 +51,18 @@ export default function ProfileIndex({ profileUser }) {
                 subtitle="Your photo shows up next to your messages and throughout the app."
             />
 
-            <div className="card card--padded max-w-md">
-                <div className="flex items-center gap-4 mb-4">
+            <div className="card card--padded card--narrow profile-card">
+                <div className="profile-card__identity">
                     <Avatar name={user.name} avatarUrl={user.avatar_url} id={user.id} size={72} />
                     <div>
-                        <div className="font-semibold">{user.name}</div>
-                        <div className="text-sm text-shadow-grey">{user.email}</div>
+                        <div className="profile-card__name">{user.name}</div>
+                        <div className="profile-card__email">{user.email}</div>
                     </div>
                 </div>
 
-                {error && <div className="text-sm text-watermelon mb-3">{error}</div>}
+                {error && <div className="form-message form-message--error profile-card__error">{error}</div>}
 
-                <div className="flex gap-2">
+                <div className="profile-card__actions">
                     <Button variant="secondary" onClick={() => inputRef.current.click()} disabled={saving}>
                         {user.avatar_url ? 'Change photo' : 'Upload photo'}
                     </Button>
@@ -70,7 +70,7 @@ export default function ProfileIndex({ profileUser }) {
                         <Button variant="danger" onClick={removeAvatar} disabled={saving}>Remove photo</Button>
                     )}
                 </div>
-                <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={uploadAvatar} />
+                <input ref={inputRef} type="file" accept="image/*" hidden onChange={uploadAvatar} />
             </div>
         </AppLayout>
     );

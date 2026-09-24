@@ -72,7 +72,7 @@ export default function ProposalsIndex({ proposals: proposalsProp }) {
                 }
             />
 
-            <div className="card overflow-hidden">
+            <div className="card card--flush">
                 {proposals.length === 0 ? (
                     <EmptyState text="No proposals yet." />
                 ) : (
@@ -90,27 +90,27 @@ export default function ProposalsIndex({ proposals: proposalsProp }) {
                         <tbody>
                             {proposals.map((proposal) => (
                                 <tr key={proposal.id}>
-                                    <td>
-                                        <div className="font-medium">{proposal.company.name}</div>
+                                    <td className="table__cell--strong">
+                                        <div>{proposal.company.name}</div>
                                     </td>
                                     <td>
                                         {proposal.project ? (
-                                            <Link href={`/projects/${proposal.project.id}`} className="hover:underline">
+                                            <Link href={`/projects/${proposal.project.id}`} className="link">
                                                 {proposal.project.name}
                                             </Link>
                                         ) : '—'}
                                     </td>
                                     <td>
-                                        <Link href={`/proposals/${proposal.id}/edit`} className="hover:underline">
+                                        <Link href={`/proposals/${proposal.id}/edit`} className="link">
                                             {proposal.title}
                                         </Link>
                                     </td>
-                                    <td className="tabular-nums">
+                                    <td className="table__cell--numeric">
                                         {proposal.estimate_amount ? formatCurrency(proposal.estimate_amount) : '—'}
                                     </td>
                                     <td><ProposalStatusBadge proposal={proposal} /></td>
-                                    <td className="text-right">
-                                        <div className="flex items-center justify-end gap-3">
+                                    <td className="table__cell--end">
+                                        <div className="table__actions">
                                             <a href={`/p/${proposal.accept_token}`} target="_blank" rel="noopener noreferrer" title="Preview" className="icon-btn icon-btn--secondary">
                                                 <Eye />
                                             </a>
@@ -132,7 +132,7 @@ export default function ProposalsIndex({ proposals: proposalsProp }) {
                                                 </button>
                                             )}
                                             {proposal.status === 'accepted' && (
-                                                <span className="text-xs text-shadow-grey">{formatDate(proposal.accepted_at)}</span>
+                                                <span className="table__note">{formatDate(proposal.accepted_at)}</span>
                                             )}
                                             {proposal.status !== 'accepted' && (
                                                 <button

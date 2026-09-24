@@ -1,0 +1,30 @@
+// Avatar + name/email with photo upload actions (staff and portal profile
+// pages share it).
+
+.profile-card {
+    &__identity {
+        display: flex;
+        align-items: center;
+        gap: var(--space-4);
+        margin-bottom: var(--space-4);
+    }
+
+    &__name {
+        font-weight: var(--font-weight-semibold);
+    }
+
+    &__email {
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+        color: var(--color-shadow-grey);
+    }
+
+    &__error {
+        margin-bottom: var(--space-3);
+    }
+
+    &__actions {
+        display: flex;
+        gap: var(--space-2);
+    }
+}

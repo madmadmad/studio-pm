@@ -93,7 +93,7 @@ export default function ProjectsIndex({ projects, companies, archivedView = fals
             <PageHeader
                 title={archivedView ? 'Archived Projects' : 'Projects'}
                 actions={archivedView ? (
-                    <Link href="/projects" className="text-sm font-medium text-shadow-grey hover:underline">
+                    <Link href="/projects" className="link link--muted page-header__link">
                         All Projects
                     </Link>
                 ) : (
@@ -109,28 +109,26 @@ export default function ProjectsIndex({ projects, companies, archivedView = fals
             />
 
             {archivedView ? null : (
-                <div className="flex items-center justify-between mb-6">
-                    <div className="flex gap-1">
+                <div className="filter-bar">
+                    <div className="filter-bar__pills">
                         {STATUS_FILTERS.map((s) => (
                             <button
                                 key={s.value}
                                 onClick={() => setFilter(s.value)}
-                                className={`text-sm px-3 py-1.5 rounded ${
-                                    filter === s.value ? 'bg-gunmetal text-white' : 'text-shadow-grey border border-border'
-                                }`}
+                                className={`filter-bar__pill${filter === s.value ? ' filter-bar__pill--active' : ''}`}
                             >
                                 {s.label}
                             </button>
                         ))}
                     </div>
-                    <Link href="/projects/archived" className="text-sm text-shadow-grey hover:underline">
+                    <Link href="/projects/archived" className="link link--muted filter-bar__link">
                         Archived
                     </Link>
                 </div>
             )}
 
             {showForm && (
-                <form onSubmit={submit} className="card card--padded mb-6 grid grid-cols-2 gap-3">
+                <form onSubmit={submit} className="card card--padded form-grid page-section">
                     <select
                         required
                         value={form.company_id}
@@ -160,23 +158,23 @@ export default function ProjectsIndex({ projects, companies, archivedView = fals
                         placeholder="Project name"
                         value={form.name}
                         onChange={(e) => setForm({ ...form, name: e.target.value })}
-                        className="input col-span-2"
+                        className="input form-grid__full"
                     />
                     <input
                         placeholder="Description"
                         value={form.description}
                         onChange={(e) => setForm({ ...form, description: e.target.value })}
-                        className="input col-span-2"
+                        className="input form-grid__full"
                     />
-                    {error && <div className="text-sm text-watermelon col-span-2">{error}</div>}
-                    <div className="flex gap-2 col-span-2 justify-end">
+                    {error && <div className="form-message form-message--error form-grid__full">{error}</div>}
+                    <div className="form-actions form-grid__full">
                         <Button type="button" variant="secondary" onClick={() => setShowForm(false)}>Cancel</Button>
                         <Button type="submit" variant="confirm" disabled={saving}>Save project</Button>
                     </div>
                 </form>
             )}
 
-            <div className="card overflow-hidden">
+            <div className="card card--flush">
                 {visibleProjects.length === 0 ? (
                     <EmptyState text="No projects match this filter." />
                 ) : (
@@ -192,25 +190,25 @@ export default function ProjectsIndex({ projects, companies, archivedView = fals
                         <tbody>
                             {visibleProjects.map((project) => (
                                 <tr key={project.id}>
-                                    <td className="font-medium">
-                                        <Link href={`/projects/${project.id}`} className="hover:underline">
+                                    <td className="table__cell--strong">
+                                        <Link href={`/projects/${project.id}`} className="link">
                                             {project.name}
                                         </Link>
                                     </td>
                                     <td>
-                                        <Link href={`/clients/${project.company.id}`} className="text-shadow-grey hover:underline">
+                                        <Link href={`/clients/${project.company.id}`} className="link link--muted">
                                             {project.company.name}
                                         </Link>
                                     </td>
-                                    <td className="text-shadow-grey">{taskProgress(project)}</td>
+                                    <td className="table__cell--muted">{taskProgress(project)}</td>
                                     <td>
-                                        <div className="flex items-center gap-2">
+                                        <div className="table__group">
                                             <ProjectStatusBadge project={project} />
                                             <select
                                                 value={project.status}
                                                 disabled={pendingStatus[project.id]}
                                                 onChange={(e) => changeStatus(project, e.target.value)}
-                                                className="text-xs border border-border rounded px-1 py-0.5 text-shadow-grey"
+                                                className="input input--micro input--inline"
                                             >
                                                 {STATUS_OPTIONS.map((s) => (
                                                     <option key={s.value} value={s.value}>{s.label}</option>

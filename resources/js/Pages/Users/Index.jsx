@@ -124,22 +124,22 @@ export default function UsersIndex({ users: usersProp }) {
             />
 
             {showForm && (
-                <form onSubmit={submit} className="card card--padded mb-6 grid grid-cols-2 gap-3">
+                <form onSubmit={submit} className="card card--padded form-grid page-section">
                     <input required placeholder="Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="input" />
                     <input required type="email" placeholder="Email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="input" />
-                    <select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })} className="input col-span-2">
+                    <select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })} className="input form-grid__full">
                         <option value="team_member">Team Member</option>
                         <option value="manager">Manager</option>
                     </select>
-                    <p className="text-xs text-shadow-grey col-span-2">They'll get an email with a link to set their own password.</p>
-                    <div className="flex gap-2 col-span-2 justify-end">
+                    <p className="form-hint form-grid__full">They'll get an email with a link to set their own password.</p>
+                    <div className="form-actions form-grid__full">
                         <Button type="button" variant="secondary" onClick={() => setShowForm(false)}>Cancel</Button>
                         <Button type="submit" variant="confirm" disabled={saving}>Send invite</Button>
                     </div>
                 </form>
             )}
 
-            <div className="card overflow-hidden">
+            <div className="card card--flush">
                 {users.length === 0 ? (
                     <EmptyState text="No staff yet." />
                 ) : (
@@ -156,14 +156,14 @@ export default function UsersIndex({ users: usersProp }) {
                         <tbody>
                             {users.map((user) => (
                                 <tr key={user.id}>
-                                    <td className="font-medium">{user.name}</td>
-                                    <td className="text-shadow-grey">{user.email}</td>
+                                    <td className="table__cell--strong">{user.name}</td>
+                                    <td className="table__cell--muted">{user.email}</td>
                                     <td>
                                         <select
                                             value={user.role}
                                             disabled={busyId === user.id || !!user.deactivated_at}
                                             onChange={(e) => changeRole(user, e.target.value)}
-                                            className="input input--xs w-auto disabled:opacity-50"
+                                            className="input input--xs input--inline"
                                         >
                                             <option value="team_member">Team Member</option>
                                             <option value="manager">Manager</option>
@@ -172,18 +172,18 @@ export default function UsersIndex({ users: usersProp }) {
                                     <td>
                                         <StatusBadge user={user} />
                                         {user.invited_at && !user.deactivated_at && (
-                                            <div className="text-xs text-shadow-grey mt-1">Invited {formatDate(user.invited_at)}</div>
+                                            <div className="table__meta">Invited {formatDate(user.invited_at)}</div>
                                         )}
                                     </td>
-                                    <td className="text-right">
-                                        <div className="flex items-center justify-end gap-3">
+                                    <td className="table__cell--end">
+                                        <div className="table__actions">
                                             {user.has_pending_invite && !user.deactivated_at && (
                                                 <button onClick={() => resendInvite(user)} disabled={busyId === user.id} title="Resend invite" className="icon-btn icon-btn--secondary">
                                                     <EnvelopeSimple />
                                                 </button>
                                             )}
                                             {user.deactivated_at ? (
-                                                <button onClick={() => reactivate(user)} disabled={busyId === user.id} title="Reactivate" className="text-shadow-grey hover:text-fern disabled:opacity-50">
+                                                <button onClick={() => reactivate(user)} disabled={busyId === user.id} title="Reactivate" className="icon-btn icon-btn--restore">
                                                     <ArrowCounterClockwise size={16} />
                                                 </button>
                                             ) : (

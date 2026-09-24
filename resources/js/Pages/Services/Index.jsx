@@ -88,22 +88,22 @@ export default function ServicesIndex({ services: servicesProp }) {
             />
 
             {showForm && (
-                <form onSubmit={submit} className="card card--padded mb-6 grid grid-cols-2 gap-3">
-                    <input required placeholder="Service name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="input col-span-2" />
-                    <input required type="number" min="0" step="0.01" placeholder="Default rate ($)" value={form.default_rate} onChange={(e) => setForm({ ...form, default_rate: e.target.value })} className="input tabular-nums" />
+                <form onSubmit={submit} className="card card--padded form-grid page-section">
+                    <input required placeholder="Service name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="input form-grid__full" />
+                    <input required type="number" min="0" step="0.01" placeholder="Default rate ($)" value={form.default_rate} onChange={(e) => setForm({ ...form, default_rate: e.target.value })} className="input u-tabular-nums" />
                     <select value={form.unit} onChange={(e) => setForm({ ...form, unit: e.target.value })} className="input">
                         <option value="hourly">Hourly</option>
                         <option value="fixed">Fixed</option>
                     </select>
-                    <input placeholder="Description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="input col-span-2" />
-                    <div className="flex gap-2 col-span-2 justify-end">
+                    <input placeholder="Description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="input form-grid__full" />
+                    <div className="form-actions form-grid__full">
                         <Button type="button" variant="secondary" onClick={cancel}>Cancel</Button>
                         <Button type="submit" variant="confirm" disabled={saving}>Save</Button>
                     </div>
                 </form>
             )}
 
-            <div className="card overflow-hidden">
+            <div className="card card--flush">
                 {services.length === 0 ? (
                     <EmptyState text="No services yet." />
                 ) : (
@@ -119,11 +119,11 @@ export default function ServicesIndex({ services: servicesProp }) {
                         <tbody>
                             {services.map((service) => (
                                 <tr key={service.id}>
-                                    <td className="font-medium">{service.name}</td>
-                                    <td className="tabular-nums">{formatCurrency(service.default_rate)}</td>
-                                    <td className="text-shadow-grey capitalize">{service.unit}</td>
-                                    <td className="text-right">
-                                        <div className="flex items-center justify-end gap-3">
+                                    <td className="table__cell--strong">{service.name}</td>
+                                    <td className="table__cell--numeric">{formatCurrency(service.default_rate)}</td>
+                                    <td className="table__cell--muted table__cell--capitalize">{service.unit}</td>
+                                    <td className="table__cell--end">
+                                        <div className="table__actions">
                                             <button onClick={() => startEdit(service)} title="Edit" className="icon-btn icon-btn--confirm">
                                                 <PencilSimple />
                                             </button>

@@ -1,0 +1,17 @@
+// A plain text link that keeps the surrounding color and underlines on
+// hover (names in tables, cross-links in subtitles).
+
+.link {
+    &:hover {
+        text-decoration: underline;
+    }
+
+    &--muted {
+        color: var(--color-shadow-grey);
+    }
+
+    // Always underlined -- a link inside running text.
+    &--inline {
+        text-decoration: underline;
+    }
+}

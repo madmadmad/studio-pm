@@ -11,7 +11,7 @@ export default function LinkInvalid({ reason }) {
     return (
         <AuthLayout title="Client Hub">
             <div className="card auth-shell__card auth-shell__card--message">
-                <p className="text-sm text-shadow-grey">{MESSAGES[reason] ?? MESSAGES.invalid}</p>
+                <p className="auth-shell__text">{MESSAGES[reason] ?? MESSAGES.invalid}</p>
                 <Link href="/portal/login" className="btn btn--primary btn--lg">
                     Request a new link
                 </Link>

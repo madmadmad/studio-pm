@@ -35,7 +35,7 @@ function EditableCell({ entry, field, type = 'text' }) {
             onChange={(e) => setValue(e.target.value)}
             onBlur={save}
             disabled={saving}
-            className="border border-transparent hover:border-border focus:border-border rounded px-2 py-1 text-sm w-full bg-transparent"
+            className="inline-edit inline-edit--cell"
         />
     );
 }
@@ -53,24 +53,24 @@ export default function TimeWeekly({ weekStart, weekEnd, entries, companies }) {
             <PageHeader
                 title="Timesheets"
                 actions={
-                    <div className="choice">
-                        <button onClick={() => goToWeek(addDays(weekStart, -7))} className="px-2 py-1.5 rounded border border-border flex items-center">
+                    <div className="week-nav">
+                        <button onClick={() => goToWeek(addDays(weekStart, -7))} className="week-nav__step">
                             <CaretLeft size={14} />
                         </button>
-                        <span className="text-shadow-grey">{formatDate(weekStart)} &ndash; {formatDate(weekEnd)}</span>
-                        <button onClick={() => goToWeek(addDays(weekStart, 7))} className="px-2 py-1.5 rounded border border-border flex items-center">
+                        <span className="week-nav__range">{formatDate(weekStart)} &ndash; {formatDate(weekEnd)}</span>
+                        <button onClick={() => goToWeek(addDays(weekStart, 7))} className="week-nav__step">
                             <CaretRight size={14} />
                         </button>
                     </div>
                 }
                 subtitle={
                     <>
-                        <span className="tabular-nums">{totalHours}h</span> logged this week. Edits here update the same entries shown in Time Tracking.
+                        <span className="u-tabular-nums">{totalHours}h</span> logged this week. Edits here update the same entries shown in Time Tracking.
                     </>
                 }
             />
 
-            <div className="card overflow-hidden">
+            <div className="card card--flush">
                 {entries.length === 0 ? (
                     <EmptyState text="No time logged for this week." />
                 ) : (
@@ -87,8 +87,8 @@ export default function TimeWeekly({ weekStart, weekEnd, entries, companies }) {
                             {entries.map((entry) => (
                                 <tr key={entry.id}>
                                     <td>{formatDate(entry.date)}</td>
-                                    <td className="text-shadow-grey">{entry.company?.name ?? '—'}</td>
-                                    <td className="table__cell--tight tabular-nums w-24">
+                                    <td className="table__cell--muted">{entry.company?.name ?? '—'}</td>
+                                    <td className="table__cell--tight table__cell--numeric table__cell--narrow">
                                         <EditableCell entry={entry} field="hours" type="number" />
                                     </td>
                                     <td className="table__cell--tight">

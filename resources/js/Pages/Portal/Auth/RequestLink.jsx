@@ -15,8 +15,8 @@ export default function RequestLink() {
     return (
         <AuthLayout title="Client Hub" subtitle="Sign in to follow your project">
             <form onSubmit={submit} className="card auth-shell__card">
-                {status && <div className="text-sm text-fern">{status}</div>}
-                <p className="text-sm text-shadow-grey">
+                {status && <div className="form-message form-message--success">{status}</div>}
+                <p className="auth-shell__text">
                     Enter your email and we&rsquo;ll send you a link to sign in &mdash; no password needed.
                 </p>
                 <div>
@@ -30,7 +30,7 @@ export default function RequestLink() {
                     />
                     {errors.email && <div className="form-error">{errors.email}</div>}
                 </div>
-                <Button type="submit" disabled={processing} className="btn--lg mt-2">
+                <Button type="submit" disabled={processing} className="btn--lg auth-shell__submit">
                     Email me a sign-in link
                 </Button>
             </form>

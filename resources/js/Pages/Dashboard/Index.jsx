@@ -15,13 +15,13 @@ export default function DashboardIndex({ metrics, recentInvoices }) {
                 subtitle="Snapshot of billing and client activity."
             />
 
-            <div className="grid grid-cols-3 gap-4 mb-8">
+            <div className="metric-grid metric-grid--3">
                 <MetricCard label="Outstanding" value={formatCurrency(metrics.outstanding)} />
                 <MetricCard label="Unbilled hours" value={`${metrics.unbilled_hours}h`} />
                 <MetricCard label="Active clients" value={metrics.active_clients} />
             </div>
 
-            <h2 className="text-sm font-semibold mb-3 text-shadow-grey">Recent invoices</h2>
+            <h2 className="section-heading">Recent invoices</h2>
             <div className="card">
                 {recentInvoices.length === 0 ? (
                     <EmptyState text="No invoices yet." />
@@ -30,14 +30,14 @@ export default function DashboardIndex({ metrics, recentInvoices }) {
                         <Link
                             key={invoice.id}
                             href={`/invoices/${invoice.id}`}
-                            className="flex items-center justify-between px-4 py-3 border-b border-border last:border-b-0 hover:bg-porcelain"
+                            className="list-row"
                         >
                             <div>
-                                <div className="text-sm font-medium">{invoice.company_name}</div>
-                                <div className="text-xs text-shadow-grey">{formatDate(invoice.issued_on)}</div>
+                                <div className="list-row__title">{invoice.company_name}</div>
+                                <div className="list-row__meta">{formatDate(invoice.issued_on)}</div>
                             </div>
-                            <div className="flex items-center gap-3">
-                                <span className="tabular-nums text-sm">{formatCurrency(invoice.total)}</span>
+                            <div className="list-row__aside">
+                                <span className="list-row__amount">{formatCurrency(invoice.total)}</span>
                                 <InvoiceStatusBadge invoice={invoice} />
                             </div>
                         </Link>

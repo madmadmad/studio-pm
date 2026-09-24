@@ -29,6 +29,69 @@
         }
     }
 
+    // Rows highlight on hover (rows that link somewhere).
+    &--hover tbody tr:hover {
+        background-color: var(--color-porcelain);
+    }
+
+    // Cell modifiers apply to <th> and <td> alike.
+    &__cell {
+        &--strong {
+            font-weight: var(--font-weight-medium);
+        }
+
+        &--muted {
+            color: var(--color-shadow-grey);
+        }
+
+        &--end {
+            text-align: right;
+        }
+
+        &--numeric {
+            font-variant-numeric: tabular-nums;
+        }
+
+        &--positive {
+            color: var(--color-fern);
+        }
+
+        &--capitalize {
+            text-transform: capitalize;
+        }
+
+        &--narrow {
+            width: 6rem; // one-off: fits an hours value
+        }
+    }
+
+    // Row actions, right-aligned in the last cell.
+    &__actions {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: var(--space-3);
+    }
+
+    // Several inline items in one cell (a badge beside a picker).
+    &__group {
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
+    }
+
+    // Small secondary line under a cell's main value ("Invited Sep 2").
+    &__meta {
+        margin-top: var(--space-1);
+    }
+
+    &__meta,
+    &__note {
+        font-size: var(--font-size-xs);
+        line-height: var(--line-height-xs);
+        color: var(--color-shadow-grey);
+    }
+
     // A cell holding an inline editable control, where the default cell
     // padding is too generous. Qualified by .table to outrank `td` above.
     & &__cell--tight {

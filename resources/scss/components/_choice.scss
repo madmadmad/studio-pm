@@ -6,4 +6,8 @@
     gap: var(--space-2);
     font-size: var(--font-size-sm);
     line-height: var(--line-height-sm);
+
+    &--muted {
+        color: var(--color-shadow-grey);
+    }
 }

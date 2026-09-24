@@ -13,11 +13,11 @@ export default function ForgotPassword({ status }) {
     return (
         <AuthLayout title="Studio PM" subtitle="Reset your password">
             <form onSubmit={submit} className="card auth-shell__card">
-                <p className="text-sm text-shadow-grey">
+                <p className="auth-shell__text">
                     Enter your email and we&rsquo;ll send you a link to reset your password.
                 </p>
 
-                {status && <div className="text-sm text-fern">{status}</div>}
+                {status && <div className="form-message form-message--success">{status}</div>}
 
                 <div>
                     <label className="label">Email</label>
@@ -31,11 +31,11 @@ export default function ForgotPassword({ status }) {
                     {errors.email && <div className="form-error">{errors.email}</div>}
                 </div>
 
-                <Button type="submit" disabled={processing} className="btn--lg mt-2">
+                <Button type="submit" disabled={processing} className="btn--lg auth-shell__submit">
                     Email password reset link
                 </Button>
 
-                <Link href="/login" className="text-sm text-shadow-grey hover:text-gunmetal text-center mt-1">
+                <Link href="/login" className="text-action text-action--sm auth-shell__back">
                     Back to sign in
                 </Link>
             </form>

@@ -1,0 +1,34 @@
+// Row of filter pills above a list, with an optional trailing link.
+
+.filter-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--space-section);
+
+    &__pills {
+        display: flex;
+        gap: var(--space-1);
+    }
+
+    &__pill {
+        padding: var(--space-1-5) var(--space-3);
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+        color: var(--color-shadow-grey);
+        border: var(--border-width) solid var(--color-border);
+        border-radius: var(--radius-base);
+
+        // No border when active, matching the original pill exactly.
+        &--active {
+            color: var(--color-white);
+            background-color: var(--color-gunmetal);
+            border-width: 0;
+        }
+    }
+
+    &__link {
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+    }
+}

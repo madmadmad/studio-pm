@@ -51,7 +51,7 @@ export default function ResetPassword({ email, token }) {
                     />
                 </div>
 
-                <Button type="submit" disabled={processing} className="btn--lg mt-2">
+                <Button type="submit" disabled={processing} className="btn--lg auth-shell__submit">
                     Reset password
                 </Button>
             </form>

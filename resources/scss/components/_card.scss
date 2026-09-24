@@ -9,4 +9,14 @@
     &--padded {
         padding: var(--space-panel);
     }
+
+    // Holds an edge-to-edge table or list: clips rows to the rounded corners.
+    &--flush {
+        overflow: hidden;
+    }
+
+    // A standalone form or panel that shouldn't stretch across the page.
+    &--narrow {
+        max-width: var(--size-form);
+    }
 }

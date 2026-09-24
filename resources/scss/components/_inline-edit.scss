@@ -1,0 +1,20 @@
+// A text/number input that reads as plain text until hovered or focused
+// (editable table cells, drawer titles).
+
+.inline-edit {
+    width: 100%;
+    background-color: transparent;
+    border: var(--border-width) solid transparent;
+    border-radius: var(--radius-base);
+
+    &:hover,
+    &:focus {
+        border-color: var(--color-border);
+    }
+
+    &--cell {
+        padding: var(--space-1) var(--space-2);
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+    }
+}

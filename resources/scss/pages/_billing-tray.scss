@@ -1,0 +1,16 @@
+// Time page: the "N entries ready to bill -- Create invoice" bar that
+// appears once entries are added to the invoice tray.
+
+.billing-tray {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-4);
+    background-color: var(--color-watermelon-soft);
+    border-radius: var(--radius-base);
+
+    &__summary {
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+    }
+}

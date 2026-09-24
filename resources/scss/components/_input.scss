@@ -43,6 +43,14 @@
         width: auto;
     }
 
+    // Tiny inline select sitting beside a badge in a table row.
+    &--micro {
+        padding: var(--space-0-5) var(--space-1);
+        font-size: var(--font-size-xs);
+        line-height: var(--line-height-xs);
+        color: var(--color-shadow-grey);
+    }
+
     // A non-form element styled like a disabled field, for a fixed value
     // in a form's layout (a locked "Project: X" line, a computed total).
     &--static {
