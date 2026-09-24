@@ -1,0 +1,51 @@
+// A clickable row in a card-based list: title + meta on the left, extra
+// details on the right, dividers between rows.
+
+.list-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-3) var(--space-4);
+    border-bottom: var(--border-width) solid var(--color-border);
+
+    &:last-child {
+        border-bottom: none;
+    }
+
+    &:hover {
+        background-color: var(--color-porcelain);
+    }
+
+    // A row that isn't clickable: no hover highlight.
+    &--static:hover {
+        background-color: transparent;
+    }
+
+    &__title {
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+        font-weight: var(--font-weight-medium);
+    }
+
+    &__meta {
+        font-size: var(--font-size-xs);
+        line-height: var(--line-height-xs);
+        color: var(--color-shadow-grey);
+
+        &--capitalize {
+            text-transform: capitalize;
+        }
+    }
+
+    &__aside {
+        display: flex;
+        align-items: center;
+        gap: var(--space-3);
+    }
+
+    &__amount {
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+        font-variant-numeric: tabular-nums;
+    }
+}

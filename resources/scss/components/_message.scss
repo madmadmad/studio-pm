@@ -1,0 +1,146 @@
+// A single message in a thread: avatar rail with a connector line down to
+// the next message, then sender/time header and the message card.
+
+.message {
+    // Inline images never grow past 640 x 480.
+    --message-media-max-width: 40rem;
+    --message-media-max-height: 30rem;
+
+    display: flex;
+    gap: var(--space-3);
+
+    &__rail {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        flex-shrink: 0;
+        align-items: center;
+        align-self: stretch;
+    }
+
+    // Fades from the accent (near the avatar) to transparent, so
+    // consecutive messages read as one continuous thread.
+    &__connector {
+        flex: 1;
+        width: var(--border-width-thick);
+        margin-top: var(--space-1);
+        background: linear-gradient(to bottom, var(--color-watermelon), transparent);
+    }
+
+    &__main {
+        flex: 1;
+        min-width: 0;
+        padding-bottom: var(--space-4);
+    }
+
+    &__header {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: var(--space-2);
+        margin-bottom: var(--space-1);
+    }
+
+    &__sender {
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+        font-weight: var(--font-weight-semibold);
+    }
+
+    &__time {
+        font-size: var(--font-size-xs);
+        line-height: var(--line-height-xs);
+        color: var(--color-shadow-grey);
+    }
+
+    &__actions {
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
+        margin-left: auto;
+    }
+
+    // Soft mist fill and no border, so a long thread doesn't read as a
+    // stack of hard-edged boxes.
+    &__card {
+        padding: var(--space-3) var(--space-4);
+        background-color: var(--color-mist);
+        border-radius: var(--radius-base);
+
+        &--deleted {
+            font-size: var(--font-size-sm);
+            line-height: var(--line-height-sm);
+            font-style: italic;
+            color: var(--color-shadow-grey);
+        }
+    }
+
+    &__text {
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+        white-space: pre-wrap;
+        overflow-wrap: break-word;
+    }
+
+    &__link {
+        text-decoration: underline;
+        word-break: break-all;
+    }
+
+    &__edit-input {
+        margin-bottom: var(--space-2);
+    }
+
+    &__edit-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: var(--space-2);
+    }
+
+    // Attachment groups get space above whenever something (the text, or
+    // the images) precedes them in the card.
+    &__image,
+    &__gallery,
+    &__files {
+        &:not(:first-child) {
+            margin-top: var(--space-3);
+        }
+    }
+
+    &__image,
+    &__gallery-item {
+        display: block;
+        overflow: hidden;
+        border-radius: var(--radius-base);
+    }
+
+    &__image-img {
+        width: auto;
+        max-width: var(--message-media-max-width);
+        height: auto;
+        max-height: var(--message-media-max-height);
+    }
+
+    &__gallery {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: var(--space-2);
+        max-width: var(--message-media-max-width);
+    }
+
+    &__gallery-item {
+        aspect-ratio: 1;
+    }
+
+    &__gallery-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    &__files {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-2);
+    }
+}

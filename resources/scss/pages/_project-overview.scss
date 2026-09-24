@@ -1,0 +1,42 @@
+// Projects/Show Overview tab: description, contact/PO fields, stats.
+
+.project-overview {
+    &__description {
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+        color: var(--color-shadow-grey);
+    }
+
+    // "Contact: X  Edit" / "PO Number: X  Edit", and their edit forms.
+    &__field {
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
+        margin-bottom: var(--space-section);
+
+        &--display {
+            font-size: var(--font-size-sm);
+            line-height: var(--line-height-sm);
+            color: var(--color-shadow-grey);
+        }
+    }
+
+    &__stats {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: var(--space-4);
+        margin-bottom: var(--space-section);
+
+        // Budget and Remaining join the row when the project has a budget.
+        &--wide {
+            grid-template-columns: repeat(6, minmax(0, 1fr));
+        }
+    }
+
+    &__team-label {
+        margin-bottom: var(--space-2);
+        font-size: var(--font-size-xs);
+        line-height: var(--line-height-xs);
+        color: var(--color-shadow-grey);
+    }
+}

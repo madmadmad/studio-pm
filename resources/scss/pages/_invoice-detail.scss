@@ -1,0 +1,26 @@
+// Invoices/Show: the scheduled-send card and the record-payment row.
+
+.invoice-detail {
+    &__schedule {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    &__schedule-text {
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+    }
+
+    &__schedule-actions,
+    &__reschedule,
+    &__payment {
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
+    }
+
+    &__reschedule {
+        margin-top: var(--space-3);
+    }
+}

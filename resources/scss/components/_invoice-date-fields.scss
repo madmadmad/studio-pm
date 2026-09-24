@@ -1,0 +1,8 @@
+// Issue date / payment terms / due date, side by side.
+// Used by Components/InvoiceDateFields.jsx.
+
+.invoice-date-fields {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-3);
+}

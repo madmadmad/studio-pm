@@ -1,0 +1,84 @@
+// Centered dialog over a dimmed page: header, scrolling body, footer.
+// --nested stacks a second dialog above the first (the email preview
+// opened from the send-invoice modal).
+
+.modal {
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-overlay);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-4);
+
+    &--nested {
+        z-index: var(--z-overlay-nested);
+    }
+
+    &__backdrop {
+        position: absolute;
+        inset: 0;
+        background-color: var(--color-scrim);
+        animation: overlay-fade-in var(--duration-base) var(--ease-enter);
+
+        .modal--nested & {
+            background-color: var(--color-scrim-strong);
+            animation: none;
+        }
+    }
+
+    &__panel {
+        position: relative;
+        width: 100%;
+        max-width: var(--size-modal);
+        max-height: 90vh; // one-off: keep a margin of page visible
+        overflow-y: auto;
+        background-color: var(--color-white);
+        border-radius: var(--radius-base);
+        box-shadow: var(--shadow-overlay);
+        animation: panel-slide-in var(--duration-base) var(--ease-enter);
+
+        // A tall panel that fills with a single iframe (email preview).
+        &--frame {
+            display: flex;
+            flex-direction: column;
+            max-width: var(--size-modal-wide);
+            height: 80vh; // one-off: fixed height so the iframe has room
+            overflow: visible;
+            animation: none;
+        }
+    }
+
+    &__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: var(--space-4) var(--space-6);
+        border-bottom: var(--border-width) solid var(--color-border);
+    }
+
+    &__title {
+        font-family: var(--font-family-display);
+        font-size: var(--font-size-lg);
+        line-height: var(--line-height-lg);
+        font-weight: var(--font-weight-extrabold);
+        letter-spacing: var(--letter-spacing-display);
+    }
+
+    &__body {
+        padding: var(--space-4) var(--space-6);
+    }
+
+    &__footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: var(--space-2);
+        padding: var(--space-4) var(--space-6);
+        border-top: var(--border-width) solid var(--color-border);
+    }
+
+    &__frame {
+        flex: 1;
+        width: 100%;
+    }
+}

@@ -1,0 +1,27 @@
+// Underlined tab strip at the top of a tabbed page.
+// Used by Components/TabBar.jsx.
+
+.tabs {
+    display: flex;
+    gap: var(--space-1);
+    margin-bottom: var(--space-section);
+    overflow-x: auto;
+    border-bottom: var(--border-width) solid var(--color-border);
+
+    &__tab {
+        // Overlap the strip's own bottom border so the active underline
+        // replaces it rather than sitting above it.
+        margin-bottom: calc(var(--border-width) * -1);
+        padding: var(--space-2) var(--space-3);
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+        color: var(--color-shadow-grey);
+        white-space: nowrap;
+        border-bottom: var(--border-width-thick) solid transparent;
+
+        &--active {
+            color: var(--color-gunmetal);
+            border-bottom-color: var(--color-gunmetal);
+        }
+    }
+}

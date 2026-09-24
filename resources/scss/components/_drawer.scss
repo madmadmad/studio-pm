@@ -1,0 +1,71 @@
+// Right-edge slide-in panel over a dimmed page (task, note, time entry
+// details). Used by Components/Drawer.jsx.
+
+.drawer {
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-overlay);
+
+    &__backdrop {
+        position: absolute;
+        inset: 0;
+        background-color: var(--color-scrim);
+        animation: overlay-fade-in var(--duration-base) var(--ease-enter);
+    }
+
+    &__panel {
+        position: absolute;
+        top: 0;
+        right: 0;
+        display: flex;
+        flex-direction: column;
+        width: var(--size-drawer);
+        max-width: 95vw; // one-off: always leave a sliver of page visible
+        height: 100%;
+        background-color: var(--color-white);
+        box-shadow: var(--shadow-overlay);
+        animation: panel-slide-in var(--duration-base) var(--ease-enter);
+    }
+
+    &__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: var(--space-4) var(--space-6);
+        border-bottom: var(--border-width) solid var(--color-border);
+    }
+
+    &__actions {
+        display: flex;
+        align-items: center;
+        gap: var(--space-3);
+    }
+
+    // An icon button in the header -- a little horizontal hit area.
+    &__action {
+        padding-inline: var(--space-1);
+    }
+
+    &__body {
+        flex: 1;
+        overflow-y: auto;
+        padding: var(--space-4) var(--space-6);
+    }
+
+    // One group of fields/details in the body.
+    &__section {
+        margin-bottom: var(--space-6);
+
+        &--divided {
+            padding-bottom: var(--space-4);
+            border-bottom: var(--border-width) solid var(--color-border);
+        }
+    }
+
+    // Small print ("Edited Sep 3", "Created Aug 30").
+    &__meta {
+        font-size: var(--font-size-xs);
+        line-height: var(--line-height-xs);
+        color: var(--color-shadow-grey);
+    }
+}

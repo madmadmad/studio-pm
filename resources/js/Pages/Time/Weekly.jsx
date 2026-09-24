@@ -5,6 +5,7 @@ import AppLayout from '../../Layouts/AppLayout';
 import EmptyState from '../../Components/EmptyState';
 import { formatDate } from '../../lib/format';
 import { api } from '../../lib/api';
+import PageHeader from '../../Components/PageHeader';
 
 function addDays(dateStr, days) {
     const d = new Date(dateStr + 'T00:00:00');
@@ -34,7 +35,7 @@ function EditableCell({ entry, field, type = 'text' }) {
             onChange={(e) => setValue(e.target.value)}
             onBlur={save}
             disabled={saving}
-            className="border border-transparent hover:border-border focus:border-border rounded px-2 py-1 text-sm w-full bg-transparent"
+            className="inline-edit inline-edit--cell"
         />
     );
 }
@@ -49,23 +50,27 @@ export default function TimeWeekly({ weekStart, weekEnd, entries, companies }) {
     return (
         <AppLayout>
             <Head title="Timesheets" />
-            <div className="flex items-center justify-between mb-1">
-                <h1 className="font-display text-2xl font-semibold">Timesheets</h1>
-                <div className="flex items-center gap-2 text-sm">
-                    <button onClick={() => goToWeek(addDays(weekStart, -7))} className="px-2 py-1.5 rounded border border-border flex items-center">
-                        <CaretLeft size={14} />
-                    </button>
-                    <span className="text-shadow-grey">{formatDate(weekStart)} &ndash; {formatDate(weekEnd)}</span>
-                    <button onClick={() => goToWeek(addDays(weekStart, 7))} className="px-2 py-1.5 rounded border border-border flex items-center">
-                        <CaretRight size={14} />
-                    </button>
-                </div>
-            </div>
-            <p className="text-sm text-shadow-grey mb-6">
-                <span className="tabular-nums">{totalHours}h</span> logged this week. Edits here update the same entries shown in Time Tracking.
-            </p>
+            <PageHeader
+                title="Timesheets"
+                actions={
+                    <div className="week-nav">
+                        <button onClick={() => goToWeek(addDays(weekStart, -7))} className="week-nav__step">
+                            <CaretLeft size={14} />
+                        </button>
+                        <span className="week-nav__range">{formatDate(weekStart)} &ndash; {formatDate(weekEnd)}</span>
+                        <button onClick={() => goToWeek(addDays(weekStart, 7))} className="week-nav__step">
+                            <CaretRight size={14} />
+                        </button>
+                    </div>
+                }
+                subtitle={
+                    <>
+                        <span className="u-tabular-nums">{totalHours}h</span> logged this week. Edits here update the same entries shown in Time Tracking.
+                    </>
+                }
+            />
 
-            <div className="card overflow-hidden">
+            <div className="card card--flush">
                 {entries.length === 0 ? (
                     <EmptyState text="No time logged for this week." />
                 ) : (
@@ -82,11 +87,11 @@ export default function TimeWeekly({ weekStart, weekEnd, entries, companies }) {
                             {entries.map((entry) => (
                                 <tr key={entry.id}>
                                     <td>{formatDate(entry.date)}</td>
-                                    <td className="text-shadow-grey">{entry.company?.name ?? '—'}</td>
-                                    <td className="cell-tight tabular-nums w-24">
+                                    <td className="table__cell--muted">{entry.company?.name ?? '—'}</td>
+                                    <td className="table__cell--tight table__cell--numeric table__cell--narrow">
                                         <EditableCell entry={entry} field="hours" type="number" />
                                     </td>
-                                    <td className="cell-tight">
+                                    <td className="table__cell--tight">
                                         <EditableCell entry={entry} field="note" />
                                     </td>
                                 </tr>

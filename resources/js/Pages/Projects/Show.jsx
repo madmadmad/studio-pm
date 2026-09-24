@@ -1,6 +1,6 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
-import { ArrowLeft, CaretRight, Check, CheckCircle, Copy, DotsSixVertical, DownloadSimple, Eye, Paperclip, PaperPlaneTilt, PencilSimple, Trash, X } from '@phosphor-icons/react';
+import { CaretRight, Check, CheckCircle, Copy, DotsSixVertical, DownloadSimple, Eye, Paperclip, PaperPlaneTilt, PencilSimple, Trash, X } from '@phosphor-icons/react';
 import AppLayout from '../../Layouts/AppLayout';
 import Button from '../../Components/Button';
 import EmptyState from '../../Components/EmptyState';
@@ -14,30 +14,15 @@ import { formatCurrency, formatDate, formatFileSize, invoiceSubtotal, invoiceTot
 import { calculateDueDate, todayLocal } from '../../lib/paymentTerms';
 import { api } from '../../lib/api';
 import { copyToClipboard } from '../../lib/clipboard';
+import PageHeader from '../../Components/PageHeader';
+import Drawer from '../../Components/Drawer';
+import TabBar from '../../Components/TabBar';
 
 const ALL_TABS = ['Overview', 'Tasks', 'Notes', 'Messages', 'Time', 'Proposals', 'Billing', 'Expenses', 'Team'];
 const MANAGER_ONLY_TABS = ['Proposals', 'Billing', 'Expenses'];
 
 function reload() {
     router.reload({ only: ['project'] });
-}
-
-function TabBar({ tab, setTab, tabs }) {
-    return (
-        <div className="flex gap-1 border-b border-border mb-6 overflow-x-auto">
-            {tabs.map((t) => (
-                <button
-                    key={t}
-                    onClick={() => setTab(t)}
-                    className={`text-sm font-medium px-3 py-2 border-b-2 -mb-px whitespace-nowrap ${
-                        tab === t ? 'border-gunmetal text-gunmetal' : 'border-transparent text-shadow-grey'
-                    }`}
-                >
-                    {t}
-                </button>
-            ))}
-        </div>
-    );
 }
 
 function PoNumberField({ project }) {
@@ -58,22 +43,22 @@ function PoNumberField({ project }) {
 
     if (editing) {
         return (
-            <div className="flex items-center gap-2 mb-6">
+            <div className="project-overview__field">
                 <input
                     autoFocus
                     value={value}
                     onChange={(e) => setValue(e.target.value)}
                     placeholder="PO number"
-                    className="field field-sm"
+                    className="input input--sm"
                 />
                 <Button variant="link" onClick={save} disabled={saving}>Save</Button>
-                <button onClick={() => setEditing(false)} className="text-sm text-shadow-grey">Cancel</button>
+                <button onClick={() => setEditing(false)} className="text-action text-action--sm">Cancel</button>
             </div>
         );
     }
 
     return (
-        <div className="flex items-center gap-2 text-sm text-shadow-grey mb-6">
+        <div className="project-overview__field project-overview__field--display">
             <span>PO Number: {project.po_number || '—'}</span>
             <Button variant="link" onClick={() => { setValue(project.po_number || ''); setEditing(true); }}>
                 Edit
@@ -101,12 +86,12 @@ function ContactField({ project }) {
 
     if (editing) {
         return (
-            <div className="flex items-center gap-2 mb-6">
+            <div className="project-overview__field">
                 <select
                     autoFocus
                     value={value}
                     onChange={(e) => setValue(e.target.value)}
-                    className="field field-sm"
+                    className="input input--sm"
                 >
                     <option value="">No contact</option>
                     {contacts.map((contact) => (
@@ -116,13 +101,13 @@ function ContactField({ project }) {
                     ))}
                 </select>
                 <Button variant="link" onClick={save} disabled={saving}>Save</Button>
-                <button onClick={() => setEditing(false)} className="text-sm text-shadow-grey">Cancel</button>
+                <button onClick={() => setEditing(false)} className="text-action text-action--sm">Cancel</button>
             </div>
         );
     }
 
     return (
-        <div className="flex items-center gap-2 text-sm text-shadow-grey mb-6">
+        <div className="project-overview__field project-overview__field--display">
             <span>Contact: {project.contact?.name || '—'}</span>
             <Button variant="link" onClick={() => { setValue(project.contact_id ? String(project.contact_id) : ''); setEditing(true); }}>
                 Edit
@@ -141,43 +126,43 @@ function OverviewTab({ project }) {
 
     return (
         <div>
-            {project.description && <p className="text-sm text-shadow-grey mb-6">{project.description}</p>}
+            {project.description && <p className="project-overview__description page-section">{project.description}</p>}
             <ContactField project={project} />
             <PoNumberField project={project} />
-            <div className={`grid gap-4 mb-6 ${budget > 0 ? 'grid-cols-6' : 'grid-cols-4'}`}>
-                <div className="card card-padded">
-                    <div className="text-xs text-shadow-grey mb-1">Tasks</div>
-                    <div className="tabular-nums text-xl">{doneTasks}/{project.tasks.length}</div>
+            <div className={`project-overview__stats${budget > 0 ? ' project-overview__stats--wide' : ''}`}>
+                <div className="card card--padded metric-card">
+                    <div className="metric-card__label">Tasks</div>
+                    <div className="metric-card__value">{doneTasks}/{project.tasks.length}</div>
                 </div>
-                <div className="card card-padded">
-                    <div className="text-xs text-shadow-grey mb-1">Hours logged</div>
-                    <div className="tabular-nums text-xl">{totalHours}h</div>
+                <div className="card card--padded metric-card">
+                    <div className="metric-card__label">Hours logged</div>
+                    <div className="metric-card__value">{totalHours}h</div>
                 </div>
-                <div className="card card-padded">
-                    <div className="text-xs text-shadow-grey mb-1">Unbilled hours</div>
-                    <div className="tabular-nums text-xl">{unbilledHours}h</div>
+                <div className="card card--padded metric-card">
+                    <div className="metric-card__label">Unbilled hours</div>
+                    <div className="metric-card__value">{unbilledHours}h</div>
                 </div>
-                <div className="card card-padded">
-                    <div className="text-xs text-shadow-grey mb-1">Total invoiced</div>
-                    <div className="tabular-nums text-xl">{formatCurrency(totalInvoiced)}</div>
+                <div className="card card--padded metric-card">
+                    <div className="metric-card__label">Total invoiced</div>
+                    <div className="metric-card__value">{formatCurrency(totalInvoiced)}</div>
                 </div>
                 {budget > 0 && (
                     <>
-                        <div className="card card-padded">
-                            <div className="text-xs text-shadow-grey mb-1">Budget</div>
-                            <div className="tabular-nums text-xl">{formatCurrency(budget)}</div>
+                        <div className="card card--padded metric-card">
+                            <div className="metric-card__label">Budget</div>
+                            <div className="metric-card__value">{formatCurrency(budget)}</div>
                         </div>
-                        <div className="card card-padded">
-                            <div className="text-xs text-shadow-grey mb-1">Remaining</div>
-                            <div className={`tabular-nums text-xl ${remaining < 0 ? 'text-watermelon' : ''}`}>{formatCurrency(remaining)}</div>
+                        <div className="card card--padded metric-card">
+                            <div className="metric-card__label">Remaining</div>
+                            <div className={`metric-card__value${remaining < 0 ? ' metric-card__value--negative' : ''}`}>{formatCurrency(remaining)}</div>
                         </div>
                     </>
                 )}
             </div>
             {project.team_names?.length > 0 && (
                 <div>
-                    <div className="text-xs text-shadow-grey mb-2">Team</div>
-                    <div className="flex gap-2 flex-wrap">
+                    <div className="project-overview__team-label">Team</div>
+                    <div className="cluster">
                         {project.team_names.map((name) => (
                             <Badge key={name} tone="neutral" label={name} />
                         ))}
@@ -203,36 +188,36 @@ function TaskRow({ task, teamNames, onChange, onOpen }) {
     }
 
     return (
-        <div className="grid grid-cols-12 gap-2 items-center px-4 py-2 border-b border-border last:border-b-0 text-sm group">
-            <div className="col-span-5 flex items-center gap-2">
-                <span className="truncate">{task.title}</span>
+        <div className="grid-row">
+            <div className="task-list__title">
+                <span className="u-truncate">{task.title}</span>
                 <button
                     onClick={() => onOpen(task.id)}
                     title="Open task"
-                    className="flex-shrink-0 w-7 h-7 flex items-center justify-center rounded border border-border text-shadow-grey opacity-0 group-hover:opacity-100 hover:text-gunmetal hover:border-gunmetal transition-opacity"
+                    className="row-action row-action--reveal"
                 >
                     <CaretRight size={14} weight="bold" />
                 </button>
             </div>
-            <div className="col-span-3" onClick={(e) => e.stopPropagation()}>
+            <div className="task-list__assignee" onClick={(e) => e.stopPropagation()}>
                 <select
                     value={task.assignee ?? ''}
                     onChange={(e) => updateField('assignee', e.target.value)}
-                    className="h-8 border border-transparent hover:border-border rounded px-2 text-sm w-full bg-transparent text-shadow-grey"
+                    className="task-list__control"
                 >
                     <option value="">Unassigned</option>
                     {teamNames.map((name) => <option key={name} value={name}>{name}</option>)}
                 </select>
             </div>
-            <div className="col-span-2">
+            <div className="task-list__due">
                 <input
                     type="date"
                     value={task.due_date ? task.due_date.slice(0, 10) : ''}
                     onChange={(e) => updateField('due_date', e.target.value)}
-                    className="h-8 border border-transparent hover:border-border rounded px-2 text-xs w-full bg-transparent text-shadow-grey"
+                    className="task-list__control task-list__control--date"
                 />
             </div>
-            <div className="col-span-2 text-right">
+            <div className="task-list__status">
                 <button onClick={cycleStatus}>
                     <TaskStatusBadge task={task} />
                 </button>
@@ -262,7 +247,7 @@ function AutoResizeTextarea({ value, className, ...props }) {
             ref={ref}
             value={value}
             rows={1}
-            className={`resize-none overflow-hidden ${className}`}
+            className={`autosize ${className}`}
             {...props}
         />
     );
@@ -294,16 +279,14 @@ function SubtaskRow({ subtask, onChange, isDragging, onDragStart, onDragOver, on
             onDragOver={onDragOver}
             onDrop={onDrop}
             onDragEnd={onDragEnd}
-            className={`flex items-start gap-2 py-2 border-b border-border last:border-b-0 group ${isDragging ? 'opacity-40' : ''}`}
+            className={`subtask-list__item${isDragging ? ' subtask-list__item--dragging' : ''}`}
         >
-            <span className="text-shadow-grey cursor-grab opacity-0 group-hover:opacity-100 flex-shrink-0 mt-1">
+            <span className="subtask-list__handle">
                 <DotsSixVertical size={14} weight="bold" />
             </span>
             <button
                 onClick={toggleDone}
-                className={`mt-0.5 w-5 h-5 rounded flex items-center justify-center flex-shrink-0 text-xs ${
-                    subtask.status === 'done' ? 'bg-fern text-white' : 'border border-border'
-                }`}
+                className={`subtask-list__check${subtask.status === 'done' ? ' subtask-list__check--done' : ''}`}
             >
                 {subtask.status === 'done' && <Check size={12} weight="bold" />}
             </button>
@@ -311,11 +294,9 @@ function SubtaskRow({ subtask, onChange, isDragging, onDragStart, onDragOver, on
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 onBlur={() => title !== subtask.title && updateField('title', title)}
-                className={`flex-1 min-w-0 text-sm border-none focus:outline-none bg-transparent leading-normal py-0.5 ${
-                    subtask.status === 'done' ? 'line-through text-shadow-grey' : ''
-                }`}
+                className={`subtask-list__title${subtask.status === 'done' ? ' subtask-list__title--done' : ''}`}
             />
-            <button onClick={remove} className="icon-btn icon-btn-danger mt-0.5 opacity-0 group-hover:opacity-100 flex-shrink-0 px-1">
+            <button onClick={remove} className="icon-btn icon-btn--danger subtask-list__remove">
                 <X />
             </button>
         </div>
@@ -345,10 +326,10 @@ function SubtasksSection({ task, onChange }) {
     }
 
     return (
-        <div className="mb-6">
-            <div className="text-xs font-semibold text-shadow-grey mb-2">Subtasks</div>
+        <div className="drawer__section">
+            <div className="section-label">Subtasks</div>
             {subtasks.length > 0 && (
-                <div className="mb-1">
+                <div className="subtask-list">
                     {subtasks.map((subtask, idx) => (
                         <SubtaskRow
                             key={subtask.id}
@@ -366,14 +347,14 @@ function SubtasksSection({ task, onChange }) {
                     ))}
                 </div>
             )}
-            <form onSubmit={addSubtask} className="flex items-center gap-2 pt-2">
+            <form onSubmit={addSubtask} className="inline-form subtask-list__add">
                 <input
                     placeholder="Add subtask"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    className="field flex-1"
+                    className="input inline-form__grow"
                 />
-                <Button type="submit" variant="confirm" className="btn-lg flex-shrink-0">
+                <Button type="submit" variant="confirm" className="btn--lg subtask-list__add-button">
                     Add
                 </Button>
             </form>
@@ -407,35 +388,35 @@ function FilesSection({ task, onChange }) {
     }
 
     return (
-        <div className="mb-6">
-            <div className="flex items-center justify-between mb-2">
-                <div className="text-xs font-semibold text-shadow-grey">Files</div>
+        <div className="drawer__section">
+            <div className="task-files__header">
+                <div className="section-label section-label--flush">Files</div>
                 <Button variant="link" onClick={() => inputRef.current.click()} disabled={uploading}>
                     <Paperclip size={14} /> {uploading ? 'Uploading…' : 'Add file'}
                 </Button>
-                <input ref={inputRef} type="file" onChange={handleFileChange} className="hidden" />
+                <input ref={inputRef} type="file" onChange={handleFileChange} hidden />
             </div>
             {files.length === 0 ? (
                 <EmptyState text="No files yet." />
             ) : (
-                <div className="border border-border rounded-lg overflow-hidden">
+                <div className="task-files__list">
                     {files.map((file) => (
                         <div
                             key={file.id}
-                            className="flex items-center justify-between px-3 py-2 border-b border-border last:border-b-0 group"
+                            className="task-files__item"
                         >
-                            <div className="min-w-0">
-                                <div className="text-sm truncate">{file.filename}</div>
-                                <div className="text-xs text-shadow-grey">{formatFileSize(file.size)}</div>
+                            <div className="task-files__info">
+                                <div className="task-files__name">{file.filename}</div>
+                                <div className="task-files__size">{formatFileSize(file.size)}</div>
                             </div>
-                            <div className="flex items-center gap-1 flex-shrink-0">
-                                <a href={file.url} download={file.filename} title="Download" className="icon-btn icon-btn-secondary p-1.5">
+                            <div className="task-files__actions">
+                                <a href={file.url} download={file.filename} title="Download" className="icon-btn icon-btn--secondary task-files__action">
                                     <DownloadSimple />
                                 </a>
                                 <button
                                     onClick={() => remove(file)}
                                     title="Remove"
-                                    className="icon-btn icon-btn-danger p-1.5 opacity-0 group-hover:opacity-100"
+                                    className="icon-btn icon-btn--danger task-files__action task-files__action--reveal"
                                 >
                                     <X />
                                 </button>
@@ -473,72 +454,65 @@ function TaskDrawer({ task, teamNames, onClose, onChange }) {
     }
 
     return (
-        <div className="fixed inset-0 z-50">
-            <div className="absolute inset-0 bg-gunmetal/20 drawer-overlay" onClick={onClose} />
-            <div className="absolute right-0 top-0 h-full w-[600px] max-w-[95vw] bg-white shadow-xl flex flex-col drawer-panel">
-                <div className="flex items-center justify-between px-6 py-4 border-b border-border">
-                    <select
-                        value={task.status}
-                        onChange={(e) => updateField('status', e.target.value)}
-                        className="field field-xs font-medium w-auto"
-                    >
-                        {TASK_STATUS_OPTIONS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
-                    </select>
-                    <button onClick={onClose} className="icon-btn icon-btn-secondary px-1">
-                        <X />
-                    </button>
-                </div>
+        <Drawer
+            onClose={onClose}
+            header={
+                <select
+                    value={task.status}
+                    onChange={(e) => updateField('status', e.target.value)}
+                    className="input input--xs input--inline task-drawer__status"
+                >
+                    {TASK_STATUS_OPTIONS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
+                </select>
+            }
+        >
+            <input
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                onBlur={() => title !== task.title && updateField('title', title)}
+                className="inline-edit inline-edit--title"
+            />
 
-                <div className="flex-1 overflow-y-auto px-6 py-4">
-                    <input
-                        value={title}
-                        onChange={(e) => setTitle(e.target.value)}
-                        onBlur={() => title !== task.title && updateField('title', title)}
-                        className="text-xl font-semibold w-full mb-4 border border-transparent hover:border-border focus:border-border rounded px-1 -mx-1 focus:outline-none"
-                    />
-
-                    <div className="text-sm mb-6 pb-4 border-b border-border">
-                        <div className="text-xs font-semibold text-shadow-grey mb-1">Assignee</div>
-                        <select
-                            value={task.assignee ?? ''}
-                            onChange={(e) => updateField('assignee', e.target.value)}
-                            className="field field-xs w-auto"
-                        >
-                            <option value="">Unassigned</option>
-                            {teamNames.map((name) => <option key={name} value={name}>{name}</option>)}
-                        </select>
-                    </div>
-
-                    <div className="mb-6">
-                        <div className="text-xs font-semibold text-shadow-grey mb-2">Description</div>
-                        <textarea
-                            value={description}
-                            onChange={(e) => setDescription(e.target.value)}
-                            onBlur={() => description !== (task.description ?? '') && updateField('description', description)}
-                            rows={6}
-                            placeholder="Add a description…"
-                            className="field"
-                        />
-                    </div>
-
-                    <SubtasksSection task={task} onChange={onChange} />
-
-                    <FilesSection task={task} onChange={onChange} />
-
-                    <div className="mb-6">
-                        <div className="text-xs font-semibold text-shadow-grey mb-2">Due date</div>
-                        <input
-                            type="date"
-                            value={task.due_date ? task.due_date.slice(0, 10) : ''}
-                            onChange={(e) => updateField('due_date', e.target.value)}
-                            className="field"
-                        />
-                    </div>
-
-                    <div className="text-xs text-shadow-grey">Created {formatDate(task.created_at)}</div>
-                </div>
+            <div className="drawer__section drawer__section--divided task-drawer__assignee">
+                <div className="section-label section-label--tight">Assignee</div>
+                <select
+                    value={task.assignee ?? ''}
+                    onChange={(e) => updateField('assignee', e.target.value)}
+                    className="input input--xs input--inline"
+                >
+                    <option value="">Unassigned</option>
+                    {teamNames.map((name) => <option key={name} value={name}>{name}</option>)}
+                </select>
             </div>
-        </div>
+
+            <div className="drawer__section">
+                <div className="section-label">Description</div>
+                <textarea
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    onBlur={() => description !== (task.description ?? '') && updateField('description', description)}
+                    rows={6}
+                    placeholder="Add a description…"
+                    className="input"
+                />
+            </div>
+
+            <SubtasksSection task={task} onChange={onChange} />
+
+            <FilesSection task={task} onChange={onChange} />
+
+            <div className="drawer__section">
+                <div className="section-label">Due date</div>
+                <input
+                    type="date"
+                    value={task.due_date ? task.due_date.slice(0, 10) : ''}
+                    onChange={(e) => updateField('due_date', e.target.value)}
+                    className="input"
+                />
+            </div>
+
+            <div className="drawer__meta">Created {formatDate(task.created_at)}</div>
+        </Drawer>
     );
 }
 
@@ -565,25 +539,25 @@ function TasksTab({ project }) {
 
     return (
         <div>
-            <form onSubmit={addTask} className="flex gap-2 mb-4">
+            <form onSubmit={addTask} className="inline-form page-section--tight">
                 <input
                     placeholder="New task"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    className="field flex-1"
+                    className="input inline-form__grow"
                 />
                 <Button type="submit" variant="confirm">Add</Button>
             </form>
-            <div className="card overflow-hidden">
+            <div className="card card--flush">
                 {project.tasks.length === 0 ? (
                     <EmptyState text="No tasks yet." />
                 ) : (
                     <>
-                        <div className="grid grid-cols-12 gap-2 px-4 py-2 border-b border-border text-xs font-medium text-shadow-grey">
-                            <div className="col-span-5">Task</div>
-                            <div className="col-span-3">Assignee</div>
-                            <div className="col-span-2">Due date</div>
-                            <div className="col-span-2 text-right">Status</div>
+                        <div className="grid-row grid-row--head">
+                            <div className="task-list__title">Task</div>
+                            <div className="task-list__assignee">Assignee</div>
+                            <div className="task-list__due">Due date</div>
+                            <div className="task-list__status">Status</div>
                         </div>
                         {project.tasks.map((task) => (
                             <TaskRow
@@ -614,12 +588,12 @@ function NoteRow({ note, onOpen }) {
     return (
         <button
             onClick={() => onOpen(note.id)}
-            className="w-full flex items-center justify-between gap-2 px-4 py-3 border-b border-border last:border-b-0 text-sm text-left group hover:bg-porcelain"
+            className="list-row note-list__row"
         >
-            <span className="truncate font-medium">{note.title || 'Untitled note'}</span>
-            <span className="flex items-center gap-2 flex-shrink-0">
-                <span className="text-xs text-shadow-grey">{formatDate(note.updated_at)}</span>
-                <span className="w-7 h-7 flex items-center justify-center rounded border border-border text-shadow-grey opacity-0 group-hover:opacity-100 transition-opacity">
+            <span className="note-list__title">{note.title || 'Untitled note'}</span>
+            <span className="note-list__meta">
+                <span className="note-list__date">{formatDate(note.updated_at)}</span>
+                <span className="row-action row-action--reveal">
                     <CaretRight size={14} weight="bold" />
                 </span>
             </span>
@@ -672,34 +646,25 @@ function NoteDrawer({ note, onClose, onChange }) {
     }
 
     return (
-        <div className="fixed inset-0 z-50">
-            <div className="absolute inset-0 bg-gunmetal/20 drawer-overlay" onClick={onClose} />
-            <div className="absolute right-0 top-0 h-full w-[600px] max-w-[95vw] bg-white shadow-xl flex flex-col drawer-panel">
-                <div className="flex items-center justify-between px-6 py-4 border-b border-border">
-                    <span className="text-xs text-shadow-grey">Edited {formatDate(note.updated_at)}</span>
-                    <div className="flex items-center gap-3">
-                        <button onClick={remove} title="Delete note" className="icon-btn icon-btn-danger px-1">
-                            <Trash />
-                        </button>
-                        <button onClick={onClose} className="icon-btn icon-btn-secondary px-1">
-                            <X />
-                        </button>
-                    </div>
-                </div>
+        <Drawer
+            onClose={onClose}
+            header={<span className="drawer__meta">Edited {formatDate(note.updated_at)}</span>}
+            actions={
+                <button onClick={remove} title="Delete note" className="icon-btn icon-btn--danger drawer__action">
+                    <Trash />
+                </button>
+            }
+        >
+            <input
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                onBlur={() => title !== (note.title ?? '') && updateField('title', title)}
+                placeholder="Untitled note"
+                className="inline-edit inline-edit--title"
+            />
 
-                <div className="flex-1 overflow-y-auto px-6 py-4">
-                    <input
-                        value={title}
-                        onChange={(e) => setTitle(e.target.value)}
-                        onBlur={() => title !== (note.title ?? '') && updateField('title', title)}
-                        placeholder="Untitled note"
-                        className="text-xl font-semibold w-full mb-4 border border-transparent hover:border-border focus:border-border rounded px-1 -mx-1 focus:outline-none"
-                    />
-
-                    <RichTextEditor value={body} onChange={handleBodyChange} />
-                </div>
-            </div>
-        </div>
+            <RichTextEditor value={body} onChange={handleBodyChange} />
+        </Drawer>
     );
 }
 
@@ -723,12 +688,12 @@ function NotesTab({ project }) {
 
     return (
         <div>
-            <div className="flex justify-end mb-4">
+            <div className="toolbar page-section--tight">
                 <Button variant="confirm" onClick={createNote} disabled={creating}>
                     + New note
                 </Button>
             </div>
-            <div className="card overflow-hidden">
+            <div className="card card--flush">
                 {project.notes.length === 0 ? (
                     <EmptyState text="No notes yet." />
                 ) : (
@@ -785,20 +750,20 @@ function MessagesTab({ project }) {
 
 function TimeEntryRow({ entry, onOpen }) {
     return (
-        <div className="grid grid-cols-12 gap-2 items-center px-4 py-2 border-b border-border last:border-b-0 text-sm group">
-            <div className="col-span-2 text-shadow-grey">{formatDate(entry.date)}</div>
-            <div className="col-span-2 tabular-nums">{entry.hours}h</div>
-            <div className="col-span-6 flex items-center gap-2">
-                <span className="truncate text-shadow-grey">{entry.task ? entry.task.title : entry.note || '—'}</span>
+        <div className="grid-row">
+            <div className="time-list__date">{formatDate(entry.date)}</div>
+            <div className="time-list__hours">{entry.hours}h</div>
+            <div className="time-list__detail">
+                <span className="time-list__text">{entry.task ? entry.task.title : entry.note || '—'}</span>
                 <button
                     onClick={() => onOpen(entry.id)}
                     title="Open entry"
-                    className="flex-shrink-0 w-7 h-7 flex items-center justify-center rounded border border-border text-shadow-grey opacity-0 group-hover:opacity-100 hover:text-gunmetal hover:border-gunmetal transition-opacity"
+                    className="row-action row-action--reveal"
                 >
                     <CaretRight size={14} weight="bold" />
                 </button>
             </div>
-            <div className="col-span-2 text-right">
+            <div className="time-list__status">
                 {entry.billed ? <Badge tone="fern" label="Billed" /> : <Badge tone="neutral" label="Unbilled" />}
             </div>
         </div>
@@ -836,81 +801,72 @@ function TimeEntryDrawer({ entry, tasks, onClose, onChange }) {
     }
 
     return (
-        <div className="fixed inset-0 z-50">
-            <div className="absolute inset-0 bg-gunmetal/20 drawer-overlay" onClick={onClose} />
-            <div className="absolute right-0 top-0 h-full w-[600px] max-w-[95vw] bg-white shadow-xl flex flex-col drawer-panel">
-                <div className="flex items-center justify-between px-6 py-4 border-b border-border">
-                    {entry.billed ? <Badge tone="fern" label="Billed" /> : <Badge tone="neutral" label="Unbilled" />}
-                    <div className="flex items-center gap-3">
-                        <button onClick={remove} title="Delete entry" className="icon-btn icon-btn-danger px-1">
-                            <Trash />
-                        </button>
-                        <button onClick={onClose} className="icon-btn icon-btn-secondary px-1">
-                            <X />
-                        </button>
-                    </div>
+        <Drawer
+            onClose={onClose}
+            header={entry.billed ? <Badge tone="fern" label="Billed" /> : <Badge tone="neutral" label="Unbilled" />}
+            actions={
+                <button onClick={remove} title="Delete entry" className="icon-btn icon-btn--danger drawer__action">
+                    <Trash />
+                </button>
+            }
+        >
+            <div className="form-grid drawer__section drawer__section--divided">
+                <div>
+                    <div className="section-label section-label--tight">Date</div>
+                    <input
+                        type="date"
+                        value={entry.date.slice(0, 10)}
+                        onChange={(e) => updateField('date', e.target.value)}
+                        className="input input--xs"
+                    />
                 </div>
-
-                <div className="flex-1 overflow-y-auto px-6 py-4">
-                    <div className="grid grid-cols-2 gap-3 mb-6 pb-4 border-b border-border">
-                        <div>
-                            <div className="text-xs font-semibold text-shadow-grey mb-1">Date</div>
-                            <input
-                                type="date"
-                                value={entry.date.slice(0, 10)}
-                                onChange={(e) => updateField('date', e.target.value)}
-                                className="field field-xs w-full"
-                            />
-                        </div>
-                        <div>
-                            <div className="text-xs font-semibold text-shadow-grey mb-1">Hours</div>
-                            <input
-                                type="number"
-                                min="0.25"
-                                step="0.25"
-                                value={hours}
-                                onChange={(e) => setHours(e.target.value)}
-                                onBlur={() => Number(hours) !== Number(entry.hours) && updateField('hours', hours)}
-                                className="field field-xs w-full tabular-nums"
-                            />
-                        </div>
-                    </div>
-
-                    <div className="mb-6">
-                        <div className="text-xs font-semibold text-shadow-grey mb-1">Task</div>
-                        <select
-                            value={entry.task_id ?? ''}
-                            onChange={(e) => updateField('task_id', e.target.value || null)}
-                            className="field field-xs w-full"
-                        >
-                            <option value="">No task</option>
-                            {tasks.map((t) => <option key={t.id} value={t.id}>{t.title}</option>)}
-                        </select>
-                    </div>
-
-                    <div className="mb-6">
-                        <div className="text-xs font-semibold text-shadow-grey mb-2">Note</div>
-                        <AutoResizeTextarea
-                            value={note}
-                            onChange={(e) => setNote(e.target.value)}
-                            onBlur={() => note !== (entry.note ?? '') && updateField('note', note)}
-                            placeholder="Add a note…"
-                            className="field"
-                        />
-                    </div>
-
-                    <label className="flex items-center gap-2 text-sm">
-                        <input
-                            type="checkbox"
-                            checked={entry.billable}
-                            disabled={entry.billed}
-                            onChange={(e) => updateField('billable', e.target.checked)}
-                        />
-                        Billable
-                    </label>
+                <div>
+                    <div className="section-label section-label--tight">Hours</div>
+                    <input
+                        type="number"
+                        min="0.25"
+                        step="0.25"
+                        value={hours}
+                        onChange={(e) => setHours(e.target.value)}
+                        onBlur={() => Number(hours) !== Number(entry.hours) && updateField('hours', hours)}
+                        className="input input--xs u-tabular-nums"
+                    />
                 </div>
             </div>
-        </div>
+
+            <div className="drawer__section">
+                <div className="section-label section-label--tight">Task</div>
+                <select
+                    value={entry.task_id ?? ''}
+                    onChange={(e) => updateField('task_id', e.target.value || null)}
+                    className="input input--xs"
+                >
+                    <option value="">No task</option>
+                    {tasks.map((t) => <option key={t.id} value={t.id}>{t.title}</option>)}
+                </select>
+            </div>
+
+            <div className="drawer__section">
+                <div className="section-label">Note</div>
+                <AutoResizeTextarea
+                    value={note}
+                    onChange={(e) => setNote(e.target.value)}
+                    onBlur={() => note !== (entry.note ?? '') && updateField('note', note)}
+                    placeholder="Add a note…"
+                    className="input"
+                />
+            </div>
+
+            <label className="choice">
+                <input
+                    type="checkbox"
+                    checked={entry.billable}
+                    disabled={entry.billed}
+                    onChange={(e) => updateField('billable', e.target.checked)}
+                />
+                Billable
+            </label>
+        </Drawer>
     );
 }
 
@@ -942,26 +898,26 @@ function TimeTab({ project }) {
 
     return (
         <div>
-            <form onSubmit={logTime} className="card card-padded mb-4 grid grid-cols-4 gap-2">
-                <input required type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className="field" />
-                <select value={form.task_id} onChange={(e) => setForm({ ...form, task_id: e.target.value })} className="field">
+            <form onSubmit={logTime} className="card card--padded form-grid form-grid--4 form-grid--tight page-section--tight">
+                <input required type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className="input" />
+                <select value={form.task_id} onChange={(e) => setForm({ ...form, task_id: e.target.value })} className="input">
                     <option value="">No task</option>
                     {project.tasks.map((t) => <option key={t.id} value={t.id}>{t.title}</option>)}
                 </select>
-                <input required type="number" min="0.25" step="0.25" placeholder="Hours" value={form.hours} onChange={(e) => setForm({ ...form, hours: e.target.value })} className="field" />
-                <input placeholder="Note" value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} className="field" />
-                <Button type="submit" variant="confirm" disabled={saving} className="col-span-4 justify-self-end w-fit">Log time</Button>
+                <input required type="number" min="0.25" step="0.25" placeholder="Hours" value={form.hours} onChange={(e) => setForm({ ...form, hours: e.target.value })} className="input" />
+                <input placeholder="Note" value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} className="input" />
+                <Button type="submit" variant="confirm" disabled={saving} className="form-grid__submit">Log time</Button>
             </form>
-            <div className="card overflow-hidden">
+            <div className="card card--flush">
                 {project.time_entries.length === 0 ? (
                     <EmptyState text="No time logged yet." />
                 ) : (
                     <>
-                        <div className="grid grid-cols-12 gap-2 px-4 py-2 border-b border-border text-xs font-medium text-shadow-grey">
-                            <div className="col-span-2">Date</div>
-                            <div className="col-span-2">Hours</div>
-                            <div className="col-span-6">Task / Note</div>
-                            <div className="col-span-2 text-right">Status</div>
+                        <div className="grid-row grid-row--head">
+                            <div className="time-list__date">Date</div>
+                            <div className="time-list__hours">Hours</div>
+                            <div className="time-list__detail">Task / Note</div>
+                            <div className="time-list__status">Status</div>
                         </div>
                         {project.time_entries.map((entry) => (
                             <TimeEntryRow key={entry.id} entry={entry} onOpen={setSelectedEntryId} />
@@ -985,16 +941,16 @@ function TimeTab({ project }) {
 function ProposalsTab({ project }) {
     return (
         <div>
-            <div className="flex justify-end mb-4">
+            <div className="toolbar page-section--tight">
                 <Link
                     href={`/proposals/create?company_id=${project.company_id}&project_id=${project.id}`}
-                    className="btn btn-primary"
+                    className="btn btn--primary"
                 >
                     New proposal
                 </Link>
             </div>
 
-            <div className="card overflow-hidden">
+            <div className="card card--flush">
                 {project.proposals.length === 0 ? (
                     <EmptyState text="No proposals for this project yet." />
                 ) : (
@@ -1010,11 +966,11 @@ function ProposalsTab({ project }) {
                             {project.proposals.map((proposal) => (
                                 <tr key={proposal.id}>
                                     <td>
-                                        <Link href={`/proposals/${proposal.id}/edit`} className="hover:underline">
+                                        <Link href={`/proposals/${proposal.id}/edit`} className="link">
                                             {proposal.title}
                                         </Link>
                                     </td>
-                                    <td className="tabular-nums">
+                                    <td className="table__cell--numeric">
                                         {proposal.estimate_amount ? formatCurrency(proposal.estimate_amount) : '—'}
                                     </td>
                                     <td><ProposalStatusBadge proposal={proposal} /></td>
@@ -1177,12 +1133,12 @@ function BillingTab({ project }) {
 
     return (
         <div>
-            <div className="flex items-center justify-between mb-4">
+            <div className="toolbar toolbar--split page-section--tight">
                 {budget > 0 ? (
-                    <div className="text-sm text-shadow-grey">
-                        Budget <span className="tabular-nums font-medium text-gunmetal">{formatCurrency(budget)}</span>
+                    <div className="project-billing__budget">
+                        Budget <span className="project-billing__figure">{formatCurrency(budget)}</span>
                         {' · '}
-                        Remaining <span className={`tabular-nums font-medium ${remaining < 0 ? 'text-watermelon' : 'text-gunmetal'}`}>{formatCurrency(remaining)}</span>
+                        Remaining <span className={`project-billing__figure${remaining < 0 ? ' project-billing__figure--negative' : ''}`}>{formatCurrency(remaining)}</span>
                     </div>
                 ) : <div />}
                 <Button onClick={() => (showForm ? setShowForm(false) : openForm())}>
@@ -1191,13 +1147,13 @@ function BillingTab({ project }) {
             </div>
 
             {showForm && (
-                <form onSubmit={createInvoice} className="card card-padded mb-4">
+                <form onSubmit={createInvoice} className="card card--padded page-section--tight invoice-form">
                     {proposalsWithItems.length > 0 && (
-                        <div className="mb-3">
+                        <div className="invoice-form__section">
                             <select
                                 value={form.proposal_id}
                                 onChange={(e) => copyFromProposal(e.target.value)}
-                                className="field"
+                                className="input"
                             >
                                 <option value="">Copy line items from a proposal…</option>
                                 {proposalsWithItems.map((p) => (
@@ -1206,11 +1162,11 @@ function BillingTab({ project }) {
                             </select>
                             {wasScaledToRemaining && (
                                 remaining <= 0 ? (
-                                    <div className="text-xs text-watermelon mt-1">
+                                    <div className="form-error">
                                         This project's budget is already fully invoiced, so these line items scaled to $0.00 — increase the budget or edit the amounts below.
                                     </div>
                                 ) : (
-                                    <div className="text-xs text-shadow-grey mt-1">
+                                    <div className="form-hint form-hint--attached">
                                         Scaled to the {formatCurrency(remaining)} left in the budget.
                                     </div>
                                 )
@@ -1218,19 +1174,19 @@ function BillingTab({ project }) {
                         </div>
                     )}
 
-                    <div className="mb-4">
+                    <div className="invoice-form__section">
                         <InvoiceDateFields values={form} onChange={(patch) => setForm((current) => ({ ...current, ...patch }))} />
                     </div>
 
-                    <div className="mb-3">
+                    <div className="invoice-form__items">
                         {form.items.map((item, idx) => (
-                            <div key={idx} className="mb-2 pb-2 border-b border-border last:border-b-0">
-                                <div className="flex gap-2 mb-1">
+                            <div key={idx} className="invoice-form__item">
+                                <div className="invoice-form__item-row">
                                     <input
                                         placeholder="Line item description (required)"
                                         value={item.description}
                                         onChange={(e) => updateItem(idx, 'description', e.target.value)}
-                                        className="field flex-1"
+                                        className="input invoice-form__description"
                                     />
                                     <input
                                         type="number"
@@ -1239,10 +1195,10 @@ function BillingTab({ project }) {
                                         placeholder="Amount"
                                         value={item.amount}
                                         onChange={(e) => updateItem(idx, 'amount', e.target.value)}
-                                        className="field tabular-nums w-28"
+                                        className="input invoice-form__amount"
                                     />
                                     {form.items.length > 1 && (
-                                        <Button type="button" variant="link-danger" onClick={() => removeItemRow(idx)}>Remove</Button>
+                                        <Button type="button" variant="link-accent" onClick={() => removeItemRow(idx)}>Remove</Button>
                                     )}
                                 </div>
                                 <textarea
@@ -1250,39 +1206,39 @@ function BillingTab({ project }) {
                                     value={item.details || ''}
                                     onChange={(e) => updateItem(idx, 'details', e.target.value)}
                                     rows={2}
-                                    className="field text-xs text-shadow-grey"
+                                    className="input invoice-form__details"
                                 />
                             </div>
                         ))}
                         <Button type="button" variant="link-accent" onClick={addItemRow}>+ Add line item</Button>
                     </div>
 
-                    <div className="text-sm mb-3 space-y-1">
-                        <div className="flex justify-between text-shadow-grey">
+                    <div className="invoice-form__section totals">
+                        <div className="totals__row totals__row--muted">
                             <span>Subtotal</span>
-                            <span className="tabular-nums">{formatCurrency(formSubtotal)}</span>
+                            <span className="totals__value">{formatCurrency(formSubtotal)}</span>
                         </div>
-                        <div className="flex justify-between font-semibold">
+                        <div className="totals__row totals__row--strong">
                             <span>Total</span>
-                            <span className="tabular-nums">{formatCurrency(formTotal)}</span>
+                            <span className="totals__value">{formatCurrency(formTotal)}</span>
                         </div>
                     </div>
 
-                    <div className="mb-2">
+                    <div className="invoice-form__section">
                         <Toggle
                             checked={form.surcharge}
                             onChange={(value) => setForm({ ...form, surcharge: value })}
                             label="Offer to pay by card (adds a 3% fee, shown only at checkout)"
                         />
                     </div>
-                    {error && <div className="text-sm text-watermelon mb-2">{error}</div>}
-                    <div className="flex justify-end">
+                    {error && <div className="form-message form-message--error form-message--spaced">{error}</div>}
+                    <div className="form-actions">
                         <Button type="submit" variant="confirm" disabled={saving}>Create draft invoice</Button>
                     </div>
                 </form>
             )}
 
-            <div className="card overflow-hidden">
+            <div className="card card--flush">
                 {project.invoices.length === 0 ? (
                     <EmptyState text="No invoices for this project yet." />
                 ) : (
@@ -1299,41 +1255,41 @@ function BillingTab({ project }) {
                         <tbody>
                             {project.invoices.map((invoice) => (
                                 <tr key={invoice.id}>
-                                    <td className="tabular-nums text-shadow-grey">{invoice.invoice_number}</td>
+                                    <td className="table__cell--numeric table__cell--muted">{invoice.invoice_number}</td>
                                     <td>
-                                        <Link href={`/invoices/${invoice.id}`} className="hover:underline">
+                                        <Link href={`/invoices/${invoice.id}`} className="link">
                                             {formatDate(invoice.issued_on)}
                                         </Link>
                                     </td>
-                                    <td className="tabular-nums">{formatCurrency(invoiceTotal(invoice.items, invoice.surcharge))}</td>
+                                    <td className="table__cell--numeric">{formatCurrency(invoiceTotal(invoice.items, invoice.surcharge))}</td>
                                     <td><InvoiceStatusBadge invoice={invoice} /></td>
-                                    <td className="text-right">
-                                        <div className="flex items-center justify-end gap-3">
-                                            <a href={`/i/${invoice.public_token}`} target="_blank" rel="noopener noreferrer" title="Preview" className="icon-btn icon-btn-secondary">
+                                    <td className="table__cell--end">
+                                        <div className="table__actions">
+                                            <a href={`/i/${invoice.public_token}`} target="_blank" rel="noopener noreferrer" title="Preview" className="icon-btn icon-btn--secondary">
                                                 <Eye />
                                             </a>
                                             {invoice.status === 'draft' && (
-                                                <Link href={`/invoices/${invoice.id}`} title="Edit" className="icon-btn icon-btn-confirm">
+                                                <Link href={`/invoices/${invoice.id}`} title="Edit" className="icon-btn icon-btn--confirm">
                                                     <PencilSimple />
                                                 </Link>
                                             )}
                                             {invoice.status === 'draft' && (
-                                                <button onClick={() => sendInvoice(invoice)} title="Send" className="icon-btn icon-btn-accent">
+                                                <button onClick={() => sendInvoice(invoice)} title="Send" className="icon-btn icon-btn--accent">
                                                     <PaperPlaneTilt />
                                                 </button>
                                             )}
                                             {invoice.status !== 'draft' && (
-                                                <button onClick={() => copyInvoiceLink(invoice)} title={copiedInvoiceId === invoice.id ? 'Copied!' : 'Copy link'} className="icon-btn icon-btn-secondary">
+                                                <button onClick={() => copyInvoiceLink(invoice)} title={copiedInvoiceId === invoice.id ? 'Copied!' : 'Copy link'} className="icon-btn icon-btn--secondary">
                                                     {copiedInvoiceId === invoice.id ? <Check /> : <Copy />}
                                                 </button>
                                             )}
                                             {invoice.status !== 'draft' && (
-                                                <a href={`/invoices/${invoice.id}/pdf`} title="Download PDF" className="icon-btn icon-btn-secondary">
+                                                <a href={`/invoices/${invoice.id}/pdf`} title="Download PDF" className="icon-btn icon-btn--secondary">
                                                     <DownloadSimple />
                                                 </a>
                                             )}
                                             {invoice.status === 'sent' && (
-                                                <button onClick={() => markInvoicePaid(invoice)} title="Mark paid (check)" className="icon-btn icon-btn-confirm">
+                                                <button onClick={() => markInvoicePaid(invoice)} title="Mark paid (check)" className="icon-btn icon-btn--confirm">
                                                     <CheckCircle />
                                                 </button>
                                             )}
@@ -1342,7 +1298,7 @@ function BillingTab({ project }) {
                                                     onClick={() => deleteInvoice(invoice)}
                                                     disabled={deletingInvoiceId === invoice.id}
                                                     title="Delete"
-                                                    className="icon-btn icon-btn-danger"
+                                                    className="icon-btn icon-btn--danger"
                                                 >
                                                     <Trash />
                                                 </button>
@@ -1387,11 +1343,11 @@ function ExpensesTab({ project }) {
 
     return (
         <div>
-            <form onSubmit={addExpense} className="card card-padded mb-4 grid grid-cols-2 gap-2">
-                <input required placeholder="Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="field col-span-2" />
-                <input required type="number" min="0.01" step="0.01" placeholder="Amount" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} className="field tabular-nums" />
-                <input required type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className="field" />
-                <label className="flex items-center gap-2 text-sm">
+            <form onSubmit={addExpense} className="card card--padded form-grid form-grid--tight page-section--tight">
+                <input required placeholder="Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="input form-grid__full" />
+                <input required type="number" min="0.01" step="0.01" placeholder="Amount" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} className="input u-tabular-nums" />
+                <input required type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className="input" />
+                <label className="choice">
                     <input type="checkbox" checked={form.is_billable} onChange={(e) => setForm({ ...form, is_billable: e.target.checked })} />
                     Billable to this project
                 </label>
@@ -1400,12 +1356,12 @@ function ExpensesTab({ project }) {
                     value={form.markup_percent}
                     disabled={!form.is_billable}
                     onChange={(e) => setForm({ ...form, markup_percent: e.target.value })}
-                    className="field tabular-nums disabled:opacity-50"
+                    className="input u-tabular-nums"
                 />
-                <Button type="submit" variant="confirm" disabled={saving} className="col-span-2 justify-self-end w-fit">Add expense</Button>
+                <Button type="submit" variant="confirm" disabled={saving} className="form-grid__submit">Add expense</Button>
             </form>
-            <div className="text-sm text-shadow-grey mb-2">Total expenses: <span className="tabular-nums text-watermelon">{formatCurrency(total)}</span></div>
-            <div className="card overflow-hidden">
+            <div className="project-expenses__total">Total expenses: <span className="project-expenses__total-value">{formatCurrency(total)}</span></div>
+            <div className="card card--flush">
                 {expenses.length === 0 ? (
                     <EmptyState text="No expenses logged for this project." />
                 ) : (
@@ -1415,7 +1371,7 @@ function ExpensesTab({ project }) {
                                 <th>Date</th>
                                 <th>Name</th>
                                 <th>Status</th>
-                                <th className="text-right">Amount</th>
+                                <th className="table__cell--end">Amount</th>
                                 <th></th>
                             </tr>
                         </thead>
@@ -1423,12 +1379,12 @@ function ExpensesTab({ project }) {
                             {expenses.map((e) => (
                                 <tr key={e.id}>
                                     <td>{formatDate(e.date)}</td>
-                                    <td className="text-shadow-grey">{e.name}</td>
+                                    <td className="table__cell--muted">{e.name}</td>
                                     <td><ExpenseStatusBadge expense={e} /></td>
-                                    <td className="text-right tabular-nums text-watermelon">{formatCurrency(e.amount)}</td>
-                                    <td className="text-right">
+                                    <td className="table__cell--end table__cell--numeric table__cell--negative">{formatCurrency(e.amount)}</td>
+                                    <td className="table__cell--end">
                                         {e.billing_status === 'unbilled' && (
-                                            <button onClick={() => remove(e)} className="icon-btn icon-btn-danger">
+                                            <button onClick={() => remove(e)} className="icon-btn icon-btn--danger">
                                                 <Trash />
                                             </button>
                                         )}
@@ -1475,14 +1431,14 @@ function AssignedStaff({ project, canManageTeam, assignableStaff }) {
     }
 
     return (
-        <div className="mb-8">
-            <h2 className="text-sm font-semibold mb-3 text-shadow-grey">Assigned staff</h2>
+        <div className="page-section">
+            <h2 className="section-heading">Assigned staff</h2>
             {canManageTeam && (
-                <form onSubmit={assign} className="flex gap-2 mb-4">
+                <form onSubmit={assign} className="inline-form page-section--tight">
                     <select
                         value={pickId}
                         onChange={(e) => setPickId(e.target.value)}
-                        className="field flex-1"
+                        className="input inline-form__grow"
                     >
                         <option value="">Assign staff&hellip;</option>
                         {available.map((staffer) => (
@@ -1495,12 +1451,12 @@ function AssignedStaff({ project, canManageTeam, assignableStaff }) {
             {assigned.length === 0 ? (
                 <EmptyState text="No staff assigned to this project yet." />
             ) : (
-                <div className="flex flex-wrap gap-2">
+                <div className="cluster">
                     {assigned.map((user) => (
-                        <span key={user.id} className="inline-flex items-center gap-2 bg-white border border-border rounded-full px-3 py-1 text-sm">
+                        <span key={user.id} className="person-chip">
                             {user.name}
                             {canManageTeam && (
-                                <button onClick={() => unassign(user)} className="icon-btn icon-btn-danger">
+                                <button onClick={() => unassign(user)} className="icon-btn icon-btn--danger">
                                     <X />
                                 </button>
                             )}
@@ -1543,24 +1499,24 @@ function TeamTab({ project, canManageTeam, assignableStaff }) {
         <div>
             <AssignedStaff project={project} canManageTeam={canManageTeam} assignableStaff={assignableStaff} />
 
-            <h2 className="text-sm font-semibold mb-3 text-shadow-grey">Other names (not linked to a login)</h2>
-            <form onSubmit={add} className="flex gap-2 mb-4">
+            <h2 className="section-heading">Other names (not linked to a login)</h2>
+            <form onSubmit={add} className="inline-form page-section--tight">
                 <input
                     placeholder="Add team member name"
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
-                    className="field flex-1"
+                    className="input inline-form__grow"
                 />
                 <Button type="submit" variant="confirm" disabled={saving}>Add</Button>
             </form>
             {names.length === 0 ? (
                 <EmptyState text="No one assigned yet." />
             ) : (
-                <div className="flex flex-wrap gap-2">
+                <div className="cluster">
                     {names.map((name) => (
-                        <span key={name} className="inline-flex items-center gap-2 bg-white border border-border rounded-full px-3 py-1 text-sm">
+                        <span key={name} className="person-chip">
                             {name}
-                            <button onClick={() => remove(name)} className="icon-btn icon-btn-danger">
+                            <button onClick={() => remove(name)} className="icon-btn icon-btn--danger">
                                 <X />
                             </button>
                         </span>
@@ -1578,18 +1534,12 @@ export default function ProjectsShow({ project, canManageTeam, assignableStaff }
     return (
         <AppLayout>
             <Head title={project.name} />
-            <div className="mb-1">
-                <Link href="/projects" className="text-sm text-shadow-grey hover:underline inline-flex items-center gap-1">
-                    <ArrowLeft size={14} /> Projects
-                </Link>
-            </div>
-            <div className="flex items-center justify-between mb-1">
-                <h1 className="font-display text-2xl font-semibold">{project.name}</h1>
-                <ProjectStatusBadge project={project} />
-            </div>
-            <p className="text-sm text-shadow-grey mb-6">
-                <Link href={`/clients/${project.company.id}`} className="hover:underline">{project.company.name}</Link>
-            </p>
+            <PageHeader
+                back={{ href: '/projects', label: 'Projects' }}
+                title={project.name}
+                actions={<ProjectStatusBadge project={project} />}
+                subtitle={<Link href={`/clients/${project.company.id}`} className="link">{project.company.name}</Link>}
+            />
 
             <TabBar tab={tab} setTab={setTab} tabs={tabs} />
 

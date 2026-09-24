@@ -41,36 +41,36 @@ export default function NotificationBell() {
     }
 
     return (
-        <div className="relative">
+        <div className="notification-bell">
             <button
                 type="button"
                 onClick={toggle}
                 aria-label={unreadCount > 0 ? `Notifications, ${unreadCount} unread` : 'Notifications'}
-                className="relative icon-btn text-porcelain/60 hover:text-porcelain"
+                className="notification-bell__trigger"
             >
                 {unreadCount > 0 ? <BellRinging /> : <Bell />}
                 {unreadCount > 0 && (
-                    <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-watermelon text-white text-[10px] leading-4 text-center">
+                    <span className="notification-bell__count">
                         {unreadCount}
                     </span>
                 )}
             </button>
 
             {open && (
-                <div className="absolute right-0 top-full mt-2 w-72 max-h-96 overflow-y-auto bg-white border border-border rounded shadow-lg z-50 text-gunmetal">
+                <div className="popover notification-bell__panel">
                     {notifications.length === 0 ? (
-                        <p className="text-sm text-shadow-grey p-4">No notifications yet.</p>
+                        <p className="notification-bell__empty">No notifications yet.</p>
                     ) : (
-                        <ul className="divide-y divide-border">
+                        <ul>
                             {notifications.map((n) => (
-                                <li key={n.id}>
+                                <li key={n.id} className="notification-bell__entry">
                                     <button
                                         type="button"
                                         onClick={() => markRead(n)}
-                                        className={`w-full text-left px-3 py-2 text-xs hover:bg-porcelain ${n.read_at ? 'text-shadow-grey' : 'font-semibold'}`}
+                                        className={`notification-bell__item${n.read_at ? ' notification-bell__item--read' : ''}`}
                                     >
                                         <div>{n.data.message}</div>
-                                        <div className="text-shadow-grey font-normal mt-0.5">{formatRelativeTime(n.created_at)}</div>
+                                        <div className="notification-bell__time">{formatRelativeTime(n.created_at)}</div>
                                     </button>
                                 </li>
                             ))}

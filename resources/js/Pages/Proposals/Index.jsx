@@ -7,6 +7,7 @@ import { ProposalStatusBadge } from '../../Components/StatusBadges';
 import { formatCurrency, formatDate } from '../../lib/format';
 import { api } from '../../lib/api';
 import { copyToClipboard } from '../../lib/clipboard';
+import PageHeader from '../../Components/PageHeader';
 
 export default function ProposalsIndex({ proposals: proposalsProp }) {
     const [proposals, setProposals] = useState(proposalsProp);
@@ -57,15 +58,21 @@ export default function ProposalsIndex({ proposals: proposalsProp }) {
     return (
         <AppLayout>
             <Head title="Proposals" />
-            <div className="flex items-center justify-between mb-1">
-                <h1 className="font-display text-2xl font-semibold">Proposals</h1>
-                <Link href="/proposals/create" className="btn btn-primary">
-                    New proposal
-                </Link>
-            </div>
-            <p className="text-sm text-shadow-grey mb-6">{proposals.length} proposal{proposals.length !== 1 ? 's' : ''} on file.</p>
+            <PageHeader
+                title="Proposals"
+                actions={
+                    <Link href="/proposals/create" className="btn btn--primary">
+                        New proposal
+                    </Link>
+                }
+                subtitle={
+                    <>
+                        {proposals.length} proposal{proposals.length !== 1 ? 's' : ''} on file.
+                    </>
+                }
+            />
 
-            <div className="card overflow-hidden">
+            <div className="card card--flush">
                 {proposals.length === 0 ? (
                     <EmptyState text="No proposals yet." />
                 ) : (
@@ -83,35 +90,35 @@ export default function ProposalsIndex({ proposals: proposalsProp }) {
                         <tbody>
                             {proposals.map((proposal) => (
                                 <tr key={proposal.id}>
-                                    <td>
-                                        <div className="font-medium">{proposal.company.name}</div>
+                                    <td className="table__cell--strong">
+                                        <div>{proposal.company.name}</div>
                                     </td>
                                     <td>
                                         {proposal.project ? (
-                                            <Link href={`/projects/${proposal.project.id}`} className="hover:underline">
+                                            <Link href={`/projects/${proposal.project.id}`} className="link">
                                                 {proposal.project.name}
                                             </Link>
                                         ) : '—'}
                                     </td>
                                     <td>
-                                        <Link href={`/proposals/${proposal.id}/edit`} className="hover:underline">
+                                        <Link href={`/proposals/${proposal.id}/edit`} className="link">
                                             {proposal.title}
                                         </Link>
                                     </td>
-                                    <td className="tabular-nums">
+                                    <td className="table__cell--numeric">
                                         {proposal.estimate_amount ? formatCurrency(proposal.estimate_amount) : '—'}
                                     </td>
                                     <td><ProposalStatusBadge proposal={proposal} /></td>
-                                    <td className="text-right">
-                                        <div className="flex items-center justify-end gap-3">
-                                            <a href={`/p/${proposal.accept_token}`} target="_blank" rel="noopener noreferrer" title="Preview" className="icon-btn icon-btn-secondary">
+                                    <td className="table__cell--end">
+                                        <div className="table__actions">
+                                            <a href={`/p/${proposal.accept_token}`} target="_blank" rel="noopener noreferrer" title="Preview" className="icon-btn icon-btn--secondary">
                                                 <Eye />
                                             </a>
-                                            <Link href={`/proposals/${proposal.id}/edit`} title="Edit" className="icon-btn icon-btn-confirm">
+                                            <Link href={`/proposals/${proposal.id}/edit`} title="Edit" className="icon-btn icon-btn--confirm">
                                                 <PencilSimple />
                                             </Link>
                                             {proposal.status === 'draft' && (
-                                                <button onClick={() => sendProposal(proposal)} title="Send" className="icon-btn icon-btn-accent">
+                                                <button onClick={() => sendProposal(proposal)} title="Send" className="icon-btn icon-btn--accent">
                                                     <PaperPlaneTilt />
                                                 </button>
                                             )}
@@ -119,20 +126,20 @@ export default function ProposalsIndex({ proposals: proposalsProp }) {
                                                 <button
                                                     onClick={() => copyLink(proposal)}
                                                     title={copiedId === proposal.id ? 'Copied!' : 'Copy link'}
-                                                    className="icon-btn icon-btn-secondary"
+                                                    className="icon-btn icon-btn--secondary"
                                                 >
                                                     {copiedId === proposal.id ? <Check /> : <Copy />}
                                                 </button>
                                             )}
                                             {proposal.status === 'accepted' && (
-                                                <span className="text-xs text-shadow-grey">{formatDate(proposal.accepted_at)}</span>
+                                                <span className="table__note">{formatDate(proposal.accepted_at)}</span>
                                             )}
                                             {proposal.status !== 'accepted' && (
                                                 <button
                                                     onClick={() => deleteProposal(proposal)}
                                                     disabled={deletingId === proposal.id}
                                                     title="Delete"
-                                                    className="icon-btn icon-btn-danger"
+                                                    className="icon-btn icon-btn--danger"
                                                 >
                                                     <Trash />
                                                 </button>

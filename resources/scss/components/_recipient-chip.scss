@@ -1,0 +1,27 @@
+// Selectable person pill in the new-message recipient picker -- a <label>
+// around a hidden checkbox.
+
+.recipient-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-1) var(--space-3);
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-sm);
+    color: var(--color-shadow-grey);
+    cursor: pointer;
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-pill);
+
+    &--selected {
+        color: var(--color-fern);
+        background-color: var(--color-fern-soft);
+        border-color: var(--color-fern);
+    }
+
+    &__sublabel {
+        font-size: var(--font-size-xs);
+        line-height: var(--line-height-xs);
+        opacity: 0.7;
+    }
+}

@@ -1,6 +1,5 @@
-import { Head, Link, router, usePage } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
-import { ArrowLeft } from '@phosphor-icons/react';
 import PortalLayout from '../../../Layouts/PortalLayout';
 import Button from '../../../Components/Button';
 import EmptyState from '../../../Components/EmptyState';
@@ -8,6 +7,8 @@ import MessagesPanel from '../../../Components/MessagesPanel';
 import { ProjectStatusBadge, TaskStatusBadge, InvoiceStatusBadge, ProposalStatusBadge } from '../../../Components/StatusBadges';
 import { formatCurrency, formatDate, invoiceTotal } from '../../../lib/format';
 import { api } from '../../../lib/api';
+import PageHeader from '../../../Components/PageHeader';
+import TabBar from '../../../Components/TabBar';
 
 const TABS = ['Overview', 'Tasks', 'Messages', 'Proposals', 'Invoices', 'Team'];
 
@@ -15,31 +16,13 @@ function reload() {
     router.reload({ only: ['project'] });
 }
 
-function TabBar({ tab, setTab }) {
-    return (
-        <div className="flex gap-1 border-b border-border mb-6 overflow-x-auto">
-            {TABS.map((t) => (
-                <button
-                    key={t}
-                    onClick={() => setTab(t)}
-                    className={`text-sm font-medium px-3 py-2 border-b-2 -mb-px whitespace-nowrap ${
-                        tab === t ? 'border-gunmetal text-gunmetal' : 'border-transparent text-shadow-grey'
-                    }`}
-                >
-                    {t}
-                </button>
-            ))}
-        </div>
-    );
-}
-
 function OverviewTab({ project }) {
     return (
-        <div className="card card-padded">
-            <div className="text-sm text-shadow-grey mb-1">Status</div>
+        <div className="card card--padded">
+            <div className="portal-project__label">Status</div>
             <ProjectStatusBadge project={project} />
             {project.description && (
-                <p className="text-sm mt-4 whitespace-pre-wrap">{project.description}</p>
+                <p className="portal-project__description">{project.description}</p>
             )}
         </div>
     );
@@ -63,12 +46,12 @@ function NewTaskForm({ project }) {
     }
 
     return (
-        <form onSubmit={submit} className="flex gap-2 mb-4">
+        <form onSubmit={submit} className="inline-form page-section--tight">
             <input
                 placeholder="New task title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="field flex-1"
+                className="input inline-form__grow"
             />
             <Button type="submit" variant="confirm" disabled={saving}>Add task</Button>
         </form>
@@ -86,10 +69,10 @@ function TaskRow({ task }) {
     }
 
     return (
-        <div className="flex items-center justify-between px-4 py-3 border-b border-border last:border-b-0">
+        <div className="list-row list-row--static">
             <div>
-                <div className="text-sm font-medium">{task.title}</div>
-                {task.due_date && <div className="text-xs text-shadow-grey">Due {formatDate(task.due_date)}</div>}
+                <div className="list-row__title">{task.title}</div>
+                {task.due_date && <div className="list-row__meta">Due {formatDate(task.due_date)}</div>}
             </div>
             <button onClick={cycleStatus}>
                 <TaskStatusBadge task={{ status }} />
@@ -102,7 +85,7 @@ function TasksTab({ project }) {
     return (
         <div>
             <NewTaskForm project={project} />
-            <div className="card overflow-hidden">
+            <div className="card card--flush">
                 {project.tasks.length === 0 ? (
                     <EmptyState text="No tasks yet." />
                 ) : (
@@ -146,24 +129,24 @@ function MessagesTab({ project }) {
 
 function ProposalsTab({ project }) {
     return (
-        <div className="card overflow-hidden">
+        <div className="card card--flush">
             {project.proposals.length === 0 ? (
                 <EmptyState text="No accepted proposals yet." />
             ) : (
                 project.proposals.map((proposal) => (
-                    <div key={proposal.id} className="flex items-center justify-between px-4 py-3 border-b border-border last:border-b-0">
+                    <div key={proposal.id} className="list-row list-row--static">
                         <div>
-                            <div className="text-sm font-medium">{proposal.title}</div>
-                            <div className="text-xs text-shadow-grey">Accepted {formatDate(proposal.accepted_at)}</div>
+                            <div className="list-row__title">{proposal.title}</div>
+                            <div className="list-row__meta">Accepted {formatDate(proposal.accepted_at)}</div>
                         </div>
-                        <div className="flex items-center gap-3">
-                            <span className="tabular-nums text-sm">{formatCurrency(proposal.estimate_amount)}</span>
+                        <div className="list-row__aside">
+                            <span className="list-row__amount">{formatCurrency(proposal.estimate_amount)}</span>
                             <ProposalStatusBadge proposal={proposal} />
                             <a
                                 href={`/p/${proposal.accept_token}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="btn btn-confirm btn-sm"
+                                className="btn btn--confirm btn--sm"
                             >
                                 Client view
                             </a>
@@ -177,24 +160,24 @@ function ProposalsTab({ project }) {
 
 function InvoicesTab({ project }) {
     return (
-        <div className="card overflow-hidden">
+        <div className="card card--flush">
             {project.invoices.length === 0 ? (
                 <EmptyState text="No invoices yet." />
             ) : (
                 project.invoices.map((invoice) => (
-                    <div key={invoice.id} className="flex items-center justify-between px-4 py-3 border-b border-border last:border-b-0">
+                    <div key={invoice.id} className="list-row list-row--static">
                         <div>
-                            <div className="text-sm font-medium">Invoice #{invoice.invoice_number ?? invoice.id}</div>
-                            <div className="text-xs text-shadow-grey">Issued {formatDate(invoice.issued_on)} &middot; Due {formatDate(invoice.due_on)}</div>
+                            <div className="list-row__title">Invoice #{invoice.invoice_number ?? invoice.id}</div>
+                            <div className="list-row__meta">Issued {formatDate(invoice.issued_on)} &middot; Due {formatDate(invoice.due_on)}</div>
                         </div>
-                        <div className="flex items-center gap-3">
-                            <span className="tabular-nums text-sm">{formatCurrency(invoiceTotal(invoice.items, invoice.surcharge))}</span>
+                        <div className="list-row__aside">
+                            <span className="list-row__amount">{formatCurrency(invoiceTotal(invoice.items, invoice.surcharge))}</span>
                             <InvoiceStatusBadge invoice={invoice} />
                             <a
                                 href={`/i/${invoice.public_token}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="btn btn-confirm btn-sm"
+                                className="btn btn--confirm btn--sm"
                             >
                                 Client view
                             </a>
@@ -208,14 +191,14 @@ function InvoicesTab({ project }) {
 
 function TeamTab({ project }) {
     return (
-        <div className="card overflow-hidden">
+        <div className="card card--flush">
             {(project.active_users || []).length === 0 ? (
                 <EmptyState text="No staff assigned yet." />
             ) : (
                 project.active_users.map((user) => (
-                    <div key={user.id} className="flex items-center justify-between px-4 py-3 border-b border-border last:border-b-0">
-                        <div className="text-sm font-medium">{user.name}</div>
-                        <span className="text-xs text-shadow-grey capitalize">{user.role.replace('_', ' ')}</span>
+                    <div key={user.id} className="list-row list-row--static">
+                        <div className="list-row__title">{user.name}</div>
+                        <span className="list-row__meta list-row__meta--capitalize">{user.role.replace('_', ' ')}</span>
                     </div>
                 ))
             )}
@@ -229,18 +212,14 @@ export default function PortalProjectShow({ project }) {
     return (
         <PortalLayout>
             <Head title={project.name} />
-            <div className="mb-1">
-                <Link href="/portal" className="text-sm text-shadow-grey hover:underline inline-flex items-center gap-1">
-                    <ArrowLeft size={14} /> Your projects
-                </Link>
-            </div>
-            <div className="flex items-center justify-between mb-1">
-                <h1 className="font-display text-2xl font-semibold">{project.name}</h1>
-                <ProjectStatusBadge project={project} />
-            </div>
-            <p className="text-sm text-shadow-grey mb-6">{project.company.name}</p>
+            <PageHeader
+                back={{ href: '/portal', label: 'Your projects' }}
+                title={project.name}
+                actions={<ProjectStatusBadge project={project} />}
+                subtitle={project.company.name}
+            />
 
-            <TabBar tab={tab} setTab={setTab} />
+            <TabBar tabs={TABS} tab={tab} setTab={setTab} />
 
             {tab === 'Overview' && <OverviewTab project={project} />}
             {tab === 'Tasks' && <TasksTab project={project} />}

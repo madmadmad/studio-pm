@@ -1,0 +1,43 @@
+// The white, bordered panel for metrics, list rows, and grouped content.
+// Used by Components/Card.jsx or directly.
+
+.card {
+    background-color: var(--color-white);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-base);
+
+    &--padded {
+        padding: var(--space-panel);
+    }
+
+    // Holds an edge-to-edge table or list: clips rows to the rounded corners.
+    &--flush {
+        overflow: hidden;
+    }
+
+    // Title row at the top of a card: heading plus an action on the right.
+    &__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: var(--space-3);
+    }
+
+    &__title {
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+        font-weight: var(--font-weight-semibold);
+        color: var(--color-shadow-grey);
+    }
+
+    // A chunk of a card's content with room below it (an inline form above
+    // the list it adds to, a table above its totals).
+    &__section {
+        margin-bottom: var(--space-4);
+    }
+
+    // A standalone form or panel that shouldn't stretch across the page.
+    &--narrow {
+        max-width: var(--size-form);
+    }
+}

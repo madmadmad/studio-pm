@@ -1,0 +1,116 @@
+// Contents of the Send Invoice dialog (the dialog frame itself is .modal):
+// send-method tabs, reminder/timing dropdowns, and the two tab panels.
+// Used by Components/SendInvoiceModal.jsx.
+@use '../abstracts' as *;
+
+.send-invoice {
+    &__methods {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: var(--space-2);
+        margin-bottom: var(--space-4);
+    }
+
+    &__method {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: var(--space-2);
+        padding: var(--space-3);
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+        color: var(--color-shadow-grey);
+        border: var(--border-width) solid var(--color-border);
+        border-radius: var(--radius-base);
+        transition:
+            color var(--duration-fast) var(--ease-standard),
+            border-color var(--duration-fast) var(--ease-standard);
+
+        &:disabled {
+            opacity: 0.4;
+        }
+
+        &--active {
+            color: var(--color-watermelon);
+            border-color: var(--color-watermelon);
+        }
+    }
+
+    &__options {
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
+        margin-bottom: var(--space-4);
+    }
+
+    &__option {
+        position: relative;
+    }
+
+    // Dropdown trigger dressed as a compact field (mixed with .input).
+    &__trigger {
+        display: flex;
+        align-items: center;
+        gap: var(--space-1-5);
+        width: auto;
+    }
+
+    &__popover {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-2);
+        width: var(--size-popover-sm);
+
+        &--wide {
+            width: var(--size-popover);
+        }
+    }
+
+    &__schedule {
+        display: flex;
+        gap: var(--space-2);
+        padding-top: var(--space-1);
+    }
+
+    &__hint {
+        font-size: var(--font-size-xs);
+        line-height: var(--line-height-xs);
+        color: var(--color-shadow-grey);
+    }
+
+    &__panel {
+        @include stack(var(--space-3));
+    }
+
+    // Small watermelon text actions ("+ Add CC", "Show Email Preview").
+    &__text-action {
+        display: inline-block;
+        font-size: var(--font-size-xs);
+        line-height: var(--line-height-xs);
+        color: var(--color-watermelon);
+
+        &:hover {
+            text-decoration: underline;
+        }
+    }
+
+    &__link-row {
+        display: flex;
+        gap: var(--space-2);
+    }
+
+    &__link-input {
+        flex: 1;
+    }
+
+    &__copy-label {
+        margin-left: var(--space-1);
+    }
+
+    &__error {
+        margin-top: var(--space-3);
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+        color: var(--color-watermelon);
+    }
+}

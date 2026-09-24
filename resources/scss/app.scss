@@ -1,0 +1,46 @@
+// Single stylesheet entry. See STYLES.md for structure and conventions.
+//
+// This file owns the cascade: each folder is loaded into its own layer,
+// so precedence follows the layer order below rather than source order
+// or selector specificity. Later layers win:
+//
+//   reset       opt-in baseline for bare elements
+//   base        tokens, element defaults, keyframes
+//   layout      page structure (shells, grids, sections)
+//   components  the shared UI vocabulary
+//   pages       styles that belong to exactly one page
+//   helpers     the small u- set, which must beat everything
+//
+// Partials stay layer-agnostic; they never declare @layer themselves.
+@use 'sass:meta';
+
+@layer reset, base, layout, components, pages, helpers;
+
+// @font-face isn't affected by cascade layers; load it plainly.
+@include meta.load-css('base/fonts');
+
+@layer reset {
+    @include meta.load-css('base/reset');
+}
+
+@layer base {
+    @include meta.load-css('base/tokens');
+    @include meta.load-css('base/elements');
+    @include meta.load-css('base/animations');
+}
+
+@layer layout {
+    @include meta.load-css('layout');
+}
+
+@layer components {
+    @include meta.load-css('components');
+}
+
+@layer pages {
+    @include meta.load-css('pages');
+}
+
+@layer helpers {
+    @include meta.load-css('base/helpers');
+}

@@ -1,0 +1,21 @@
+// Timesheets page: previous/next week buttons around the date range.
+
+.week-nav {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-sm);
+
+    &__step {
+        display: flex;
+        align-items: center;
+        padding: var(--space-1-5) var(--space-2);
+        border: var(--border-width) solid var(--color-border);
+        border-radius: var(--radius-base);
+    }
+
+    &__range {
+        color: var(--color-shadow-grey);
+    }
+}

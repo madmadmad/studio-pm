@@ -1,0 +1,28 @@
+// Two-column form layout: fields pair up side by side, and anything that
+// should span the full row (long fields, errors, the actions) says so.
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-3);
+
+    // Tighter gutter for a small form nested inside a card.
+    &--tight {
+        gap: var(--space-2);
+    }
+
+    &--4 {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    &__full {
+        grid-column: 1 / -1;
+    }
+
+    // The submit button on its own row, at the right edge.
+    &__submit {
+        grid-column: 1 / -1;
+        justify-self: end;
+        width: fit-content;
+    }
+}

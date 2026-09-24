@@ -1,0 +1,15 @@
+// Projects/Show Expenses tab: the running total above the table.
+
+.project-expenses {
+    &__total {
+        margin-bottom: var(--space-2);
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+        color: var(--color-shadow-grey);
+    }
+
+    &__total-value {
+        color: var(--color-watermelon);
+        font-variant-numeric: tabular-nums;
+    }
+}

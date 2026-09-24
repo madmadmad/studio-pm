@@ -1,0 +1,18 @@
+// Small caption heading a group of fields or details inside a card.
+
+.section-label {
+    margin-bottom: var(--space-2);
+    font-size: var(--font-size-xs);
+    line-height: var(--line-height-xs);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-shadow-grey);
+
+    &--tight {
+        margin-bottom: var(--space-1);
+    }
+
+    // Sharing a row with an action, so the row sets the spacing.
+    &--flush {
+        margin-bottom: 0;
+    }
+}

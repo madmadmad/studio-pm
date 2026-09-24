@@ -190,42 +190,42 @@ export default function SendInvoiceModal({ invoice, studio, invoicingDefaults, o
     const footerDisabled = submitting || (activeTab === 'email' ? emailBlocked : linkBlocked);
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-gunmetal/20 drawer-overlay" onClick={onClose} />
+        <div className="modal">
+            <div className="modal__backdrop" onClick={onClose} />
             <div
                 ref={panelRef}
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="send-invoice-title"
-                className="relative w-full max-w-lg bg-white rounded-lg shadow-xl drawer-panel max-h-[90vh] overflow-y-auto"
+                className="modal__panel"
             >
-                <div className="flex items-center justify-between px-6 py-4 border-b border-border">
-                    <h2 id="send-invoice-title" className="font-display text-lg font-semibold">Send Invoice</h2>
-                    <button onClick={onClose} className="icon-btn icon-btn-secondary" aria-label="Close">
+                <div className="modal__header">
+                    <h2 id="send-invoice-title" className="modal__title">Send Invoice</h2>
+                    <button onClick={onClose} className="icon-btn icon-btn--secondary" aria-label="Close">
                         <X />
                     </button>
                 </div>
 
-                <div className="px-6 py-4" onClick={closeDropdowns}>
+                <div className="modal__body" onClick={closeDropdowns}>
                     {alreadySent && (
-                        <div className="text-xs text-shadow-grey bg-porcelain rounded px-3 py-2 mb-4">
+                        <div className="alert alert--info alert--compact">
                             This invoice has already been sent. The client won&rsquo;t see changes in their original email until you resend it; the online link always shows the latest version.
                         </div>
                     )}
 
                     {blockingIssues.length > 0 && (
-                        <div className="text-sm text-watermelon bg-watermelon-soft rounded px-3 py-2 mb-4">
+                        <div className="alert alert--danger">
                             {blockingIssues.join(' ')}
                         </div>
                     )}
 
                     {invoice.needs_issue_date_update && blockingIssues.length === 0 && (
-                        <label className="flex items-start gap-2 text-xs text-shadow-grey bg-porcelain rounded px-3 py-2 mb-4">
+                        <label className="alert alert--info alert--compact alert--choice">
                             <input
                                 type="checkbox"
                                 checked={updateIssueDate}
                                 onChange={(e) => setUpdateIssueDate(e.target.checked)}
-                                className="mt-0.5"
+                                className="alert__control"
                             />
                             <span>
                                 The issue date is in the past. Update it to {sendTiming === 'later' ? 'the scheduled send date' : 'today'} and recalculate the due date?
@@ -233,7 +233,7 @@ export default function SendInvoiceModal({ invoice, studio, invoicingDefaults, o
                         </label>
                     )}
 
-                    <div role="tablist" aria-label="Send method" className="grid grid-cols-2 gap-2 mb-4">
+                    <div role="tablist" aria-label="Send method" className="send-invoice__methods">
                         <button
                             ref={firstFieldRef}
                             type="button"
@@ -241,9 +241,7 @@ export default function SendInvoiceModal({ invoice, studio, invoicingDefaults, o
                             aria-selected={activeTab === 'email'}
                             onClick={() => setActiveTab('email')}
                             disabled={emailBlocked}
-                            className={`flex items-center justify-center gap-2 rounded border px-3 py-3 text-sm font-semibold transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
-                                activeTab === 'email' ? 'border-watermelon text-watermelon' : 'border-border text-shadow-grey'
-                            }`}
+                            className={`send-invoice__method${activeTab === 'email' ? ' send-invoice__method--active' : ''}`}
                         >
                             <Envelope /> Send Email
                         </button>
@@ -253,28 +251,26 @@ export default function SendInvoiceModal({ invoice, studio, invoicingDefaults, o
                             aria-selected={activeTab === 'link'}
                             onClick={() => setActiveTab('link')}
                             disabled={linkBlocked}
-                            className={`flex items-center justify-center gap-2 rounded border px-3 py-3 text-sm font-semibold transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
-                                activeTab === 'link' ? 'border-watermelon text-watermelon' : 'border-border text-shadow-grey'
-                            }`}
+                            className={`send-invoice__method${activeTab === 'link' ? ' send-invoice__method--active' : ''}`}
                         >
                             <LinkSimple /> Send via URL
                         </button>
                     </div>
 
-                    <div className="flex items-center gap-2 mb-4">
-                        <div className="relative" onClick={(e) => e.stopPropagation()}>
+                    <div className="send-invoice__options">
+                        <div className="send-invoice__option" onClick={(e) => e.stopPropagation()}>
                             <button
                                 type="button"
                                 onClick={() => setRemindersOpen((v) => !v)}
-                                className="field field-sm w-auto flex items-center gap-1.5"
+                                className="input input--sm send-invoice__trigger"
                             >
                                 <Lightning size={14} />
                                 {remindersEnabled ? 'Automatic reminders enabled' : 'Automatic reminders off'}
                             </button>
                             {remindersOpen && (
-                                <div className="absolute z-10 mt-1 w-64 bg-white border border-border rounded shadow-lg p-3">
+                                <div className="popover popover--padded send-invoice__popover">
                                     <Toggle checked={remindersEnabled} onChange={setRemindersEnabled} label="Send automatic payment reminders" />
-                                    <p className="text-xs text-shadow-grey mt-2">
+                                    <p className="send-invoice__hint">
                                         Uses the client&rsquo;s reminder setting (or the firm default) unless overridden here.
                                     </p>
                                 </div>
@@ -282,32 +278,32 @@ export default function SendInvoiceModal({ invoice, studio, invoicingDefaults, o
                         </div>
 
                         {activeTab === 'email' && (
-                            <div className="relative" onClick={(e) => e.stopPropagation()}>
+                            <div className="send-invoice__option" onClick={(e) => e.stopPropagation()}>
                                 <button
                                     type="button"
                                     onClick={() => setTimingOpen((v) => !v)}
-                                    className="field field-sm w-auto flex items-center gap-1.5"
+                                    className="input input--sm send-invoice__trigger"
                                 >
                                     <CalendarBlank size={14} />
                                     {sendTiming === 'later' ? 'Scheduled' : 'Send immediately'}
                                 </button>
                                 {timingOpen && (
-                                    <div className="absolute z-10 mt-1 w-72 bg-white border border-border rounded shadow-lg p-3 space-y-2">
-                                        <label className="flex items-center gap-2 text-sm">
+                                    <div className="popover popover--padded send-invoice__popover send-invoice__popover--wide">
+                                        <label className="choice">
                                             <input type="radio" checked={sendTiming === 'now'} onChange={() => setSendTiming('now')} />
                                             Send immediately
                                         </label>
-                                        <label className="flex items-center gap-2 text-sm">
+                                        <label className="choice">
                                             <input type="radio" checked={sendTiming === 'later'} onChange={() => setSendTiming('later')} />
                                             Schedule
                                         </label>
                                         {sendTiming === 'later' && (
                                             <>
-                                                <div className="flex gap-2 pt-1">
-                                                    <input type="date" value={scheduleDate} onChange={(e) => setScheduleDate(e.target.value)} className="field field-sm" />
-                                                    <input type="time" value={scheduleTime} onChange={(e) => setScheduleTime(e.target.value)} className="field field-sm" />
+                                                <div className="send-invoice__schedule">
+                                                    <input type="date" value={scheduleDate} onChange={(e) => setScheduleDate(e.target.value)} className="input input--sm" />
+                                                    <input type="time" value={scheduleTime} onChange={(e) => setScheduleTime(e.target.value)} className="input input--sm" />
                                                 </div>
-                                                <p className="text-xs text-shadow-grey">Times are in Eastern (America/New_York).</p>
+                                                <p className="send-invoice__hint">Times are in Eastern (America/New_York).</p>
                                             </>
                                         )}
                                     </div>
@@ -317,81 +313,81 @@ export default function SendInvoiceModal({ invoice, studio, invoicingDefaults, o
                     </div>
 
                     {activeTab === 'email' ? (
-                        <div role="tabpanel" className="space-y-3">
+                        <div role="tabpanel" className="send-invoice__panel">
                             <div>
-                                <label className="field-label">To</label>
+                                <label className="label">To</label>
                                 <input
                                     value={contact?.email || 'No contact email -- update the contact on the invoice'}
                                     readOnly
-                                    className="field"
+                                    className="input"
                                 />
                             </div>
 
                             {!ccOpen ? (
-                                <button type="button" onClick={() => setCcOpen(true)} className="text-xs text-watermelon hover:underline">
+                                <button type="button" onClick={() => setCcOpen(true)} className="send-invoice__text-action">
                                     + Add CC
                                 </button>
                             ) : (
                                 <div>
-                                    <label className="field-label">CC</label>
+                                    <label className="label">CC</label>
                                     <input
                                         value={ccInput}
                                         onChange={(e) => setCcInput(e.target.value)}
                                         placeholder="comma-separated email addresses"
-                                        className="field"
+                                        className="input"
                                     />
-                                    {ccInvalid && <p className="text-xs text-watermelon mt-1">One of these doesn&rsquo;t look like a valid email address.</p>}
+                                    {ccInvalid && <p className="form-error">One of these doesn&rsquo;t look like a valid email address.</p>}
                                 </div>
                             )}
 
                             <div>
-                                <label className="field-label">Subject</label>
-                                <input value={subject} onChange={(e) => setSubject(e.target.value)} className="field" />
+                                <label className="label">Subject</label>
+                                <input value={subject} onChange={(e) => setSubject(e.target.value)} className="input" />
                             </div>
 
                             <div>
-                                <label className="field-label">Message</label>
-                                <textarea value={message} onChange={(e) => setMessage(e.target.value)} rows={5} className="field" />
+                                <label className="label">Message</label>
+                                <textarea value={message} onChange={(e) => setMessage(e.target.value)} rows={5} className="input" />
                             </div>
 
-                            <label className="flex items-center gap-2 text-sm">
+                            <label className="choice">
                                 <input type="checkbox" checked={sendCopyToSelf} onChange={(e) => setSendCopyToSelf(e.target.checked)} />
                                 Send me a copy
                             </label>
 
-                            <button type="button" onClick={loadPreview} disabled={previewLoading} className="text-xs text-watermelon hover:underline">
+                            <button type="button" onClick={loadPreview} disabled={previewLoading} className="send-invoice__text-action">
                                 {previewLoading ? 'Loading preview…' : 'Show Email Preview'}
                             </button>
                         </div>
                     ) : (
-                        <div role="tabpanel" className="space-y-3">
+                        <div role="tabpanel" className="send-invoice__panel">
                             <div>
-                                <label className="field-label">Client link</label>
-                                <div className="flex gap-2">
-                                    <input value={invoice.public_url} readOnly className="field flex-1" />
+                                <label className="label">Client link</label>
+                                <div className="send-invoice__link-row">
+                                    <input value={invoice.public_url} readOnly className="input send-invoice__link-input" />
                                     <Button type="button" variant="secondary" onClick={copyLink}>
                                         {copied ? <Check size={14} /> : <Copy size={14} />}
-                                        <span className="ml-1">{copied ? 'Copied' : 'Copy link'}</span>
+                                        <span className="send-invoice__copy-label">{copied ? 'Copied' : 'Copy link'}</span>
                                     </Button>
                                 </div>
-                                <span className="sr-only" role="status" aria-live="polite">{copied ? 'Link copied to clipboard' : ''}</span>
+                                <span className="u-sr-only" role="status" aria-live="polite">{copied ? 'Link copied to clipboard' : ''}</span>
                             </div>
 
-                            <label className="flex items-center gap-2 text-sm">
+                            <label className="choice">
                                 <input type="checkbox" checked={markAsSent} onChange={(e) => setMarkAsSent(e.target.checked)} />
                                 Mark as sent
                             </label>
 
-                            <a href={invoice.public_url} target="_blank" rel="noopener noreferrer" className="text-xs text-watermelon hover:underline inline-block">
+                            <a href={invoice.public_url} target="_blank" rel="noopener noreferrer" className="send-invoice__text-action">
                                 Open link (view as the client will see it)
                             </a>
                         </div>
                     )}
 
-                    {error && <div className="text-sm text-watermelon mt-3">{error}</div>}
+                    {error && <div className="send-invoice__error">{error}</div>}
                 </div>
 
-                <div className="flex justify-end gap-2 px-6 py-4 border-t border-border">
+                <div className="modal__footer">
                     <Button type="button" variant="secondary" onClick={onClose}>Cancel</Button>
                     <Button type="button" variant="primary" onClick={submit} disabled={footerDisabled}>
                         {submitting ? 'Sending…' : footerLabel}
@@ -400,16 +396,16 @@ export default function SendInvoiceModal({ invoice, studio, invoicingDefaults, o
             </div>
 
             {previewOpen && (
-                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-                    <div className="absolute inset-0 bg-gunmetal/40" onClick={() => setPreviewOpen(false)} />
-                    <div className="relative w-full max-w-2xl h-[80vh] bg-white rounded-lg shadow-xl flex flex-col">
-                        <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-                            <span className="text-sm font-semibold">Email preview</span>
-                            <button onClick={() => setPreviewOpen(false)} className="icon-btn icon-btn-secondary" aria-label="Close preview">
+                <div className="modal modal--nested">
+                    <div className="modal__backdrop" onClick={() => setPreviewOpen(false)} />
+                    <div className="modal__panel modal__panel--frame">
+                        <div className="modal__header">
+                            <span className="modal__title">Email preview</span>
+                            <button onClick={() => setPreviewOpen(false)} className="icon-btn icon-btn--secondary" aria-label="Close preview">
                                 <X />
                             </button>
                         </div>
-                        <iframe title="Email preview" srcDoc={previewHtml} className="flex-1 w-full" />
+                        <iframe title="Email preview" srcDoc={previewHtml} className="modal__frame" />
                     </div>
                 </div>
             )}

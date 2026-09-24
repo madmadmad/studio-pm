@@ -1,0 +1,29 @@
+// Small outlined square button at the end of a list row ("open").
+// --reveal keeps it hidden until the row is hovered.
+
+.row-action {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem; // one-off: a compact square hit target
+    height: 1.75rem;
+    color: var(--color-shadow-grey);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-base);
+    transition: opacity var(--duration-fast) var(--ease-standard);
+
+    &:hover {
+        color: var(--color-gunmetal);
+        border-color: var(--color-gunmetal);
+    }
+
+    &--reveal {
+        opacity: 0;
+
+        .grid-row:hover &,
+        .list-row:hover & {
+            opacity: 1;
+        }
+    }
+}

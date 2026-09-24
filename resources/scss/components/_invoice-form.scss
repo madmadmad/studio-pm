@@ -1,0 +1,48 @@
+// Creating or editing an invoice: client/contact, dates, line items,
+// totals, card-fee toggle. Shared by Invoices/Index, Invoices/Show, and
+// the Projects/Show billing tab.
+
+.invoice-form {
+    // Each group of the form, with room below it.
+    &__section {
+        margin-bottom: var(--space-4);
+    }
+
+    &__parties {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: var(--space-3);
+    }
+
+    &__items {
+        margin-bottom: var(--space-3);
+    }
+
+    &__item {
+        margin-bottom: var(--space-2);
+        padding-bottom: var(--space-2);
+        border-bottom: var(--border-width) solid var(--color-border);
+    }
+
+    &__item-row {
+        display: flex;
+        gap: var(--space-2);
+        margin-bottom: var(--space-1);
+    }
+
+    &__description {
+        flex: 1;
+    }
+
+    &__amount {
+        width: 7rem; // one-off: fits a five-figure amount
+        font-variant-numeric: tabular-nums;
+    }
+
+    // Client-facing notes under a line item: smaller and quieter.
+    &__details {
+        font-size: var(--font-size-xs);
+        line-height: var(--line-height-xs);
+        color: var(--color-shadow-grey);
+    }
+}

@@ -1,0 +1,9 @@
+// Heading above a list or card further down a page ("Recent invoices").
+
+.section-heading {
+    margin-bottom: var(--space-3);
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-sm);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-shadow-grey);
+}

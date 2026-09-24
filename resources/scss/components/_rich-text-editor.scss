@@ -1,0 +1,49 @@
+// Tiptap editor: a toolbar of formatting toggles above the editable area.
+// Used by Components/RichTextEditor.jsx; the editable element also
+// carries .prose so it renders exactly like the published text.
+
+.rich-text-editor {
+    overflow: hidden;
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-base);
+
+    &__toolbar {
+        display: flex;
+        gap: var(--space-1);
+        padding: var(--space-1) var(--space-2);
+        background-color: var(--color-porcelain);
+        border-bottom: var(--border-width) solid var(--color-border);
+    }
+
+    &__tool {
+        padding: var(--space-1) var(--space-2);
+        font-size: var(--font-size-xs);
+        line-height: var(--line-height-xs);
+        color: var(--color-shadow-grey);
+        border-radius: var(--radius-base);
+
+        &:hover {
+            background-color: var(--color-porcelain);
+        }
+
+        &--active,
+        &--active:hover {
+            background-color: var(--color-gunmetal);
+            color: var(--color-white);
+        }
+    }
+
+    &__content {
+        background-color: var(--color-white);
+    }
+
+    &__input {
+        min-height: 10rem; // one-off: comfortable empty-editor height
+        padding: var(--space-2) var(--space-3);
+        font-size: var(--font-size-sm);
+
+        &:focus {
+            outline: none;
+        }
+    }
+}

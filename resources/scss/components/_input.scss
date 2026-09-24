@@ -1,0 +1,61 @@
+// Text/number/date/email inputs, selects, and textareas. Pair with .label.
+@use '../abstracts' as *;
+
+.input {
+    display: block;
+    width: 100%;
+    padding: var(--space-2) var(--space-3);
+    font-size: var(--font-size-sm);
+    background-color: var(--color-white);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-base);
+
+    &:focus {
+        @include focus-ring;
+        border-color: transparent;
+    }
+
+    // :read-only is scoped to input/textarea on purpose: a <select> has no
+    // readonly state and matches :read-only unconditionally.
+    &:disabled,
+    &:is(input, textarea):read-only {
+        background-color: var(--color-porcelain);
+    }
+
+    // Keep the room elements.scss reserves for the custom dropdown arrow;
+    // the padding shorthands here would otherwise remove it.
+    &:is(select) {
+        padding-right: var(--space-8);
+    }
+
+    // Matches .btn's height, for a field sitting inline next to a button.
+    &--sm {
+        padding-block: var(--space-1-5);
+    }
+
+    // Embedded directly in a table row, where --sm still reads too tall.
+    &--xs {
+        padding: var(--space-1) var(--space-2);
+    }
+
+    // Shrink to content instead of filling the row (a select beside a
+    // button, a picker in a table cell).
+    &--inline {
+        width: auto;
+    }
+
+    // Tiny inline select sitting beside a badge in a table row.
+    &--micro {
+        padding: var(--space-0-5) var(--space-1);
+        font-size: var(--font-size-xs);
+        line-height: var(--line-height-xs);
+        color: var(--color-shadow-grey);
+    }
+
+    // A non-form element styled like a disabled field, for a fixed value
+    // in a form's layout (a locked "Project: X" line, a computed total).
+    &--static {
+        color: var(--color-shadow-grey);
+        background-color: var(--color-porcelain);
+    }
+}

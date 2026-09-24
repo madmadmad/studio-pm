@@ -1,0 +1,4 @@
+// Abstracts emit no CSS on their own -- only maps, functions, and mixins.
+// Consume with `@use '../abstracts' as *;`.
+@forward 'breakpoints';
+@forward 'mixins';

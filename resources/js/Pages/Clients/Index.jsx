@@ -5,6 +5,7 @@ import Button from '../../Components/Button';
 import EmptyState from '../../Components/EmptyState';
 import { CompanyStatusBadge } from '../../Components/StatusBadges';
 import { api } from '../../lib/api';
+import PageHeader from '../../Components/PageHeader';
 
 export default function ClientsIndex({ companies }) {
     const [showForm, setShowForm] = useState(false);
@@ -32,31 +33,33 @@ export default function ClientsIndex({ companies }) {
     return (
         <AppLayout>
             <Head title="Clients" />
-            <div className="flex items-center justify-between mb-1">
-                <h1 className="font-display text-2xl font-semibold">Clients</h1>
-                <Button onClick={() => setShowForm(true)}>Add client</Button>
-            </div>
-            <p className="text-sm text-shadow-grey mb-6">
-                {companies.length} client{companies.length !== 1 ? 's' : ''} on file.
-            </p>
+            <PageHeader
+                title="Clients"
+                actions={<Button onClick={() => setShowForm(true)}>Add client</Button>}
+                subtitle={
+                    <>
+                        {companies.length} client{companies.length !== 1 ? 's' : ''} on file.
+                    </>
+                }
+            />
 
             {showForm && (
-                <form onSubmit={handleSubmit} className="card card-padded mb-6 grid grid-cols-2 gap-3">
+                <form onSubmit={handleSubmit} className="card card--padded form-grid page-section">
                     <input
                         required
                         placeholder="Client or company name"
                         value={form.name}
                         onChange={(e) => setForm({ ...form, name: e.target.value })}
-                        className="field col-span-2"
+                        className="input form-grid__full"
                     />
                     <input
                         placeholder="Phone"
                         value={form.phone}
                         onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                        className="field col-span-2"
+                        className="input form-grid__full"
                     />
-                    {error && <div className="text-sm text-watermelon col-span-2">{error}</div>}
-                    <div className="flex gap-2 col-span-2 justify-end">
+                    {error && <div className="form-message form-message--error form-grid__full">{error}</div>}
+                    <div className="form-actions form-grid__full">
                         <Button type="button" variant="secondary" onClick={() => setShowForm(false)}>
                             Cancel
                         </Button>
@@ -67,11 +70,11 @@ export default function ClientsIndex({ companies }) {
                 </form>
             )}
 
-            <div className="card overflow-hidden">
+            <div className="card card--flush">
                 {companies.length === 0 ? (
                     <EmptyState text="No clients yet." />
                 ) : (
-                    <table className="table">
+                    <table className="table table--hover">
                         <thead>
                             <tr>
                                 <th>Client</th>
@@ -82,20 +85,20 @@ export default function ClientsIndex({ companies }) {
                         </thead>
                         <tbody>
                             {companies.map((c) => (
-                                <tr key={c.id} className="hover:bg-porcelain">
-                                    <td className="font-medium">
-                                        <Link href={`/clients/${c.id}`} className="hover:underline">
+                                <tr key={c.id}>
+                                    <td className="table__cell--strong">
+                                        <Link href={`/clients/${c.id}`} className="link">
                                             {c.name}
                                         </Link>
                                     </td>
-                                    <td className="text-shadow-grey">
+                                    <td className="table__cell--muted">
                                         {c.contacts?.[0] ? `${c.contacts[0].name} · ${c.contacts[0].email ?? ''}` : '—'}
                                     </td>
                                     <td>
                                         <CompanyStatusBadge company={c} />
                                     </td>
-                                    <td className="text-right">
-                                        <Link href={`/clients/${c.id}`} className="btn-link">
+                                    <td className="table__cell--end">
+                                        <Link href={`/clients/${c.id}`} className="link-btn">
                                             Edit
                                         </Link>
                                     </td>

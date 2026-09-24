@@ -1,0 +1,12 @@
+// A row of controls above a list: actions on the right, or --split to put
+// a summary on the left.
+
+.toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+
+    &--split {
+        justify-content: space-between;
+    }
+}

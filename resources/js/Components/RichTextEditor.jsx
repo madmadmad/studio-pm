@@ -7,7 +7,7 @@ function ToolbarButton({ active, onClick, children }) {
         <button
             type="button"
             onClick={onClick}
-            className={`text-xs font-medium px-2 py-1 rounded ${active ? 'bg-gunmetal text-white' : 'text-shadow-grey hover:bg-porcelain'}`}
+            className={`rich-text-editor__tool${active ? ' rich-text-editor__tool--active' : ''}`}
         >
             {children}
         </button>
@@ -21,7 +21,7 @@ export default function RichTextEditor({ value, onChange }) {
         onUpdate: ({ editor }) => onChange(editor.getHTML()),
         editorProps: {
             attributes: {
-                class: 'proposal-body text-sm min-h-[160px] px-3 py-2 focus:outline-none',
+                class: 'prose rich-text-editor__input',
             },
         },
     });
@@ -44,8 +44,8 @@ export default function RichTextEditor({ value, onChange }) {
     if (!editor) return null;
 
     return (
-        <div className="border border-border rounded overflow-hidden">
-            <div className="flex gap-1 border-b border-border px-2 py-1 bg-porcelain">
+        <div className="rich-text-editor">
+            <div className="rich-text-editor__toolbar">
                 <ToolbarButton active={editor.isActive('bold')} onClick={() => editor.chain().focus().toggleBold().run()}>Bold</ToolbarButton>
                 <ToolbarButton active={editor.isActive('italic')} onClick={() => editor.chain().focus().toggleItalic().run()}>Italic</ToolbarButton>
                 <ToolbarButton active={editor.isActive('heading', { level: 2 })} onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}>H2</ToolbarButton>
@@ -54,7 +54,7 @@ export default function RichTextEditor({ value, onChange }) {
                 <ToolbarButton active={editor.isActive('bulletList')} onClick={() => editor.chain().focus().toggleBulletList().run()}>List</ToolbarButton>
                 <ToolbarButton active={editor.isActive('orderedList')} onClick={() => editor.chain().focus().toggleOrderedList().run()}>1. List</ToolbarButton>
             </div>
-            <EditorContent editor={editor} className="bg-white" />
+            <EditorContent editor={editor} className="rich-text-editor__content" />
         </div>
     );
 }

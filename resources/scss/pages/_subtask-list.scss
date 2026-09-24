@@ -1,0 +1,91 @@
+// Task drawer: draggable subtasks with a done checkbox, plus the add form.
+
+.subtask-list {
+    margin-bottom: var(--space-1);
+
+    &__item {
+        display: flex;
+        align-items: flex-start;
+        gap: var(--space-2);
+        padding-block: var(--space-2);
+        border-bottom: var(--border-width) solid var(--color-border);
+
+        &:last-child {
+            border-bottom: none;
+        }
+
+        &--dragging {
+            opacity: 0.4;
+        }
+    }
+
+    // Drag handle and remove button appear on hover.
+    &__handle,
+    &__remove {
+        flex-shrink: 0;
+        opacity: 0;
+
+        .subtask-list__item:hover & {
+            opacity: 1;
+        }
+    }
+
+    &__handle {
+        margin-top: var(--space-1);
+        color: var(--color-shadow-grey);
+        cursor: grab;
+    }
+
+    &__remove {
+        margin-top: var(--space-0-5);
+        padding-inline: var(--space-1);
+    }
+
+    &__check {
+        display: flex;
+        flex-shrink: 0;
+        align-items: center;
+        justify-content: center;
+        width: var(--space-5);
+        height: var(--space-5);
+        margin-top: var(--space-0-5);
+        font-size: var(--font-size-xs);
+        line-height: var(--line-height-xs);
+        border: var(--border-width) solid var(--color-border);
+        border-radius: var(--radius-base);
+
+        &--done {
+            color: var(--color-white);
+            background-color: var(--color-fern);
+            border-width: 0;
+        }
+    }
+
+    &__title {
+        flex: 1;
+        min-width: 0;
+        padding-block: var(--space-0-5);
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-body);
+        background-color: transparent;
+        border: none;
+
+        &:focus {
+            outline: none;
+        }
+
+        &--done {
+            color: var(--color-shadow-grey);
+            text-decoration: line-through;
+        }
+    }
+
+    &__add {
+        align-items: center;
+        padding-top: var(--space-2);
+    }
+
+    &__add-button {
+        flex-shrink: 0;
+    }
+}

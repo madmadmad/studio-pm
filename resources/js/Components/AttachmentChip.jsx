@@ -22,10 +22,10 @@ export default function AttachmentChip({ attachment, downloadUrl }) {
 
     return (
         <a href={downloadUrl} download={attachment.original_name} className="attachment-chip" title={attachment.original_name}>
-            <Icon size={20} className="text-shadow-grey flex-shrink-0" />
-            <span className="truncate">{attachment.original_name}</span>
-            <span className="text-shadow-grey flex-shrink-0">{formatFileSize(attachment.size)}</span>
-            <DownloadSimple size={16} className="text-shadow-grey flex-shrink-0" />
+            <Icon size={20} className="attachment-chip__icon" />
+            <span className="attachment-chip__name">{attachment.original_name}</span>
+            <span className="attachment-chip__size">{formatFileSize(attachment.size)}</span>
+            <DownloadSimple size={16} className="attachment-chip__icon" />
         </a>
     );
 }

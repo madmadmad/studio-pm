@@ -1,0 +1,23 @@
+// Breakpoints live in Sass, not :root -- var() can't be used inside a
+// media query condition. Values match Tailwind's defaults so responsive
+// behavior is unchanged by the migration.
+@use 'sass:map';
+
+$breakpoints: (
+    'sm': 40rem,
+    'md': 48rem,
+    'lg': 64rem,
+    'xl': 80rem,
+);
+
+// Mobile-first: styles inside apply from the named breakpoint upward.
+//   @include respond-to('md') { ... }
+@mixin respond-to($name) {
+    @if not map.has-key($breakpoints, $name) {
+        @error 'Unknown breakpoint `#{$name}`. Expected one of: #{map.keys($breakpoints)}.';
+    }
+
+    @media (min-width: map.get($breakpoints, $name)) {
+        @content;
+    }
+}

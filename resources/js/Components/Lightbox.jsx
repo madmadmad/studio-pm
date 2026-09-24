@@ -17,8 +17,8 @@ export default function Lightbox({ images, index, onClose, onNavigate }) {
     if (!current) return null;
 
     return (
-        <div className="fixed inset-0 z-50 bg-gunmetal/80 drawer-overlay flex items-center justify-center p-6" onClick={onClose}>
-            <button onClick={onClose} className="absolute top-4 right-4 text-white hover:opacity-70">
+        <div className="lightbox" onClick={onClose}>
+            <button onClick={onClose} className="lightbox__control lightbox__control--close">
                 <X size={28} />
             </button>
 
@@ -26,7 +26,7 @@ export default function Lightbox({ images, index, onClose, onNavigate }) {
                 href={current.downloadUrl}
                 download={current.name}
                 onClick={(e) => e.stopPropagation()}
-                className="absolute top-4 right-16 text-white hover:opacity-70"
+                className="lightbox__control lightbox__control--download"
                 title="Download"
             >
                 <DownloadSimple size={28} />
@@ -35,7 +35,7 @@ export default function Lightbox({ images, index, onClose, onNavigate }) {
             {index > 0 && (
                 <button
                     onClick={(e) => { e.stopPropagation(); onNavigate(index - 1); }}
-                    className="absolute left-4 top-1/2 -translate-y-1/2 text-white hover:opacity-70"
+                    className="lightbox__control lightbox__control--prev"
                 >
                     <CaretLeft size={32} />
                 </button>
@@ -44,7 +44,7 @@ export default function Lightbox({ images, index, onClose, onNavigate }) {
             {index < images.length - 1 && (
                 <button
                     onClick={(e) => { e.stopPropagation(); onNavigate(index + 1); }}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-white hover:opacity-70"
+                    className="lightbox__control lightbox__control--next"
                 >
                     <CaretRight size={32} />
                 </button>
@@ -54,7 +54,7 @@ export default function Lightbox({ images, index, onClose, onNavigate }) {
                 src={current.src}
                 alt={current.name}
                 onClick={(e) => e.stopPropagation()}
-                className="max-w-full max-h-full rounded object-contain"
+                className="lightbox__image"
             />
         </div>
     );

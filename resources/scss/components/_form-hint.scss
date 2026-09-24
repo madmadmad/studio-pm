@@ -1,0 +1,12 @@
+// Helper text explaining a field or form.
+
+.form-hint {
+    font-size: var(--font-size-xs);
+    line-height: var(--line-height-xs);
+    color: var(--color-shadow-grey);
+
+    // Directly under the field it explains.
+    &--attached {
+        margin-top: var(--space-1);
+    }
+}

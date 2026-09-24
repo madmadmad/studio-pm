@@ -1,0 +1,16 @@
+// Single-column form: fields stacked with even spacing. A child marked
+// __break starts a new group with more room above; __footer is the
+// actions row.
+@use '../abstracts' as *;
+
+.form-stack {
+    @include stack(var(--space-2));
+
+    & &__break {
+        margin-top: var(--space-4);
+    }
+
+    & &__footer {
+        margin-top: var(--space-3);
+    }
+}

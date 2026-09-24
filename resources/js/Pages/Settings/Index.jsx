@@ -3,6 +3,7 @@ import { useState } from 'react';
 import AppLayout from '../../Layouts/AppLayout';
 import Button from '../../Components/Button';
 import { api } from '../../lib/api';
+import PageHeader from '../../Components/PageHeader';
 
 export default function SettingsIndex({ studioProfile }) {
     const [form, setForm] = useState({
@@ -32,47 +33,49 @@ export default function SettingsIndex({ studioProfile }) {
     return (
         <AppLayout>
             <Head title="Settings" />
-            <h1 className="font-display text-2xl font-semibold mb-1">Settings</h1>
-            <p className="text-sm text-shadow-grey mb-6">This is how your studio appears on proposals sent to clients.</p>
+            <PageHeader
+                title="Settings"
+                subtitle="This is how your studio appears on proposals sent to clients."
+            />
 
-            <form onSubmit={submit} className="card card-padded max-w-lg">
-                <div className="text-xs font-semibold text-shadow-grey mb-2">Studio information</div>
+            <form onSubmit={submit} className="card card--padded card--narrow form-stack">
+                <div className="section-label">Studio information</div>
                 <input
                     required
                     placeholder="Studio name"
                     value={form.name}
                     onChange={(e) => setForm({ ...form, name: e.target.value })}
-                    className="field mb-2"
+                    className="input"
                 />
                 <textarea
                     placeholder="Address"
                     value={form.address}
                     onChange={(e) => setForm({ ...form, address: e.target.value })}
                     rows={3}
-                    className="field mb-2"
+                    className="input"
                 />
                 <input
                     type="email"
                     placeholder="Email"
                     value={form.email}
                     onChange={(e) => setForm({ ...form, email: e.target.value })}
-                    className="field mb-2"
+                    className="input"
                 />
                 <input
                     placeholder="Phone"
                     value={form.phone}
                     onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                    className="field mb-2"
+                    className="input"
                 />
                 <input
                     placeholder="Website"
                     value={form.website}
                     onChange={(e) => setForm({ ...form, website: e.target.value })}
-                    className="field mb-4"
+                    className="input"
                 />
 
-                <div className="text-xs font-semibold text-shadow-grey mb-2">Payment instructions</div>
-                <p className="text-xs text-shadow-grey mb-2">
+                <div className="section-label form-stack__break">Payment instructions</div>
+                <p className="form-hint">
                     Shown on sent invoices alongside the Pay Now button, for clients who'd rather pay by ACH or check.
                 </p>
                 <textarea
@@ -80,10 +83,10 @@ export default function SettingsIndex({ studioProfile }) {
                     value={form.payment_instructions}
                     onChange={(e) => setForm({ ...form, payment_instructions: e.target.value })}
                     rows={3}
-                    className="field mb-3"
+                    className="input"
                 />
-                <div className="flex items-center justify-end gap-3">
-                    {saved && <span className="text-sm text-fern">Saved</span>}
+                <div className="form-actions form-stack__footer">
+                    {saved && <span className="form-message form-message--success">Saved</span>}
                     <Button type="submit" variant="confirm" disabled={saving}>
                         Save
                     </Button>

@@ -1,0 +1,147 @@
+// Data tables. Apply .table to the <table>; header/row/cell styling
+// follows automatically, no per-cell classes needed.
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--font-size-sm);
+    text-align: left;
+
+    thead tr {
+        border-bottom: var(--border-width) solid var(--color-border);
+        color: var(--color-shadow-grey);
+    }
+
+    th {
+        padding: var(--space-2) var(--space-4);
+        font-weight: var(--font-weight-semibold);
+    }
+
+    td {
+        padding: var(--space-3) var(--space-4);
+    }
+
+    tbody tr {
+        border-bottom: var(--border-width) solid var(--color-border);
+
+        &:last-child {
+            border-bottom: none;
+        }
+    }
+
+    // Rows highlight on hover (rows that link somewhere).
+    &--hover tbody tr:hover {
+        background-color: var(--color-porcelain);
+    }
+
+    // Top-align cells in a row whose cells hold multi-line content.
+    &__row--top {
+        vertical-align: top;
+    }
+
+    // A sortable column header's button, with its direction arrow.
+    &__sort {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--space-1);
+
+        &:hover {
+            color: var(--color-gunmetal);
+        }
+    }
+
+    &__sort-indicator {
+        font-size: var(--font-size-xs);
+        line-height: var(--line-height-xs);
+    }
+
+    // Cell modifiers apply to <th> and <td> alike.
+    &__cell {
+        &--strong {
+            font-weight: var(--font-weight-medium);
+        }
+
+        &--muted {
+            color: var(--color-shadow-grey);
+        }
+
+        &--end {
+            text-align: right;
+        }
+
+        &--numeric {
+            font-variant-numeric: tabular-nums;
+        }
+
+        &--positive {
+            color: var(--color-fern);
+        }
+
+        &--negative {
+            color: var(--color-watermelon);
+        }
+
+        &--capitalize {
+            text-transform: capitalize;
+        }
+
+        &--top {
+            vertical-align: top;
+        }
+
+        &--narrow {
+            width: 6rem; // one-off: fits an hours value
+        }
+    }
+
+    // Row actions, right-aligned in the last cell.
+    &__actions {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: var(--space-3);
+    }
+
+    // Several inline items in one cell (a badge beside a picker).
+    &__group {
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
+    }
+
+    // Small secondary line under a cell's main value ("Invited Sep 2").
+    &__meta {
+        margin-top: var(--space-1);
+    }
+
+    // Keeps the line breaks a user typed (line-item details).
+    &__meta--multiline {
+        white-space: pre-wrap;
+    }
+
+    &__meta,
+    &__note {
+        font-size: var(--font-size-xs);
+        line-height: var(--line-height-xs);
+        color: var(--color-shadow-grey);
+    }
+
+    // A cell holding an inline editable control, where the default cell
+    // padding is too generous. Qualified by .table to outrank `td` above.
+    & &__cell--tight {
+        padding: var(--space-1) var(--space-2);
+    }
+
+    // Nested inside an already-padded .card: no horizontal cell padding
+    // (the card supplies it) and tighter rows.
+    &--flush {
+        th,
+        td {
+            padding-inline: 0;
+        }
+
+        td {
+            padding-block: var(--space-2);
+        }
+    }
+}

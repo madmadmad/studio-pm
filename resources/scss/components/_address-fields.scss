@@ -1,0 +1,7 @@
+// City / State / Zip on one row, city widest.
+
+.address-fields {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: var(--space-3);
+}

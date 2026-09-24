@@ -1,0 +1,11 @@
+// One block in a page's vertical flow (a form, a table card, a grid of
+// metrics). Mix onto the block itself: `card card--flush page-section`.
+
+.page-section {
+    margin-bottom: var(--space-section);
+
+    // Less room below: a toolbar or add-form directly above its list.
+    &--tight {
+        margin-bottom: var(--space-4);
+    }
+}

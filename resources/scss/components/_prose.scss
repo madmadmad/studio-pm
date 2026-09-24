@@ -1,0 +1,34 @@
+// Long-form rich text (proposal bodies, notes) rendered from editor HTML,
+// where there are no classes on the inner elements. Spacing is in `em` on
+// purpose so it scales with whatever font size the container sets.
+
+.prose {
+    line-height: var(--line-height-prose);
+
+    p {
+        margin-bottom: 0.75em;
+    }
+
+    ul,
+    ol {
+        margin: 0.5em 0 0.75em 1.25em;
+    }
+
+    ul {
+        list-style: disc;
+    }
+
+    ol {
+        list-style: decimal;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4 {
+        margin: 0.75em 0 0.4em;
+        font-family: var(--font-family-display);
+        font-weight: var(--font-weight-extrabold);
+        letter-spacing: var(--letter-spacing-display);
+    }
+}

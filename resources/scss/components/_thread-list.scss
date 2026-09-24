@@ -1,0 +1,43 @@
+// The list of message threads, one clickable row per thread, on a .card.
+
+.thread-list {
+    overflow: hidden;
+
+    &__item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        padding: var(--space-3) var(--space-4);
+        text-align: left;
+        border-bottom: var(--border-width) solid var(--color-border);
+
+        &:last-child {
+            border-bottom: none;
+        }
+
+        &:hover {
+            background-color: var(--color-porcelain);
+        }
+    }
+
+    &__subject {
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+        font-weight: var(--font-weight-medium);
+    }
+
+    &__participants {
+        margin-top: var(--space-1);
+    }
+
+    &__participants,
+    &__date {
+        font-size: var(--font-size-xs);
+        line-height: var(--line-height-xs);
+        color: var(--color-shadow-grey);
+    }
+}

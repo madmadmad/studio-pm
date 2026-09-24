@@ -1,0 +1,51 @@
+// Projects/Show Tasks tab: the task rows (a .grid-row list) with inline
+// assignee/due-date pickers.
+
+.task-list {
+    &__title {
+        display: flex;
+        grid-column: span 5;
+        align-items: center;
+        gap: var(--space-2);
+    }
+
+    &__assignee {
+        grid-column: span 3;
+    }
+
+    &__due {
+        grid-column: span 2;
+    }
+
+    &__status {
+        grid-column: span 2;
+        text-align: right;
+    }
+
+    // Picker that reads as plain text until hovered.
+    &__control {
+        width: 100%;
+        height: var(--space-8);
+        padding-inline: var(--space-2);
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+        color: var(--color-shadow-grey);
+        background-color: transparent;
+        border: var(--border-width) solid transparent;
+        border-radius: var(--radius-base);
+
+        &:hover {
+            border-color: var(--color-border);
+        }
+
+        // Keep room for the custom dropdown arrow.
+        &:is(select) {
+            padding-right: var(--space-8);
+        }
+
+        &--date {
+            font-size: var(--font-size-xs);
+            line-height: var(--line-height-xs);
+        }
+    }
+}

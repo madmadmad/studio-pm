@@ -1,0 +1,48 @@
+// On/off switch with an optional text label. Used by Components/Toggle.jsx.
+
+.toggle {
+    // Switch geometry: a 2.25rem x 1.25rem track, 1rem knob, 0.125rem inset.
+    --toggle-track-width: 2.25rem;
+    --toggle-track-height: var(--space-5);
+    --toggle-knob-size: var(--space-4);
+    --toggle-inset: var(--space-0-5);
+
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-sm);
+    cursor: pointer;
+    user-select: none;
+
+    &__switch {
+        position: relative;
+        display: inline-flex;
+        flex-shrink: 0;
+        align-items: center;
+        width: var(--toggle-track-width);
+        height: var(--toggle-track-height);
+        background-color: var(--color-border);
+        border-radius: var(--radius-pill);
+        transition: background-color var(--duration-fast) var(--ease-standard);
+
+        &--on {
+            background-color: var(--color-fern);
+        }
+    }
+
+    &__knob {
+        display: inline-block;
+        width: var(--toggle-knob-size);
+        height: var(--toggle-knob-size);
+        background-color: var(--color-white);
+        border-radius: var(--radius-pill);
+        box-shadow: var(--shadow-raised);
+        transform: translateX(var(--toggle-inset));
+        transition: transform var(--duration-fast) var(--ease-standard);
+
+        .toggle__switch--on & {
+            transform: translateX(calc(var(--toggle-track-width) - var(--toggle-knob-size) - var(--toggle-inset) * 2));
+        }
+    }
+}

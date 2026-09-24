@@ -1,5 +1,6 @@
 import { Link, useForm } from '@inertiajs/react';
 import Button from '../../Components/Button';
+import AuthLayout from '../../Layouts/AuthLayout';
 
 export default function ForgotPassword({ status }) {
     const { data, setData, post, processing, errors } = useForm({ email: '' });
@@ -10,41 +11,34 @@ export default function ForgotPassword({ status }) {
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-porcelain text-gunmetal px-4">
-            <div className="w-full max-w-sm">
-                <div className="mb-8 text-center">
-                    <div className="text-xl font-semibold">Studio PM</div>
-                    <div className="text-sm text-shadow-grey">Reset your password</div>
+        <AuthLayout title="Studio PM" subtitle="Reset your password">
+            <form onSubmit={submit} className="card auth-shell__card">
+                <p className="auth-shell__text">
+                    Enter your email and we&rsquo;ll send you a link to reset your password.
+                </p>
+
+                {status && <div className="form-message form-message--success">{status}</div>}
+
+                <div>
+                    <label className="label">Email</label>
+                    <input
+                        type="email"
+                        autoFocus
+                        value={data.email}
+                        onChange={(e) => setData('email', e.target.value)}
+                        className="input"
+                    />
+                    {errors.email && <div className="form-error">{errors.email}</div>}
                 </div>
 
-                <form onSubmit={submit} className="card p-6 flex flex-col gap-3">
-                    <p className="text-sm text-shadow-grey">
-                        Enter your email and we&rsquo;ll send you a link to reset your password.
-                    </p>
+                <Button type="submit" disabled={processing} className="btn--lg auth-shell__submit">
+                    Email password reset link
+                </Button>
 
-                    {status && <div className="text-sm text-fern">{status}</div>}
-
-                    <div>
-                        <label className="field-label">Email</label>
-                        <input
-                            type="email"
-                            autoFocus
-                            value={data.email}
-                            onChange={(e) => setData('email', e.target.value)}
-                            className="field"
-                        />
-                        {errors.email && <div className="text-xs text-watermelon mt-1">{errors.email}</div>}
-                    </div>
-
-                    <Button type="submit" disabled={processing} className="btn-lg mt-2">
-                        Email password reset link
-                    </Button>
-
-                    <Link href="/login" className="text-sm text-shadow-grey hover:text-gunmetal text-center mt-1">
-                        Back to sign in
-                    </Link>
-                </form>
-            </div>
-        </div>
+                <Link href="/login" className="text-action text-action--sm auth-shell__back">
+                    Back to sign in
+                </Link>
+            </form>
+        </AuthLayout>
     );
 }

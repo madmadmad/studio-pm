@@ -1,0 +1,25 @@
+// Tone-based status/category label. Status -> tone mapping lives in
+// Components/StatusBadges.jsx; Components/Badge.jsx maps tone -> modifier.
+
+.badge {
+    padding: var(--space-0-5) var(--space-2);
+    font-size: var(--font-size-xs);
+    line-height: var(--line-height-xs);
+    font-weight: var(--font-weight-medium);
+    border-radius: var(--radius-base);
+
+    &--neutral {
+        background-color: var(--color-mist);
+        color: var(--color-shadow-grey);
+    }
+
+    &--watermelon {
+        background-color: var(--color-watermelon-soft);
+        color: var(--color-watermelon);
+    }
+
+    &--fern {
+        background-color: var(--color-fern-soft);
+        color: var(--color-fern);
+    }
+}
