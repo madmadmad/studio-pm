@@ -1,0 +1,10 @@
+// Projects/Show note drawer: the author's name in the byline above the
+// title (the byline itself is .drawer__byline). The body is .prose (read)
+// or .rich-text-editor (editing).
+
+.note-drawer {
+    &__author {
+        font-weight: var(--font-weight-medium);
+        color: var(--color-gunmetal);
+    }
+}

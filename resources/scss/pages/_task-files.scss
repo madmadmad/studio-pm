@@ -2,13 +2,6 @@
 @use '../abstracts' as *;
 
 .task-files {
-    &__header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: var(--space-2);
-    }
-
     &__list {
         overflow: hidden;
         border: var(--border-width) solid var(--color-border);

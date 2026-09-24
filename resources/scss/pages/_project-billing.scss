@@ -1,4 +1,5 @@
-// Projects/Show Billing tab: the budget summary above the invoice list.
+// Projects/Show Billing tab: the budget summary (the toolbar summary) and
+// the invoice rows (a .grid-row list). An invoice opens in the wide drawer.
 
 .project-billing {
     &__budget {
@@ -15,5 +16,24 @@
         &--negative {
             color: var(--color-watermelon);
         }
+    }
+
+    &__number {
+        grid-column: span 2;
+        color: var(--color-shadow-grey);
+        font-variant-numeric: tabular-nums;
+    }
+
+    &__issued {
+        grid-column: span 3;
+    }
+
+    &__total {
+        grid-column: span 3;
+        font-variant-numeric: tabular-nums;
+    }
+
+    &__status {
+        grid-column: span 4;
     }
 }

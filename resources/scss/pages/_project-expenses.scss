@@ -1,8 +1,9 @@
-// Projects/Show Expenses tab: the running total above the table.
+// Projects/Show Expenses tab: the running total (the toolbar summary) and
+// the expense rows (a .grid-row list).
+@use '../abstracts' as *;
 
 .project-expenses {
     &__total {
-        margin-bottom: var(--space-2);
         font-size: var(--font-size-sm);
         line-height: var(--line-height-sm);
         color: var(--color-shadow-grey);
@@ -10,6 +11,26 @@
 
     &__total-value {
         color: var(--color-watermelon);
+        font-variant-numeric: tabular-nums;
+    }
+
+    &__date {
+        grid-column: span 2;
+        color: var(--color-shadow-grey);
+    }
+
+    &__name {
+        @include truncate;
+        grid-column: span 5;
+    }
+
+    &__status {
+        grid-column: span 3;
+    }
+
+    &__amount {
+        grid-column: span 2;
+        text-align: right;
         font-variant-numeric: tabular-nums;
     }
 }

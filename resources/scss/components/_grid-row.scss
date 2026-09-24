@@ -1,6 +1,11 @@
 // Rows of a card-based list laid out on a 12-column grid, so columns line
 // up across rows without a <table>. The owning list's elements set each
 // column's span. --head is the column-label row.
+//
+// The project list pattern (every tab of Projects/Show): rows are
+// --link (the whole row opens the item's drawer) and --action (a fixed
+// trailing column for the .row-action caret; give the --head row an empty
+// cell there so the columns stay aligned).
 
 .grid-row {
     display: grid;
@@ -14,6 +19,23 @@
 
     &:last-child {
         border-bottom: none;
+    }
+
+    &--action {
+        grid-template-columns: repeat(12, minmax(0, 1fr)) var(--size-row-action);
+    }
+
+    &--link {
+        cursor: pointer;
+
+        &:hover {
+            background-color: var(--color-porcelain);
+        }
+    }
+
+    // A --link row whose drawer is loading its detail (an invoice).
+    &--loading {
+        cursor: progress;
     }
 
     &--head {

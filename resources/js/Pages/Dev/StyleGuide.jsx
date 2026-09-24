@@ -271,8 +271,8 @@ export default function StyleGuide() {
                     </div>
                 </Section>
 
-                <Section title="Messages" description="The .message__card body (soft fill, no border) and .attachment-chip (a non-image file inline in a message) -- see MessagesPanel.jsx.">
-                    <div className="message__card style-guide__message">
+                <Section title="Messages" description="The .message__body (plain text, lined up with the sender name) and .attachment-chip (a non-image file inline in a message) -- see MessagesPanel.jsx.">
+                    <div className="message__body style-guide__message">
                         This is what a message body looks like -- soft background, generous padding, no heavy border.
                     </div>
                     <AttachmentChip attachment={{ original_name: 'brand-brief.pdf', size: 245000 }} downloadUrl="#" />

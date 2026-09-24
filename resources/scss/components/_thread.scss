@@ -60,6 +60,13 @@
         text-align: center;
     }
 
+    // --bare: inside a drawer, which is the frame -- no card padding, so
+    // the messages line up with the drawer's content edge. (The header is
+    // replaced by the drawer's standard byline and title.)
+    &--bare &__body {
+        padding-inline: 0;
+    }
+
     // Shown instead of the composer to someone not in the thread.
     &__join {
         display: flex;

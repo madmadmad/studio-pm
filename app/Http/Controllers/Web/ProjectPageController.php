@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Web;
 use App\Http\Controllers\Controller;
 use App\Models\Company;
 use App\Models\Project;
+use App\Models\Service;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -48,7 +49,7 @@ class ProjectPageController extends Controller
             'contact',
             'tasks.subtasks',
             'tasks.files',
-            'notes',
+            'notes.user',
             'messages' => fn ($q) => $q->withTrashed()->with([
                 'senderUser', 'senderContact', 'attachments',
                 'participants.user', 'participants.contact',
@@ -79,6 +80,9 @@ class ProjectPageController extends Controller
             'assignableStaff' => $request->user()->isManager()
                 ? User::whereNull('deactivated_at')->orderBy('name')->get(['id', 'name'])
                 : [],
+            // Line-item presets for the proposal drawer (Manager-only, like
+            // the proposals themselves).
+            'services' => $request->user()->isManager() ? Service::orderBy('name')->get() : [],
         ]);
     }
 

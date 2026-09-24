@@ -1,24 +1,21 @@
-// Projects/Show Notes tab: the note rows (a .grid-row list).
+// Projects/Show Messages tab: the thread rows (a .grid-row list). The
+// open thread and the new-message form render in a drawer, using
+// MessagesPanel's .thread and .composer blocks.
 @use '../abstracts' as *;
 
-.note-list {
-    // Author avatar + title; min-width lets the title truncate.
-    &__lead {
+.project-messages {
+    &__subject {
         display: flex;
-        grid-column: span 7;
+        grid-column: span 6;
         align-items: center;
         gap: var(--space-2);
         min-width: 0;
-    }
-
-    &__title {
-        @include truncate;
         font-weight: var(--font-weight-medium);
     }
 
-    &__author {
+    &__participants {
         @include truncate;
-        grid-column: span 3;
+        grid-column: span 4;
         color: var(--color-shadow-grey);
     }
 

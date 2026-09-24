@@ -1,0 +1,20 @@
+// Projects/Show Proposals tab: the proposal rows (a .grid-row list). The
+// proposal itself opens in the wide drawer (components/_proposal-form).
+@use '../abstracts' as *;
+
+.project-proposals {
+    &__title {
+        @include truncate;
+        grid-column: span 6;
+        font-weight: var(--font-weight-medium);
+    }
+
+    &__estimate {
+        grid-column: span 3;
+        font-variant-numeric: tabular-nums;
+    }
+
+    &__status {
+        grid-column: span 3;
+    }
+}

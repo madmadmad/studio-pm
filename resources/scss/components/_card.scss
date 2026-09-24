@@ -3,7 +3,8 @@
 
 .card {
     background-color: var(--color-white);
-    border: var(--border-width) solid var(--color-border);
+    // border: var(--border-width) solid var(--color-border);
+    border: 0;
     border-radius: var(--radius-base);
 
     &--padded {

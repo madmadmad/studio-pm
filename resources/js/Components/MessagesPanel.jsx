@@ -8,16 +8,17 @@ import EmptyState from './EmptyState';
 import Avatar from './Avatar';
 import AttachmentChip from './AttachmentChip';
 import Lightbox from './Lightbox';
+import { DrawerByline, DrawerDate } from './Drawer';
 
 function participantName(participant) {
     return participant.user?.name ?? participant.contact?.name ?? 'Unknown';
 }
 
-function isSameActor(a, currentActorType, currentActorId) {
+export function isSameActor(a, currentActorType, currentActorId) {
     return a.type === currentActorType && String(a.id) === String(currentActorId);
 }
 
-function threadParticipantActors(thread) {
+export function threadParticipantActors(thread) {
     return (thread.participants || []).map((p) => ({
         type: p.user ? 'user' : 'contact',
         id: p.user ? p.user.id : p.contact?.id,
@@ -124,7 +125,8 @@ function AutoGrowTextarea({ value, onChange, onKeyDown, onPaste, placeholder, au
     );
 }
 
-function NewThreadForm({ recipientOptions, endpoints, onCreate, onCancel }) {
+// `bare` drops the card framing, for use inside a drawer.
+export function NewThreadForm({ recipientOptions, endpoints, onCreate, onCancel, bare = false }) {
     const [subject, setSubject] = useState('');
     const [body, setBody] = useState('');
     const [selected, setSelected] = useState([]);
@@ -182,7 +184,7 @@ function NewThreadForm({ recipientOptions, endpoints, onCreate, onCancel }) {
             onSubmit={submit}
             onDragOver={(e) => e.preventDefault()}
             onDrop={(e) => { e.preventDefault(); if (e.dataTransfer.files?.length) attachments.addFiles(e.dataTransfer.files); }}
-            className="card card--padded composer composer--new"
+            className={`${bare ? '' : 'card card--padded '}composer composer--new`}
         >
             <div className="composer__label">To</div>
             <div className="composer__recipients">
@@ -290,7 +292,7 @@ function MessageAttachments({ message, endpoints, onOpenLightbox }) {
     );
 }
 
-function MessageRow({ message, isLast, endpoints, currentActorType, currentActorId, currentActorRole, onChange, onOpenLightbox }) {
+function MessageRow({ message, endpoints, currentActorType, currentActorId, currentActorRole, onChange, onOpenLightbox }) {
     const [editing, setEditing] = useState(false);
     const [editBody, setEditBody] = useState(message.body || '');
     const [saving, setSaving] = useState(false);
@@ -322,7 +324,7 @@ function MessageRow({ message, isLast, endpoints, currentActorType, currentActor
         <div className="message">
             <div className="message__rail">
                 <Avatar name={sender?.name} avatarUrl={sender?.avatar_url} id={sender?.id ?? sender?.name} responsive />
-                {!isLast && <div className="message__connector" />}
+                <div className="message__rule" />
             </div>
             <div className="message__main">
                 <div className="message__header">
@@ -344,9 +346,9 @@ function MessageRow({ message, isLast, endpoints, currentActorType, currentActor
                 </div>
 
                 {isDeleted ? (
-                    <div className="message__card message__card--deleted">Message deleted</div>
+                    <div className="message__body message__body--deleted">Message deleted</div>
                 ) : editing ? (
-                    <div className="message__card">
+                    <div className="message__body">
                         <textarea
                             value={editBody}
                             onChange={(e) => setEditBody(e.target.value)}
@@ -360,7 +362,7 @@ function MessageRow({ message, isLast, endpoints, currentActorType, currentActor
                         </div>
                     </div>
                 ) : (
-                    <div className="message__card">
+                    <div className="message__body">
                         {message.body && <div className="message__text">{linkify(message.body)}</div>}
                         <MessageAttachments message={message} endpoints={endpoints} onOpenLightbox={onOpenLightbox} />
                     </div>
@@ -372,7 +374,9 @@ function MessageRow({ message, isLast, endpoints, currentActorType, currentActor
 
 const INITIAL_VISIBLE = 50;
 
-function ThreadView({ thread, currentActorType, currentActorId, currentActorRole, endpoints, onChange, onBack }) {
+// `bare` drops the card framing (thread, reply box, join prompt), for use
+// inside a drawer; the drawer is the frame.
+export function ThreadView({ thread, currentActorType, currentActorId, currentActorRole, endpoints, onChange, onBack, bare = false }) {
     const [body, setBody] = useState('');
     const [saving, setSaving] = useState(false);
     const [joining, setJoining] = useState(false);
@@ -436,17 +440,32 @@ function ThreadView({ thread, currentActorType, currentActorId, currentActorRole
         }
     }
 
-    return (
-        <div>
-            <button onClick={onBack} className="thread__back">&larr; All messages</button>
+    const card = bare ? '' : 'card ';
+    const paddedCard = bare ? '' : 'card card--padded ';
 
-            <div className="card thread__card">
-                <div className="thread__header">
-                    <div className="thread__subject">{thread.subject}</div>
-                    <div className="thread__participants">
-                        With: {participants.map((p) => p.name).join(', ') || '—'}
+    return (
+        <div className={bare ? 'thread thread--bare' : 'thread'}>
+            {onBack && <button onClick={onBack} className="thread__back">&larr; All messages</button>}
+
+            <div className={`${card}thread__card`}>
+                {bare ? (
+                    // In a drawer: the standard drawer opening -- byline
+                    // (started date, participants), then the subject.
+                    <>
+                        <DrawerByline>
+                            <DrawerDate label="Started" date={thread.sent_at} />
+                            <span>With {participants.map((p) => p.name).join(', ') || '—'}</span>
+                        </DrawerByline>
+                        <h2 className="drawer__title">{thread.subject}</h2>
+                    </>
+                ) : (
+                    <div className="thread__header">
+                        <div className="thread__subject">{thread.subject}</div>
+                        <div className="thread__participants">
+                            With: {participants.map((p) => p.name).join(', ') || '—'}
+                        </div>
                     </div>
-                </div>
+                )}
                 <div className="thread__body">
                     {hasEarlier && (
                         <button
@@ -469,7 +488,6 @@ function ThreadView({ thread, currentActorType, currentActorId, currentActorRole
                                 )}
                                 <MessageRow
                                     message={message}
-                                    isLast={i === visibleMessages.length - 1}
                                     endpoints={endpoints}
                                     currentActorType={currentActorType}
                                     currentActorId={currentActorId}
@@ -489,7 +507,7 @@ function ThreadView({ thread, currentActorType, currentActorId, currentActorRole
                     onSubmit={submitReply}
                     onDragOver={(e) => e.preventDefault()}
                     onDrop={(e) => { e.preventDefault(); if (e.dataTransfer.files?.length) attachments.addFiles(e.dataTransfer.files); }}
-                    className="card card--padded composer"
+                    className={`${paddedCard}composer`}
                 >
                     <AutoGrowTextarea
                         value={body}
@@ -513,7 +531,7 @@ function ThreadView({ thread, currentActorType, currentActorId, currentActorRole
                     </div>
                 </form>
             ) : (
-                <div className="card card--padded thread__join">
+                <div className={`${paddedCard}thread__join`}>
                     <div className="thread__join-text">You're not part of this thread yet.</div>
                     <Button variant="confirm" onClick={join} disabled={joining}>Join thread</Button>
                 </div>

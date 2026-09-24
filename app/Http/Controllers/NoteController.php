@@ -24,7 +24,11 @@ class NoteController extends Controller
             'body' => ['nullable', 'string'],
         ]);
 
-        return $project->notes()->create($data);
+        $note = $project->notes()->make($data);
+        $note->user()->associate($request->user());
+        $note->save();
+
+        return $note->load('user');
     }
 
     public function update(Request $request, Note $note)

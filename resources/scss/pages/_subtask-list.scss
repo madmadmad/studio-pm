@@ -1,4 +1,5 @@
-// Task drawer: draggable subtasks with a done checkbox, plus the add form.
+// Task drawer: draggable subtasks with a done checkbox, plus the draft
+// row for adding one.
 
 .subtask-list {
     margin-bottom: var(--space-1);
@@ -16,6 +17,13 @@
 
         &--dragging {
             opacity: 0.4;
+        }
+
+        // The new subtask being typed. Keeps the handle's space so the
+        // text lines up with the rows above, but never shows it -- the
+        // draft can't be dragged.
+        &--draft .subtask-list__handle {
+            visibility: hidden;
         }
     }
 
@@ -78,14 +86,5 @@
             color: var(--color-shadow-grey);
             text-decoration: line-through;
         }
-    }
-
-    &__add {
-        align-items: center;
-        padding-top: var(--space-2);
-    }
-
-    &__add-button {
-        flex-shrink: 0;
     }
 }

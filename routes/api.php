@@ -67,7 +67,7 @@ Route::middleware('auth:sanctum')->name('api.')->group(function () {
         Route::post('contacts/{contact}/portal-invite', [PortalInviteController::class, 'store']);
         Route::apiResource('services', ServiceController::class);
 
-        Route::apiResource('companies.invoices', InvoiceController::class)->shallow()->only(['index', 'store', 'update', 'destroy']);
+        Route::apiResource('companies.invoices', InvoiceController::class)->shallow()->only(['index', 'store', 'show', 'update', 'destroy']);
         Route::post('invoices/{invoice}/send', [InvoiceController::class, 'send'])->middleware('throttle:invoice-send');
         Route::post('invoices/{invoice}/email-preview', [InvoiceController::class, 'emailPreview']);
         Route::post('invoices/{invoice}/regenerate-token', [InvoiceController::class, 'regenerateToken']);

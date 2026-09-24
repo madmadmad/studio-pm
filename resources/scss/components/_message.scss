@@ -1,5 +1,6 @@
-// A single message in a thread: avatar rail with a connector line down to
-// the next message, then sender/time header and the message card.
+// A single message in a thread: an avatar rail with a hairline rule down
+// the message's own height, then the sender/time header and the message
+// text, which lines up with the sender's name.
 
 .message {
     // Inline images never grow past 640 x 480.
@@ -8,6 +9,10 @@
 
     display: flex;
     gap: var(--space-3);
+    // Space between messages sits outside each one (a margin, not
+    // padding), so a message's rule stops where its content does instead
+    // of running into the next.
+    margin-bottom: var(--space-4);
 
     &__rail {
         position: relative;
@@ -18,19 +23,18 @@
         align-self: stretch;
     }
 
-    // Fades from the accent (near the avatar) to transparent, so
-    // consecutive messages read as one continuous thread.
-    &__connector {
+    // Centered under the avatar (the rail centers its children), running
+    // the rest of the message's height.
+    &__rule {
         flex: 1;
-        width: var(--border-width-thick);
-        margin-top: var(--space-1);
-        background: linear-gradient(to bottom, var(--color-watermelon), transparent);
+        width: var(--border-width);
+        margin-top: var(--space-2);
+        background-color: var(--color-border);
     }
 
     &__main {
         flex: 1;
         min-width: 0;
-        padding-bottom: var(--space-4);
     }
 
     &__header {
@@ -60,13 +64,8 @@
         margin-left: auto;
     }
 
-    // Soft mist fill and no border, so a long thread doesn't read as a
-    // stack of hard-edged boxes.
-    &__card {
-        padding: var(--space-3) var(--space-4);
-        background-color: var(--color-mist);
-        border-radius: var(--radius-base);
-
+    // No fill or padding: the text starts where the sender's name does.
+    &__body {
         &--deleted {
             font-size: var(--font-size-sm);
             line-height: var(--line-height-sm);
@@ -98,7 +97,7 @@
     }
 
     // Attachment groups get space above whenever something (the text, or
-    // the images) precedes them in the card.
+    // the images) precedes them in the body.
     &__image,
     &__gallery,
     &__files {

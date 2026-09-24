@@ -6,17 +6,19 @@
     flex-shrink: 0;
     align-items: center;
     justify-content: center;
-    width: 1.75rem; // one-off: a compact square hit target
-    height: 1.75rem;
-    color: var(--color-border);
-    border: var(--border-width) solid var(--color-border);
+    width: var(--size-row-action);
+    height: var(--size-row-action);
+    color: var(--color-white);
+    border: var(--border-width) solid var(--color-fern);
+    background-color: var(--color-fern);
     border-radius: var(--radius-base);
     transition:
         color var(--duration-fast) var(--ease-standard),
         border-color var(--duration-fast) var(--ease-standard);
 
     &:hover {
-        color: var(--color-gunmetal);
-        border-color: var(--color-gunmetal);
+        color: var(--color-white);
+        border-color: var(--color-fern-soft);
+        background-color: var(--color-fern-soft);
     }
 }

@@ -40,6 +40,11 @@
         box-shadow: var(--shadow-drawer);
         animation: panel-slide-in var(--duration-drawer) var(--ease-enter);
 
+        // Drawer size="wide": proposals and invoices.
+        .drawer--wide & {
+            width: var(--size-drawer-wide);
+        }
+
         @media (prefers-reduced-motion: reduce) {
             animation-name: overlay-fade-in;
         }
@@ -53,21 +58,20 @@
         }
     }
 
-    &__header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: var(--space-4) var(--space-8);
-        border-bottom: var(--border-width) solid var(--color-border);
-    }
-
+    // Close button (plus any caller actions), pinned to the panel's
+    // top-right corner -- positioned against the panel, not the body, so
+    // changing its padding doesn't move it.
     &__actions {
+        position: absolute;
+        top: var(--space-8);
+        right: var(--space-12);
+        z-index: 1; // one-off: above any positioned content in the body
         display: flex;
         align-items: center;
         gap: var(--space-3);
     }
 
-    // An icon button in the header -- a little horizontal hit area.
+    // An icon button beside the close button -- a little horizontal hit area.
     &__action {
         padding-inline: var(--space-1);
     }
@@ -75,7 +79,26 @@
     &__body {
         flex: 1;
         overflow-y: auto;
-        padding: var(--space-4) var(--space-8);
+        padding: var(--space-16) var(--space-12) var(--space-12) var(--space-12);
+    }
+
+    // Heading of a create-mode drawer ("Log time"), sized to match the
+    // editable title a record's drawer opens with.
+    &__title {
+        margin-bottom: var(--space-4);
+        font-size: var(--font-size-xl);
+        line-height: var(--line-height-xl);
+        font-weight: var(--font-weight-semibold);
+    }
+
+    // A section's label with its one icon action at the right (edit
+    // description, add subtask, add file). Pair the label with
+    // .section-label--flush so this row sets the spacing.
+    &__section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: var(--space-2);
     }
 
     // One group of fields/details in the body.
@@ -92,6 +115,44 @@
     &__meta {
         font-size: var(--font-size-xs);
         line-height: var(--line-height-xs);
+        color: var(--color-shadow-grey);
+    }
+
+    // The meta line above a drawer's title (author, date). Mixed onto
+    // .drawer__meta, which supplies the small grey type.
+    &__byline {
+        display: flex;
+        align-items: center;
+        gap: var(--space-1-5);
+        margin-bottom: var(--space-2);
+    }
+
+    // One byline item, with the "·" before it when it isn't first.
+    &__byline-item {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--space-1-5);
+    }
+
+    // A date in the byline, led by a small fern calendar icon.
+    &__date {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--space-1);
+    }
+
+    &__date-icon {
+        flex-shrink: 0;
+        width: var(--size-icon-sm);
+        height: var(--size-icon-sm);
+        color: var(--color-fern);
+    }
+
+    // Placeholder for a read-only rich text field with nothing in it yet
+    // (a note body, a task description).
+    &__empty {
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
         color: var(--color-shadow-grey);
     }
 }

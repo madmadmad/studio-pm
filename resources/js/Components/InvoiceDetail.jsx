@@ -1,0 +1,445 @@
+import { useEffect, useState } from 'react';
+import { Check, Copy, DownloadSimple, Eye, PaperPlaneTilt } from '@phosphor-icons/react';
+import Button from './Button';
+import Toggle from './Toggle';
+import InvoiceDateFields from './InvoiceDateFields';
+import SendInvoiceModal from './SendInvoiceModal';
+import { formatCurrency, formatDate, invoiceSubtotal, invoiceTotal } from '../lib/format';
+import { formatDateTimeEastern, utcToEasternParts, easternWallTimeToUtcIso } from '../lib/datetime';
+import { reminderRows } from '../lib/reminders';
+import { paymentTermsLabel } from '../lib/paymentTerms';
+import { api } from '../lib/api';
+import { copyToClipboard } from '../lib/clipboard';
+
+// The invoice detail, shared by the standalone page (Pages/Invoices/Show)
+// and the project page's invoice drawer. The caller supplies the frame
+// through `renderFrame({ invoice, actions, children })` -- a page header
+// or a drawer -- and `onChange` to refresh after a save or payment.
+// `bare` lays the sections out plainly (no cards), for inside a drawer.
+
+function editFormFrom(invoice) {
+    return {
+        contact_id: invoice.contact_id ? String(invoice.contact_id) : '',
+        surcharge: invoice.surcharge,
+        issued_on: invoice.issued_on ? invoice.issued_on.slice(0, 10) : '',
+        payment_terms: invoice.payment_terms,
+        due_on: invoice.due_on ? invoice.due_on.slice(0, 10) : '',
+        items: invoice.items.map((item) => ({ description: item.description, details: item.details ?? '', amount: item.amount })),
+    };
+}
+
+// "Due Oct 19, 2026 (Net 30) · Billed to Jo Park · PO #1234"
+export function InvoiceDueLine({ invoice }) {
+    return (
+        <>
+            Due {formatDate(invoice.due_on)}
+            {paymentTermsLabel(invoice.payment_terms) !== 'Custom' && ` (${paymentTermsLabel(invoice.payment_terms)})`}
+            {invoice.contact && <> &middot; Billed to {invoice.contact.name}</>}
+            {invoice.project?.po_number && <> &middot; PO #{invoice.project.po_number}</>}
+        </>
+    );
+}
+
+export default function InvoiceDetail({ invoice: initialInvoice, studio, invoicingDefaults, onChange, renderFrame, bare = false }) {
+    const [invoice, setInvoice] = useState(initialInvoice);
+    useEffect(() => setInvoice(initialInvoice), [initialInvoice]);
+
+    const [editing, setEditing] = useState(false);
+    const [form, setForm] = useState(() => editFormFrom(invoice));
+    const [saving, setSaving] = useState(false);
+    const [error, setError] = useState('');
+    const [copied, setCopied] = useState(false);
+    const [paymentMethod, setPaymentMethod] = useState('check');
+    const [recordingPayment, setRecordingPayment] = useState(false);
+    const [sendModalOpen, setSendModalOpen] = useState(false);
+    const [successMessage, setSuccessMessage] = useState('');
+    const [reschedulingId, setReschedulingId] = useState(null);
+    const [rescheduleDate, setRescheduleDate] = useState('');
+    const [rescheduleTime, setRescheduleTime] = useState('');
+
+    // A card on the page; a plain section in a drawer (the drawer is the frame).
+    const section = bare ? 'drawer__section' : 'card card--padded page-section';
+
+    const subtotal = invoiceSubtotal(invoice.items);
+    const total = invoiceTotal(invoice.items, invoice.surcharge);
+
+    const formSubtotal = invoiceSubtotal(form.items);
+    const formTotal = invoiceTotal(form.items, form.surcharge);
+
+    function handleSent(updatedInvoice, message) {
+        setInvoice(updatedInvoice);
+        setSendModalOpen(false);
+        setSuccessMessage(message);
+        setTimeout(() => setSuccessMessage(''), 6000);
+        // Let the container catch up too (the project list's status badge).
+        onChange();
+    }
+
+    const pendingScheduledSend = (invoice.invoice_sends || []).find((s) => s.type === 'email' && s.status === 'scheduled');
+
+    async function cancelScheduledSend(send) {
+        const updated = await api.post(`/api/invoices/${invoice.id}/sends/${send.id}/cancel`);
+        setInvoice((current) => ({ ...current, invoice_sends: current.invoice_sends.map((s) => (s.id === updated.id ? updated : s)) }));
+    }
+
+    async function sendScheduledNow(send) {
+        const updated = await api.post(`/api/invoices/${invoice.id}/sends/${send.id}/send-now`);
+        setInvoice((current) => ({ ...current, invoice_sends: current.invoice_sends.map((s) => (s.id === updated.id ? updated : s)) }));
+    }
+
+    function startRescheduling(send) {
+        const parts = utcToEasternParts(send.scheduled_for);
+        setReschedulingId(send.id);
+        setRescheduleDate(parts.date);
+        setRescheduleTime(parts.time);
+    }
+
+    async function confirmReschedule(send) {
+        const scheduledFor = easternWallTimeToUtcIso(rescheduleDate, rescheduleTime);
+        const updated = await api.post(`/api/invoices/${invoice.id}/sends/${send.id}/reschedule`, { scheduled_for: scheduledFor });
+        setInvoice((current) => ({ ...current, invoice_sends: current.invoice_sends.map((s) => (s.id === updated.id ? updated : s)) }));
+        setReschedulingId(null);
+    }
+
+    async function skipReminder(rule) {
+        const created = await api.post(`/api/invoices/${invoice.id}/reminders/skip`, { rule });
+        setInvoice((current) => ({ ...current, invoice_sends: [created, ...(current.invoice_sends || [])] }));
+    }
+
+    async function recordPayment() {
+        setRecordingPayment(true);
+        try {
+            await api.post(`/api/invoices/${invoice.id}/mark-paid`, { method: paymentMethod });
+            onChange();
+        } finally {
+            setRecordingPayment(false);
+        }
+    }
+
+    async function copyLink() {
+        const ok = await copyToClipboard(`${window.location.origin}/i/${invoice.public_token}`);
+        if (!ok) {
+            alert('Could not copy the link. Copy it manually instead.');
+            return;
+        }
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1500);
+    }
+
+    function startEditing() {
+        setForm(editFormFrom(invoice));
+        setError('');
+        setEditing(true);
+    }
+
+    function updateItem(idx, field, value) {
+        const items = form.items.map((it, i) => (i === idx ? { ...it, [field]: value } : it));
+        setForm({ ...form, items });
+    }
+    function addItemRow() {
+        setForm({ ...form, items: [...form.items, { description: '', amount: '' }] });
+    }
+    function removeItemRow(idx) {
+        setForm({ ...form, items: form.items.filter((_, i) => i !== idx) });
+    }
+
+    async function save() {
+        const validItems = form.items.filter((i) => i.description.trim() && parseFloat(i.amount) > 0);
+        if (validItems.length === 0) {
+            setError('Add at least one line item with a description and amount.');
+            return;
+        }
+        setSaving(true);
+        setError('');
+        try {
+            await api.patch(`/api/invoices/${invoice.id}`, {
+                contact_id: form.contact_id || null,
+                surcharge: form.surcharge,
+                issued_on: form.issued_on,
+                payment_terms: form.payment_terms,
+                due_on: form.due_on,
+                items: validItems,
+            });
+            setEditing(false);
+            onChange();
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setSaving(false);
+        }
+    }
+
+    const actions = (
+        <>
+            <a href={`/i/${invoice.public_token}`} target="_blank" rel="noopener noreferrer" title="Preview" className="icon-btn icon-btn--secondary">
+                <Eye />
+            </a>
+            <button onClick={copyLink} title={copied ? 'Copied!' : 'Copy link'} className="icon-btn icon-btn--secondary">
+                {copied ? <Check /> : <Copy />}
+            </button>
+            {invoice.status !== 'draft' && (
+                <a href={`/invoices/${invoice.id}/pdf`} title="Download PDF" className="icon-btn icon-btn--secondary">
+                    <DownloadSimple />
+                </a>
+            )}
+            {invoice.status !== 'paid' && (
+                <button
+                    onClick={() => setSendModalOpen(true)}
+                    disabled={editing}
+                    title={editing ? 'Save or cancel your edits first' : invoice.sent_at ? 'Resend' : 'Send invoice'}
+                    className="icon-btn icon-btn--accent"
+                >
+                    <PaperPlaneTilt />
+                </button>
+            )}
+            {invoice.status === 'draft' && !editing && (
+                <Button variant="link" onClick={startEditing}>Edit</Button>
+            )}
+        </>
+    );
+
+    return renderFrame({
+        invoice,
+        actions,
+        children: (
+            <>
+                {successMessage && (
+                    <div role="status" aria-live="polite" className="alert alert--success">
+                        {successMessage}
+                    </div>
+                )}
+
+                {editing && invoice.sent_at && (
+                    <div className="alert alert--info">
+                        This invoice has already been sent. The client won&rsquo;t see changes in their original email until you resend it; the online link always shows the latest version.
+                    </div>
+                )}
+
+                {editing ? (
+                    <div className={`${section} invoice-form`}>
+                        <div className="invoice-form__section">
+                            <select
+                                value={form.contact_id}
+                                onChange={(e) => setForm({ ...form, contact_id: e.target.value })}
+                                className="input"
+                            >
+                                <option value="">Bill to (no specific contact)</option>
+                                {invoice.company.contacts.map((contact) => (
+                                    <option key={contact.id} value={contact.id}>
+                                        {contact.name}{contact.email ? ` (${contact.email})` : ''}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div className="invoice-form__section">
+                            <InvoiceDateFields values={form} onChange={(patch) => setForm((current) => ({ ...current, ...patch }))} />
+                        </div>
+
+                        <div className="invoice-form__items">
+                            {form.items.map((item, idx) => (
+                                <div key={idx} className="invoice-form__item">
+                                    <div className="invoice-form__item-row">
+                                        <input
+                                            placeholder="Line item description (required)"
+                                            value={item.description}
+                                            onChange={(e) => updateItem(idx, 'description', e.target.value)}
+                                            className="input invoice-form__description"
+                                        />
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            step="0.01"
+                                            placeholder="Amount"
+                                            value={item.amount}
+                                            onChange={(e) => updateItem(idx, 'amount', e.target.value)}
+                                            className="input invoice-form__amount"
+                                        />
+                                        {form.items.length > 1 && (
+                                            <Button variant="link-accent" onClick={() => removeItemRow(idx)}>Remove</Button>
+                                        )}
+                                    </div>
+                                    <textarea
+                                        placeholder="Additional notes shown to the client (optional, not required)"
+                                        value={item.details || ''}
+                                        onChange={(e) => updateItem(idx, 'details', e.target.value)}
+                                        rows={2}
+                                        className="input invoice-form__details"
+                                    />
+                                </div>
+                            ))}
+                            <Button variant="link-accent" onClick={addItemRow}>+ Add line item</Button>
+                        </div>
+
+                        <div className="invoice-form__section totals">
+                            <div className="totals__row totals__row--muted">
+                                <span>Subtotal</span>
+                                <span className="totals__value">{formatCurrency(formSubtotal)}</span>
+                            </div>
+                            <div className="totals__row totals__row--strong">
+                                <span>Total</span>
+                                <span className="totals__value">{formatCurrency(formTotal)}</span>
+                            </div>
+                        </div>
+
+                        <div className="invoice-form__section">
+                            <Toggle
+                                checked={form.surcharge}
+                                onChange={(value) => setForm({ ...form, surcharge: value })}
+                                label="Offer to pay by card (adds a 3% fee, shown only at checkout)"
+                            />
+                        </div>
+
+                        {error && <div className="form-message form-message--error form-message--spaced">{error}</div>}
+
+                        <div className="form-actions">
+                            <Button variant="secondary" onClick={() => setEditing(false)}>Cancel</Button>
+                            <Button variant="confirm" disabled={saving} onClick={save}>Save</Button>
+                        </div>
+                    </div>
+                ) : (
+                    <div className={section}>
+                        <table className="table table--flush card__section">
+                            <thead>
+                                <tr>
+                                    <th>Description</th>
+                                    <th className="table__cell--end">Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {invoice.items.map((item) => (
+                                    <tr key={item.id}>
+                                        <td>
+                                            {item.description}
+                                            {item.details && item.details !== item.description && (
+                                                <div className="table__meta table__meta--multiline">{item.details}</div>
+                                            )}
+                                        </td>
+                                        <td className="table__cell--end table__cell--numeric table__cell--top">{formatCurrency(item.amount)}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+
+                        <div className="totals totals--aside">
+                            <div className="totals__row totals__row--muted">
+                                <span>Subtotal</span>
+                                <span className="totals__value">{formatCurrency(subtotal)}</span>
+                            </div>
+                            <div className="totals__row totals__row--strong">
+                                <span>Total</span>
+                                <span className="totals__value">{formatCurrency(total)}</span>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {invoice.payments.length > 0 && (
+                    <div className={section}>
+                        <h2 className="section-heading">Payments</h2>
+                        <ul className="detail-list">
+                            {invoice.payments.map((payment) => (
+                                <li key={payment.id} className="detail-list__item detail-list__item--split">
+                                    <span>{formatDate(payment.paid_at)}{payment.method ? ` · ${payment.method}` : ''}</span>
+                                    <span className="detail-list__amount">{formatCurrency(parseFloat(payment.amount) + parseFloat(payment.surcharge_amount))}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                )}
+
+                {pendingScheduledSend && (
+                    <div className={section}>
+                        <div className="invoice-detail__schedule">
+                            <span className="invoice-detail__schedule-text">
+                                Scheduled for <strong>{formatDateTimeEastern(pendingScheduledSend.scheduled_for)}</strong>
+                            </span>
+                            <div className="invoice-detail__schedule-actions">
+                                <Button variant="link" onClick={() => sendScheduledNow(pendingScheduledSend)}>Send now</Button>
+                                <Button variant="link" onClick={() => startRescheduling(pendingScheduledSend)}>Reschedule</Button>
+                                <Button variant="link-accent" onClick={() => cancelScheduledSend(pendingScheduledSend)}>Cancel</Button>
+                            </div>
+                        </div>
+                        {reschedulingId === pendingScheduledSend.id && (
+                            <div className="invoice-detail__reschedule">
+                                <input type="date" value={rescheduleDate} onChange={(e) => setRescheduleDate(e.target.value)} className="input input--sm" />
+                                <input type="time" value={rescheduleTime} onChange={(e) => setRescheduleTime(e.target.value)} className="input input--sm" />
+                                <Button variant="confirm" onClick={() => confirmReschedule(pendingScheduledSend)}>Save</Button>
+                                <Button variant="secondary" onClick={() => setReschedulingId(null)}>Cancel</Button>
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {invoice.status !== 'draft' && invoice.status !== 'paid' && (
+                    <div className={section}>
+                        <h2 className="section-heading">Reminders</h2>
+                        <ul className="detail-list">
+                            {reminderRows(invoice).map((row) => (
+                                <li key={row.rule} className="detail-list__item detail-list__item--split">
+                                    <span>
+                                        {row.label} &middot; {formatDate(row.date.toISOString())}
+                                        {row.status === 'sent' && <span className="detail-list__status--success"> &middot; Sent</span>}
+                                        {row.status === 'cancelled' && <span className="detail-list__status--muted"> &middot; Skipped</span>}
+                                        {row.status === 'failed' && <span className="detail-list__status--error"> &middot; Failed</span>}
+                                    </span>
+                                    {row.status === 'upcoming' && (
+                                        <Button variant="link-accent" onClick={() => skipReminder(row.rule)}>Skip</Button>
+                                    )}
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                )}
+
+                {invoice.invoice_sends?.length > 0 && (
+                    <div className={section}>
+                        <h2 className="section-heading">History</h2>
+                        <ul className="detail-list">
+                            {invoice.invoice_sends.map((send) => (
+                                <li key={send.id} className="detail-list__item">
+                                    {send.type === 'link' && <>Link copied{send.sent_by ? ` by ${send.sent_by.name}` : ''}, {formatDateTimeEastern(send.sent_at)}</>}
+                                    {send.type === 'email' && send.status === 'sent' && <>Sent to {(send.recipients || []).join(', ')}, {formatDateTimeEastern(send.sent_at)}</>}
+                                    {send.type === 'email' && send.status === 'scheduled' && <>Scheduled for {formatDateTimeEastern(send.scheduled_for)}</>}
+                                    {send.type === 'email' && send.status === 'cancelled' && <>Scheduled send cancelled{send.failure_reason ? `: ${send.failure_reason}` : ''}</>}
+                                    {send.type === 'email' && send.status === 'failed' && <span className="detail-list__status--error">Send failed{send.failure_reason ? `: ${send.failure_reason}` : ''}</span>}
+                                    {send.type === 'reminder' && send.status === 'sent' && <>Reminder sent to {(send.recipients || []).join(', ')}, {formatDateTimeEastern(send.sent_at)}</>}
+                                    {send.type === 'reminder' && send.status === 'cancelled' && <>Reminder skipped{send.failure_reason ? `: ${send.failure_reason}` : ''}</>}
+                                    {send.type === 'reminder' && send.status === 'failed' && <span className="detail-list__status--error">Reminder failed{send.failure_reason ? `: ${send.failure_reason}` : ''}</span>}
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                )}
+
+                {!editing && error && <div className="form-message form-message--error form-message--spaced">{error}</div>}
+
+                {!editing && invoice.status === 'sent' && (
+                    <div className="invoice-detail__payment">
+                        <select
+                            value={paymentMethod}
+                            onChange={(e) => setPaymentMethod(e.target.value)}
+                            className="input input--sm input--inline"
+                        >
+                            <option value="check">Check</option>
+                            <option value="other">Other</option>
+                        </select>
+                        <Button variant="confirm" onClick={recordPayment} disabled={recordingPayment}>
+                            Record payment
+                        </Button>
+                    </div>
+                )}
+
+                {sendModalOpen && (
+                    <SendInvoiceModal
+                        invoice={invoice}
+                        studio={studio}
+                        invoicingDefaults={invoicingDefaults}
+                        onClose={() => setSendModalOpen(false)}
+                        onSent={handleSent}
+                    />
+                )}
+            </>
+        ),
+    });
+}

@@ -24,6 +24,16 @@ class InvoiceController extends Controller
         return $company->invoices()->with('items')->latest()->get();
     }
 
+    // The invoice detail as JSON, for the project page's invoice drawer --
+    // the same data the standalone invoice page renders with.
+    public function show(Invoice $invoice)
+    {
+        return [
+            'invoice' => $invoice->loadForDetail(),
+            ...Invoice::detailContext(),
+        ];
+    }
+
     public function store(Request $request, Company $company)
     {
         $data = $this->validateInvoice($request, [

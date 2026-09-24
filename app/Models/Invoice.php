@@ -30,6 +30,31 @@ class Invoice extends Model
         });
     }
 
+    // Everything the invoice detail view shows -- the standalone page
+    // (InvoicePageController@show) and the project page's invoice drawer
+    // (InvoiceController@show) -- so the two can't drift apart.
+    public function loadForDetail(): static
+    {
+        $this->load([
+            'items.service', 'items.timeEntries', 'company.contacts', 'contact', 'project', 'payments',
+            'invoiceSends' => fn ($query) => $query->with('sentBy:id,name')->latest('id'),
+        ]);
+
+        return $this->append(['send_blocking_issues', 'contact_email_missing', 'needs_issue_date_update', 'remaining_balance', 'effective_reminders_enabled', 'public_url']);
+    }
+
+    // The props the detail view takes alongside the invoice itself.
+    public static function detailContext(): array
+    {
+        return [
+            'studio' => StudioProfile::current(),
+            'invoicingDefaults' => [
+                'emailTemplate' => config('invoicing.email_template'),
+                'emailSubjectTemplate' => config('invoicing.email_subject_template'),
+            ],
+        ];
+    }
+
     public function company(): BelongsTo
     {
         return $this->belongsTo(Company::class);

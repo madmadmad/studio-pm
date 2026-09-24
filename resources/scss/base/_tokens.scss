@@ -43,7 +43,7 @@
     // canvas is the dark frame around everything; the panel is the light
     // surface each page sits in (porcelain, so pages look as they did).
     --color-canvas: var(--color-gunmetal);
-    --color-panel: var(--color-porcelain);
+    --color-panel: var(--color-white);
 
     // Avatar fills -- a small curated set so an initials avatar always
     // harmonizes with the palette. Avatar.jsx references these by name.
@@ -71,7 +71,7 @@
     --line-height-base: 1.5rem;
     --font-size-lg: 1.125rem;
     --line-height-lg: 1.75rem;
-    --font-size-xl: 1.25rem;
+    --font-size-xl: 1.5rem;
     --line-height-xl: 1.75rem;
     --font-size-2xl: 1.75rem; // page titles, headline numerals
     --line-height-2xl: 2rem;
@@ -83,7 +83,7 @@
     --font-weight-medium: 600;
     --font-weight-semibold: 700;
     --font-weight-bold: 700; // buttons
-    --font-weight-extrabold: 800; // display headings
+    --font-weight-extrabold: 700; // display headings
 
     // One tracking value for body text everywhere, one for display.
     --letter-spacing-body: -0.018em;
@@ -104,6 +104,7 @@
     --space-6: 1.5rem;
     --space-8: 2rem;
     --space-10: 2.5rem;
+    --space-12: 3rem;
     --space-15: 3.75rem;
     --space-16: 4rem;
 
@@ -111,7 +112,7 @@
     --space-panel: var(--space-4); // card padding
     --space-panel-lg: var(--space-8); // modal, drawer, auth card padding
     --space-section: var(--space-6); // gap below a page section
-    --space-page: var(--space-8); // main content padding
+    --space-page: var(--space-16); // main content padding
 
     // -----------------------------------------------------------------
     // Borders and radii
@@ -137,7 +138,7 @@
     --shadow-raised: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1); // toggle knob
     --shadow-popover: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1); // dropdowns
     --shadow-overlay: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1); // modal
-    --shadow-drawer: -12px 0 32px -8px rgb(0 0 0 / 0.18), -2px 0 6px -2px rgb(0 0 0 / 0.08); // cast left, off the right-edge drawer
+    --shadow-drawer: -12px 0 32px -8px rgb(0 0 0 / 0.12), -2px 0 6px -2px rgb(0 0 0 / 0.07); // cast left, off the right-edge drawer
 
     --z-dropdown: 10;
     --z-overlay: 50;
@@ -168,8 +169,16 @@
     --size-form: 32rem; // standalone settings/profile panels
     --size-modal: 32rem;
     --size-modal-wide: 42rem;
-    --size-drawer: 40rem;
+    --size-drawer: 45vw; // standard drawer: tasks, notes, time, expenses, messages
+    --size-drawer-wide: 64vw; // wide drawer: proposals, invoices
     --size-document: 50rem; // public invoice/proposal sheet
     --size-content: 56rem; // detail/editor page column
     --size-portal: 56rem;
+    --size-row-action: 1.75rem; // the square "open" button ending a list row
+
+    // Icons. The default size (18px) is set app-wide in JS -- the
+    // IconContext in app.jsx -- because Phosphor sizes via SVG attributes.
+    // Sizes here override that from CSS, for an icon given a class.
+    --size-icon-sm: 0.875rem; // 14px: inline with small meta text
+    --size-icon-lg: 1.5rem; // 24px: a tab's primary add action (.icon-btn--lg)
 }
