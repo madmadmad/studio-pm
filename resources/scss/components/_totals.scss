@@ -27,6 +27,7 @@
     }
 
     &__value {
+        letter-spacing: var(--letter-spacing-body);
         font-variant-numeric: tabular-nums;
     }
 }

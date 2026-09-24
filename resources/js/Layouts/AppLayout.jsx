@@ -1,6 +1,6 @@
 import { Link, router, usePage } from '@inertiajs/react';
 import Avatar from '../Components/Avatar';
-import NotificationBell from '../Components/NotificationBell';
+import AlertsMenu from '../Components/AlertsMenu';
 
 const NAV_ITEMS = [
     { href: '/', label: 'Overview' },
@@ -37,11 +37,7 @@ export default function AppLayout({ children }) {
         <div className="app-shell">
             <aside className="app-shell__sidebar">
                 <div className="app-shell__brand">
-                    <div>
-                        <div className="app-shell__brand-name">Studio PM</div>
-                        <div className="app-shell__brand-tagline">Client and billing workspace</div>
-                    </div>
-                    {isManager && <NotificationBell />}
+                    <img src="/images/studio-lockup-rev.svg" alt="Madhouse Studio" className="app-shell__logo" />
                 </div>
                 {navItems.map((item) => (
                     <Link
@@ -52,6 +48,12 @@ export default function AppLayout({ children }) {
                         {item.label}
                     </Link>
                 ))}
+                {isManager && (
+                    <AlertsMenu
+                        triggerClassName="app-shell__nav-link"
+                        activeTriggerClassName="app-shell__nav-link--active"
+                    />
+                )}
                 <div className="app-shell__footer">
                     {user && (
                         <Link href="/profile" className="app-shell__user">

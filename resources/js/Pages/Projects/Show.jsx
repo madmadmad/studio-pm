@@ -194,7 +194,7 @@ function TaskRow({ task, teamNames, onChange, onOpen }) {
                 <button
                     onClick={() => onOpen(task.id)}
                     title="Open task"
-                    className="row-action row-action--reveal"
+                    className="row-action"
                 >
                     <CaretRight size={14} weight="bold" />
                 </button>
@@ -593,7 +593,7 @@ function NoteRow({ note, onOpen }) {
             <span className="note-list__title">{note.title || 'Untitled note'}</span>
             <span className="note-list__meta">
                 <span className="note-list__date">{formatDate(note.updated_at)}</span>
-                <span className="row-action row-action--reveal">
+                <span className="row-action">
                     <CaretRight size={14} weight="bold" />
                 </span>
             </span>
@@ -758,7 +758,7 @@ function TimeEntryRow({ entry, onOpen }) {
                 <button
                     onClick={() => onOpen(entry.id)}
                     title="Open entry"
-                    className="row-action row-action--reveal"
+                    className="row-action"
                 >
                     <CaretRight size={14} weight="bold" />
                 </button>

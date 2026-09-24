@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { Bell, BellRinging } from '@phosphor-icons/react';
 import { api } from '../lib/api';
 import { formatRelativeTime } from '../lib/format';
 
@@ -7,8 +6,12 @@ import { formatRelativeTime } from '../lib/format';
 // invoice you aren't currently viewing -- backed by Laravel's own database
 // notification channel, not a bespoke table. No real-time layer (matches
 // this app's existing choice to skip live updates elsewhere): it refreshes
-// on mount and whenever the dropdown is opened.
-export default function NotificationBell() {
+// on mount and whenever the menu is opened.
+//
+// The trigger's look comes from the caller (`triggerClassName`, plus
+// `activeTriggerClassName` while open), so it can match whatever
+// navigation it sits in.
+export default function AlertsMenu({ triggerClassName = '', activeTriggerClassName = '' }) {
     const [open, setOpen] = useState(false);
     const [notifications, setNotifications] = useState([]);
     const [unreadCount, setUnreadCount] = useState(0);
@@ -40,37 +43,40 @@ export default function NotificationBell() {
         setUnreadCount((count) => Math.max(0, count - 1));
     }
 
+    const triggerClasses = ['alerts-menu__trigger', triggerClassName, open && activeTriggerClassName].filter(Boolean).join(' ');
+
     return (
-        <div className="notification-bell">
+        <div className="alerts-menu">
             <button
                 type="button"
                 onClick={toggle}
-                aria-label={unreadCount > 0 ? `Notifications, ${unreadCount} unread` : 'Notifications'}
-                className="notification-bell__trigger"
+                aria-expanded={open}
+                aria-label={unreadCount > 0 ? `Alerts, ${unreadCount} unread` : 'Alerts'}
+                className={triggerClasses}
             >
-                {unreadCount > 0 ? <BellRinging /> : <Bell />}
+                Alerts
                 {unreadCount > 0 && (
-                    <span className="notification-bell__count">
+                    <span className="alerts-menu__count">
                         {unreadCount}
                     </span>
                 )}
             </button>
 
             {open && (
-                <div className="popover notification-bell__panel">
+                <div className="popover alerts-menu__panel">
                     {notifications.length === 0 ? (
-                        <p className="notification-bell__empty">No notifications yet.</p>
+                        <p className="alerts-menu__empty">No alerts yet.</p>
                     ) : (
                         <ul>
                             {notifications.map((n) => (
-                                <li key={n.id} className="notification-bell__entry">
+                                <li key={n.id} className="alerts-menu__entry">
                                     <button
                                         type="button"
                                         onClick={() => markRead(n)}
-                                        className={`notification-bell__item${n.read_at ? ' notification-bell__item--read' : ''}`}
+                                        className={`alerts-menu__item${n.read_at ? ' alerts-menu__item--read' : ''}`}
                                     >
                                         <div>{n.data.message}</div>
-                                        <div className="notification-bell__time">{formatRelativeTime(n.created_at)}</div>
+                                        <div className="alerts-menu__time">{formatRelativeTime(n.created_at)}</div>
                                     </button>
                                 </li>
                             ))}

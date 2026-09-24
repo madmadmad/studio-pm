@@ -12,7 +12,7 @@
     // -----------------------------------------------------------------
     --color-white: #fff;
     --color-gunmetal: #23262e;
-    --color-gunmetal-light: #373b45; // nav row highlight + primary button hover
+    --color-gunmetal-light: #373b45; // primary button hover
     --color-porcelain: #f7f7f7;
     --color-border: #eee;
     --color-mist: #e7e7e9; // neutral badge/chip fill, a hair darker than porcelain
@@ -32,6 +32,7 @@
     --color-on-dark-muted: color-mix(in srgb, var(--color-porcelain) 80%, transparent);
     --color-on-dark-subtle: color-mix(in srgb, var(--color-porcelain) 60%, transparent);
     --color-on-dark-border: color-mix(in srgb, var(--color-porcelain) 15%, transparent);
+    --color-on-dark-rule: color-mix(in srgb, var(--color-mist) 3%, transparent); // resting nav rule
 
     // Backdrops behind overlays, lightest to heaviest.
     --color-scrim: color-mix(in srgb, var(--color-gunmetal) 20%, transparent); // drawer, modal
@@ -66,21 +67,21 @@
     --line-height-lg: 1.75rem;
     --font-size-xl: 1.25rem;
     --line-height-xl: 1.75rem;
-    --font-size-2xl: 1.5rem; // page titles, headline numerals
+    --font-size-2xl: 1.75rem; // page titles, headline numerals
     --line-height-2xl: 2rem;
 
     --line-height-body: 1.5;
     --line-height-prose: 1.6; // long-form rich text (proposals)
 
-    --font-weight-normal: 400;
-    --font-weight-medium: 500;
-    --font-weight-semibold: 600;
+    --font-weight-normal: 500;
+    --font-weight-medium: 600;
+    --font-weight-semibold: 700;
     --font-weight-bold: 700; // buttons
     --font-weight-extrabold: 800; // display headings
 
     // One tracking value for body text everywhere, one for display.
-    --letter-spacing-body: -0.011em;
-    --letter-spacing-display: -0.03rem;
+    --letter-spacing-body: -0.018em;
+    --letter-spacing-display: -0.05rem;
 
     // -----------------------------------------------------------------
     // Spacing -- step names match the old Tailwind scale (1 = 0.25rem) so
@@ -102,7 +103,7 @@
 
     // Semantic spacing -- reach for these first.
     --space-panel: var(--space-4); // card padding
-    --space-panel-lg: var(--space-6); // modal, drawer, auth card padding
+    --space-panel-lg: var(--space-8); // modal, drawer, auth card padding
     --space-section: var(--space-6); // gap below a page section
     --space-page: var(--space-8); // main content padding
 
@@ -141,14 +142,14 @@
     // -----------------------------------------------------------------
     // Sizes -- fixed widths for recurring containers.
     // -----------------------------------------------------------------
-    --size-sidebar: 14rem;
+    --size-sidebar: 18rem;
     --size-popover-sm: 16rem;
     --size-popover: 18rem;
     --size-auth-card: 24rem;
     --size-form: 32rem; // standalone settings/profile panels
     --size-modal: 32rem;
     --size-modal-wide: 42rem;
-    --size-drawer: 37.5rem;
+    --size-drawer: 40rem;
     --size-document: 50rem; // public invoice/proposal sheet
     --size-content: 56rem; // detail/editor page column
     --size-portal: 56rem;

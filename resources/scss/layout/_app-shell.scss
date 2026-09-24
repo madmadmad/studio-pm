@@ -17,44 +17,37 @@
     }
 
     &__brand {
-        display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
-        margin-bottom: var(--space-section);
+        margin-bottom: var(--space-8);
     }
 
-    &__brand-name {
-        font-size: var(--font-size-lg);
-        line-height: var(--line-height-lg);
-        font-weight: var(--font-weight-semibold);
-        color: var(--color-on-dark);
+    // The reversed (light-on-dark) studio lockup.
+    &__logo {
+        width: 10rem; // one-off: lockup display width in the sidebar
+        height: auto;
     }
 
-    &__brand-tagline {
-        font-size: var(--font-size-xs);
-        line-height: var(--line-height-xs);
-        color: var(--color-on-dark-subtle);
-    }
-
+    // Plain text rows divided by a rule: faint mist at rest, fern on
+    // hover, mist for the current page. No background, no side padding.
     &__nav-link {
-        padding: var(--space-2) var(--space-3);
-        border-radius: var(--radius-base);
+        padding-block: var(--space-1-5);
         font-size: var(--font-size-sm);
         line-height: var(--line-height-sm);
         font-weight: var(--font-weight-semibold);
         color: var(--color-on-dark-subtle);
+        border-bottom: var(--border-width) solid var(--color-on-dark-rule);
         transition:
             color var(--duration-fast) var(--ease-standard),
-            background-color var(--duration-fast) var(--ease-standard);
+            border-color var(--duration-fast) var(--ease-standard);
 
         &:hover {
             color: var(--color-on-dark);
+            border-bottom-color: var(--color-watermelon);
         }
 
         &--active,
         &--active:hover {
-            background-color: var(--color-gunmetal-light);
             color: var(--color-white);
+            border-bottom-color: var(--color-mist);
         }
     }
 

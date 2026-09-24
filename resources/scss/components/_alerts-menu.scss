@@ -1,25 +1,21 @@
-// Bell in the dark sidebar with an unread count and a dropdown list.
-// Used by Components/NotificationBell.jsx; the list mixes in .popover.
+// "Alerts" entry in the sidebar with an unread count; opens a list of
+// failed/skipped invoice sends. Used by Components/AlertsMenu.jsx. The
+// trigger's nav-link look is supplied by the layout; the list mixes in
+// .popover.
 
-.notification-bell {
+.alerts-menu {
     position: relative;
 
+    // Full-width row, label left and count right.
     &__trigger {
-        position: relative;
-        display: inline-flex;
+        display: flex;
         align-items: center;
-        color: var(--color-on-dark-subtle);
-        transition: color var(--duration-fast) var(--ease-standard);
-
-        &:hover {
-            color: var(--color-on-dark);
-        }
+        justify-content: space-between;
+        width: 100%;
+        text-align: left;
     }
 
     &__count {
-        position: absolute;
-        top: calc(var(--space-1) * -1);
-        right: calc(var(--space-1) * -1);
         min-width: var(--space-4);
         height: var(--space-4);
         padding-inline: var(--space-1);
@@ -31,11 +27,15 @@
         border-radius: var(--radius-pill);
     }
 
+    // Opens beside the sidebar, bottom-aligned with the trigger. The left
+    // offset clears the sidebar's own padding so the list starts flush with
+    // the sidebar's edge instead of overlapping it.
     &__panel {
-        top: 100%;
-        right: 0;
+        bottom: 0;
+        left: calc(100% + var(--space-panel-lg));
         width: var(--size-popover);
-        max-height: 24rem; // one-off: scroll past ~10 notifications
+        max-height: 24rem; // one-off: scroll past ~10 alerts
+        margin-top: 0;
         overflow-y: auto;
         color: var(--color-gunmetal);
     }

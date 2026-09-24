@@ -38,9 +38,11 @@
             border-color: var(--color-border);
         }
 
-        // Keep room for the custom dropdown arrow.
+        // A dropdown always shows its border, so it reads as a control;
+        // keep room for the custom arrow.
         &:is(select) {
             padding-right: var(--space-8);
+            border-color: var(--color-border);
         }
 
         &--date {
