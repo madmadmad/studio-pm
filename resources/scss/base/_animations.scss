@@ -20,3 +20,51 @@
         transform: translateX(0);
     }
 }
+
+// Exits -- the enter keyframes in reverse. Run with fill-mode `forwards`
+// so the overlay stays gone until it unmounts.
+@keyframes overlay-fade-out {
+    from {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0;
+    }
+}
+
+@keyframes panel-slide-out {
+    from {
+        transform: translateX(0);
+    }
+
+    to {
+        transform: translateX(100%);
+    }
+}
+
+// The app shell's content panel arriving on page navigation: a short
+// slide from the right plus a fade -- a hint of motion, not a transition.
+@keyframes shell-panel-enter {
+    from {
+        opacity: 0;
+        transform: translateX(var(--motion-panel-offset));
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+// Held on the shell for the length of shell-panel-enter, so the panel's
+// starting offset past the right edge doesn't briefly make the page
+// horizontally scrollable. Overflow animates discretely, so this simply
+// holds `clip` for the duration; afterwards the shell's normal overflow
+// returns (wide content can still scroll the page sideways).
+@keyframes shell-clip-x {
+    from,
+    to {
+        overflow-x: clip;
+    }
+}

@@ -33,12 +33,15 @@ Every design value is a custom property on `:root`, defined in `base/_tokens.scs
 | Group | Examples | Notes |
 |---|---|---|
 | Color | `--color-gunmetal`, `--color-watermelon-soft`, `--color-scrim` | Brand palette names, plus on-dark text, scrims and hover shades |
+| Shell color | `--color-canvas`, `--color-panel` | The dark frame and the light surface each page sits in |
 | Type | `--font-size-sm` + `--line-height-sm`, `--font-weight-semibold` | Sizes come in pairs; set both |
 | Spacing | `--space-1` … `--space-16` | Step numbers follow the old 4px scale (`--space-3` = 0.75rem) |
 | Semantic spacing | `--space-panel`, `--space-section`, `--space-page` | Reach for these first |
-| Radius | `--radius-base`, `--radius-pill` | One knob for all corner rounding |
-| Elevation | `--shadow-popover`, `--shadow-overlay`, `--z-overlay` | |
-| Motion | `--duration-fast`, `--ease-standard` | |
+| Radius | `--radius-base`, `--radius-pill` | One knob for all component corner rounding |
+| Shell radius | `--radius-panel`, `--radius-drawer` | Shell layers only; components never use these |
+| Elevation | `--shadow-popover`, `--shadow-overlay`, `--shadow-drawer`, `--z-overlay` | |
+| Motion | `--duration-fast`, `--ease-standard`, `--ease-enter`, `--ease-exit` | |
+| Shell motion | `--duration-panel`, `--duration-drawer`, `--motion-panel-offset` | Page-change slide and drawer slide in/out; enter with `--ease-enter`, exit with `--ease-exit` |
 | Sizes | `--size-sidebar`, `--size-drawer`, `--size-form` | Recurring container widths |
 
 Breakpoints can't be custom properties, because `var()` doesn't work in media queries. They live in a Sass map in `abstracts/_breakpoints.scss` (`sm` 40rem, `md` 48rem, `lg` 64rem, `xl` 80rem):

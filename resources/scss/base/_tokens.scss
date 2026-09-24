@@ -39,6 +39,12 @@
     --color-scrim-strong: color-mix(in srgb, var(--color-gunmetal) 40%, transparent); // modal stacked on a modal
     --color-scrim-heavy: color-mix(in srgb, var(--color-gunmetal) 80%, transparent); // lightbox
 
+    // App shell layers, back to front: canvas -> panel -> drawer. The
+    // canvas is the dark frame around everything; the panel is the light
+    // surface each page sits in (porcelain, so pages look as they did).
+    --color-canvas: var(--color-gunmetal);
+    --color-panel: var(--color-porcelain);
+
     // Avatar fills -- a small curated set so an initials avatar always
     // harmonizes with the palette. Avatar.jsx references these by name.
     --color-avatar-1: #dce8f5;
@@ -120,12 +126,18 @@
     --radius-base: 0.22rem;
     --radius-pill: 9999px;
 
+    // Shell layers only (content panel, drawer) -- large-scale rounding
+    // that --radius-base would be too tight for. Components never use these.
+    --radius-panel: 1.25rem;
+    --radius-drawer: var(--radius-panel); // leading (left) edge only
+
     // -----------------------------------------------------------------
     // Elevation
     // -----------------------------------------------------------------
     --shadow-raised: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1); // toggle knob
     --shadow-popover: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1); // dropdowns
-    --shadow-overlay: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1); // drawer, modal
+    --shadow-overlay: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1); // modal
+    --shadow-drawer: -12px 0 32px -8px rgb(0 0 0 / 0.18), -2px 0 6px -2px rgb(0 0 0 / 0.08); // cast left, off the right-edge drawer
 
     --z-dropdown: 10;
     --z-overlay: 50;
@@ -138,6 +150,13 @@
     --duration-base: 200ms; // overlays entering
     --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
     --ease-enter: ease-out;
+    --ease-exit: ease-in; // overlays leaving (drawer close)
+
+    // Shell layers. Both enter with --ease-enter; the drawer is a touch
+    // faster since it travels its full width.
+    --duration-panel: 180ms; // content panel on page navigation
+    --duration-drawer: 160ms; // drawer sliding in
+    --motion-panel-offset: 0.875rem; // how far the panel slides in from the right
 
     // -----------------------------------------------------------------
     // Sizes -- fixed widths for recurring containers.

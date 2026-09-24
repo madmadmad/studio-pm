@@ -440,14 +440,6 @@ function TaskDrawer({ task, teamNames, onClose, onChange }) {
         }
     }, [task?.id]);
 
-    useEffect(() => {
-        function onKeyDown(e) {
-            if (e.key === 'Escape') onClose();
-        }
-        window.addEventListener('keydown', onKeyDown);
-        return () => window.removeEventListener('keydown', onKeyDown);
-    }, [onClose]);
-
     async function updateField(field, value) {
         await api.patch(`/api/tasks/${task.id}`, { [field]: value || null });
         onChange();
@@ -605,6 +597,9 @@ function NoteDrawer({ note, onClose, onChange }) {
     const [title, setTitle] = useState('');
     const [body, setBody] = useState('');
     const bodySaveTimeout = useRef(null);
+    const pendingBody = useRef(null); // { id, value } awaiting the debounced save
+    const onChangeRef = useRef(onChange);
+    onChangeRef.current = onChange;
 
     useEffect(() => {
         if (note) {
@@ -613,17 +608,26 @@ function NoteDrawer({ note, onClose, onChange }) {
         }
     }, [note?.id]);
 
-    useEffect(() => {
-        function onKeyDown(e) {
-            if (e.key === 'Escape') onClose();
-        }
-        window.addEventListener('keydown', onKeyDown);
-        return () => window.removeEventListener('keydown', onKeyDown);
-    }, [onClose]);
+    // Saves the pending body now, if there is one. Reads only refs, so it's
+    // safe to call from the unmount cleanup below. The id is captured with
+    // the value, so a save always lands on the note that was being edited.
+    async function savePendingBody() {
+        const pending = pendingBody.current;
+        if (!pending) return;
+        pendingBody.current = null;
+        await api.patch(`/api/notes/${pending.id}`, { body: pending.value || null });
+        onChangeRef.current();
+    }
 
     // Flush any pending debounced body save if the drawer closes mid-type,
     // so the last few keystrokes aren't silently dropped.
-    useEffect(() => () => clearTimeout(bodySaveTimeout.current), []);
+    useEffect(
+        () => () => {
+            clearTimeout(bodySaveTimeout.current);
+            savePendingBody();
+        },
+        []
+    );
 
     async function updateField(field, value) {
         await api.patch(`/api/notes/${note.id}`, { [field]: value || null });
@@ -633,13 +637,17 @@ function NoteDrawer({ note, onClose, onChange }) {
     function handleBodyChange(value) {
         setBody(value);
         clearTimeout(bodySaveTimeout.current);
+        pendingBody.current = { id: note.id, value };
         // Local state already renders the change instantly -- debounce the
         // network save (and the resulting project reload) so typing
         // doesn't fire a request, and a resync, on every keystroke.
-        bodySaveTimeout.current = setTimeout(() => updateField('body', value), 600);
+        bodySaveTimeout.current = setTimeout(savePendingBody, 600);
     }
 
     async function remove() {
+        // Drop any pending body save -- the note is about to be deleted.
+        clearTimeout(bodySaveTimeout.current);
+        pendingBody.current = null;
         await api.delete(`/api/notes/${note.id}`);
         onClose();
         onChange();
@@ -780,14 +788,6 @@ function TimeEntryDrawer({ entry, tasks, onClose, onChange }) {
             setNote(entry.note ?? '');
         }
     }, [entry?.id]);
-
-    useEffect(() => {
-        function onKeyDown(e) {
-            if (e.key === 'Escape') onClose();
-        }
-        window.addEventListener('keydown', onKeyDown);
-        return () => window.removeEventListener('keydown', onKeyDown);
-    }, [onClose]);
 
     async function updateField(field, value) {
         await api.patch(`/api/time-entries/${entry.id}`, { [field]: value });

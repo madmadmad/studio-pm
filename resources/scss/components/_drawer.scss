@@ -1,5 +1,11 @@
 // Right-edge slide-in panel over a dimmed page (task, note, time entry
 // details). Used by Components/Drawer.jsx.
+//
+// The top layer of the app shell (canvas -> content panel -> drawer): the
+// backdrop dims the layers beneath, and the panel comes in over them with
+// a rounded leading edge and a shadow cast back onto the page. A drawer
+// opened over another would dim that one the same way, via its own
+// backdrop.
 
 .drawer {
     position: fixed;
@@ -10,7 +16,14 @@
         position: absolute;
         inset: 0;
         background-color: var(--color-scrim);
-        animation: overlay-fade-in var(--duration-base) var(--ease-enter);
+        animation: overlay-fade-in var(--duration-drawer) var(--ease-enter);
+
+        // --closing: Drawer.jsx plays the exit, then unmounts. The
+        // backdrop keeps catching clicks until then, so a click meant for
+        // the page can't land mid-exit.
+        .drawer--closing & {
+            animation: overlay-fade-out var(--duration-drawer) var(--ease-exit) forwards;
+        }
     }
 
     &__panel {
@@ -23,8 +36,21 @@
         max-width: 95vw; // one-off: always leave a sliver of page visible
         height: 100%;
         background-color: var(--color-white);
-        box-shadow: var(--shadow-overlay);
-        animation: panel-slide-in var(--duration-base) var(--ease-enter);
+        border-radius: var(--radius-drawer) 0 0 var(--radius-drawer);
+        box-shadow: var(--shadow-drawer);
+        animation: panel-slide-in var(--duration-drawer) var(--ease-enter);
+
+        @media (prefers-reduced-motion: reduce) {
+            animation-name: overlay-fade-in;
+        }
+
+        .drawer--closing & {
+            animation: panel-slide-out var(--duration-drawer) var(--ease-exit) forwards;
+
+            @media (prefers-reduced-motion: reduce) {
+                animation-name: overlay-fade-out;
+            }
+        }
     }
 
     &__header {

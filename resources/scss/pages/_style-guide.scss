@@ -79,6 +79,45 @@
         font-weight: var(--font-weight-medium);
     }
 
+    // A miniature of the app frame: canvas behind a panel, with a drawer
+    // layered over its right side.
+    &__shell-demo {
+        position: relative;
+        display: flex;
+        max-width: var(--style-guide-demo-width);
+        height: var(--space-16);
+        margin-block: var(--space-4);
+        padding-left: var(--space-10); // canvas standing in for the sidebar
+        overflow: hidden;
+        background-color: var(--color-canvas);
+        border-radius: var(--radius-panel);
+    }
+
+    &__shell-panel,
+    &__shell-drawer {
+        padding: var(--space-2) var(--space-3);
+        font-size: var(--font-size-xs);
+        line-height: var(--line-height-xs);
+        color: var(--color-shadow-grey);
+    }
+
+    &__shell-panel {
+        flex: 1;
+        background-color: var(--color-panel);
+        border-radius: var(--radius-panel) 0 0 var(--radius-panel);
+    }
+
+    &__shell-drawer {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        width: 40%;
+        background-color: var(--color-white);
+        border-radius: var(--radius-drawer) 0 0 var(--radius-drawer);
+        box-shadow: var(--shadow-drawer);
+    }
+
     &__row {
         display: flex;
         flex-wrap: wrap;

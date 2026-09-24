@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { Head } from '@inertiajs/react';
 import { CheckCircle, Copy, DownloadSimple, Eye, PaperPlaneTilt, PencilSimple, Trash } from '@phosphor-icons/react';
 import AppLayout from '../../Layouts/AppLayout';
@@ -55,6 +56,53 @@ const COLORS = [
     ['Fern soft', '--color-fern-soft'],
 ];
 
+const SHELL_COLORS = [
+    ['Canvas', '--color-canvas'],
+    ['Panel', '--color-panel'],
+];
+
+const SHELL_TOKENS = [
+    ['--radius-panel', 'Content panel left corners'],
+    ['--radius-drawer', 'Drawer leading edge'],
+    ['--shadow-drawer', 'Drawer over the panel'],
+    ['--duration-panel', 'Panel slide-in on page navigation'],
+    ['--duration-drawer', 'Drawer slide in and out'],
+    ['--ease-exit', 'Drawer closing'],
+    ['--motion-panel-offset', 'Panel slide distance'],
+];
+
+// Reads each token's live value from :root, so the table can't drift
+// from base/_tokens.scss.
+function ShellTokenTable() {
+    const [values, setValues] = useState({});
+
+    useEffect(() => {
+        const styles = getComputedStyle(document.documentElement);
+        setValues(Object.fromEntries(SHELL_TOKENS.map(([name]) => [name, styles.getPropertyValue(name).trim()])));
+    }, []);
+
+    return (
+        <table className="table style-guide__table">
+            <thead>
+                <tr>
+                    <th>Token</th>
+                    <th>Value</th>
+                    <th>Used for</th>
+                </tr>
+            </thead>
+            <tbody>
+                {SHELL_TOKENS.map(([name, use]) => (
+                    <tr key={name}>
+                        <td className="style-guide__strong">{name}</td>
+                        <td>{values[name]}</td>
+                        <td>{use}</td>
+                    </tr>
+                ))}
+            </tbody>
+        </table>
+    );
+}
+
 export default function StyleGuide() {
     return (
         <AppLayout>
@@ -71,6 +119,19 @@ export default function StyleGuide() {
                             <Swatch key={varName} name={name} varName={varName} />
                         ))}
                     </div>
+                </Section>
+
+                <Section title="Shell" description="The app frame's three layers, back to front: canvas, content panel, drawer. Tokens in base/_tokens.scss; used by layout/_app-shell.scss and components/_drawer.scss only.">
+                    <div className="style-guide__swatches">
+                        {SHELL_COLORS.map(([name, varName]) => (
+                            <Swatch key={varName} name={name} varName={varName} />
+                        ))}
+                    </div>
+                    <div className="style-guide__shell-demo">
+                        <div className="style-guide__shell-panel">Panel</div>
+                        <div className="style-guide__shell-drawer">Drawer</div>
+                    </div>
+                    <ShellTokenTable />
                 </Section>
 
                 <Section title="Buttons" description=".btn plus one color modifier (.btn--primary, --confirm...), or .link-btn for an inline text action. Use the Button component or apply the classes directly.">
