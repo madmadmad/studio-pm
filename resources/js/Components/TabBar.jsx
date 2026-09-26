@@ -10,7 +10,7 @@ export default function TabBar({ tabs, tab, setTab, counts = {} }) {
                     className={`tabs__tab${tab === t ? ' tabs__tab--active' : ''}`}
                 >
                     {t}
-                    {counts[t] != null && <span className="tabs__count">{counts[t]}</span>}
+                    {counts[t] != null && <span className="count tabs__count">{counts[t]}</span>}
                 </button>
             ))}
         </div>

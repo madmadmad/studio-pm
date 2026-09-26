@@ -1,30 +1,11 @@
-// Projects/Show Overview tab: description, contact/PO fields, stats.
+// Projects/Show: the project's description under its header details.
 
 .project-overview {
     &__description {
+        max-width: var(--size-content);
         font-size: var(--font-size-sm);
-        line-height: var(--line-height-sm);
+        line-height: var(--line-height-body);
         color: var(--color-shadow-grey);
-    }
-
-    // "Contact: X  Edit" / "PO Number: X  Edit", and their edit forms.
-    &__field {
-        display: flex;
-        align-items: center;
-        gap: var(--space-2);
-        margin-bottom: var(--space-section);
-
-        &--display {
-            font-size: var(--font-size-sm);
-            line-height: var(--line-height-sm);
-            color: var(--color-shadow-grey);
-        }
-    }
-
-    &__team-label {
-        margin-bottom: var(--space-2);
-        font-size: var(--font-size-xs);
-        line-height: var(--line-height-xs);
-        color: var(--color-shadow-grey);
+        white-space: pre-wrap;
     }
 }

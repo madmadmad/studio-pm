@@ -134,6 +134,7 @@ class PortalPageController extends Controller
                 'replies.senderUser', 'replies.senderContact', 'replies.attachments',
             ]),
             'activeUsers:id,name,role,avatar_path',
+            'scheduleItems:id,project_id,title,description,starts_on,ends_on,position',
             'proposals' => fn ($q) => $q->where('status', 'accepted')->with('items'),
             'invoices' => fn ($q) => $request->user()->canViewInvoices()
                 ? $q->whereIn('status', ['sent', 'paid'])->with('items')

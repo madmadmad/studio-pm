@@ -331,7 +331,7 @@ function ContactsCard({ company }) {
                     <div className="toolbar__summary">
                         Primary <span className="toolbar__figure">{contacts.find((c) => c.is_primary)?.name ?? 'None'}</span>
                         {' · '}
-                        Billing <span className="toolbar__figure">{contacts.filter((c) => c.is_billing).length}</span>
+                        Billing<span className="count">{contacts.filter((c) => c.is_billing).length}</span>
                     </div>
                 )}
                 addLabel="Add contact"
@@ -445,9 +445,9 @@ function ProjectsCard({ company }) {
             <TabToolbar
                 summary={company.projects.length > 0 && (
                     <div className="toolbar__summary">
-                        Active <span className="toolbar__figure">{company.projects.filter((p) => p.status === 'active').length}</span>
-                        {' of '}
-                        <span className="toolbar__figure">{company.projects.length}</span>
+                        Active<span className="count">{company.projects.filter((p) => p.status === 'active').length}</span>
+                        {' · '}
+                        Total<span className="count">{company.projects.length}</span>
                     </div>
                 )}
                 addLabel="New project"
@@ -540,9 +540,9 @@ function ProposalsCard({ company, services }) {
             <TabToolbar
                 summary={company.proposals.length > 0 && (
                     <div className="toolbar__summary">
-                        Open <span className="toolbar__figure">{company.proposals.filter((p) => p.status === 'sent').length}</span>
+                        Open<span className="count">{company.proposals.filter((p) => p.status === 'sent').length}</span>
                         {' · '}
-                        Accepted <span className="toolbar__figure">{company.proposals.filter((p) => p.status === 'accepted').length}</span>
+                        Accepted<span className="count">{company.proposals.filter((p) => p.status === 'accepted').length}</span>
                     </div>
                 )}
                 addLabel="New proposal"

@@ -19,9 +19,12 @@ class ServiceController extends Controller
             'description' => ['nullable', 'string'],
             'default_rate' => ['required', 'numeric', 'min:0'],
             'unit' => ['required', 'in:hourly,fixed'],
+            'billable' => ['sometimes', 'boolean'],
         ]);
 
-        return Service::create($data);
+        // Fresh, so defaults the request left out (billable) come back too --
+        // the Services list shows the response as-is.
+        return Service::create($data)->refresh();
     }
 
     public function update(Request $request, Service $service)
@@ -31,6 +34,7 @@ class ServiceController extends Controller
             'description' => ['nullable', 'string'],
             'default_rate' => ['sometimes', 'numeric', 'min:0'],
             'unit' => ['sometimes', 'in:hourly,fixed'],
+            'billable' => ['sometimes', 'boolean'],
         ]);
 
         $service->update($data);

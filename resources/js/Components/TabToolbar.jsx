@@ -1,7 +1,8 @@
 import { Plus } from '@phosphor-icons/react';
 
-// The bar above a tab's list: an optional summary on the left (budget,
-// totals -- use .toolbar__summary / .toolbar__figure) and the tab's one add
+// The bar above a tab's list: an optional summary on the left (in a
+// .toolbar__summary: counts as .count circles, names, money and dates as
+// .toolbar__figure) and the tab's one add
 // action, a large plus, on the right. Every list tab follows the same
 // pattern (project and client pages): this toolbar, the list, and
 // create/view/edit in a drawer.

@@ -67,3 +67,11 @@ export function ExpenseStatusBadge({ expense }) {
     const m = EXPENSE_STATUS[expense.billing_status] || EXPENSE_STATUS.unbilled;
     return <Badge tone={m.tone} label={m.label} />;
 }
+
+// A time entry is billable or not (from its service). Time isn't invoiced
+// hour by hour, so there's no billed/unbilled state to show.
+export function TimeEntryStatusBadge({ entry }) {
+    return entry.billable
+        ? <Badge tone="fern" label="Billable" />
+        : <Badge tone="neutral" label="Non-billable" />;
+}

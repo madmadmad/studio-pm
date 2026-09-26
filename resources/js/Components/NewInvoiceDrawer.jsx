@@ -8,13 +8,11 @@ import { formatCurrency, invoiceSubtotal, invoiceTotal } from '../lib/format';
 import { calculateDueDate, todayLocal } from '../lib/paymentTerms';
 import { toPlainText } from '../lib/richText';
 
-// Copies a proposal's line items as invoice items. When less than the full
-// proposal amount remains in the project's budget (some of it already
-// invoiced), scales each item down proportionally so the new invoice starts
-// at exactly what's left, rather than re-billing the full proposal total.
+// Copies a proposal's line items as invoice items, scaled so they add up
+// to exactly `targetCents` (the share of the budget this invoice bills).
 // Proposal details are rich text; invoice details are plain, so the
 // formatting is dropped.
-function proposalToInvoiceItems(proposal, remaining) {
+function proposalToInvoiceItems(proposal, targetCents) {
     const items = proposal.items.map((item) => {
         const details = toPlainText(item.details);
         return {
@@ -24,9 +22,30 @@ function proposalToInvoiceItems(proposal, remaining) {
             service_id: item.service_id ? String(item.service_id) : '',
         };
     });
-    const proposalTotal = items.reduce((s, i) => s + i.amount, 0);
-    const scale = proposalTotal > 0 && remaining < proposalTotal ? Math.max(remaining, 0) / proposalTotal : 1;
-    return items.map((item) => ({ ...item, amount: (item.amount * scale).toFixed(2) }));
+    const cents = splitCents(Math.max(targetCents, 0), items.map((i) => i.amount));
+    return items.map((item, i) => ({ ...item, amount: (cents[i] / 100).toFixed(2) }));
+}
+
+// Splits `totalCents` across items in proportion to `weights`, in whole
+// cents that add up to exactly `totalCents`. Rounding each share on its own
+// can leave the sum a cent or two out (a scaled invoice landing $0.01 short
+// of the remaining budget), so each share is rounded down and the leftover
+// cents go to the shares that lost the most to rounding.
+function splitCents(totalCents, weights) {
+    const weightTotal = weights.reduce((s, w) => s + w, 0);
+    if (weightTotal <= 0) return weights.map(() => 0);
+    const exact = weights.map((w) => (totalCents * w) / weightTotal);
+    const cents = exact.map(Math.floor);
+    let leftover = totalCents - cents.reduce((s, c) => s + c, 0);
+    const byRemainder = exact
+        .map((value, i) => ({ i, remainder: value - Math.floor(value) }))
+        .sort((a, b) => b.remainder - a.remainder);
+    for (const { i } of byRemainder) {
+        if (leftover <= 0) break;
+        cents[i] += 1;
+        leftover -= 1;
+    }
+    return cents;
 }
 
 function emptyInvoiceForm(defaultTerms) {
@@ -38,25 +57,59 @@ function emptyInvoiceForm(defaultTerms) {
     };
 }
 
+const toCents = (dollars) => Math.round(dollars * 100);
+const round2 = (n) => Math.round(n * 100) / 100;
+
+// What's been invoiced on a project and what's left of its budget, in
+// cents. The percentage field bills a share of `baseCents`: the project's
+// budget (its accepted proposals), or the chosen proposal's own total when
+// the project has no budget yet.
+function billingPlan(project, proposal) {
+    const invoicedCents = project
+        ? project.invoices.reduce((s, inv) => s + toCents(invoiceTotal(inv.items, inv.surcharge)), 0)
+        : 0;
+    const budgetCents = project ? toCents(parseFloat(project.budget) || 0) : 0;
+    const proposalCents = proposal
+        ? toCents(proposal.items.reduce((s, i) => s + parseFloat(i.quantity) * parseFloat(i.rate), 0))
+        : 0;
+    const baseCents = budgetCents > 0 ? budgetCents : proposalCents;
+    const remainingCents = Math.max(baseCents - invoicedCents, 0);
+    return {
+        baseCents,
+        invoicedCents,
+        remainingCents,
+        // Starts at whatever's left, so leaving it alone bills the rest.
+        remainingPercent: baseCents > 0 ? round2((remainingCents / baseCents) * 100) : 0,
+    };
+}
+
+// The cents a percentage bills: exactly what's left when it's the rest
+// (so the default never leaves a stray cent), otherwise that share of the
+// base to the cent -- never more than what's left.
+function centsForPercent(plan, percent) {
+    const value = parseFloat(percent);
+    if (!(value > 0)) return 0;
+    if (value >= plan.remainingPercent) return plan.remainingCents;
+    return Math.min(Math.round((plan.baseCents * value) / 100), plan.remainingCents);
+}
+
 function proposalsWithItemsFor(project) {
     return project ? project.proposals.filter((p) => p.items.length > 0) : [];
 }
 
-// What's left to invoice on a project: its budget minus every invoice so far.
-function remainingBudget(project) {
-    if (!project) return 0;
-    const invoiced = project.invoices.reduce((s, inv) => s + invoiceTotal(inv.items, inv.surcharge), 0);
-    return (parseFloat(project.budget) || 0) - invoiced;
-}
-
-// The proposal and line items a project's new invoice starts from: the
-// accepted proposal's items, scaled to what's left in the budget, when
-// there's exactly one to choose from -- otherwise blank, to pick or type.
+// The proposal, percentage and line items a project's new invoice starts
+// from: the accepted proposal billing the rest of the budget, when there's
+// exactly one to choose from -- otherwise blank, to pick or type.
 function seedFromProject(project) {
     const accepted = proposalsWithItemsFor(project).filter((p) => p.status === 'accepted');
-    return accepted.length === 1
-        ? { proposal_id: String(accepted[0].id), items: proposalToInvoiceItems(accepted[0], remainingBudget(project)) }
-        : { proposal_id: '', items: [{ description: '', amount: '' }] };
+    if (accepted.length !== 1) return { proposal_id: '', percent: '', items: [{ description: '', amount: '' }] };
+    return seedFromProposal(project, accepted[0]);
+}
+
+function seedFromProposal(project, proposal) {
+    const plan = billingPlan(project, proposal);
+    const percent = String(plan.remainingPercent);
+    return { proposal_id: String(proposal.id), percent, items: proposalToInvoiceItems(proposal, centsForPercent(plan, percent)) };
 }
 
 // Create mode for an invoice, in the wide drawer: optionally seeded from a
@@ -70,7 +123,6 @@ export default function NewInvoiceDrawer({ company, projects, initialProjectId =
     const [projectId, setProjectId] = useState(initialProjectId ? String(initialProjectId) : '');
     const project = projects.find((p) => String(p.id) === projectId) || null;
     const proposalsWithItems = proposalsWithItemsFor(project);
-    const remaining = remainingBudget(project);
 
     const [form, setForm] = useState(() => ({ ...emptyInvoiceForm(defaultTerms), ...seedFromProject(project) }));
     const [saving, setSaving] = useState(false);
@@ -83,21 +135,26 @@ export default function NewInvoiceDrawer({ company, projects, initialProjectId =
     }
 
     const selectedProposal = proposalsWithItems.find((p) => String(p.id) === form.proposal_id);
-    const selectedProposalTotal = selectedProposal
-        ? selectedProposal.items.reduce((s, i) => s + parseFloat(i.quantity) * parseFloat(i.rate), 0)
-        : 0;
-    const wasScaledToRemaining = selectedProposal && remaining < selectedProposalTotal;
+    const plan = selectedProposal ? billingPlan(project, selectedProposal) : null;
+    const thisCents = plan ? centsForPercent(plan, form.percent) : 0;
     const formSubtotal = invoiceSubtotal(form.items);
     const formTotal = invoiceTotal(form.items, form.surcharge);
 
     function copyFromProposal(proposalId) {
         if (!proposalId) {
-            setForm({ ...form, proposal_id: '', items: [{ description: '', amount: '' }] });
+            setForm({ ...form, proposal_id: '', percent: '', items: [{ description: '', amount: '' }] });
             return;
         }
         const proposal = proposalsWithItems.find((p) => String(p.id) === proposalId);
-        setForm({ ...form, proposal_id: proposalId, items: proposalToInvoiceItems(proposal, remaining) });
+        setForm({ ...form, ...seedFromProposal(project, proposal) });
     }
+
+    // A new percentage rebuilds the line items to bill that share.
+    function setPercent(percent) {
+        setForm({ ...form, percent, items: proposalToInvoiceItems(selectedProposal, centsForPercent(plan, percent)) });
+    }
+
+    const pct = (cents) => (plan.baseCents > 0 ? `${round2((cents / plan.baseCents) * 100)}%` : '0%');
 
     function updateItem(idx, field, value) {
         const items = form.items.map((it, i) => (i === idx ? { ...it, [field]: value } : it));
@@ -115,8 +172,8 @@ export default function NewInvoiceDrawer({ company, projects, initialProjectId =
         const validItems = form.items.filter((i) => i.description.trim() && parseFloat(i.amount) > 0);
         if (validItems.length === 0) {
             setError(
-                form.proposal_id && remaining <= 0
-                    ? "This project's budget is already fully invoiced, so the copied line items scaled to $0.00. Increase the budget or enter amounts manually below."
+                plan && plan.remainingCents <= 0
+                    ? "This project's budget is already fully invoiced, so there's nothing left to bill from the proposal. Increase the budget or enter amounts manually below."
                     : 'Add at least one line item with a description and amount.'
             );
             return;
@@ -168,14 +225,37 @@ export default function NewInvoiceDrawer({ company, projects, initialProjectId =
                                 <option key={p.id} value={p.id}>{p.title} ({formatCurrency(p.estimate_amount)})</option>
                             ))}
                         </select>
-                        {wasScaledToRemaining && (
-                            remaining <= 0 ? (
+                        {plan && (
+                            plan.remainingCents <= 0 ? (
                                 <div className="form-error">
-                                    This project's budget is already fully invoiced, so these line items scaled to $0.00 — increase the budget or edit the amounts below.
+                                    This project's budget is already fully invoiced — increase the budget or enter amounts manually below.
                                 </div>
                             ) : (
-                                <div className="form-hint form-hint--attached">
-                                    Scaled to the {formatCurrency(remaining)} left in the budget.
+                                <div className="invoice-form__percent">
+                                    <div className="invoice-form__percent-field">
+                                        <label className="label" htmlFor="invoice-percent">Bill</label>
+                                        <input
+                                            id="invoice-percent"
+                                            type="number"
+                                            min="0.01"
+                                            max={plan.remainingPercent}
+                                            step="0.01"
+                                            value={form.percent}
+                                            onChange={(e) => setPercent(e.target.value)}
+                                            className="input invoice-form__percent-input u-tabular-nums"
+                                        />
+                                        <span className="invoice-form__percent-unit">% of the budget</span>
+                                        {parseFloat(form.percent) < plan.remainingPercent && (
+                                            <button type="button" onClick={() => setPercent(String(plan.remainingPercent))} className="link-btn link-btn--accent link-btn--xs">
+                                                Bill the rest
+                                            </button>
+                                        )}
+                                    </div>
+                                    <div className="form-hint">
+                                        Invoiced so far {pct(plan.invoicedCents)} ({formatCurrency(plan.invoicedCents / 100)})
+                                        {' · '}This invoice {pct(thisCents)} ({formatCurrency(thisCents / 100)})
+                                        {' · '}Left after this {pct(plan.remainingCents - thisCents)} ({formatCurrency((plan.remainingCents - thisCents) / 100)})
+                                    </div>
                                 </div>
                             )
                         )}

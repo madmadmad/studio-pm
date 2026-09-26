@@ -1,6 +1,6 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
-import { Check, DotsSixVertical, Eye, DownloadSimple, Paperclip, PencilSimple, Plus, Trash, X } from '@phosphor-icons/react';
+import { Check, DotsSixVertical, Eye, GearSix, DownloadSimple, Paperclip, PencilSimple, Plus, Trash, X } from '@phosphor-icons/react';
 import AppLayout from '../../Layouts/AppLayout';
 import Button from '../../Components/Button';
 import EmptyState from '../../Components/EmptyState';
@@ -10,8 +10,10 @@ import RichTextEditor from '../../Components/RichTextEditor';
 import RichTextView from '../../Components/RichTextView';
 import Avatar from '../../Components/Avatar';
 import { NewThreadForm, ThreadView, isSameActor, threadParticipantActors } from '../../Components/MessagesPanel';
-import { ProjectStatusBadge, TaskStatusBadge, InvoiceStatusBadge, ProposalStatusBadge, ExpenseStatusBadge } from '../../Components/StatusBadges';
-import { formatCurrency, formatDate, formatDateTime, formatFileSize, invoiceTotal } from '../../lib/format';
+import { ProjectStatusBadge, TaskStatusBadge, InvoiceStatusBadge, ProposalStatusBadge, ExpenseStatusBadge, TimeEntryStatusBadge } from '../../Components/StatusBadges';
+import { formatCurrency, formatDate, formatDateTime, formatFileSize, invoiceTotal, todayInAppTimezone } from '../../lib/format';
+import { addDays, daysBetween, formatLength, formatRange } from '../../lib/scheduleDates';
+import ScheduleChart from '../../Components/schedule/ScheduleChart';
 import { todayLocal } from '../../lib/paymentTerms';
 import { api } from '../../lib/api';
 import { isBlankRichText, toRichText } from '../../lib/richText';
@@ -26,8 +28,13 @@ import { useRememberedTab } from '../../lib/useRememberedTab';
 import AutoResizeTextarea from '../../Components/AutoResizeTextarea';
 import Toggle from '../../Components/Toggle';
 import RowActions from '../../Components/RowActions';
+import TimeEntryDrawer, { NewTimeEntryDrawer } from '../../Components/TimeEntryDrawer';
+import { Field } from '../../Components/client/ClientFields';
+import ContactCards from '../../Components/client/ContactCards';
+import ActionMenu from '../../Components/ActionMenu';
+import { PROJECT_STATUS_OPTIONS } from '../../Components/ProjectsTable';
 
-const ALL_TABS = ['Overview', 'Tasks', 'Notes', 'Messages', 'Time', 'Proposals', 'Billing', 'Expenses', 'Team'];
+const ALL_TABS = ['Schedule', 'Tasks', 'Notes', 'Messages', 'Time', 'Proposals', 'Billing', 'Expenses', 'Team'];
 const MANAGER_ONLY_TABS = ['Proposals', 'Billing', 'Expenses'];
 
 function reload() {
@@ -71,133 +78,146 @@ function useDebouncedSave(save, delay = 600) {
     return { queue, flush, cancel };
 }
 
-function PoNumberField({ project }) {
-    const [editing, setEditing] = useState(false);
-    const [value, setValue] = useState(project.po_number || '');
+// The project's settings, from the header's gear: name, status, contact,
+// PO number and description. Saved together on the button.
+function ProjectSettingsDrawer({ project, onClose }) {
+    const [form, setForm] = useState({
+        name: project.name,
+        status: project.status,
+        contact_id: project.contact_id ? String(project.contact_id) : '',
+        po_number: project.po_number ?? '',
+        description: project.description ?? '',
+    });
     const [saving, setSaving] = useState(false);
-
-    async function save() {
-        setSaving(true);
-        try {
-            await api.patch(`/api/projects/${project.id}`, { po_number: value.trim() || null });
-            setEditing(false);
-            reload();
-        } finally {
-            setSaving(false);
-        }
-    }
-
-    if (editing) {
-        return (
-            <div className="project-overview__field">
-                <input
-                    autoFocus
-                    value={value}
-                    onChange={(e) => setValue(e.target.value)}
-                    placeholder="PO number"
-                    className="input input--sm"
-                />
-                <Button variant="link" onClick={save} disabled={saving}>Save</Button>
-                <button onClick={() => setEditing(false)} className="text-action text-action--sm">Cancel</button>
-            </div>
-        );
-    }
-
-    return (
-        <div className="project-overview__field project-overview__field--display">
-            <span>PO Number: {project.po_number || '—'}</span>
-            <Button variant="link" onClick={() => { setValue(project.po_number || ''); setEditing(true); }}>
-                Edit
-            </Button>
-        </div>
-    );
-}
-
-function ContactField({ project }) {
-    const [editing, setEditing] = useState(false);
-    const [value, setValue] = useState(project.contact_id ? String(project.contact_id) : '');
-    const [saving, setSaving] = useState(false);
+    const [error, setError] = useState('');
     const contacts = project.company.contacts || [];
 
-    async function save() {
+    function field(name) {
+        return { value: form[name], onChange: (e) => setForm({ ...form, [name]: e.target.value }) };
+    }
+
+    async function save(e) {
+        e.preventDefault();
         setSaving(true);
+        setError('');
         try {
-            await api.patch(`/api/projects/${project.id}`, { contact_id: value || null });
-            setEditing(false);
+            await api.patch(`/api/projects/${project.id}`, {
+                name: form.name,
+                status: form.status,
+                contact_id: form.contact_id || null,
+                po_number: form.po_number.trim() || null,
+                description: form.description.trim() || null,
+            });
             reload();
+            onClose();
+        } catch (err) {
+            setError(err.message || 'Could not save these settings.');
         } finally {
             setSaving(false);
         }
     }
 
-    if (editing) {
-        return (
-            <div className="project-overview__field">
-                <select
-                    autoFocus
-                    value={value}
-                    onChange={(e) => setValue(e.target.value)}
-                    className="input input--sm"
-                >
-                    <option value="">No contact</option>
-                    {contacts.map((contact) => (
-                        <option key={contact.id} value={contact.id}>
-                            {contact.name}{contact.email ? ` (${contact.email})` : ''}
-                        </option>
-                    ))}
-                </select>
-                <Button variant="link" onClick={save} disabled={saving}>Save</Button>
-                <button onClick={() => setEditing(false)} className="text-action text-action--sm">Cancel</button>
-            </div>
-        );
-    }
-
     return (
-        <div className="project-overview__field project-overview__field--display">
-            <span>Contact: {project.contact?.name || '—'}</span>
-            <Button variant="link" onClick={() => { setValue(project.contact_id ? String(project.contact_id) : ''); setEditing(true); }}>
-                Edit
-            </Button>
-        </div>
+        <Drawer onClose={onClose}>
+            <h2 className="drawer__title">Project settings</h2>
+            <form onSubmit={save}>
+                <div className="drawer__section drawer__section--divided">
+                    <div className="section-label section-label--tight">Name</div>
+                    <input required autoFocus {...field('name')} className="input input--xs" />
+                </div>
+                <div className="form-grid drawer__section">
+                    <div>
+                        <div className="section-label section-label--tight">Status</div>
+                        <select {...field('status')} className="input input--xs">
+                            {PROJECT_STATUS_OPTIONS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
+                        </select>
+                    </div>
+                    <div>
+                        <div className="section-label section-label--tight">PO number</div>
+                        <input {...field('po_number')} className="input input--xs" />
+                    </div>
+                    <div className="form-grid__full">
+                        <div className="section-label section-label--tight">Contact</div>
+                        <select {...field('contact_id')} className="input input--xs">
+                            <option value="">No contact</option>
+                            {contacts.map((c) => (
+                                <option key={c.id} value={c.id}>{c.name}{c.email ? ` (${c.email})` : ''}</option>
+                            ))}
+                        </select>
+                    </div>
+                </div>
+                <div className="drawer__section">
+                    <div className="section-label">Description</div>
+                    <AutoResizeTextarea {...field('description')} placeholder="What this project is…" className="input" />
+                    <div className="form-hint form-hint--attached">Clients see this on the project in their portal.</div>
+                </div>
+
+                {error && <div className="form-message form-message--error drawer__section">{error}</div>}
+
+                <div className="form-actions">
+                    <Button type="submit" variant="confirm" disabled={saving}>Save settings</Button>
+                </div>
+            </form>
+        </Drawer>
     );
 }
 
-function OverviewTab({ project }) {
-    const totalHours = project.time_entries.reduce((s, e) => s + parseFloat(e.hours), 0);
-    const unbilledHours = project.time_entries.filter((e) => !e.billed).reduce((s, e) => s + parseFloat(e.hours), 0);
+// Under the header, as on the client page: the project's details in
+// columns, its description, then the metric cards. Money figures only
+// for managers (the only ones sent invoices).
+function ProjectSummary({ project, proposedHours }) {
+    const sumHours = (entries) => entries.reduce((s, e) => s + parseFloat(e.hours), 0);
+    const totalHours = sumHours(project.time_entries);
+    const billableHours = sumHours(project.time_entries.filter((e) => e.billable));
+    // Hours sold in accepted proposals, less the billable time logged.
+    const hoursRemaining = proposedHours > 0 ? proposedHours - billableHours : null;
     const doneTasks = project.tasks.filter((t) => t.status === 'done').length;
-    const totalInvoiced = project.invoices.reduce((s, inv) => s + invoiceTotal(inv.items, inv.surcharge), 0);
+    const invoices = project.invoices;
+    const totalInvoiced = invoices ? invoices.reduce((s, inv) => s + invoiceTotal(inv.items, inv.surcharge), 0) : 0;
     const budget = parseFloat(project.budget) || 0;
     const remaining = budget - totalInvoiced;
 
     return (
-        <div>
-            {project.description && <p className="project-overview__description page-section">{project.description}</p>}
-            <ContactField project={project} />
-            <PoNumberField project={project} />
-            <div className="metric-grid">
+        <>
+            <div className={`field-grid page-section${project.description ? '' : ' page-section--loose'}`}>
+                <Field label="Client">
+                    <div className="field-grid__value">
+                        <Link href={`/clients/${project.company.id}`} className="link">{project.company.name}</Link>
+                    </div>
+                </Field>
+                <Field label="Contact">
+                    {project.contact ? <div className="field-grid__value">{project.contact.name}</div> : null}
+                </Field>
+                <Field label="PO number">
+                    {project.po_number ? <div className="field-grid__value">{project.po_number}</div> : null}
+                </Field>
+                <Field label="Status">
+                    <div><ProjectStatusBadge project={project} /></div>
+                </Field>
+            </div>
+            {project.description && <p className="project-overview__description page-section page-section--loose">{project.description}</p>}
+
+            {/* Work, then money in a row of its own, so the budget figures
+                always sit together instead of wrapping apart. */}
+            <div className={`metric-grid ${invoices ? 'metric-grid--stacked' : 'metric-grid--loose'}`}>
                 <MetricCard label="Tasks" value={`${doneTasks}/${project.tasks.length}`} />
                 <MetricCard label="Hours logged" value={`${totalHours}h`} />
-                <MetricCard label="Unbilled hours" value={`${unbilledHours}h`} />
-                <MetricCard label="Total invoiced" value={formatCurrency(totalInvoiced)} />
-                {budget > 0 && (
-                    <>
-                        <MetricCard label="Budget" value={formatCurrency(budget)} />
-                        <MetricCard label="Remaining" value={formatCurrency(remaining)} negative={remaining < 0} />
-                    </>
-                )}
+                <MetricCard label="Billable hours" value={`${billableHours}h`} />
+                <MetricCard
+                    label="Hours remaining"
+                    value={hoursRemaining === null ? '—' : `${hoursRemaining}h`}
+                    // Fern, or watermelon once the sold hours are used up.
+                    tone={hoursRemaining !== null && hoursRemaining < 0 ? 'watermelon' : 'fern'}
+                />
             </div>
-            {project.team_names?.length > 0 && (
-                <div>
-                    <div className="project-overview__team-label">Team</div>
-                    <div className="cluster">
-                        {project.team_names.map((name) => (
-                            <Badge key={name} tone="neutral" label={name} />
-                        ))}
-                    </div>
+            {invoices && (
+                <div className="metric-grid metric-grid--one-row metric-grid--loose">
+                    {budget > 0 && <MetricCard label="Budget" value={formatCurrency(budget)} />}
+                    <MetricCard label="Total invoiced" value={formatCurrency(totalInvoiced)} />
+                    {budget > 0 && <MetricCard label="Remaining" value={formatCurrency(remaining)} negative={remaining < 0} />}
                 </div>
             )}
-        </div>
+        </>
     );
 }
 
@@ -702,6 +722,232 @@ function TasksTab({ project }) {
     );
 }
 
+// A schedule item in the drawer: create (no `item`) or edit. Saves on the
+// button rather than per field, since the two dates are checked together.
+function ScheduleItemDrawer({ project, item, onClose }) {
+    const lastEnd = (project.schedule_items || []).reduce((max, i) => (i.ends_on > max ? i.ends_on : max), '');
+    const defaultStart = lastEnd ? addDays(lastEnd, 1) : todayInAppTimezone();
+    const [form, setForm] = useState(() => (item
+        ? { title: item.title, description: item.description ?? '', starts_on: item.starts_on, ends_on: item.ends_on }
+        : { title: '', description: '', starts_on: defaultStart, ends_on: addDays(defaultStart, 6) }));
+    const [saving, setSaving] = useState(false);
+    const [error, setError] = useState('');
+
+    function setStart(value) {
+        // Keep the item's length when its start moves.
+        const length = form.starts_on && form.ends_on ? daysBetween(form.starts_on, form.ends_on) : 7;
+        setForm({ ...form, starts_on: value, ends_on: value ? addDays(value, length - 1) : form.ends_on });
+    }
+
+    async function save(e) {
+        e.preventDefault();
+        setSaving(true);
+        setError('');
+        try {
+            const payload = { ...form, description: form.description || null };
+            if (item) {
+                await api.patch(`/api/schedule-items/${item.id}`, payload);
+            } else {
+                await api.post(`/api/projects/${project.id}/schedule-items`, payload);
+            }
+            reload();
+            onClose();
+        } catch (err) {
+            setError(err.message || 'Could not save this item.');
+        } finally {
+            setSaving(false);
+        }
+    }
+
+    return (
+        <Drawer onClose={onClose}>
+            <h2 className="drawer__title">{item ? 'Edit schedule item' : 'New schedule item'}</h2>
+            <form onSubmit={save}>
+                <div className="drawer__section drawer__section--divided">
+                    <div className="section-label section-label--tight">Title</div>
+                    <input
+                        required
+                        autoFocus
+                        placeholder="e.g. Discovery"
+                        value={form.title}
+                        onChange={(e) => setForm({ ...form, title: e.target.value })}
+                        className="input input--xs"
+                    />
+                </div>
+                <div className="form-grid drawer__section">
+                    <div>
+                        <div className="section-label section-label--tight">Start</div>
+                        <input required type="date" value={form.starts_on} onChange={(e) => setStart(e.target.value)} className="input input--xs" />
+                    </div>
+                    <div>
+                        <div className="section-label section-label--tight">End</div>
+                        <input
+                            required
+                            type="date"
+                            min={form.starts_on}
+                            value={form.ends_on}
+                            onChange={(e) => setForm({ ...form, ends_on: e.target.value })}
+                            className="input input--xs"
+                        />
+                    </div>
+                    {form.starts_on && form.ends_on && form.ends_on >= form.starts_on && (
+                        <div className="form-hint form-grid__full">{formatLength(form.starts_on, form.ends_on)}</div>
+                    )}
+                </div>
+                <div className="drawer__section">
+                    <div className="section-label">Description</div>
+                    <AutoResizeTextarea
+                        value={form.description}
+                        onChange={(e) => setForm({ ...form, description: e.target.value })}
+                        placeholder="What happens in this phase…"
+                        className="input"
+                    />
+                </div>
+
+                {error && <div className="form-message form-message--error drawer__section">{error}</div>}
+
+                <div className="form-actions">
+                    <Button type="submit" variant="confirm" disabled={saving}>{item ? 'Save changes' : 'Add to schedule'}</Button>
+                </div>
+            </form>
+        </Drawer>
+    );
+}
+
+// `drag` wires the row into the list's drag-to-reorder: the row is only
+// draggable while its handle is held, so a click still opens the drawer.
+function ScheduleRow({ item, onOpen, drag }) {
+    return (
+        <div
+            onClick={() => onOpen(item)}
+            draggable={drag.armed}
+            onDragStart={drag.onDragStart}
+            onDragOver={drag.onDragOver}
+            onDrop={drag.onDrop}
+            onDragEnd={drag.onDragEnd}
+            className={`grid-row grid-row--action grid-row--link${drag.dragging ? ' project-schedule__row--dragging' : ''}`}
+        >
+            <div className="project-schedule__title">
+                <span
+                    className="project-schedule__handle"
+                    title="Drag to reorder"
+                    onClick={(e) => e.stopPropagation()}
+                    onPointerDown={drag.onArm}
+                    onPointerUp={drag.onDisarm}
+                >
+                    <DotsSixVertical size={14} weight="bold" />
+                </span>
+                <div className="project-schedule__text">
+                    <span className="u-truncate">{item.title}</span>
+                    {item.description && <span className="project-schedule__description u-truncate">{item.description}</span>}
+                </div>
+            </div>
+            <div className="project-schedule__dates">{formatRange(item.starts_on, item.ends_on)}</div>
+            <div className="project-schedule__length">{formatLength(item.starts_on, item.ends_on)}</div>
+            <RowActions
+                openLabel="Open schedule item"
+                deleteLabel="Delete schedule item"
+                confirmMessage={`Remove "${item.title}" from the schedule? This can't be undone.`}
+                onDelete={async () => {
+                    await api.delete(`/api/schedule-items/${item.id}`);
+                    reload();
+                }}
+            />
+        </div>
+    );
+}
+
+// The project's schedule: a gantt chart of every item, then the same items
+// as a list. A bar, a chart label or a list row opens the item's drawer;
+// the + adds one.
+function ScheduleTab({ project }) {
+    // A local copy so a drag shows its new order immediately; re-synced
+    // when the page reloads.
+    const [items, setItems] = useState(project.schedule_items || []);
+    useEffect(() => setItems(project.schedule_items || []), [project.schedule_items]);
+    // 'new' while adding, an item while editing, null when closed.
+    const [editing, setEditing] = useState(null);
+    const [armedId, setArmedId] = useState(null);
+    const [dragId, setDragId] = useState(null);
+
+    async function moveItem(fromId, toId) {
+        if (fromId === toId) return;
+        const next = [...items];
+        const [moved] = next.splice(next.findIndex((i) => i.id === fromId), 1);
+        next.splice(next.findIndex((i) => i.id === toId), 0, moved);
+        setItems(next);
+        try {
+            await api.put(`/api/projects/${project.id}/schedule-items/order`, { ids: next.map((i) => i.id) });
+        } finally {
+            reload();
+        }
+    }
+
+    function dragProps(item) {
+        return {
+            armed: armedId === item.id,
+            dragging: dragId === item.id,
+            onArm: () => setArmedId(item.id),
+            onDisarm: () => setArmedId(null),
+            onDragStart: () => setDragId(item.id),
+            onDragOver: (e) => e.preventDefault(),
+            onDrop: () => moveItem(dragId, item.id),
+            onDragEnd: () => {
+                setDragId(null);
+                setArmedId(null);
+            },
+        };
+    }
+    const first = items.reduce((min, i) => (!min || i.starts_on < min ? i.starts_on : min), '');
+    const last = items.reduce((max, i) => (i.ends_on > max ? i.ends_on : max), '');
+
+    return (
+        <div>
+            <TabToolbar
+                summary={items.length > 0 && (
+                    <div className="toolbar__summary">
+                        <span className="toolbar__figure">{formatRange(first, last)}</span>
+                        {' · '}
+                        {formatLength(first, last)}
+                    </div>
+                )}
+                addLabel="New schedule item"
+                onAdd={() => setEditing('new')}
+            />
+
+            {items.length === 0 ? (
+                <div className="card card--flush">
+                    <EmptyState text="No schedule yet. Add the project's phases or milestones to build the timeline." />
+                </div>
+            ) : (
+                <>
+                    <div className="card card--flush page-section">
+                        <ScheduleChart items={items} onOpen={setEditing} />
+                    </div>
+                    <div className="card card--flush">
+                        <div className="grid-row grid-row--action grid-row--head">
+                            <div className="project-schedule__title">Item</div>
+                            <div className="project-schedule__dates">Dates</div>
+                            <div className="project-schedule__length">Length</div>
+                            <div />
+                        </div>
+                        {items.map((item) => <ScheduleRow key={item.id} item={item} onOpen={setEditing} drag={dragProps(item)} />)}
+                    </div>
+                </>
+            )}
+
+            {editing && (
+                <ScheduleItemDrawer
+                    key={editing === 'new' ? 'new' : editing.id}
+                    project={project}
+                    item={editing === 'new' ? null : editing}
+                    onClose={() => setEditing(null)}
+                />
+            )}
+        </div>
+    );
+}
+
 function NoteRow({ note, onOpen }) {
     return (
         <div onClick={() => onOpen(note.id)} className="grid-row grid-row--action grid-row--link">
@@ -980,12 +1226,18 @@ function TimeEntryRow({ entry, canDelete, onOpen }) {
     return (
         <div onClick={() => onOpen(entry.id)} className="grid-row grid-row--action grid-row--link">
             <div className="time-list__date">{formatDate(entry.date)}</div>
-            <div className="time-list__hours">{entry.hours}h</div>
-            <div className="time-list__detail">
-                <span className="time-list__text">{entry.task ? entry.task.title : entry.note || '—'}</span>
+            <div className="time-list__who">
+                {entry.user && <Avatar name={entry.user.name} avatarUrl={entry.user.avatar_url} id={entry.user.id} size={24} />}
+                <span className="u-truncate">{entry.user?.name ?? '—'}</span>
+            </div>
+            <div className="time-list__hours time-list__hours--narrow">{entry.hours}h</div>
+            <div className="time-list__note">
+                <span className="time-list__text">
+                    {[entry.service?.name, entry.task ? entry.task.title : entry.note].filter(Boolean).join(' · ') || '—'}
+                </span>
             </div>
             <div className="time-list__status">
-                {entry.billed ? <Badge tone="fern" label="Billed" /> : <Badge tone="neutral" label="Unbilled" />}
+                <TimeEntryStatusBadge entry={entry} />
             </div>
             <RowActions
                 openLabel="Open entry"
@@ -1000,192 +1252,13 @@ function TimeEntryRow({ entry, canDelete, onOpen }) {
     );
 }
 
-function TimeEntryDrawer({ entry, tasks, onClose, onChange }) {
-    const [hours, setHours] = useState('');
-    const [note, setNote] = useState('');
-
-    useEffect(() => {
-        if (entry) {
-            setHours(entry.hours);
-            setNote(entry.note ?? '');
-        }
-    }, [entry?.id]);
-
-    async function updateField(field, value) {
-        await api.patch(`/api/time-entries/${entry.id}`, { [field]: value });
-        onChange();
-    }
-
-    async function remove() {
-        await api.delete(`/api/time-entries/${entry.id}`);
-        onClose();
-        onChange();
-    }
-
-    return (
-        <Drawer
-            onClose={onClose}
-            actions={
-                <button onClick={remove} title="Delete entry" className="icon-btn icon-btn--danger drawer__action">
-                    <Trash />
-                </button>
-            }
-        >
-            <DrawerByline>
-                <DrawerDate label="Created" date={entry.created_at} />
-                {entry.billed ? <Badge tone="fern" label="Billed" /> : <Badge tone="neutral" label="Unbilled" />}
-            </DrawerByline>
-            {/* An entry has no name of its own -- it's titled by its task. */}
-            <h2 className="drawer__title">{entry.task?.title || 'Time entry'}</h2>
-
-            <div className="form-grid drawer__section drawer__section--divided">
-                <div>
-                    <div className="section-label section-label--tight">Date</div>
-                    <input
-                        type="date"
-                        value={entry.date.slice(0, 10)}
-                        onChange={(e) => updateField('date', e.target.value)}
-                        className="input input--xs"
-                    />
-                </div>
-                <div>
-                    <div className="section-label section-label--tight">Hours</div>
-                    <input
-                        type="number"
-                        min="0.25"
-                        step="0.25"
-                        value={hours}
-                        onChange={(e) => setHours(e.target.value)}
-                        onBlur={() => Number(hours) !== Number(entry.hours) && updateField('hours', hours)}
-                        className="input input--xs u-tabular-nums"
-                    />
-                </div>
-            </div>
-
-            <div className="drawer__section">
-                <div className="section-label section-label--tight">Task</div>
-                <select
-                    value={entry.task_id ?? ''}
-                    onChange={(e) => updateField('task_id', e.target.value || null)}
-                    className="input input--xs"
-                >
-                    <option value="">No task</option>
-                    {tasks.map((t) => <option key={t.id} value={t.id}>{t.title}</option>)}
-                </select>
-            </div>
-
-            <div className="drawer__section">
-                <div className="section-label">Note</div>
-                <AutoResizeTextarea
-                    value={note}
-                    onChange={(e) => setNote(e.target.value)}
-                    onBlur={() => note !== (entry.note ?? '') && updateField('note', note)}
-                    placeholder="Add a note…"
-                    className="input"
-                />
-            </div>
-
-            <label className="choice">
-                <input
-                    type="checkbox"
-                    checked={entry.billable}
-                    disabled={entry.billed}
-                    onChange={(e) => updateField('billable', e.target.checked)}
-                />
-                Billable
-            </label>
-        </Drawer>
-    );
-}
-
-// Create mode for a time entry. Unlike a note or task, an entry can't
-// exist half-filled (the API requires a date and hours), so this is a form
-// that saves on submit rather than a record created up front.
-function NewTimeEntryDrawer({ project, onClose }) {
-    const [form, setForm] = useState({ date: todayLocal(), task_id: '', hours: '', note: '' });
-    const [saving, setSaving] = useState(false);
-
-    async function logTime(e) {
-        e.preventDefault();
-        setSaving(true);
-        try {
-            await api.post('/api/time-entries', {
-                company_id: project.company_id,
-                project_id: project.id,
-                task_id: form.task_id || null,
-                date: form.date,
-                hours: form.hours,
-                note: form.note,
-            });
-            reload();
-            onClose();
-        } finally {
-            setSaving(false);
-        }
-    }
-
-    return (
-        <Drawer onClose={onClose}>
-            <h2 className="drawer__title">Log time</h2>
-            <form onSubmit={logTime}>
-                <div className="form-grid drawer__section drawer__section--divided">
-                    <div>
-                        <div className="section-label section-label--tight">Date</div>
-                        <input
-                            required
-                            type="date"
-                            value={form.date}
-                            onChange={(e) => setForm({ ...form, date: e.target.value })}
-                            className="input input--xs"
-                        />
-                    </div>
-                    <div>
-                        <div className="section-label section-label--tight">Hours</div>
-                        <input
-                            required
-                            autoFocus
-                            type="number"
-                            min="0.25"
-                            step="0.25"
-                            value={form.hours}
-                            onChange={(e) => setForm({ ...form, hours: e.target.value })}
-                            className="input input--xs u-tabular-nums"
-                        />
-                    </div>
-                </div>
-
-                <div className="drawer__section">
-                    <div className="section-label section-label--tight">Task</div>
-                    <select
-                        value={form.task_id}
-                        onChange={(e) => setForm({ ...form, task_id: e.target.value })}
-                        className="input input--xs"
-                    >
-                        <option value="">No task</option>
-                        {project.tasks.map((t) => <option key={t.id} value={t.id}>{t.title}</option>)}
-                    </select>
-                </div>
-
-                <div className="drawer__section">
-                    <div className="section-label">Note</div>
-                    <AutoResizeTextarea
-                        value={form.note}
-                        onChange={(e) => setForm({ ...form, note: e.target.value })}
-                        placeholder="Add a note…"
-                        className="input"
-                    />
-                </div>
-
-                <div className="form-actions">
-                    <Button type="submit" variant="confirm" disabled={saving}>Log time</Button>
-                </div>
-            </form>
-        </Drawer>
-    );
-}
-
-function TimeTab({ project }) {
+function TimeTab({ project, timeServices }) {
     const currentUser = usePage().props.auth?.user;
+    const isManager = currentUser?.role === 'manager';
+    // Whose time a manager can log: the project's team, plus themselves
+    // (a manager needn't be assigned to log their own time).
+    const team = project.active_users || [];
+    const teamForLogging = team.some((u) => u.id === currentUser?.id) ? team : [{ id: currentUser?.id, name: currentUser?.name }, ...team];
     const [creating, setCreating] = useState(false);
     const [selectedEntryId, setSelectedEntryId] = useState(null);
     const selectedEntry = project.time_entries.find((e) => e.id === selectedEntryId) || null;
@@ -1200,8 +1273,9 @@ function TimeTab({ project }) {
                     <>
                         <div className="grid-row grid-row--action grid-row--head">
                             <div className="time-list__date">Date</div>
-                            <div className="time-list__hours">Hours</div>
-                            <div className="time-list__detail">Task / Note</div>
+                            <div className="time-list__who">Team member</div>
+                            <div className="time-list__hours time-list__hours--narrow">Hours</div>
+                            <div className="time-list__note">Service · Task / Note</div>
                             <div className="time-list__status">Status</div>
                             <div />
                         </div>
@@ -1220,14 +1294,29 @@ function TimeTab({ project }) {
 
             {selectedEntry && (
                 <TimeEntryDrawer
+                    key={selectedEntry.id}
                     entry={selectedEntry}
                     tasks={project.tasks}
+                    teamMembers={isManager ? project.active_users : null}
+                    services={timeServices}
+                    canEdit={currentUser?.role === 'manager' || selectedEntry.user_id === currentUser?.id}
                     onClose={() => setSelectedEntryId(null)}
                     onChange={reload}
                 />
             )}
 
-            {creating && <NewTimeEntryDrawer project={project} onClose={() => setCreating(false)} />}
+            {creating && (
+                <NewTimeEntryDrawer
+                    companies={[project.company]}
+                    projects={[project]}
+                    fixedProjectId={project.id}
+                    teamMembers={isManager ? teamForLogging : null}
+                    services={timeServices}
+                    currentUserId={currentUser?.id}
+                    onCreated={reload}
+                    onClose={() => setCreating(false)}
+                />
+            )}
         </div>
     );
 }
@@ -1790,137 +1879,169 @@ function ExpensesTab({ project }) {
     );
 }
 
-function AssignedStaff({ project, canManageTeam, assignableStaff }) {
-    const [assigned, setAssigned] = useState(project.active_users || []);
+function roleLabel(role) {
+    return role ? role.replace('_', ' ').replace(/^./, (c) => c.toUpperCase()) : null;
+}
+
+// Add someone to the project: a staff account (managers only -- assigning
+// staff is a roster decision) or a name for someone without a login.
+function AddTeamMemberDrawer({ project, canManageTeam, assignableStaff, onClose }) {
+    const assignedIds = (project.active_users || []).map((u) => u.id);
+    const available = (assignableStaff || []).filter((staffer) => !assignedIds.includes(staffer.id));
     const [pickId, setPickId] = useState('');
+    const [name, setName] = useState('');
     const [busy, setBusy] = useState(false);
+    const [error, setError] = useState('');
 
-    const available = (assignableStaff || []).filter((tm) => !assigned.some((a) => a.id === tm.id));
-
-    async function assign(e) {
-        e.preventDefault();
-        if (!pickId) return;
+    async function run(action) {
         setBusy(true);
+        setError('');
         try {
-            const updated = await api.post(`/api/projects/${project.id}/assignments`, { user_id: pickId });
-            setAssigned(updated);
-            setPickId('');
+            await action();
+            reload();
+            onClose();
+        } catch (err) {
+            setError(err.message || 'Could not add them.');
         } finally {
             setBusy(false);
         }
     }
+
+    function assign(e) {
+        e.preventDefault();
+        if (!pickId) return;
+        run(() => api.post(`/api/projects/${project.id}/assignments`, { user_id: pickId }));
+    }
+
+    function addName(e) {
+        e.preventDefault();
+        const trimmed = name.trim();
+        const names = project.team_names || [];
+        if (!trimmed || names.includes(trimmed)) return;
+        run(() => api.patch(`/api/projects/${project.id}`, { team_names: [...names, trimmed] }));
+    }
+
+    return (
+        <Drawer onClose={onClose}>
+            <h2 className="drawer__title">Add to team</h2>
+
+            {canManageTeam && (
+                <form onSubmit={assign} className="drawer__section drawer__section--divided">
+                    <div className="section-label section-label--tight">Assign staff</div>
+                    <div className="inline-form">
+                        <select value={pickId} onChange={(e) => setPickId(e.target.value)} className="input input--xs inline-form__grow">
+                            <option value="">{available.length ? 'Choose someone…' : 'Everyone is already on this project'}</option>
+                            {available.map((staffer) => <option key={staffer.id} value={staffer.id}>{staffer.name}</option>)}
+                        </select>
+                        <Button type="submit" variant="confirm" disabled={busy || !pickId}>Assign</Button>
+                    </div>
+                    <div className="form-hint form-hint--attached">They'll see this project in their account.</div>
+                </form>
+            )}
+
+            <form onSubmit={addName} className="drawer__section">
+                <div className="section-label section-label--tight">Add someone without a login</div>
+                <div className="inline-form">
+                    <input
+                        autoFocus={!canManageTeam}
+                        placeholder="Name"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        className="input input--xs inline-form__grow"
+                    />
+                    <Button type="submit" variant="confirm" disabled={busy || !name.trim()}>Add</Button>
+                </div>
+                <div className="form-hint form-hint--attached">Listed on the team and offered as a task assignee.</div>
+            </form>
+
+            {error && <div className="form-message form-message--error drawer__section">{error}</div>}
+        </Drawer>
+    );
+}
+
+// Everyone on the project as cards, like the client portal's Team tab:
+// assigned staff (photo, name, role, email), then names added for people
+// without a login. The + adds someone; a card's gear removes them.
+function TeamTab({ project, canManageTeam, canEdit, assignableStaff }) {
+    const [adding, setAdding] = useState(false);
+    const staff = project.active_users || [];
+    const names = project.team_names || [];
 
     async function unassign(user) {
         if (!confirm(`Remove ${user.name} from this project? They'll keep read-only access to their past work here.`)) return;
-        setBusy(true);
-        try {
-            await api.delete(`/api/projects/${project.id}/assignments/${user.id}`);
-            setAssigned((current) => current.filter((u) => u.id !== user.id));
-        } finally {
-            setBusy(false);
-        }
+        await api.delete(`/api/projects/${project.id}/assignments/${user.id}`);
+        reload();
     }
 
-    return (
-        <div className="page-section">
-            <h2 className="section-heading">Assigned staff</h2>
-            {canManageTeam && (
-                <form onSubmit={assign} className="inline-form page-section--tight">
-                    <select
-                        value={pickId}
-                        onChange={(e) => setPickId(e.target.value)}
-                        className="input inline-form__grow"
-                    >
-                        <option value="">Assign staff&hellip;</option>
-                        {available.map((staffer) => (
-                            <option key={staffer.id} value={staffer.id}>{staffer.name}</option>
-                        ))}
-                    </select>
-                    <Button type="submit" variant="confirm" disabled={busy || !pickId}>Assign</Button>
-                </form>
-            )}
-            {assigned.length === 0 ? (
-                <EmptyState text="No staff assigned to this project yet." />
-            ) : (
-                <div className="cluster">
-                    {assigned.map((user) => (
-                        <span key={user.id} className="person-chip">
-                            {user.name}
-                            {canManageTeam && (
-                                <button onClick={() => unassign(user)} className="icon-btn icon-btn--danger">
-                                    <X />
-                                </button>
-                            )}
-                        </span>
-                    ))}
-                </div>
-            )}
-        </div>
-    );
-}
-
-function TeamTab({ project, canManageTeam, assignableStaff }) {
-    const [names, setNames] = useState(project.team_names || []);
-    const [input, setInput] = useState('');
-    const [saving, setSaving] = useState(false);
-
-    async function persist(next) {
-        setSaving(true);
-        try {
-            await api.patch(`/api/projects/${project.id}`, { team_names: next });
-            setNames(next);
-        } finally {
-            setSaving(false);
-        }
+    async function removeName(name) {
+        if (!confirm(`Remove ${name} from this project's team?`)) return;
+        await api.patch(`/api/projects/${project.id}`, { team_names: names.filter((n) => n !== name) });
+        reload();
     }
 
-    function add(e) {
-        e.preventDefault();
-        if (!input.trim() || names.includes(input.trim())) return;
-        const next = [...names, input.trim()];
-        setInput('');
-        persist(next);
-    }
-
-    function remove(name) {
-        persist(names.filter((n) => n !== name));
-    }
+    const cards = [
+        ...staff.map((user) => ({
+            id: `user-${user.id}`,
+            name: user.name,
+            role: roleLabel(user.role),
+            email: user.email,
+            avatar_url: user.avatar_url,
+            remove: canManageTeam ? () => unassign(user) : null,
+        })),
+        ...names.map((name) => ({
+            id: `name-${name}`,
+            name,
+            role: 'No login',
+            remove: canEdit ? () => removeName(name) : null,
+        })),
+    ];
 
     return (
         <div>
-            <AssignedStaff project={project} canManageTeam={canManageTeam} assignableStaff={assignableStaff} />
+            <TabToolbar
+                summary={cards.length > 0 && (
+                    <div className="toolbar__summary">
+                        Staff<span className="count">{staff.length}</span>
+                        {names.length > 0 && <>{' · '}Without a login<span className="count">{names.length}</span></>}
+                    </div>
+                )}
+                addLabel="Add to team"
+                onAdd={canEdit ? () => setAdding(true) : null}
+            />
 
-            <h2 className="section-heading">Other names (not linked to a login)</h2>
-            <form onSubmit={add} className="inline-form page-section--tight">
-                <input
-                    placeholder="Add team member name"
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    className="input inline-form__grow"
-                />
-                <Button type="submit" variant="confirm" disabled={saving}>Add</Button>
-            </form>
-            {names.length === 0 ? (
-                <EmptyState text="No one assigned yet." />
-            ) : (
-                <div className="cluster">
-                    {names.map((name) => (
-                        <span key={name} className="person-chip">
-                            {name}
-                            <button onClick={() => remove(name)} className="icon-btn icon-btn--danger">
-                                <X />
-                            </button>
-                        </span>
-                    ))}
+            {cards.length === 0 ? (
+                <div className="card card--flush">
+                    <EmptyState text="No one on this project yet." />
                 </div>
+            ) : (
+                <ContactCards
+                    contacts={cards}
+                    menuFor={(card) => card.remove && (
+                        <ActionMenu
+                            label={`Settings for ${card.name}`}
+                            icon={<GearSix />}
+                            items={[{ label: 'Remove from project', onSelect: card.remove, danger: true }]}
+                        />
+                    )}
+                />
+            )}
+
+            {adding && (
+                <AddTeamMemberDrawer
+                    project={project}
+                    canManageTeam={canManageTeam}
+                    assignableStaff={assignableStaff}
+                    onClose={() => setAdding(false)}
+                />
             )}
         </div>
     );
 }
 
-export default function ProjectsShow({ project, canManageTeam, assignableStaff, services }) {
+export default function ProjectsShow({ project, canManageTeam, canEdit, assignableStaff, services, timeServices = [], proposedHours = 0 }) {
     const tabs = canManageTeam ? ALL_TABS : ALL_TABS.filter((t) => !MANAGER_ONLY_TABS.includes(t));
     const [tab, setTab] = useRememberedTab('project-page-tab', tabs);
+    const [settingsOpen, setSettingsOpen] = useState(false);
 
     return (
         <AppLayout>
@@ -1928,21 +2049,27 @@ export default function ProjectsShow({ project, canManageTeam, assignableStaff, 
             <PageHeader
                 back={{ href: '/projects', label: 'Projects' }}
                 title={project.name}
-                actions={<ProjectStatusBadge project={project} />}
-                subtitle={<Link href={`/clients/${project.company.id}`} className="link">{project.company.name}</Link>}
+                actions={canEdit && (
+                    <button onClick={() => setSettingsOpen(true)} title="Project settings" aria-label="Project settings" className="icon-btn icon-btn--secondary icon-btn--lg">
+                        <GearSix />
+                    </button>
+                )}
             />
+            <ProjectSummary project={project} proposedHours={proposedHours} />
 
             <TabBar tab={tab} setTab={setTab} tabs={tabs} />
 
-            {tab === 'Overview' && <OverviewTab project={project} />}
             {tab === 'Tasks' && <TasksTab project={project} />}
+            {tab === 'Schedule' && <ScheduleTab project={project} />}
             {tab === 'Notes' && <NotesTab project={project} />}
             {tab === 'Messages' && <MessagesTab project={project} />}
-            {tab === 'Time' && <TimeTab project={project} />}
+            {tab === 'Time' && <TimeTab project={project} timeServices={timeServices} />}
             {tab === 'Proposals' && <ProposalsTab project={project} services={services} />}
             {tab === 'Billing' && <BillingTab project={project} />}
             {tab === 'Expenses' && <ExpensesTab project={project} />}
-            {tab === 'Team' && <TeamTab project={project} canManageTeam={canManageTeam} assignableStaff={assignableStaff} />}
+            {tab === 'Team' && <TeamTab project={project} canManageTeam={canManageTeam} canEdit={canEdit} assignableStaff={assignableStaff} />}
+
+            {settingsOpen && <ProjectSettingsDrawer project={project} onClose={() => setSettingsOpen(false)} />}
         </AppLayout>
     );
 }

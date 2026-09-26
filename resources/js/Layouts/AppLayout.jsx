@@ -6,8 +6,9 @@ const NAV_ITEMS = [
     { href: '/', label: 'Overview', exact: true },
     { href: '/clients', label: 'Clients', managerOnly: true },
     { href: '/projects', label: 'Projects' },
-    { href: '/time-entries', label: 'Time' },
-    { href: '/timesheets', label: 'Timesheets' },
+    // Time and Timesheets (/time-entries, /timesheets) are hidden while time
+    // is logged only inside projects (each project's Time tab). The pages
+    // still exist; add them back here to show them again.
     { href: '/invoices', label: 'Invoices', managerOnly: true },
     { href: '/proposals', label: 'Proposals', managerOnly: true },
     { href: '/bookkeeping', label: 'Bookkeeping', managerOnly: true },

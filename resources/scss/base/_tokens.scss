@@ -99,6 +99,7 @@
     // display headings, and the totals figures.
     --letter-spacing-body: -0.018em;
     --letter-spacing-display: -0.05rem;
+    --letter-spacing-figures: -0.04em; // metric card numbers; em, so it scales with their size
 
     // -----------------------------------------------------------------
     // Spacing -- step names match the old Tailwind scale (1 = 0.25rem) so
@@ -196,6 +197,7 @@
     // so a row's controls all line up.
     --size-row-action: 1.75rem; // 28px
     --size-metric-card-min: 13.75rem; // 220px: narrowest a metric card gets before the grid wraps
+    --size-schedule-label: 12rem; // the gantt chart's item-name column
     --size-field-min: 11rem; // 176px: narrowest a .field-grid column gets before wrapping
     --size-contact-card-min: 16rem; // 256px: narrowest a contact card gets before the grid wraps
 

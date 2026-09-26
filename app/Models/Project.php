@@ -62,6 +62,24 @@ class Project extends Model
         return $this->hasMany(Task::class);
     }
 
+    // Hours sold on this project: the quantities of hourly-service line
+    // items across its accepted proposals. Fixed-price and custom lines
+    // aren't counted -- their quantities aren't hours.
+    public function proposedHours(): float
+    {
+        return (float) ProposalItem::query()
+            ->whereHas('proposal', fn ($q) => $q->where('project_id', $this->id)->where('status', 'accepted'))
+            ->whereHas('service', fn ($q) => $q->where('unit', 'hourly'))
+            ->sum('quantity');
+    }
+
+    // In the order the studio dragged them into (the list and the gantt
+    // chart both read top to bottom this way).
+    public function scheduleItems(): HasMany
+    {
+        return $this->hasMany(ScheduleItem::class)->orderBy('position')->orderBy('id');
+    }
+
     public function timeEntries(): HasMany
     {
         return $this->hasMany(TimeEntry::class);

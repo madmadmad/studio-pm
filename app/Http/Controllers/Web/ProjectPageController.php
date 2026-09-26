@@ -50,6 +50,7 @@ class ProjectPageController extends Controller
             'tasks.subtasks',
             'tasks.files',
             'notes.user',
+            'scheduleItems',
             'messages' => fn ($q) => $q->withTrashed()->with([
                 'senderUser', 'senderContact', 'attachments',
                 'participants.user', 'participants.contact',
@@ -57,7 +58,10 @@ class ProjectPageController extends Controller
                 'replies.senderUser', 'replies.senderContact', 'replies.attachments',
             ]),
             'timeEntries.task',
-            'activeUsers:id,name,email',
+            // Whose time each entry is (the Time tab's Team member column).
+            'timeEntries.user:id,name,avatar_path',
+            'timeEntries.service:id,name,billable',
+            'activeUsers:id,name,email,role,avatar_path',
         ]);
 
         // Firm financials on a project stay Manager-only, even for a Team
@@ -74,6 +78,11 @@ class ProjectPageController extends Controller
         return Inertia::render('Projects/Show', [
             'project' => $project,
             'canManageTeam' => $request->user()->isManager(),
+            // The header's settings gear (name, status, contact, PO...).
+            'canEdit' => $request->user()->can('update', $project),
+            // For the Hours remaining card: hours sold in accepted proposals.
+            // Sent to everyone (proposals themselves are manager-only).
+            'proposedHours' => $project->proposedHours(),
             // Every active staff account is assignable, regardless of role --
             // a manager can be put on a project's roster too (for messaging,
             // visibility, etc.), not just team members.
@@ -83,6 +92,9 @@ class ProjectPageController extends Controller
             // Line-item presets for the proposal drawer (Manager-only, like
             // the proposals themselves).
             'services' => $request->user()->isManager() ? Service::orderBy('name')->get() : [],
+            // For logging time: everyone picks a service; the rates above
+            // stay manager-only, so this is just name and billable.
+            'timeServices' => Service::orderBy('name')->get(['id', 'name', 'billable']),
         ]);
     }
 

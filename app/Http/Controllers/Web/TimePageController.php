@@ -21,7 +21,10 @@ class TimePageController extends Controller
         return Inertia::render('Time/Index', [
             'timeEntries' => $entries->orderByDesc('date')->get(),
             'companies' => Company::orderBy('name')->get(['id', 'name']),
-            'projects' => $this->visibleProjects($request)->get(['id', 'company_id', 'name']),
+            // With their tasks, for the drawers' Task pickers.
+            'projects' => $this->visibleProjects($request)
+                ->with('tasks:id,project_id,title')
+                ->get(['id', 'company_id', 'name']),
         ]);
     }
 

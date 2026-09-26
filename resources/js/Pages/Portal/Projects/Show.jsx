@@ -12,14 +12,16 @@ import RowActions from '../../../Components/RowActions';
 import { ProjectStatusBadge, TaskStatusBadge, InvoiceStatusBadge, ProposalStatusBadge } from '../../../Components/StatusBadges';
 import TabToolbar from '../../../Components/TabToolbar';
 import ContactCards from '../../../Components/client/ContactCards';
-import { formatCurrency, formatDate, formatDateTime, formatFileSize, invoiceTotal } from '../../../lib/format';
+import ScheduleChart from '../../../Components/schedule/ScheduleChart';
+import { formatLength, formatRange } from '../../../lib/scheduleDates';
+import { displayInvoiceStatus, formatCurrency, formatDate, formatDateTime, formatFileSize, invoiceTotal } from '../../../lib/format';
 import { api } from '../../../lib/api';
 import { isBlankRichText, toRichText } from '../../../lib/richText';
 import PageHeader from '../../../Components/PageHeader';
 import TabBar from '../../../Components/TabBar';
 import { useRememberedTab } from '../../../lib/useRememberedTab';
 
-const TABS = ['Overview', 'Tasks', 'Messages', 'Proposals', 'Invoices', 'Team'];
+const TABS = ['Schedule', 'Tasks', 'Messages', 'Proposals', 'Invoices', 'Team'];
 
 const TASK_STATUS_OPTIONS = [
     { value: 'todo', label: 'To do' },
@@ -29,18 +31,6 @@ const TASK_STATUS_OPTIONS = [
 
 function reload() {
     router.reload({ only: ['project'] });
-}
-
-function OverviewTab({ project }) {
-    return (
-        <div className="card card--padded">
-            <div className="portal-project__label">Status</div>
-            <ProjectStatusBadge project={project} />
-            {project.description && (
-                <p className="portal-project__description">{project.description}</p>
-            )}
-        </div>
-    );
 }
 
 function TaskRow({ task, onOpen }) {
@@ -119,7 +109,7 @@ function TaskDrawer({ task, isNew, onClose }) {
                 </div>
                 <div>
                     <div className="section-label section-label--tight">Assignee</div>
-                    <div className="portal-project__value">{task.assignee || 'Unassigned'}</div>
+                    <div className="drawer__text">{task.assignee || 'Unassigned'}</div>
                 </div>
                 <div className="form-grid__full">
                     <div className="section-label section-label--tight">Due date</div>
@@ -365,6 +355,86 @@ function MessagesTab({ project }) {
     );
 }
 
+// The project's schedule, read-only: the same gantt chart and list as the
+// staff Schedule tab, in the studio's order. A bar or row opens the item's
+// dates and description in the drawer.
+function ScheduleTab({ project }) {
+    const items = project.schedule_items || [];
+    const [openId, setOpenId] = useState(null);
+    const open = items.find((i) => i.id === openId) || null;
+
+    if (items.length === 0) {
+        return (
+            <div className="card card--flush">
+                <EmptyState text="The schedule for this project hasn't been set yet." />
+            </div>
+        );
+    }
+
+    const first = items.reduce((min, i) => (!min || i.starts_on < min ? i.starts_on : min), '');
+    const last = items.reduce((max, i) => (i.ends_on > max ? i.ends_on : max), '');
+
+    return (
+        <div>
+            <TabToolbar
+                summary={
+                    <div className="toolbar__summary">
+                        <span className="toolbar__figure">{formatRange(first, last)}</span>
+                        {' · '}
+                        {formatLength(first, last)}
+                    </div>
+                }
+            />
+            <div className="card card--flush page-section">
+                <ScheduleChart items={items} onOpen={(item) => setOpenId(item.id)} />
+            </div>
+            <div className="card card--flush">
+                <div className="grid-row grid-row--action grid-row--head">
+                    <div className="project-schedule__title">Item</div>
+                    <div className="project-schedule__dates">Dates</div>
+                    <div className="project-schedule__length">Length</div>
+                    <div />
+                </div>
+                {items.map((item) => (
+                    <div key={item.id} onClick={() => setOpenId(item.id)} className="grid-row grid-row--action grid-row--link">
+                        <div className="project-schedule__title">
+                            <div className="project-schedule__text">
+                                <span className="u-truncate">{item.title}</span>
+                                {item.description && <span className="project-schedule__description u-truncate">{item.description}</span>}
+                            </div>
+                        </div>
+                        <div className="project-schedule__dates">{formatRange(item.starts_on, item.ends_on)}</div>
+                        <div className="project-schedule__length">{formatLength(item.starts_on, item.ends_on)}</div>
+                        <RowActions openLabel="Open schedule item" />
+                    </div>
+                ))}
+            </div>
+
+            {open && (
+                <Drawer onClose={() => setOpenId(null)}>
+                    <h2 className="drawer__title">{open.title}</h2>
+                    <div className="form-grid drawer__section drawer__section--divided">
+                        <div>
+                            <div className="section-label section-label--tight">Dates</div>
+                            <div className="drawer__text">{formatRange(open.starts_on, open.ends_on)}</div>
+                        </div>
+                        <div>
+                            <div className="section-label section-label--tight">Length</div>
+                            <div className="drawer__text">{formatLength(open.starts_on, open.ends_on)}</div>
+                        </div>
+                    </div>
+                    <div className="drawer__section">
+                        <div className="section-label">Description</div>
+                        {open.description
+                            ? <p className="portal-project__description">{open.description}</p>
+                            : <p className="drawer__empty">No description.</p>}
+                    </div>
+                </Drawer>
+            )}
+        </div>
+    );
+}
+
 function ProposalsTab({ project }) {
     return (
         <div className="card card--flush">
@@ -410,7 +480,8 @@ function InvoicesTab({ project }) {
                         </div>
                         <div className="list-row__aside">
                             <span className="list-row__amount">{formatCurrency(invoiceTotal(invoice.items, invoice.surcharge))}</span>
-                            <InvoiceStatusBadge invoice={invoice} />
+                            {/* Every invoice here is sent, so only Paid / Overdue need saying. */}
+                            {displayInvoiceStatus(invoice) !== 'sent' && <InvoiceStatusBadge invoice={invoice} />}
                             <a
                                 href={`/i/${invoice.public_token}`}
                                 target="_blank"
@@ -460,10 +531,11 @@ export default function PortalProjectShow({ project, canViewInvoices }) {
                 actions={<ProjectStatusBadge project={project} />}
                 subtitle={project.company.name}
             />
+            {project.description && <p className="project-overview__description page-section page-section--loose">{project.description}</p>}
 
             <TabBar tabs={tabs} tab={tab} setTab={setTab} />
 
-            {tab === 'Overview' && <OverviewTab project={project} />}
+            {tab === 'Schedule' && <ScheduleTab project={project} />}
             {tab === 'Tasks' && <TasksTab project={project} />}
             {tab === 'Messages' && <MessagesTab project={project} />}
             {tab === 'Proposals' && <ProposalsTab project={project} />}

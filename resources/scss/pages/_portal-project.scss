@@ -1,14 +1,7 @@
-// Portal/Projects/Show: the Overview tab's status and description, and
-// the read-only bits of the task drawer.
+// Portal/Projects/Show: muted text, and a schedule item's description in
+// its drawer.
 
 .portal-project {
-    &__label {
-        margin-bottom: var(--space-1);
-        font-size: var(--font-size-sm);
-        line-height: var(--line-height-sm);
-        color: var(--color-shadow-grey);
-    }
-
     &__description {
         margin-top: var(--space-4);
         font-size: var(--font-size-sm);
@@ -18,11 +11,5 @@
 
     &__muted {
         color: var(--color-shadow-grey);
-    }
-
-    // A field the client can see but not change (a task's assignee).
-    &__value {
-        font-size: var(--font-size-sm);
-        line-height: var(--line-height-sm);
     }
 }

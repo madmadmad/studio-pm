@@ -17,7 +17,7 @@ export default function PortalProposalsIndex({ proposals }) {
                     <EmptyState text="No proposals yet." />
                 </div>
             ) : (
-                <ClientProposalsTable proposals={proposals} hrefFor={(proposal) => `/p/${proposal.accept_token}`} />
+                <ClientProposalsTable proposals={proposals} hrefFor={(proposal) => `/p/${proposal.accept_token}`} hideSent newTab />
             )}
         </PortalLayout>
     );

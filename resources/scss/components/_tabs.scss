@@ -29,22 +29,8 @@
         }
     }
 
-    // The number beside a tab's label, in a small light fern circle
-    // (the fern badge's colors). Grows into a pill past two digits.
+    // The .count beside a tab's label.
     &__count {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        min-width: var(--space-4);
-        height: var(--space-4);
         margin-left: var(--space-1-5);
-        padding-inline: var(--space-0-5);
-        font-size: var(--font-size-2xs);
-        line-height: 1;
-        font-weight: var(--font-weight-semibold);
-        font-variant-numeric: tabular-nums;
-        color: var(--color-fern);
-        background-color: var(--color-fern-soft);
-        border-radius: var(--radius-pill);
     }
 }

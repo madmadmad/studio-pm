@@ -45,4 +45,32 @@
         line-height: var(--line-height-xs);
         color: var(--color-shadow-grey);
     }
+
+    // "Bill [46.44] % of the budget  Bill the rest", then the running
+    // tally, under the proposal picker.
+    &__percent {
+        margin-top: var(--space-3);
+    }
+
+    &__percent-field {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: var(--space-2);
+        margin-bottom: var(--space-1);
+
+        .label {
+            margin-bottom: 0;
+        }
+    }
+
+    &__percent-input {
+        width: 6rem; // one-off: fits "100.00"
+    }
+
+    &__percent-unit {
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+        color: var(--color-shadow-grey);
+    }
 }

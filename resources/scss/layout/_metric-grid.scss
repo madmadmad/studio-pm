@@ -14,4 +14,18 @@
     &--loose {
         margin-bottom: var(--space-section-lg);
     }
+
+    // Directly above another .metric-grid that belongs with it (a separate
+    // row of related cards): the grid's own gap, so the two read as one.
+    &--stacked {
+        margin-bottom: var(--space-4);
+    }
+
+    // Cards that belong side by side (a project's budget figures): one row
+    // at any width, never wrapping; the cards narrow instead.
+    &--one-row {
+        grid-template-columns: none;
+        grid-auto-columns: minmax(0, 1fr);
+        grid-auto-flow: column;
+    }
 }

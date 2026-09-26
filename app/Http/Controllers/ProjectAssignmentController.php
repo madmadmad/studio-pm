@@ -26,7 +26,7 @@ class ProjectAssignmentController extends Controller
             $data['user_id'] => ['assigned_at' => now(), 'unassigned_at' => null],
         ]);
 
-        return $project->activeUsers()->get(['users.id', 'users.name', 'users.email']);
+        return $project->activeUsers()->get(['users.id', 'users.name', 'users.email', 'users.role', 'users.avatar_path']);
     }
 
     public function destroy(Request $request, Project $project, User $user)

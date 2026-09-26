@@ -148,6 +148,13 @@
         color: var(--color-fern);
     }
 
+    // A value shown but not editable in a drawer's field layout (a time
+    // entry's client, a task's assignee in the Client Hub).
+    &__text {
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+    }
+
     // Placeholder for a read-only rich text field with nothing in it yet
     // (a note body, a task description).
     &__empty {

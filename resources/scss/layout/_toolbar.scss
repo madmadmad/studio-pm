@@ -18,6 +18,11 @@
         color: var(--color-shadow-grey);
     }
 
+    // A .count in a summary sits a little off the label before it.
+    .count {
+        margin-left: var(--space-1);
+    }
+
     &__figure {
         font-weight: var(--font-weight-medium);
         color: var(--color-gunmetal);

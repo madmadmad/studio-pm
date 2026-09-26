@@ -18,6 +18,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProjectAssignmentController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProposalController;
+use App\Http\Controllers\ScheduleItemController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\StudioProfileController;
 use App\Http\Controllers\SubtaskController;
@@ -37,6 +38,8 @@ Route::middleware('auth:sanctum')->name('api.')->group(function () {
     Route::apiResource('tasks.subtasks', SubtaskController::class)->shallow()->only(['store', 'update', 'destroy']);
     Route::apiResource('tasks.files', TaskFileController::class)->shallow()->only(['store', 'destroy']);
     Route::apiResource('projects.notes', NoteController::class)->shallow()->only(['index', 'store', 'update', 'destroy']);
+    Route::put('projects/{project}/schedule-items/order', [ScheduleItemController::class, 'reorder']);
+    Route::apiResource('projects.schedule-items', ScheduleItemController::class)->shallow()->only(['index', 'store', 'update', 'destroy']);
     Route::apiResource('projects.messages', MessageController::class)->shallow()->only(['index', 'store']);
     Route::patch('messages/{message}', [MessageController::class, 'update']);
     Route::delete('messages/{message}', [MessageController::class, 'destroy']);

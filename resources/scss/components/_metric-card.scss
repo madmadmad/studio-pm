@@ -2,8 +2,28 @@
 // porcelain rather than the card's white. Used by Components/MetricCard.jsx.
 // (Loaded after .card, so this background wins at equal specificity.)
 
+@use '../abstracts' as *;
+
 .metric-card {
     background-color: var(--color-porcelain);
+
+    // Filled with a brand color, text reversed to white.
+    &--fern,
+    &--watermelon {
+        color: var(--color-white);
+
+        .metric-card__label {
+            color: color-mix(in srgb, var(--color-white) 85%, transparent);
+        }
+    }
+
+    &--fern {
+        background-color: var(--color-fern);
+    }
+
+    &--watermelon {
+        background-color: var(--color-watermelon);
+    }
 
     &__label {
         margin-bottom: var(--space-1);
@@ -12,11 +32,19 @@
         color: var(--color-shadow-grey);
     }
 
+    // Smaller on phones, where cards can be a third of the screen wide
+    // (a project's budget row); full size from the sm breakpoint up.
     &__value {
-        font-size: var(--font-size-2xl);
-        line-height: var(--line-height-2xl);
+        font-size: var(--font-size-lg);
+        line-height: var(--line-height-lg);
         font-weight: var(--font-weight-medium);
         font-variant-numeric: tabular-nums;
+        letter-spacing: var(--letter-spacing-figures);
+
+        @include respond-to('sm') {
+            font-size: var(--font-size-2xl);
+            line-height: var(--line-height-2xl);
+        }
 
         // Over budget.
         &--negative {

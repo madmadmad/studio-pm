@@ -1,4 +1,6 @@
-// Projects/Show Time tab: the time entry rows (a .grid-row list).
+// Time entry rows (a .grid-row list), both Date | (who) | Hours | Task /
+// Note | Status: a project's Time tab shows the team member, the Time page
+// the client and project.
 @use '../abstracts' as *;
 
 .time-list {
@@ -16,13 +18,6 @@
         font-variant-numeric: tabular-nums;
     }
 
-    &__detail {
-        display: flex;
-        grid-column: span 6;
-        align-items: center;
-        gap: var(--space-2);
-    }
-
     &__text {
         @include truncate;
         color: var(--color-shadow-grey);
@@ -30,5 +25,41 @@
 
     &__status {
         text-align: right;
+    }
+
+    &__date {
+        white-space: nowrap;
+    }
+
+    // The team member the time belongs to (a project's Time tab).
+    &__who {
+        display: flex;
+        grid-column: span 3;
+        align-items: center;
+        gap: var(--space-2);
+        min-width: 0;
+    }
+
+    &__client {
+        display: flex;
+        grid-column: span 3;
+        flex-direction: column;
+        min-width: 0;
+    }
+
+    &__project {
+        font-size: var(--font-size-xs);
+        line-height: var(--line-height-xs);
+        color: var(--color-shadow-grey);
+    }
+
+    &__hours--narrow {
+        grid-column: span 1;
+    }
+
+    &__note {
+        display: flex;
+        grid-column: span 4;
+        min-width: 0;
     }
 }
