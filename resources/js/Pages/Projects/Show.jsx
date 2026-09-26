@@ -21,6 +21,8 @@ import ProposalEditor, { ProposalActions } from '../../Components/ProposalEditor
 import InvoiceDetail, { InvoiceDueLine } from '../../Components/InvoiceDetail';
 import NewInvoiceDrawer from '../../Components/NewInvoiceDrawer';
 import TabBar from '../../Components/TabBar';
+import TabToolbar from '../../Components/TabToolbar';
+import { useRememberedTab } from '../../lib/useRememberedTab';
 import AutoResizeTextarea from '../../Components/AutoResizeTextarea';
 
 const ALL_TABS = ['Overview', 'Tasks', 'Notes', 'Messages', 'Time', 'Proposals', 'Billing', 'Expenses', 'Team'];
@@ -193,21 +195,6 @@ function OverviewTab({ project }) {
                     </div>
                 </div>
             )}
-        </div>
-    );
-}
-
-// The bar above each tab's list: an optional summary on the left (budget,
-// totals) and the tab's one add action, a large plus, on the right. Every
-// list tab follows the same pattern: this toolbar, a .grid-row list whose
-// rows open the item in a drawer, and create/view/edit in that drawer.
-function TabToolbar({ summary, addLabel, onAdd, disabled }) {
-    return (
-        <div className={`toolbar${summary ? ' toolbar--split' : ''} page-section--tight`}>
-            {summary}
-            <button onClick={onAdd} disabled={disabled} title={addLabel} className="icon-btn icon-btn--secondary icon-btn--lg">
-                <Plus />
-            </button>
         </div>
     );
 }
@@ -1478,10 +1465,10 @@ function BillingTab({ project }) {
         <div>
             <TabToolbar
                 summary={budget > 0 && (
-                    <div className="project-billing__budget">
-                        Budget <span className="project-billing__figure">{formatCurrency(budget)}</span>
+                    <div className="toolbar__summary">
+                        Budget <span className="toolbar__figure">{formatCurrency(budget)}</span>
                         {' · '}
-                        Remaining <span className={`project-billing__figure${remaining < 0 ? ' project-billing__figure--negative' : ''}`}>{formatCurrency(remaining)}</span>
+                        Remaining <span className={`toolbar__figure${remaining < 0 ? ' toolbar__figure--negative' : ''}`}>{formatCurrency(remaining)}</span>
                     </div>
                 )}
                 addLabel="New invoice"
@@ -1947,7 +1934,7 @@ function TeamTab({ project, canManageTeam, assignableStaff }) {
 
 export default function ProjectsShow({ project, canManageTeam, assignableStaff, services }) {
     const tabs = canManageTeam ? ALL_TABS : ALL_TABS.filter((t) => !MANAGER_ONLY_TABS.includes(t));
-    const [tab, setTab] = useState('Overview');
+    const [tab, setTab] = useRememberedTab('project-page-tab', tabs);
 
     return (
         <AppLayout>

@@ -9,6 +9,7 @@ import { formatCurrency, formatDate, invoiceTotal } from '../../../lib/format';
 import { api } from '../../../lib/api';
 import PageHeader from '../../../Components/PageHeader';
 import TabBar from '../../../Components/TabBar';
+import { useRememberedTab } from '../../../lib/useRememberedTab';
 
 const TABS = ['Overview', 'Tasks', 'Messages', 'Proposals', 'Invoices', 'Team'];
 
@@ -207,7 +208,7 @@ function TeamTab({ project }) {
 }
 
 export default function PortalProjectShow({ project }) {
-    const [tab, setTab] = useState('Overview');
+    const [tab, setTab] = useRememberedTab('portal-project-page-tab', TABS);
 
     return (
         <PortalLayout>

@@ -6,11 +6,15 @@ import EmptyState from '../../Components/EmptyState';
 import Badge from '../../Components/Badge';
 import { InvoiceStatusBadge, ProposalStatusBadge, CompanyStatusBadge } from '../../Components/StatusBadges';
 import ProjectsTable from '../../Components/ProjectsTable';
-import { formatCurrency, formatDate, invoiceTotal } from '../../lib/format';
+import { formatCurrency, formatDate, invoiceTotal, isOverdue } from '../../lib/format';
 import { CLIENT_PAYMENT_TERMS, paymentTermsLabel } from '../../lib/paymentTerms';
 import { api } from '../../lib/api';
 import { visitRow } from '../../lib/rowLink';
+import { useRememberedTab } from '../../lib/useRememberedTab';
 import PageHeader from '../../Components/PageHeader';
+import MetricCard from '../../Components/MetricCard';
+import TabBar from '../../Components/TabBar';
+import TabToolbar from '../../Components/TabToolbar';
 import Avatar from '../../Components/Avatar';
 import ActionMenu from '../../Components/ActionMenu';
 import Drawer from '../../Components/Drawer';
@@ -18,28 +22,44 @@ import NewInvoiceDrawer from '../../Components/NewInvoiceDrawer';
 import ProposalEditor from '../../Components/ProposalEditor';
 import Toggle from '../../Components/Toggle';
 import AutoResizeTextarea from '../../Components/AutoResizeTextarea';
-import { GearSix, Plus } from '@phosphor-icons/react';
+import { GearSix } from '@phosphor-icons/react';
 import BackLink from '../../Components/BackLink';
 
 function reload() {
     router.reload({ only: ['company'] });
 }
 
-// A section's heading row: its title, plus -- when the section can add
-// something -- the large + icon the project page's tabs use.
-function SectionHeader({ title, addLabel, onAdd }) {
+// What's still owed across a client's sent invoices: each one's total
+// less what's been paid on it. Drafts aren't owed yet; paid ones are done.
+function outstandingBalance(invoices) {
+    return invoices
+        .filter((inv) => inv.status === 'sent')
+        .reduce((sum, inv) => {
+            const paid = inv.payments.reduce((p, payment) => p + (parseFloat(payment.amount) || 0), 0);
+            return sum + invoiceTotal(inv.items, inv.surcharge) - paid;
+        }, 0);
+}
+
+// The at-a-glance row under the header, in the project Overview's
+// metric cards.
+function ClientMetrics({ company }) {
+    const year = String(new Date().getFullYear());
+    const invoicedThisYear = company.invoices
+        .filter((inv) => inv.status !== 'draft' && String(inv.issued_on).startsWith(year))
+        .reduce((sum, inv) => sum + invoiceTotal(inv.items, inv.surcharge), 0);
+    const outstanding = outstandingBalance(company.invoices);
+
     return (
-        <div className="card__header">
-            <h2 className="card__title">{title}</h2>
-            {onAdd && (
-                <button onClick={onAdd} title={addLabel} aria-label={addLabel} className="icon-btn icon-btn--secondary icon-btn--lg">
-                    <Plus />
-                </button>
-            )}
+        <div className="metric-grid metric-grid--loose">
+            <MetricCard label="Outstanding" value={formatCurrency(outstanding)} negative={company.invoices.some(isOverdue)} />
+            <MetricCard label={`Invoiced in ${year}`} value={formatCurrency(invoicedThisYear)} />
+            <MetricCard label="Active projects" value={company.projects.filter((p) => p.status === 'active').length} />
+            <MetricCard label="Open proposals" value={company.proposals.filter((p) => p.status === 'sent').length} />
         </div>
     );
 }
 
+const TABS = ['Contacts', 'Projects', 'Invoices', 'Proposals'];
 function DetailsCard({ company, firmDefaultTerms }) {
     const [editing, setEditing] = useState(false);
     const [saving, setSaving] = useState(false);
@@ -90,7 +110,7 @@ function DetailsCard({ company, firmDefaultTerms }) {
                         </>
                     }
                 />
-                <div className="field-grid page-section">
+                <div className="field-grid page-section page-section--loose">
                     <div>
                         <div className="section-label section-label--ruled">Address</div>
                         {company.address_line1 || cityStateZip ? (
@@ -333,8 +353,18 @@ function ContactsCard({ company }) {
     }
 
     return (
-        <div className="page-section">
-            <SectionHeader title="Contacts" addLabel="Add contact" onAdd={() => setEditing('new')} />
+        <div>
+            <TabToolbar
+                summary={contacts.length > 0 && (
+                    <div className="toolbar__summary">
+                        Primary <span className="toolbar__figure">{contacts.find((c) => c.is_primary)?.name ?? 'None'}</span>
+                        {' · '}
+                        Billing <span className="toolbar__figure">{contacts.filter((c) => c.is_billing).length}</span>
+                    </div>
+                )}
+                addLabel="Add contact"
+                onAdd={() => setEditing('new')}
+            />
 
             {contacts.length === 0 ? (
                 <EmptyState text="No contacts yet." />
@@ -462,13 +492,25 @@ function ProjectsCard({ company }) {
     const [creating, setCreating] = useState(false);
 
     return (
-        <div className="page-section">
-            <SectionHeader title="Projects" addLabel="New project" onAdd={() => setCreating(true)} />
+        <div>
+            <TabToolbar
+                summary={company.projects.length > 0 && (
+                    <div className="toolbar__summary">
+                        Active <span className="toolbar__figure">{company.projects.filter((p) => p.status === 'active').length}</span>
+                        {' of '}
+                        <span className="toolbar__figure">{company.projects.length}</span>
+                    </div>
+                )}
+                addLabel="New project"
+                onAdd={() => setCreating(true)}
+            />
 
             {company.projects.length === 0 ? (
                 <EmptyState text="No projects yet." />
             ) : (
-                <ProjectsTable projects={company.projects} showClient={false} onChange={reload} />
+                <div className="card card--flush">
+                    <ProjectsTable projects={company.projects} showClient={false} onChange={reload} />
+                </div>
             )}
 
             {creating && <NewProjectDrawer company={company} onClose={() => setCreating(false)} />}
@@ -478,39 +520,52 @@ function ProjectsCard({ company }) {
 
 function InvoicesCard({ company }) {
     const [creating, setCreating] = useState(false);
+    const outstanding = outstandingBalance(company.invoices);
+    const hasOverdue = company.invoices.some(isOverdue);
 
     return (
-        <div className="page-section">
-            <SectionHeader title="Invoices" addLabel="New invoice" onAdd={() => setCreating(true)} />
+        <div>
+            <TabToolbar
+                summary={company.invoices.length > 0 && (
+                    <div className="toolbar__summary">
+                        Outstanding <span className={`toolbar__figure${hasOverdue ? ' toolbar__figure--negative' : ''}`}>{formatCurrency(outstanding)}</span>
+                        {hasOverdue && ' (overdue)'}
+                    </div>
+                )}
+                addLabel="New invoice"
+                onAdd={() => setCreating(true)}
+            />
             {company.invoices.length === 0 ? (
                 <EmptyState text="No invoices yet." />
             ) : (
-                <table className="table">
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Project</th>
-                            <th>Issued</th>
-                            <th>Due</th>
-                            <th>Total</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {company.invoices.map((invoice) => (
-                            <tr key={invoice.id} onClick={(e) => visitRow(e, `/invoices/${invoice.id}`)} className="table__row--link">
-                                <td className="table__cell--numeric table__cell--strong">
-                                    <Link href={`/invoices/${invoice.id}`} className="link">{invoice.invoice_number}</Link>
-                                </td>
-                                <td className="table__cell--muted">{invoice.project?.name ?? '—'}</td>
-                                <td className="table__cell--muted">{formatDate(invoice.issued_on)}</td>
-                                <td className="table__cell--muted">{formatDate(invoice.due_on)}</td>
-                                <td className="table__cell--numeric">{formatCurrency(invoiceTotal(invoice.items, invoice.surcharge))}</td>
-                                <td><InvoiceStatusBadge invoice={invoice} /></td>
+                <div className="card card--flush">
+                    <table className="table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Project</th>
+                                <th>Issued</th>
+                                <th>Due</th>
+                                <th>Total</th>
+                                <th>Status</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            {company.invoices.map((invoice) => (
+                                <tr key={invoice.id} onClick={(e) => visitRow(e, `/invoices/${invoice.id}`)} className="table__row--link">
+                                    <td className="table__cell--numeric table__cell--strong">
+                                        <Link href={`/invoices/${invoice.id}`} className="link">{invoice.invoice_number}</Link>
+                                    </td>
+                                    <td className="table__cell--muted">{invoice.project?.name ?? '—'}</td>
+                                    <td className="table__cell--muted">{formatDate(invoice.issued_on)}</td>
+                                    <td className="table__cell--muted">{formatDate(invoice.due_on)}</td>
+                                    <td className="table__cell--numeric">{formatCurrency(invoiceTotal(invoice.items, invoice.surcharge))}</td>
+                                    <td><InvoiceStatusBadge invoice={invoice} /></td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             )}
 
             {creating && (
@@ -559,35 +614,47 @@ function ProposalsCard({ company, services }) {
     const [creating, setCreating] = useState(false);
 
     return (
-        <div className="page-section">
-            <SectionHeader title="Proposals" addLabel="New proposal" onAdd={() => setCreating(true)} />
+        <div>
+            <TabToolbar
+                summary={company.proposals.length > 0 && (
+                    <div className="toolbar__summary">
+                        Open <span className="toolbar__figure">{company.proposals.filter((p) => p.status === 'sent').length}</span>
+                        {' · '}
+                        Accepted <span className="toolbar__figure">{company.proposals.filter((p) => p.status === 'accepted').length}</span>
+                    </div>
+                )}
+                addLabel="New proposal"
+                onAdd={() => setCreating(true)}
+            />
             {company.proposals.length === 0 ? (
                 <EmptyState text="No proposals yet." />
             ) : (
-                <table className="table">
-                    <thead>
-                        <tr>
-                            <th>Title</th>
-                            <th>Project</th>
-                            <th>Estimate</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {company.proposals.map((proposal) => (
-                            <tr key={proposal.id} onClick={(e) => visitRow(e, `/proposals/${proposal.id}/edit`)} className="table__row--link">
-                                <td className="table__cell--strong">
-                                    <Link href={`/proposals/${proposal.id}/edit`} className="link">{proposal.title}</Link>
-                                </td>
-                                <td className="table__cell--muted">{proposal.project?.name ?? '—'}</td>
-                                <td className="table__cell--numeric">
-                                    {proposal.estimate_amount ? formatCurrency(proposal.estimate_amount) : '—'}
-                                </td>
-                                <td><ProposalStatusBadge proposal={proposal} /></td>
+                <div className="card card--flush">
+                    <table className="table">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Project</th>
+                                <th>Estimate</th>
+                                <th>Status</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            {company.proposals.map((proposal) => (
+                                <tr key={proposal.id} onClick={(e) => visitRow(e, `/proposals/${proposal.id}/edit`)} className="table__row--link">
+                                    <td className="table__cell--strong">
+                                        <Link href={`/proposals/${proposal.id}/edit`} className="link">{proposal.title}</Link>
+                                    </td>
+                                    <td className="table__cell--muted">{proposal.project?.name ?? '—'}</td>
+                                    <td className="table__cell--numeric">
+                                        {proposal.estimate_amount ? formatCurrency(proposal.estimate_amount) : '—'}
+                                    </td>
+                                    <td><ProposalStatusBadge proposal={proposal} /></td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             )}
 
             {creating && <NewProposalDrawer company={company} services={services} onClose={() => setCreating(false)} />}
@@ -596,16 +663,31 @@ function ProposalsCard({ company, services }) {
 }
 
 export default function ClientsShow({ company, firmPaymentTerms, services }) {
+    const [tab, setTab] = useRememberedTab('client-page-tab', TABS);
+
     return (
         <AppLayout>
             <Head title={company.name} />
             <BackLink href="/clients" label="Clients" />
             <DetailsCard company={company} firmDefaultTerms={firmPaymentTerms} />
+            <ClientMetrics company={company} />
 
-            <ContactsCard company={company} />
-            <ProjectsCard company={company} />
-            <InvoicesCard company={company} />
-            <ProposalsCard company={company} services={services} />
+            <TabBar
+                tabs={TABS}
+                tab={tab}
+                setTab={setTab}
+                counts={{
+                    Contacts: company.contacts.length,
+                    Projects: company.projects.length,
+                    Invoices: company.invoices.length,
+                    Proposals: company.proposals.length,
+                }}
+            />
+
+            {tab === 'Contacts' && <ContactsCard company={company} />}
+            {tab === 'Projects' && <ProjectsCard company={company} />}
+            {tab === 'Invoices' && <InvoicesCard company={company} />}
+            {tab === 'Proposals' && <ProposalsCard company={company} services={services} />}
         </AppLayout>
     );
 }

@@ -9,4 +9,23 @@
     &--split {
         justify-content: space-between;
     }
+
+    // The summary on the left of a --split toolbar ("Budget $12,000 ·
+    // Remaining $3,400"): muted text with the figures picked out.
+    &__summary {
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+        color: var(--color-shadow-grey);
+    }
+
+    &__figure {
+        font-weight: var(--font-weight-medium);
+        color: var(--color-gunmetal);
+        font-variant-numeric: tabular-nums;
+
+        // Gone the wrong way (over budget, overdue).
+        &--negative {
+            color: var(--color-watermelon);
+        }
+    }
 }

@@ -3,7 +3,9 @@
 
 .tabs {
     display: flex;
-    gap: var(--space-1);
+    // Tabs have no side padding (so the first lines up with the page's
+    // left edge and each underline spans just its label); the gap spaces them.
+    gap: var(--space-6);
     margin-bottom: var(--space-section);
     overflow-x: auto;
     border-bottom: var(--border-width) solid var(--color-border);
@@ -11,8 +13,10 @@
     &__tab {
         // Overlap the strip's own bottom border so the active underline
         // replaces it rather than sitting above it.
+        display: inline-flex;
+        align-items: center;
         margin-bottom: calc(var(--border-width) * -1);
-        padding: var(--space-2) var(--space-3);
+        padding: var(--space-2) 0;
         font-size: var(--font-size-sm);
         line-height: var(--line-height-sm);
         color: var(--color-shadow-grey);
@@ -23,5 +27,24 @@
             color: var(--color-gunmetal);
             border-bottom-color: var(--color-gunmetal);
         }
+    }
+
+    // The number beside a tab's label, in a small light fern circle
+    // (the fern badge's colors). Grows into a pill past two digits.
+    &__count {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: var(--space-4);
+        height: var(--space-4);
+        margin-left: var(--space-1-5);
+        padding-inline: var(--space-0-5);
+        font-size: var(--font-size-2xs);
+        line-height: 1;
+        font-weight: var(--font-weight-semibold);
+        font-variant-numeric: tabular-nums;
+        color: var(--color-fern);
+        background-color: var(--color-fern-soft);
+        border-radius: var(--radius-pill);
     }
 }

@@ -1,4 +1,6 @@
-export default function TabBar({ tabs, tab, setTab }) {
+// `counts` (optional) maps a tab to a number shown beside its label
+// ("Invoices 4").
+export default function TabBar({ tabs, tab, setTab, counts = {} }) {
     return (
         <div className="tabs">
             {tabs.map((t) => (
@@ -8,6 +10,7 @@ export default function TabBar({ tabs, tab, setTab }) {
                     className={`tabs__tab${tab === t ? ' tabs__tab--active' : ''}`}
                 >
                     {t}
+                    {counts[t] != null && <span className="tabs__count">{counts[t]}</span>}
                 </button>
             ))}
         </div>

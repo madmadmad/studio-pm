@@ -4,6 +4,12 @@
 .page-section {
     margin-bottom: var(--space-section);
 
+    // More room below: between a page's major blocks (a client's header
+    // details, then its metrics, then its tabs).
+    &--loose {
+        margin-bottom: var(--space-section-lg);
+    }
+
     // Less room below: a toolbar or add-form directly above its list.
     &--tight {
         margin-bottom: var(--space-4);

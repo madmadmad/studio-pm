@@ -31,6 +31,8 @@ class ClientPageController extends Controller
             'invoices' => fn ($query) => $query->orderByDesc('issued_on')->orderByDesc('invoice_number'),
             'invoices.items',
             'invoices.project',
+            // For the Outstanding figure.
+            'invoices.payments',
             'proposals' => fn ($query) => $query->latest(),
             'proposals.project',
         ]);

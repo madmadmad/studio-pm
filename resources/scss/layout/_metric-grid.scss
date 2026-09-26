@@ -9,4 +9,9 @@
     grid-template-columns: repeat(auto-fit, minmax(min(var(--size-metric-card-min), 100%), 1fr));
     gap: var(--space-4);
     margin-bottom: var(--space-section);
+
+    // Same as .page-section--loose.
+    &--loose {
+        margin-bottom: var(--space-section-lg);
+    }
 }
