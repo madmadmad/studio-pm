@@ -99,14 +99,6 @@
         }
     }
 
-    // Subheads in the details block sit on a grey rule that separates
-    // them from the values below (overrides .section-label's spacing).
-    &__details-label {
-        margin-bottom: var(--space-2);
-        padding-bottom: var(--space-1);
-        border-bottom: var(--border-width) solid var(--color-border);
-    }
-
     &__details-value {
         font-weight: var(--font-weight-medium);
     }

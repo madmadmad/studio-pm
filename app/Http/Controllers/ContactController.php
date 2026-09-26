@@ -27,7 +27,9 @@ class ContactController extends Controller
         $contact = $company->contacts()->create($data);
         $this->enforceSingleFlags($contact);
 
-        return $contact;
+        // Fresh, so flags left out of the request come back with their
+        // column defaults -- the client page shows the response as-is.
+        return $contact->refresh();
     }
 
     public function update(Request $request, Contact $contact)
@@ -44,7 +46,7 @@ class ContactController extends Controller
         $contact->update($data);
         $this->enforceSingleFlags($contact);
 
-        return $contact;
+        return $contact->refresh();
     }
 
     public function destroy(Contact $contact)
@@ -54,20 +56,15 @@ class ContactController extends Controller
         return response()->noContent();
     }
 
-    // Only one contact per company can hold each flag -- setting it here
-    // clears it from every other contact at the same company.
+    // Only one contact per company can be primary -- setting it here clears
+    // it from every other contact at the same company. Billing isn't
+    // exclusive: a client can have several billing contacts.
     protected function enforceSingleFlags(Contact $contact): void
     {
         if ($contact->is_primary) {
             Contact::where('company_id', $contact->company_id)
                 ->where('id', '!=', $contact->id)
                 ->update(['is_primary' => false]);
-        }
-
-        if ($contact->is_billing) {
-            Contact::where('company_id', $contact->company_id)
-                ->where('id', '!=', $contact->id)
-                ->update(['is_billing' => false]);
         }
     }
 }

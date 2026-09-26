@@ -11,6 +11,14 @@
         margin-bottom: var(--space-1);
     }
 
+    // On a grey rule that separates it from the value below (invoice and
+    // proposal headers, the client header's detail columns).
+    &--ruled {
+        margin-bottom: var(--space-2);
+        padding-bottom: var(--space-1);
+        border-bottom: var(--border-width) solid var(--color-border);
+    }
+
     // Sharing a row with an action, so the row sets the spacing.
     &--flush {
         margin-bottom: 0;

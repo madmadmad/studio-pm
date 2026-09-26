@@ -1,0 +1,54 @@
+// A client's contacts as a grid of cards (Clients/Show): avatar, name and
+// role with the settings menu, contact details, then role badges. Porcelain
+// like .metric-card, so the cards read against the white panel.
+
+.contact-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(var(--size-contact-card-min), 100%), 1fr));
+    gap: var(--space-4);
+}
+
+.contact-card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    background-color: var(--color-porcelain);
+
+    &__header {
+        display: flex;
+        align-items: flex-start;
+        gap: var(--space-3);
+    }
+
+    &__identity {
+        flex: 1;
+        min-width: 0;
+    }
+
+    &__name {
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+        font-weight: var(--font-weight-semibold);
+    }
+
+    &__role {
+        font-size: var(--font-size-xs);
+        line-height: var(--line-height-xs);
+        color: var(--color-shadow-grey);
+    }
+
+    &__details {
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+        color: var(--color-shadow-grey);
+        overflow-wrap: anywhere;
+    }
+
+    // Pushed to the bottom so badges line up across a row of cards.
+    &__badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-1);
+        margin-top: auto;
+    }
+}

@@ -3,7 +3,7 @@ import { useState } from 'react';
 import AppLayout from '../../Layouts/AppLayout';
 import Button from '../../Components/Button';
 import EmptyState from '../../Components/EmptyState';
-import { ProjectStatusBadge } from '../../Components/StatusBadges';
+import ProjectsTable from '../../Components/ProjectsTable';
 import { api } from '../../lib/api';
 import PageHeader from '../../Components/PageHeader';
 
@@ -16,15 +16,6 @@ const STATUS_FILTERS = [
     { value: 'completed', label: 'Completed' },
 ];
 
-const STATUS_OPTIONS = [
-    { value: 'leads', label: 'Leads' },
-    { value: 'estimated', label: 'Estimated' },
-    { value: 'active', label: 'Active' },
-    { value: 'inactive', label: 'Inactive' },
-    { value: 'completed', label: 'Completed' },
-    { value: 'archived', label: 'Archived' },
-];
-
 function emptyForm() {
     return { company_id: '', contact_id: '', name: '', description: '' };
 }
@@ -35,7 +26,6 @@ export default function ProjectsIndex({ projects, companies, archivedView = fals
     const [form, setForm] = useState(emptyForm());
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
-    const [pendingStatus, setPendingStatus] = useState({});
 
     const visibleProjects = filter === 'all' ? projects : projects.filter((p) => p.status === filter);
     const contactsForCompany = companies.find((c) => String(c.id) === String(form.company_id))?.contacts || [];
@@ -68,23 +58,6 @@ export default function ProjectsIndex({ projects, companies, archivedView = fals
         } finally {
             setSaving(false);
         }
-    }
-
-    async function changeStatus(project, status) {
-        setPendingStatus({ ...pendingStatus, [project.id]: true });
-        try {
-            await api.patch(`/api/projects/${project.id}`, { status });
-            router.reload({ only: ['projects'] });
-        } finally {
-            setPendingStatus({ ...pendingStatus, [project.id]: false });
-        }
-    }
-
-    function taskProgress(project) {
-        const total = project.tasks.length;
-        if (total === 0) return '—';
-        const done = project.tasks.filter((t) => t.status === 'done').length;
-        return `${done}/${total} done`;
     }
 
     return (
@@ -178,48 +151,7 @@ export default function ProjectsIndex({ projects, companies, archivedView = fals
                 {visibleProjects.length === 0 ? (
                     <EmptyState text="No projects match this filter." />
                 ) : (
-                    <table className="table">
-                        <thead>
-                            <tr>
-                                <th>Project</th>
-                                <th>Client</th>
-                                <th>Tasks</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {visibleProjects.map((project) => (
-                                <tr key={project.id}>
-                                    <td className="table__cell--strong">
-                                        <Link href={`/projects/${project.id}`} className="link">
-                                            {project.name}
-                                        </Link>
-                                    </td>
-                                    <td>
-                                        <Link href={`/clients/${project.company.id}`} className="link link--muted">
-                                            {project.company.name}
-                                        </Link>
-                                    </td>
-                                    <td className="table__cell--muted">{taskProgress(project)}</td>
-                                    <td>
-                                        <div className="table__group">
-                                            <ProjectStatusBadge project={project} />
-                                            <select
-                                                value={project.status}
-                                                disabled={pendingStatus[project.id]}
-                                                onChange={(e) => changeStatus(project, e.target.value)}
-                                                className="input input--micro input--inline"
-                                            >
-                                                {STATUS_OPTIONS.map((s) => (
-                                                    <option key={s.value} value={s.value}>{s.label}</option>
-                                                ))}
-                                            </select>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                    <ProjectsTable projects={visibleProjects} onChange={() => router.reload({ only: ['projects'] })} />
                 )}
             </div>
         </AppLayout>

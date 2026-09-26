@@ -1,0 +1,26 @@
+// Labeled details in columns under a page header (a client's phone,
+// address, terms...). Each item is a .section-label--ruled over its value;
+// columns wrap to fit, one per row on a phone.
+
+.field-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(var(--size-field-min), 100%), 1fr));
+    gap: var(--space-4) var(--space-6);
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-sm);
+
+    &__value {
+        font-weight: var(--font-weight-medium);
+    }
+
+    // "(firm default)" and other asides after a value.
+    &__note {
+        font-weight: var(--font-weight-normal);
+        color: var(--color-shadow-grey);
+    }
+
+    // Nothing set yet.
+    &__empty {
+        color: var(--color-shadow-grey);
+    }
+}

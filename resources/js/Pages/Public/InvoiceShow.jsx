@@ -50,7 +50,7 @@ function InvoiceItems({ invoice }) {
 function DetailField({ label, children }) {
     return (
         <div>
-            <div className="section-label document__details-label">{label}</div>
+            <div className="section-label section-label--ruled">{label}</div>
             <div className="document__details-value">{children}</div>
         </div>
     );
@@ -106,7 +106,7 @@ export default function InvoiceShow({ invoice, studio }) {
                     <div className="document__details-row">
                         <DocumentFrom studio={studio} />
                         <div>
-                            <div className="section-label document__details-label">Bill to</div>
+                            <div className="section-label section-label--ruled">Bill to</div>
                             {invoice.contact && <div className="document__party-name">{invoice.contact.name}</div>}
                             <div className={invoice.contact ? 'document__muted' : 'document__party-name'}>{invoice.company.name}</div>
                             {companyAddressLines(invoice.company).map((line) => (

@@ -9,19 +9,19 @@ import Badge from '../../Components/Badge';
 import RichTextEditor from '../../Components/RichTextEditor';
 import RichTextView from '../../Components/RichTextView';
 import Avatar from '../../Components/Avatar';
-import Toggle from '../../Components/Toggle';
 import { NewThreadForm, ThreadView, isSameActor, threadParticipantActors } from '../../Components/MessagesPanel';
-import InvoiceDateFields from '../../Components/InvoiceDateFields';
 import { ProjectStatusBadge, TaskStatusBadge, InvoiceStatusBadge, ProposalStatusBadge, ExpenseStatusBadge } from '../../Components/StatusBadges';
-import { formatCurrency, formatDate, formatDateTime, formatFileSize, invoiceSubtotal, invoiceTotal } from '../../lib/format';
-import { calculateDueDate, todayLocal } from '../../lib/paymentTerms';
+import { formatCurrency, formatDate, formatDateTime, formatFileSize, invoiceTotal } from '../../lib/format';
+import { todayLocal } from '../../lib/paymentTerms';
 import { api } from '../../lib/api';
-import { isBlankRichText, toPlainText, toRichText } from '../../lib/richText';
+import { isBlankRichText, toRichText } from '../../lib/richText';
 import PageHeader from '../../Components/PageHeader';
 import Drawer, { DrawerByline, DrawerDate } from '../../Components/Drawer';
 import ProposalEditor, { ProposalActions } from '../../Components/ProposalEditor';
 import InvoiceDetail, { InvoiceDueLine } from '../../Components/InvoiceDetail';
+import NewInvoiceDrawer from '../../Components/NewInvoiceDrawer';
 import TabBar from '../../Components/TabBar';
+import AutoResizeTextarea from '../../Components/AutoResizeTextarea';
 
 const ALL_TABS = ['Overview', 'Tasks', 'Notes', 'Messages', 'Time', 'Proposals', 'Billing', 'Expenses', 'Team'];
 const MANAGER_ONLY_TABS = ['Proposals', 'Billing', 'Expenses'];
@@ -311,27 +311,6 @@ const TASK_STATUS_OPTIONS = [
     { value: 'in_progress', label: 'In progress' },
     { value: 'done', label: 'Done' },
 ];
-
-function AutoResizeTextarea({ value, className, ...props }) {
-    const ref = useRef(null);
-
-    useEffect(() => {
-        const el = ref.current;
-        if (!el) return;
-        el.style.height = 'auto';
-        el.style.height = `${el.scrollHeight}px`;
-    }, [value]);
-
-    return (
-        <textarea
-            ref={ref}
-            value={value}
-            rows={1}
-            className={`autosize ${className}`}
-            {...props}
-        />
-    );
-}
 
 function SubtaskRow({ subtask, onChange, isDragging, onDragStart, onDragOver, onDrop, onDragEnd }) {
     const [title, setTitle] = useState(subtask.title);
@@ -1390,208 +1369,6 @@ function ProposalsTab({ project, services }) {
     );
 }
 
-// Copies a proposal's line items as invoice items. When less than the full
-// proposal amount remains in the project's budget (some of it already
-// invoiced), scales each item down proportionally so the new invoice starts
-// at exactly what's left, rather than re-billing the full proposal total.
-// Proposal details are rich text; invoice details are plain, so the
-// formatting is dropped.
-function proposalToInvoiceItems(proposal, remaining) {
-    const items = proposal.items.map((item) => {
-        const details = toPlainText(item.details);
-        return {
-            description: item.description,
-            details: details && details !== item.description ? details : '',
-            amount: parseFloat(item.quantity) * parseFloat(item.rate),
-            service_id: item.service_id ? String(item.service_id) : '',
-        };
-    });
-    const proposalTotal = items.reduce((s, i) => s + i.amount, 0);
-    const scale = proposalTotal > 0 && remaining < proposalTotal ? Math.max(remaining, 0) / proposalTotal : 1;
-    return items.map((item) => ({ ...item, amount: (item.amount * scale).toFixed(2) }));
-}
-
-function emptyInvoiceForm(defaultTerms) {
-    const issuedOn = todayLocal();
-    const terms = defaultTerms || 'net_30';
-    return {
-        proposal_id: '', items: [{ description: '', amount: '' }], surcharge: true,
-        issued_on: issuedOn, payment_terms: terms, due_on: calculateDueDate(issuedOn, terms),
-    };
-}
-
-// Create mode for an invoice, in the wide drawer: optionally seeded from a
-// proposal's line items, then dates, items, totals and the card-fee toggle.
-function NewInvoiceDrawer({ project, remaining, onClose }) {
-    const defaultTerms = project.company.effective_payment_terms;
-    const proposalsWithItems = project.proposals.filter((p) => p.items.length > 0);
-
-    // Start from the accepted proposal's line items when there's exactly
-    // one to choose from -- otherwise let the user pick.
-    const [form, setForm] = useState(() => {
-        const accepted = proposalsWithItems.filter((p) => p.status === 'accepted');
-        return accepted.length === 1
-            ? { ...emptyInvoiceForm(defaultTerms), proposal_id: String(accepted[0].id), items: proposalToInvoiceItems(accepted[0], remaining) }
-            : emptyInvoiceForm(defaultTerms);
-    });
-    const [saving, setSaving] = useState(false);
-    const [error, setError] = useState('');
-
-    const selectedProposal = proposalsWithItems.find((p) => String(p.id) === form.proposal_id);
-    const selectedProposalTotal = selectedProposal
-        ? selectedProposal.items.reduce((s, i) => s + parseFloat(i.quantity) * parseFloat(i.rate), 0)
-        : 0;
-    const wasScaledToRemaining = selectedProposal && remaining < selectedProposalTotal;
-    const formSubtotal = invoiceSubtotal(form.items);
-    const formTotal = invoiceTotal(form.items, form.surcharge);
-
-    function copyFromProposal(proposalId) {
-        if (!proposalId) {
-            setForm({ ...form, proposal_id: '', items: [{ description: '', amount: '' }] });
-            return;
-        }
-        const proposal = proposalsWithItems.find((p) => String(p.id) === proposalId);
-        setForm({ ...form, proposal_id: proposalId, items: proposalToInvoiceItems(proposal, remaining) });
-    }
-
-    function updateItem(idx, field, value) {
-        const items = form.items.map((it, i) => (i === idx ? { ...it, [field]: value } : it));
-        setForm({ ...form, items });
-    }
-    function addItemRow() {
-        setForm({ ...form, items: [...form.items, { description: '', amount: '' }] });
-    }
-    function removeItemRow(idx) {
-        setForm({ ...form, items: form.items.filter((_, i) => i !== idx) });
-    }
-
-    async function createInvoice(e) {
-        e.preventDefault();
-        const validItems = form.items.filter((i) => i.description.trim() && parseFloat(i.amount) > 0);
-        if (validItems.length === 0) {
-            setError(
-                form.proposal_id && remaining <= 0
-                    ? "This project's budget is already fully invoiced, so the copied line items scaled to $0.00. Increase the budget or enter amounts manually below."
-                    : 'Add at least one line item with a description and amount.'
-            );
-            return;
-        }
-        setSaving(true);
-        setError('');
-        try {
-            await api.post(`/api/companies/${project.company_id}/invoices`, {
-                project_id: project.id,
-                surcharge: form.surcharge,
-                issued_on: form.issued_on,
-                payment_terms: form.payment_terms,
-                due_on: form.due_on,
-                items: validItems,
-            });
-            reload();
-            onClose();
-        } catch (err) {
-            setError(err.message);
-        } finally {
-            setSaving(false);
-        }
-    }
-
-    return (
-        <Drawer size="wide" onClose={onClose}>
-            <h2 className="drawer__title">New invoice</h2>
-            <form onSubmit={createInvoice} className="invoice-form">
-                {proposalsWithItems.length > 0 && (
-                    <div className="invoice-form__section">
-                        <select
-                            value={form.proposal_id}
-                            onChange={(e) => copyFromProposal(e.target.value)}
-                            className="input"
-                        >
-                            <option value="">Copy line items from a proposal…</option>
-                            {proposalsWithItems.map((p) => (
-                                <option key={p.id} value={p.id}>{p.title} ({formatCurrency(p.estimate_amount)})</option>
-                            ))}
-                        </select>
-                        {wasScaledToRemaining && (
-                            remaining <= 0 ? (
-                                <div className="form-error">
-                                    This project's budget is already fully invoiced, so these line items scaled to $0.00 — increase the budget or edit the amounts below.
-                                </div>
-                            ) : (
-                                <div className="form-hint form-hint--attached">
-                                    Scaled to the {formatCurrency(remaining)} left in the budget.
-                                </div>
-                            )
-                        )}
-                    </div>
-                )}
-
-                <div className="invoice-form__section">
-                    <InvoiceDateFields values={form} onChange={(patch) => setForm((current) => ({ ...current, ...patch }))} />
-                </div>
-
-                <div className="invoice-form__items">
-                    {form.items.map((item, idx) => (
-                        <div key={idx} className="invoice-form__item">
-                            <div className="invoice-form__item-row">
-                                <input
-                                    placeholder="Line item description (required)"
-                                    value={item.description}
-                                    onChange={(e) => updateItem(idx, 'description', e.target.value)}
-                                    className="input invoice-form__description"
-                                />
-                                <input
-                                    type="number"
-                                    min="0"
-                                    step="0.01"
-                                    placeholder="Amount"
-                                    value={item.amount}
-                                    onChange={(e) => updateItem(idx, 'amount', e.target.value)}
-                                    className="input invoice-form__amount"
-                                />
-                                {form.items.length > 1 && (
-                                    <Button type="button" variant="link-accent" onClick={() => removeItemRow(idx)}>Remove</Button>
-                                )}
-                            </div>
-                            <textarea
-                                placeholder="Additional notes shown to the client (optional, not required)"
-                                value={item.details || ''}
-                                onChange={(e) => updateItem(idx, 'details', e.target.value)}
-                                rows={2}
-                                className="input invoice-form__details"
-                            />
-                        </div>
-                    ))}
-                    <Button type="button" variant="link-accent" onClick={addItemRow}>+ Add line item</Button>
-                </div>
-
-                <div className="invoice-form__section totals">
-                    <div className="totals__row totals__row--muted">
-                        <span>Subtotal</span>
-                        <span className="totals__value">{formatCurrency(formSubtotal)}</span>
-                    </div>
-                    <div className="totals__row totals__row--strong">
-                        <span>Total</span>
-                        <span className="totals__value">{formatCurrency(formTotal)}</span>
-                    </div>
-                </div>
-
-                <div className="invoice-form__section">
-                    <Toggle
-                        checked={form.surcharge}
-                        onChange={(value) => setForm({ ...form, surcharge: value })}
-                        label="Offer to pay by card (adds a 3% fee, shown only at checkout)"
-                    />
-                </div>
-                {error && <div className="form-message form-message--error form-message--spaced">{error}</div>}
-                <div className="form-actions">
-                    <Button type="submit" variant="confirm" disabled={saving}>Create draft invoice</Button>
-                </div>
-            </form>
-        </Drawer>
-    );
-}
-
 // An invoice in the wide drawer: the shared InvoiceDetail (as on the
 // standalone page) in the standard drawer frame -- byline, title, and the
 // invoice actions beside the close button, plus delete. `detail` is the
@@ -1744,7 +1521,16 @@ function BillingTab({ project }) {
                 />
             )}
 
-            {creating && <NewInvoiceDrawer project={project} remaining={remaining} onClose={() => setCreating(false)} />}
+            {creating && (
+                <NewInvoiceDrawer
+                    company={project.company}
+                    projects={[project]}
+                    initialProjectId={project.id}
+                    lockProject
+                    onCreated={reload}
+                    onClose={() => setCreating(false)}
+                />
+            )}
         </div>
     );
 }

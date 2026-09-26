@@ -30,7 +30,7 @@ class SendInvoiceReminders extends Command
         Invoice::query()
             ->where('status', 'sent')
             ->whereNotNull('due_on')
-            ->with('company', 'contact', 'payments')
+            ->with('company.contacts', 'contact', 'payments')
             ->chunkById(50, function ($invoices) use ($today) {
                 foreach ($invoices as $invoice) {
                     $this->considerInvoice($invoice, $today);
@@ -73,7 +73,7 @@ class SendInvoiceReminders extends Command
                 'status' => InvoiceSend::STATUS_QUEUED,
                 'subject' => $this->subjectFor($invoice, $offsetDays),
                 'message' => $this->messageFor($invoice, $offsetDays),
-                'cc' => $lastSend?->cc,
+                'cc' => $lastSend?->cc ?? $invoice->billingCcEmails(),
             ]);
         } catch (QueryException) {
             // Unique index on (invoice_id, reminder_rule) -- this rule

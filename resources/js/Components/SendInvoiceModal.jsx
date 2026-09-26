@@ -16,6 +16,16 @@ function resolveBillingContact(invoice) {
         || null;
 }
 
+// Every other billing contact with an email -- CC'd by default so a client
+// with several billing contacts gets the invoice to all of them. Mirrors
+// Invoice::billingCcEmails().
+function billingCcEmails(invoice, to) {
+    const emails = invoice.company.contacts
+        .filter((c) => c.is_billing && c.email && c.email !== to?.email)
+        .map((c) => c.email);
+    return [...new Set(emails)];
+}
+
 function fillTemplate(template, invoice, studio, contact) {
     const firstName = contact?.name?.split(' ')[0] || 'there';
 
@@ -53,8 +63,9 @@ export default function SendInvoiceModal({ invoice, studio, invoicingDefaults, o
     const [scheduleDate, setScheduleDate] = useState(initialSchedule.date);
     const [scheduleTime, setScheduleTime] = useState(initialSchedule.time);
 
-    const [ccOpen, setCcOpen] = useState(false);
-    const [ccInput, setCcInput] = useState('');
+    const defaultCc = useMemo(() => billingCcEmails(invoice, contact), [invoice, contact]);
+    const [ccOpen, setCcOpen] = useState(defaultCc.length > 0);
+    const [ccInput, setCcInput] = useState(defaultCc.join(', '));
     const [subject, setSubject] = useState(() => fillTemplate(invoicingDefaults.emailSubjectTemplate, invoice, studio, contact));
     const [message, setMessage] = useState(() => fillTemplate(invoicingDefaults.emailTemplate, invoice, studio, contact));
     const [sendCopyToSelf, setSendCopyToSelf] = useState(false);

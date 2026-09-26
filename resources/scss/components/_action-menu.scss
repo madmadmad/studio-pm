@@ -1,0 +1,36 @@
+// An icon button with a dropdown of actions. Used by
+// Components/ActionMenu.jsx; the panel is a .popover, right-aligned under
+// the trigger so it stays inside a card at the right edge.
+
+.action-menu {
+    position: relative;
+    display: inline-flex;
+
+    &__panel {
+        top: 100%;
+        right: 0;
+        display: flex;
+        flex-direction: column;
+        min-width: 11rem; // one-off: fits "Invite to portal" on one line
+        padding: var(--space-1);
+    }
+
+    &__item {
+        padding: var(--space-1-5) var(--space-2);
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+        font-weight: var(--font-weight-normal);
+        color: var(--color-gunmetal);
+        text-align: left;
+        white-space: nowrap;
+        border-radius: var(--radius-base);
+
+        &:hover {
+            background-color: var(--color-porcelain);
+        }
+
+        &--danger {
+            color: var(--color-watermelon);
+        }
+    }
+}

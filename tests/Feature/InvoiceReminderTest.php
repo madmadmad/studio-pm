@@ -222,4 +222,30 @@ class InvoiceReminderTest extends TestCase
         $this->actingAs($user)->postJson("/api/invoices/{$invoice->id}/reminders/skip", ['rule' => 'due_plus_7'])
             ->assertStatus(422);
     }
+
+    // With no earlier email send to copy CCs from, a reminder still reaches
+    // the client's other billing contacts.
+    public function test_a_reminder_ccs_the_other_billing_contacts(): void
+    {
+        Mail::fake();
+        $invoice = $this->makeSentInvoice();
+        $invoice->company->contacts()->create(['name' => 'Priya Sen', 'email' => 'priya@alderfinch.co', 'is_billing' => true]);
+        $invoice->company->contacts()->create(['name' => 'Not Billing', 'email' => 'other@alderfinch.co']);
+        $this->travelToDueOffset(0);
+
+        $this->artisan('invoices:send-reminders');
+
+        $send = $invoice->invoiceSends()->where('reminder_rule', 'due_0')->first();
+        $this->assertSame(['priya@alderfinch.co'], $send->cc);
+        Mail::assertQueued(InvoiceEmail::class, fn ($mail) => $mail->hasCc('priya@alderfinch.co') && ! $mail->hasCc('other@alderfinch.co'));
+    }
+
+    public function test_billing_cc_emails_skip_the_to_address_and_contacts_without_email(): void
+    {
+        $invoice = $this->makeSentInvoice();
+        $invoice->company->contacts()->create(['name' => 'Priya Sen', 'email' => 'priya@alderfinch.co', 'is_billing' => true]);
+        $invoice->company->contacts()->create(['name' => 'No Email', 'is_billing' => true]);
+
+        $this->assertSame(['priya@alderfinch.co'], $invoice->fresh(['company.contacts', 'contact'])->billingCcEmails());
+    }
 }

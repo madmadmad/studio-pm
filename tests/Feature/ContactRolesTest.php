@@ -25,7 +25,7 @@ class ContactRolesTest extends TestCase
         $this->assertFalse($first->fresh()->is_primary);
     }
 
-    public function test_only_one_contact_per_company_can_be_billing(): void
+    public function test_a_company_can_have_several_billing_contacts(): void
     {
         $user = User::factory()->create();
         $company = Company::create(['name' => 'Alder & Finch Design']);
@@ -36,7 +36,7 @@ class ContactRolesTest extends TestCase
             'is_billing' => true,
         ])->assertOk();
 
-        $this->assertFalse($first->fresh()->is_billing);
+        $this->assertTrue($first->fresh()->is_billing);
         $this->assertTrue($second->fresh()->is_billing);
     }
 
@@ -54,5 +54,40 @@ class ContactRolesTest extends TestCase
 
         $this->assertTrue($companyA->contacts()->first()->is_primary);
         $this->assertTrue($contactB->fresh()->is_primary);
+    }
+
+    // What the Edit contact drawer sends: every field at once.
+    public function test_a_contacts_details_can_be_edited(): void
+    {
+        $user = User::factory()->create();
+        $company = Company::create(['name' => 'Alder & Finch Design']);
+        $contact = $company->contacts()->create(['name' => 'Rosa Alder', 'email' => 'rosa@example.com']);
+
+        $this->actingAs($user)->patchJson("/api/contacts/{$contact->id}", [
+            'name' => 'Rosa Alder-Finch',
+            'role' => 'Creative Director',
+            'email' => 'rosa@alderfinch.com',
+            'phone' => '419-555-0100',
+            'is_primary' => true,
+            'is_billing' => false,
+        ])->assertOk();
+
+        $contact->refresh();
+        $this->assertSame('Rosa Alder-Finch', $contact->name);
+        $this->assertSame('Creative Director', $contact->role);
+        $this->assertSame('rosa@alderfinch.com', $contact->email);
+        $this->assertSame('419-555-0100', $contact->phone);
+        $this->assertTrue($contact->is_primary);
+    }
+
+    public function test_editing_a_contact_rejects_an_invalid_email(): void
+    {
+        $user = User::factory()->create();
+        $company = Company::create(['name' => 'Alder & Finch Design']);
+        $contact = $company->contacts()->create(['name' => 'Rosa Alder']);
+
+        $this->actingAs($user)->patchJson("/api/contacts/{$contact->id}", [
+            'email' => 'not-an-email',
+        ])->assertUnprocessable();
     }
 }

@@ -36,6 +36,16 @@
         background-color: var(--color-porcelain);
     }
 
+    // A whole row that opens something (a project): pointer + the same
+    // hover fill as .grid-row--link, so table and grid lists feel alike.
+    &__row--link {
+        cursor: pointer;
+
+        &:hover {
+            background-color: var(--color-porcelain);
+        }
+    }
+
     // Top-align cells in a row whose cells hold multi-line content.
     &__row--top {
         vertical-align: top;

@@ -81,7 +81,7 @@ export default function ProposalShow({ proposal, token, studio }) {
                     <div className="document__details-row">
                         <DocumentFrom studio={studio} />
                         <div>
-                            <div className="section-label document__details-label">Client</div>
+                            <div className="section-label section-label--ruled">Client</div>
                             <div className="document__party-name">{proposal.company.name}</div>
                             {proposal.project && <div className="document__muted">{proposal.project.name}</div>}
                         </div>

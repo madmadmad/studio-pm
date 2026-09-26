@@ -162,6 +162,23 @@ class Invoice extends Model
             ?? $this->company->contacts->firstWhere('is_primary', true);
     }
 
+    // Everyone else who should get a copy: the company's other billing
+    // contacts with an email address, minus whoever billingContact() is
+    // sending to. The Send modal pre-fills its CC field with these, and
+    // reminders fall back to them when there's no earlier send to copy.
+    public function billingCcEmails(): array
+    {
+        $to = $this->billingContact()?->email;
+
+        return $this->company->contacts
+            ->where('is_billing', true)
+            ->pluck('email')
+            ->filter(fn ($email) => $email && $email !== $to)
+            ->unique()
+            ->values()
+            ->all();
+    }
+
     // Invalidates the old /i/{token} link immediately by swapping in a new
     // one -- used when a link needs to be revoked.
     public function regenerateToken(): void

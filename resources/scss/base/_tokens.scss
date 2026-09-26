@@ -187,6 +187,8 @@
     --size-portal: 56rem;
     --size-row-action: 1.75rem; // the square "open" button ending a list row
     --size-metric-card-min: 13.75rem; // 220px: narrowest a metric card gets before the grid wraps
+    --size-field-min: 11rem; // 176px: narrowest a .field-grid column gets before wrapping
+    --size-contact-card-min: 16rem; // 256px: narrowest a contact card gets before the grid wraps
 
     // Icons. The default size (18px) is set app-wide in JS -- the
     // IconContext in app.jsx -- because Phosphor sizes via SVG attributes.
