@@ -73,12 +73,13 @@
     --line-height-lg: 1.75rem;
     --font-size-xl: 1.5rem;
     --line-height-xl: 1.75rem;
-    --font-size-2xl: 1.75rem; // page titles, headline numerals
+    --font-size-2xl: 1.85rem; // page titles, headline numerals
     --line-height-2xl: 2rem;
 
     --line-height-body: 1.5;
     --line-height-prose: 1.6; // long-form rich text (proposals)
 
+    --font-weight-light: 400; // Inter Regular; Inter Display has no 400 and falls back to 500
     --font-weight-normal: 500;
     --font-weight-medium: 600;
     --font-weight-semibold: 700;

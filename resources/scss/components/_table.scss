@@ -1,6 +1,8 @@
 // Data tables. Apply .table to the <table>; header/row/cell styling
 // follows automatically, no per-cell classes needed.
 
+@use '../abstracts' as *;
+
 .table {
     width: 100%;
     border-collapse: collapse;
@@ -9,12 +11,12 @@
 
     thead tr {
         border-bottom: var(--border-width) solid var(--color-border);
-        color: var(--color-shadow-grey);
     }
 
     th {
+        @include subhead;
+
         padding: var(--space-2) 0;
-        font-weight: var(--font-weight-semibold);
     }
 
     td {

@@ -1,5 +1,7 @@
 import { Head } from '@inertiajs/react';
 import { useState } from 'react';
+import { DownloadSimple } from '@phosphor-icons/react';
+import DocumentFrom from '../../Components/DocumentFrom';
 import { formatCurrency, formatDate, invoiceSubtotal, invoiceTotal } from '../../lib/format';
 import { paymentTermsLabel } from '../../lib/paymentTerms';
 import { api } from '../../lib/api';
@@ -44,6 +46,24 @@ function InvoiceItems({ invoice }) {
     );
 }
 
+// One labeled value in the invoice's details column.
+function DetailField({ label, children }) {
+    return (
+        <div>
+            <div className="section-label document__details-label">{label}</div>
+            <div className="document__details-value">{children}</div>
+        </div>
+    );
+}
+
+// Street, then "City, ST 12345" -- whichever parts the company has.
+function companyAddressLines(company) {
+    const cityStateZip = [company.city, [company.state, company.postal_code].filter(Boolean).join(' ')]
+        .filter(Boolean)
+        .join(', ');
+    return [company.address_line1, cityStateZip].filter(Boolean);
+}
+
 export default function InvoiceShow({ invoice, studio }) {
     const paidAt = invoice.payments[0]?.paid_at;
     const [paying, setPaying] = useState(null); // null | 'card' | 'ach'
@@ -65,32 +85,47 @@ export default function InvoiceShow({ invoice, studio }) {
         <div className="document-page">
             <Head title={`Invoice — ${invoice.company.name}`} />
             <div className="document">
+                <a
+                    href={`/i/${invoice.public_token}/pdf`}
+                    title="Download PDF"
+                    aria-label="Download PDF"
+                    className="icon-btn icon-btn--secondary icon-btn--lg document__download"
+                >
+                    <DownloadSimple />
+                </a>
                 <img src="/images/studio-lockup.svg" alt="Studio" className="document__logo" />
 
-                <div className="document__parties">
-                    <div className="document__from">
-                        <div className="document__party-name">{studio.name}</div>
-                        {studio.address && <div className="document__address">{studio.address}</div>}
-                        {studio.email && <div>{studio.email}</div>}
-                        {studio.phone && <div>{studio.phone}</div>}
-                        {studio.website && <div>{studio.website}</div>}
-                    </div>
-                    <div className="document__to">
-                        <div className="section-label">Client</div>
-                        <div className="document__party-name">{invoice.company.name}</div>
-                        {invoice.project && <div className="document__muted">{invoice.project.name}</div>}
-                        {invoice.project?.po_number && <div className="document__muted">PO #{invoice.project.po_number}</div>}
-                    </div>
-                </div>
-
-                <h1 className="document__title">
-                    <span className="document__title-prefix">Invoice </span>
-                    #{invoice.invoice_number}
+                <h1 className="document__title document__title--spaced document__title--large">
+                    <span className="document__title-prefix document__title-prefix--inline">Invoice </span>
+                    {invoice.invoice_number}
                 </h1>
-                <div className="document__meta">
-                    Issued {formatDate(invoice.issued_on)} &middot; Due {formatDate(invoice.due_on)}
-                    {paymentTermsLabel(invoice.payment_terms) !== 'Custom' && ` (${paymentTermsLabel(invoice.payment_terms)})`}
-                    {invoice.contact && <> &middot; Billed to {invoice.contact.name}</>}
+
+                {/* From | Bill to, then the invoice's own details two
+                    across below. */}
+                <div className="document__details">
+                    <div className="document__details-row">
+                        <DocumentFrom studio={studio} />
+                        <div>
+                            <div className="section-label document__details-label">Bill to</div>
+                            {invoice.contact && <div className="document__party-name">{invoice.contact.name}</div>}
+                            <div className={invoice.contact ? 'document__muted' : 'document__party-name'}>{invoice.company.name}</div>
+                            {companyAddressLines(invoice.company).map((line) => (
+                                <div key={line} className="document__muted">{line}</div>
+                            ))}
+                            {invoice.contact?.email && <div className="document__muted">{invoice.contact.email}</div>}
+                        </div>
+                    </div>
+                    <div className="document__details-row document__details-row--fields">
+                        <DetailField label="Issued on">{formatDate(invoice.issued_on)}</DetailField>
+                        <DetailField label="Due date">
+                            {formatDate(invoice.due_on)}
+                            {paymentTermsLabel(invoice.payment_terms) !== 'Custom' && (
+                                <span className="document__muted"> ({paymentTermsLabel(invoice.payment_terms)})</span>
+                            )}
+                        </DetailField>
+                        {invoice.project && <DetailField label="Project">{invoice.project.name}</DetailField>}
+                        {invoice.project?.po_number && <DetailField label="PO number">{invoice.project.po_number}</DetailField>}
+                    </div>
                 </div>
 
                 <InvoiceItems invoice={invoice} />
@@ -101,35 +136,37 @@ export default function InvoiceShow({ invoice, studio }) {
                     </div>
                 ) : invoice.status === 'sent' ? (
                     <div>
-                        <div className="document__pay-label">Pay online</div>
-                        <div className="document__pay-actions">
+                        {/* Pay online | ACH/check instructions, side by side.
+                            ACH is handled manually for now (the instructions),
+                            so card is the only online option; the ACH
+                            checkout endpoint is still there. */}
+                        <div className="document__pay">
                             {invoice.surcharge && (
-                                <button
-                                    onClick={() => pay('card')}
-                                    disabled={paying !== null}
-                                    className="btn btn--lg btn--accent"
-                                >
-                                    {paying === 'card' ? 'Redirecting…' : 'Pay by card — 3% fee applies'}
-                                </button>
+                                <div>
+                                    <div className="section-label">Pay online</div>
+                                    <div className="document__pay-actions">
+                                        <button
+                                            onClick={() => pay('card')}
+                                            disabled={paying !== null}
+                                            className="btn btn--lg btn--accent"
+                                        >
+                                            {paying === 'card' ? 'Redirecting…' : 'Pay by card — 3% fee applies'}
+                                        </button>
+                                    </div>
+                                    {error && <div className="form-message form-message--error document__pay-error">{error}</div>}
+                                </div>
                             )}
-                            <button
-                                onClick={() => pay('ach')}
-                                disabled={paying !== null}
-                                className="btn btn--lg btn--primary"
-                            >
-                                {paying === 'ach' ? 'Redirecting…' : 'Pay by ACH — no fee'}
-                            </button>
+
+                            {studio.payment_instructions && (
+                                <div>
+                                    <div className="section-label">
+                                        {invoice.surcharge ? 'Prefer to pay by ACH or check?' : 'How to pay'}
+                                    </div>
+                                    <div className="document__instructions-text">{studio.payment_instructions}</div>
+                                </div>
+                            )}
                         </div>
-                        {error && <div className="form-message form-message--error document__pay-error">{error}</div>}
 
-                        {studio.payment_instructions && (
-                            <div className="document__instructions">
-                                <div className="document__instructions-title">Prefer to pay by check?</div>
-                                <div className="document__instructions-text">{studio.payment_instructions}</div>
-                            </div>
-                        )}
-
-                        <div className="document__due">Due {formatDate(invoice.due_on)}</div>
                     </div>
                 ) : (
                     <div className="document__note">Due {formatDate(invoice.due_on)}.</div>

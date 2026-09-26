@@ -1,18 +1,17 @@
 // Writing a message: the new-thread form (recipients + subject) and the
 // reply box. Both share the auto-growing textarea and attach/send footer.
 
+@use '../abstracts' as *;
+
 .composer {
     &--new {
         margin-bottom: var(--space-4);
     }
 
     &__label {
+        @include subhead;
+
         margin-bottom: var(--space-2);
-        font-size: var(--font-size-xs);
-        line-height: var(--line-height-xs);
-        font-weight: var(--font-weight-semibold);
-        color: var(--color-shadow-grey);
-        text-transform: uppercase;
     }
 
     &__recipients {

@@ -4,6 +4,20 @@
     outline-offset: var(--focus-ring-offset);
 }
 
+// Subhead: the small grey caption over a piece of content -- section
+// labels ("From", "Bill to", "Pay online"), form field labels, and table /
+// list column headers ("Description", "Amount"). The one place to change
+// how every subhead in the app reads; components add only their own
+// spacing, rules and layout. The invoice/proposal PDFs can't use Sass, so
+// resources/views/pdfs/partials/styles.blade.php (.label) mirrors this.
+@mixin subhead {
+    font-size: var(--font-size-xs);
+    line-height: var(--line-height-xs);
+    font-weight: var(--font-weight-normal);
+    color: var(--color-shadow-grey);
+    letter-spacing: -.02rem;
+}
+
 // Vertical rhythm between direct children in normal (block/inline) flow.
 // Unlike a flex column with `gap`, children keep their natural width and
 // inline-level children (text buttons) stay inline.

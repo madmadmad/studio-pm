@@ -41,7 +41,9 @@ Route::middleware('guest')->group(function () {
 });
 
 Route::get('/p/{token}', [PublicProposalController::class, 'show'])->name('proposals.public');
+Route::get('/p/{token}/pdf', [PublicProposalController::class, 'pdf'])->name('proposals.public.pdf');
 Route::get('/i/{token}', [PublicInvoiceController::class, 'show'])->name('invoices.public');
+Route::get('/i/{token}/pdf', [PublicInvoiceController::class, 'pdf'])->name('invoices.public.pdf');
 
 Route::middleware('auth')->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');

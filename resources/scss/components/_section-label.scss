@@ -1,11 +1,11 @@
 // Small caption heading a group of fields or details inside a card.
 
+@use '../abstracts' as *;
+
 .section-label {
+    @include subhead;
+
     margin-bottom: var(--space-2);
-    font-size: var(--font-size-xs);
-    line-height: var(--line-height-xs);
-    font-weight: var(--font-weight-semibold);
-    color: var(--color-shadow-grey);
 
     &--tight {
         margin-bottom: var(--space-1);

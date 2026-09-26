@@ -3,6 +3,7 @@
 @use '../abstracts' as *;
 
 .document {
+    position: relative;
     max-width: var(--size-document);
     margin-inline: auto;
     padding: var(--space-15);
@@ -10,36 +11,22 @@
     border: var(--border-width) solid var(--color-border);
     border-radius: var(--radius-base);
 
+    // PDF download, top right: inset by the sheet's own padding on both
+    // sides, so it sits level with the logo and on the right margin.
+    &__download {
+        position: absolute;
+        top: var(--space-15);
+        right: var(--space-15);
+    }
+
     &__logo {
-        width: 11.25rem; // one-off: the lockup's display width (180px)
+        width: 10rem; // one-off: the lockup's display width (160px)
         height: auto;
-        margin-bottom: var(--space-8);
+        margin-bottom: var(--space-12);
     }
 
-    // Header blocks that end in a rule: parties, the invoice meta line.
-    &__parties,
-    &__meta {
-        margin-bottom: var(--space-8);
-        padding-bottom: var(--space-8);
-        border-bottom: var(--border-width) solid var(--color-border);
-    }
-
-    &__parties {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: var(--space-4);
-        font-size: var(--font-size-sm);
-        line-height: var(--line-height-sm);
-    }
-
-    &__from,
     &__muted {
         color: var(--color-shadow-grey);
-    }
-
-    &__to {
-        padding-left: var(--space-5);
-        border-left: var(--border-width) solid var(--color-border);
     }
 
     &__party-name {
@@ -59,23 +46,69 @@
         font-weight: var(--font-weight-extrabold);
         letter-spacing: var(--letter-spacing-display);
 
-        // No meta line below it (proposals), so more room.
+        // Followed by a block rather than a meta line (the proposal body,
+        // the invoice details), so more room.
         &--spaced {
             padding-bottom: var(--space-5);
         }
+
+        // Invoices: "Invoice #1004" on one line, both at the size the
+        // prefix has on its own line (the inline prefix inherits it).
+        &--large {
+            font-size: 2rem; // one-off: matches .document__title-prefix
+            line-height: 2.15rem;
+        }
     }
 
-    // "Invoice " / "Proposal: " before the title, in body type.
+    // "Invoice" / "Proposal" on its own line above the title, in body type
+    // a step larger than the title itself.
     &__title-prefix {
+        display: block;
+        font-size: 2.5rem; // one-off: just above --font-size-2xl
+        line-height: 2.75rem;
         font-family: var(--font-family-sans);
-        font-weight: var(--font-weight-normal);
+        font-weight: var(--font-weight-light);
         color: var(--color-shadow-grey);
+
+        // Invoices: back on one line with the number, at the title's size.
+        &--inline {
+            display: inline;
+            font-size: inherit;
+            line-height: inherit;
+        }
     }
 
-    &__meta {
+    // Document header below the title: a From | Bill to (invoice) or
+    // From | Client (proposal) row, then on invoices the details (dates,
+    // project, PO) two across. No rule below.
+    &__details {
+        @include stack(var(--space-6));
+
+        margin-bottom: var(--space-8);
         font-size: var(--font-size-sm);
         line-height: var(--line-height-sm);
-        color: var(--color-shadow-grey);
+    }
+
+    &__details-row {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: var(--space-6);
+
+        &--fields {
+            row-gap: var(--space-4);
+        }
+    }
+
+    // Subheads in the details block sit on a grey rule that separates
+    // them from the values below (overrides .section-label's spacing).
+    &__details-label {
+        margin-bottom: var(--space-2);
+        padding-bottom: var(--space-1);
+        border-bottom: var(--border-width) solid var(--color-border);
+    }
+
+    &__details-value {
+        font-weight: var(--font-weight-medium);
     }
 
     &__estimate {
@@ -115,11 +148,9 @@
     }
 
     &__items-head {
+        @include subhead;
+
         padding-block: var(--space-3);
-        font-size: var(--font-size-xs);
-        line-height: var(--line-height-xs);
-        font-weight: var(--font-weight-medium);
-        color: var(--color-shadow-grey);
         border-bottom: var(--border-width) solid var(--color-border);
     }
 
@@ -206,12 +237,6 @@
         border-radius: var(--radius-base);
     }
 
-    &__pay-label {
-        margin-bottom: var(--space-2);
-        font-size: var(--font-size-sm);
-        line-height: var(--line-height-sm);
-    }
-
     &__pay-actions {
         display: flex;
         flex-wrap: wrap;
@@ -222,17 +247,13 @@
         margin-top: var(--space-2);
     }
 
-    &__instructions {
-        margin-top: var(--space-6);
-        padding-top: var(--space-6);
-        border-top: var(--border-width) solid var(--color-border);
-    }
-
-    &__instructions-title {
-        margin-bottom: var(--space-1);
-        font-size: var(--font-size-sm);
-        line-height: var(--line-height-sm);
-        font-weight: var(--font-weight-semibold);
+    // Pay online | payment instructions, two columns. Either can be
+    // missing (no card surcharge, no instructions set); the other then
+    // keeps the left column.
+    &__pay {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: var(--space-6);
     }
 
     &__instructions-text,
@@ -242,14 +263,10 @@
         color: var(--color-shadow-grey);
     }
 
+    // Smaller than body text: secondary to the pay button beside it.
     &__instructions-text {
-        white-space: pre-wrap;
-    }
-
-    &__due {
-        margin-top: var(--space-4);
         font-size: var(--font-size-xs);
         line-height: var(--line-height-xs);
-        color: var(--color-shadow-grey);
+        white-space: pre-wrap;
     }
 }

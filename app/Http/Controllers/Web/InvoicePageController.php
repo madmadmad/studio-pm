@@ -35,8 +35,8 @@ class InvoicePageController extends Controller
         ]);
     }
 
-    // Authenticated only -- for uploading to accounts receivable systems,
-    // not the client-facing document (that's the public /i/{token} page).
+    // Authenticated, by invoice ID -- for uploading to accounts receivable
+    // systems. Clients download the same PDF by token from /i/{token}/pdf.
     public function pdf(Invoice $invoice): HttpResponse
     {
         $invoice->load(['items', 'company', 'contact', 'project', 'payments']);

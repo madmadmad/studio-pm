@@ -43,4 +43,25 @@ class InvoicePdfTest extends TestCase
 
         $response->assertRedirect('/login');
     }
+
+    public function test_a_client_can_download_the_pdf_from_the_public_invoice_link(): void
+    {
+        $company = Company::create(['name' => 'Alder & Finch Design']);
+        $invoice = $company->invoices()->create([
+            'status' => 'sent', 'surcharge' => false, 'issued_on' => now(), 'due_on' => now()->addDays(30),
+        ]);
+        $invoice->items()->create(['description' => 'Design work', 'amount' => 1000]);
+
+        $response = $this->get("/i/{$invoice->public_token}/pdf");
+
+        $response->assertOk();
+        $response->assertHeader('content-type', 'application/pdf');
+        $this->assertStringContainsString("invoice-{$invoice->invoice_number}.pdf", $response->headers->get('content-disposition'));
+        $this->assertStringStartsWith('%PDF', $response->getContent());
+    }
+
+    public function test_the_public_invoice_pdf_needs_a_valid_token(): void
+    {
+        $this->get('/i/not-a-real-token/pdf')->assertNotFound();
+    }
 }

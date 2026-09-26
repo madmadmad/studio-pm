@@ -1,5 +1,7 @@
 import { Head } from '@inertiajs/react';
 import { useState } from 'react';
+import { DownloadSimple } from '@phosphor-icons/react';
+import DocumentFrom from '../../Components/DocumentFrom';
 import { formatCurrency, formatDate } from '../../lib/format';
 import { api } from '../../lib/api';
 import { isBlankRichText, toPlainText, toRichText } from '../../lib/richText';
@@ -59,27 +61,33 @@ export default function ProposalShow({ proposal, token, studio }) {
         <div className="document-page">
             <Head title={proposal.title} />
             <div className="document">
+                <a
+                    href={`/p/${token}/pdf`}
+                    title="Download PDF"
+                    aria-label="Download PDF"
+                    className="icon-btn icon-btn--secondary icon-btn--lg document__download"
+                >
+                    <DownloadSimple />
+                </a>
                 <img src="/images/studio-lockup.svg" alt="Studio" className="document__logo" />
 
-                <div className="document__parties">
-                    <div className="document__from">
-                        <div className="document__party-name">{studio.name}</div>
-                        {studio.address && <div className="document__address">{studio.address}</div>}
-                        {studio.email && <div>{studio.email}</div>}
-                        {studio.phone && <div>{studio.phone}</div>}
-                        {studio.website && <div>{studio.website}</div>}
-                    </div>
-                    <div className="document__to">
-                        <div className="section-label">Client</div>
-                        <div className="document__party-name">{proposal.company.name}</div>
-                        {proposal.project && <div className="document__muted">{proposal.project.name}</div>}
+                <h1 className="document__title document__title--spaced">
+                    <span className="document__title-prefix">Proposal</span>
+                    {proposal.title}
+                </h1>
+
+                {/* Same header as the public invoice, minus its dates row. */}
+                <div className="document__details">
+                    <div className="document__details-row">
+                        <DocumentFrom studio={studio} />
+                        <div>
+                            <div className="section-label document__details-label">Client</div>
+                            <div className="document__party-name">{proposal.company.name}</div>
+                            {proposal.project && <div className="document__muted">{proposal.project.name}</div>}
+                        </div>
                     </div>
                 </div>
 
-                <h1 className="document__title document__title--spaced">
-                    <span className="document__title-prefix">Proposal: </span>
-                    {proposal.title}
-                </h1>
                 {proposal.items.length === 0 && proposal.estimate_amount && (
                     <div className="document__estimate">Estimate: {formatCurrency(proposal.estimate_amount)}</div>
                 )}

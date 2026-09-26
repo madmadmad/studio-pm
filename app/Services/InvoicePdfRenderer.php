@@ -32,7 +32,8 @@ class InvoicePdfRenderer
         ])->setPaper('letter'); // US business -- dompdf defaults to A4
     }
 
-    protected static function ensureFontCacheDirectoryExists(): void
+    // Public so ProposalPdfRenderer, which uses the same fonts, can share it.
+    public static function ensureFontCacheDirectoryExists(): void
     {
         $dir = storage_path('fonts');
 

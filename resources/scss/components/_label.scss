@@ -1,9 +1,10 @@
 // The caption above a form field.
 
+@use '../abstracts' as *;
+
 .label {
+    @include subhead;
+
     display: block;
     margin-bottom: var(--space-1);
-    font-size: var(--font-size-xs);
-    font-weight: var(--font-weight-semibold);
-    color: var(--color-shadow-grey);
 }
