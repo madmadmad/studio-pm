@@ -8,11 +8,18 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Task extends Model
 {
-    protected $fillable = ['project_id', 'title', 'assignee', 'description', 'status', 'due_date'];
+    protected $fillable = ['project_id', 'title', 'assignee', 'description', 'status', 'due_date', 'visible_to_client'];
 
     protected $casts = [
         'due_date' => 'date',
+        'visible_to_client' => 'boolean',
     ];
+
+    // "Show client" is on: the task appears in the Client Hub.
+    public function scopeVisibleToClient($query)
+    {
+        return $query->where('visible_to_client', true);
+    }
 
     public function project(): BelongsTo
     {

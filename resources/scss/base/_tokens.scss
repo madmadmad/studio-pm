@@ -121,6 +121,11 @@
 
     // Semantic spacing -- reach for these first.
     --space-panel: var(--space-4); // card padding
+    // Every list row -- .table, .grid-row, .list-row -- pads its content the
+    // same way, so all lists line up: text starts --space-row-x in from the
+    // panel edge, with --space-row-y above and below.
+    --space-row-x: var(--space-4);
+    --space-row-y: var(--space-2);
     --space-panel-lg: var(--space-8); // modal, drawer, auth card padding
     --space-section: var(--space-6); // gap below a page section
     --space-section-lg: var(--space-10); // between a page's major blocks (header, metrics, tabs)
@@ -186,7 +191,10 @@
     --size-document: 50rem; // public invoice/proposal sheet
     --size-content: 56rem; // detail/editor page column
     --size-portal: 56rem;
-    --size-row-action: 1.75rem; // the square "open" button ending a list row
+    // The one height for everything that sits in a list row -- badges,
+    // small buttons, inline pickers, action icons and the "open" caret --
+    // so a row's controls all line up.
+    --size-row-action: 1.75rem; // 28px
     --size-metric-card-min: 13.75rem; // 220px: narrowest a metric card gets before the grid wraps
     --size-field-min: 11rem; // 176px: narrowest a .field-grid column gets before wrapping
     --size-contact-card-min: 16rem; // 256px: narrowest a contact card gets before the grid wraps

@@ -22,7 +22,8 @@ class TaskController extends Controller
             'due_date' => ['nullable', 'date'],
         ]);
 
-        return $project->tasks()->create($data);
+        // A client's own task is one they can see, so "Show client" starts on.
+        return $project->tasks()->create([...$data, 'visible_to_client' => true]);
     }
 
     public function update(Request $request, Task $task)

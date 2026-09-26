@@ -87,7 +87,8 @@
         display: inline-flex;
         align-items: center;
         gap: var(--space-1-5);
-        padding: var(--space-0-5) var(--space-2);
+        height: var(--size-row-action); // same as badges in the row
+        padding: 0 var(--space-2);
         font-size: var(--font-size-xs);
         line-height: var(--line-height-xs);
         font-weight: var(--font-weight-medium);
@@ -101,7 +102,8 @@
     // "Attach to invoice..." picker in a table row. The right padding
     // keeps room for the custom select arrow from elements.scss.
     &__attach {
-        padding: var(--space-1) var(--space-8) var(--space-1) var(--space-2);
+        height: var(--size-row-action); // same as badges in the row
+        padding: 0 var(--space-8) 0 var(--space-2);
         font-size: var(--font-size-xs);
         line-height: var(--line-height-xs);
         border: var(--border-width) solid var(--color-border);

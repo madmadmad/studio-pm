@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Contact;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -38,8 +39,30 @@ class HandleInertiaRequests extends Middleware
         return [
             ...parent::share($request),
             'auth' => [
-                'user' => $request->user(),
+                'user' => $this->sharedUser($request),
             ],
         ];
+    }
+
+    // A Client Hub contact gets only what the portal screens use (the
+    // header, message authorship). Sharing the whole model would send
+    // whatever relations a page happened to load -- e.g. the company with
+    // its payment terms and reminder settings -- to the client's browser.
+    protected function sharedUser(Request $request): mixed
+    {
+        $user = $request->user();
+
+        if ($user instanceof Contact) {
+            return [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'avatar_url' => $user->avatar_url,
+                // Whether the sidebar shows Invoices.
+                'can_view_invoices' => $user->canViewInvoices(),
+            ];
+        }
+
+        return $user;
     }
 }

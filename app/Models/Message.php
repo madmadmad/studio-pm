@@ -79,6 +79,19 @@ class Message extends Model
         return $this->participants->contains(fn (MessageParticipant $p) => $p->isActor($actor));
     }
 
+    // Threads a client contact was included on -- the only ones the Client
+    // Hub shows them.
+    public function scopeIncludingContact($query, Contact $contact)
+    {
+        return $query->whereHas('participants', fn ($q) => $q->where('contact_id', $contact->id));
+    }
+
+    // The thread this message belongs to: itself, or its parent for a reply.
+    public function thread(): self
+    {
+        return $this->parent_id ? $this->parent : $this;
+    }
+
     // Used by the email notifications -- a message can be attachments-only
     // (no body text at all), so falls back to naming what was sent instead
     // of showing a blank line.

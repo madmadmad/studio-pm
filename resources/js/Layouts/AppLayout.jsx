@@ -1,9 +1,9 @@
-import { Link, router, usePage } from '@inertiajs/react';
-import Avatar from '../Components/Avatar';
+import { usePage } from '@inertiajs/react';
 import AlertsMenu from '../Components/AlertsMenu';
+import AppShell from './AppShell';
 
 const NAV_ITEMS = [
-    { href: '/', label: 'Overview' },
+    { href: '/', label: 'Overview', exact: true },
     { href: '/clients', label: 'Clients', managerOnly: true },
     { href: '/projects', label: 'Projects' },
     { href: '/time-entries', label: 'Time' },
@@ -17,60 +17,24 @@ const NAV_ITEMS = [
     { href: '/settings', label: 'Settings', managerOnly: true },
 ];
 
+// The staff app frame: the shared sidebar with the staff nav.
 export default function AppLayout({ children }) {
-    const { url, props } = usePage();
-    const user = props.auth?.user;
-    const isManager = user?.role === 'manager';
-    const navItems = NAV_ITEMS.filter((item) => !item.managerOnly || isManager);
-
-    function isActive(href) {
-        if (href === '/') return url === '/';
-        return url.startsWith(href);
-    }
-
-    function handleLogout(e) {
-        e.preventDefault();
-        router.post('/logout');
-    }
+    const { props } = usePage();
+    const isManager = props.auth?.user?.role === 'manager';
 
     return (
-        <div className="app-shell">
-            <aside className="app-shell__sidebar">
-                <div className="app-shell__brand">
-                    <img src="/images/studio-lockup-rev.svg" alt="Madhouse Studio" className="app-shell__logo" />
-                </div>
-                {navItems.map((item) => (
-                    <Link
-                        key={item.href}
-                        href={item.href}
-                        className={`app-shell__nav-link${isActive(item.href) ? ' app-shell__nav-link--active' : ''}`}
-                    >
-                        {item.label}
-                    </Link>
-                ))}
-                {isManager && (
-                    <AlertsMenu
-                        triggerClassName="app-shell__nav-link"
-                        activeTriggerClassName="app-shell__nav-link--active"
-                    />
-                )}
-                <div className="app-shell__footer">
-                    {user && (
-                        <Link href="/profile" className="app-shell__user">
-                            <Avatar name={user.name} avatarUrl={user.avatar_url} id={user.id} size={28} />
-                            <div className="app-shell__user-details">
-                                <div className="app-shell__user-name">{user.name}</div>
-                                <div className="app-shell__user-email">{user.email}</div>
-                            </div>
-                        </Link>
-                    )}
-                    <a href="/logout" onClick={handleLogout} className="app-shell__logout">
-                        Log out
-                    </a>
-                </div>
-            </aside>
-
-            <main className="app-shell__main">{children}</main>
-        </div>
+        <AppShell
+            navItems={NAV_ITEMS.filter((item) => !item.managerOnly || isManager)}
+            extraNav={isManager && (
+                <AlertsMenu
+                    triggerClassName="app-shell__nav-link"
+                    activeTriggerClassName="app-shell__nav-link--active"
+                />
+            )}
+            profileHref="/profile"
+            logoutHref="/logout"
+        >
+            {children}
+        </AppShell>
     );
 }

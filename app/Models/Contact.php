@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Notifications\Notifiable;
 
-#[Hidden(['remember_token'])]
+#[Hidden(['remember_token', 'avatar_path'])]
 class Contact extends Model implements AuthenticatableContract
 {
     use AuthenticatableTrait, Notifiable;
@@ -45,6 +45,13 @@ class Contact extends Model implements AuthenticatableContract
     protected function getHasPortalAccessAttribute(): bool
     {
         return $this->hasPortalAccess();
+    }
+
+    // Invoices in the Client Hub are for the people who pay them: the
+    // company's billing contacts and its primary contact.
+    public function canViewInvoices(): bool
+    {
+        return $this->is_billing || $this->is_primary;
     }
 
     // Never a raw disk URL -- see User::getAvatarUrlAttribute() for why.

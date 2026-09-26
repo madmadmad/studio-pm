@@ -13,14 +13,23 @@
         border-bottom: var(--border-width) solid var(--color-border);
     }
 
-    th {
-        @include subhead;
+    // Same padding as .grid-row / .list-row: --space-row-x at the row's
+    // ends, half a .grid-row gap on each side of a cell between columns.
+    th,
+    td {
+        padding: var(--space-row-y) var(--space-1);
 
-        padding: var(--space-2) 0;
+        &:first-child {
+            padding-left: var(--space-row-x);
+        }
+
+        &:last-child {
+            padding-right: var(--space-row-x);
+        }
     }
 
-    td {
-        padding: var(--space-3) 0;
+    th {
+        @include subhead;
     }
 
     tbody tr {
@@ -112,6 +121,13 @@
         align-items: center;
         justify-content: flex-end;
         gap: var(--space-3);
+
+        // Each action icon in a row-height square, like the open caret.
+        > .icon-btn {
+            justify-content: center;
+            width: var(--size-row-action);
+            height: var(--size-row-action);
+        }
     }
 
     // Several inline items in one cell (a badge beside a picker).
@@ -156,7 +172,11 @@
     // (the card supplies it) and tighter rows.
     &--flush {
         th,
-        td {
+        td,
+        th:first-child,
+        td:first-child,
+        th:last-child,
+        td:last-child {
             padding-inline: 0;
         }
 

@@ -110,7 +110,6 @@ Route::middleware('auth:client')->prefix('portal')->name('api.portal.')->group(f
     Route::patch('messages/{message}', [PortalMessageController::class, 'update']);
     Route::delete('messages/{message}', [PortalMessageController::class, 'destroy']);
     Route::post('messages/{message}/replies', [PortalMessageController::class, 'reply']);
-    Route::post('messages/{message}/join', [PortalMessageController::class, 'join']);
     Route::get('attachments/{attachment}', [PortalMessageAttachmentController::class, 'show']);
     Route::get('attachments/{attachment}/thumbnail', [PortalMessageAttachmentController::class, 'thumbnail']);
 

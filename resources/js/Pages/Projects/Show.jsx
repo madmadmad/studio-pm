@@ -1,6 +1,6 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
-import { CaretRight, Check, DotsSixVertical, DownloadSimple, Paperclip, PencilSimple, Plus, Trash, X } from '@phosphor-icons/react';
+import { Check, DotsSixVertical, Eye, DownloadSimple, Paperclip, PencilSimple, Plus, Trash, X } from '@phosphor-icons/react';
 import AppLayout from '../../Layouts/AppLayout';
 import Button from '../../Components/Button';
 import EmptyState from '../../Components/EmptyState';
@@ -24,6 +24,8 @@ import TabBar from '../../Components/TabBar';
 import TabToolbar from '../../Components/TabToolbar';
 import { useRememberedTab } from '../../lib/useRememberedTab';
 import AutoResizeTextarea from '../../Components/AutoResizeTextarea';
+import Toggle from '../../Components/Toggle';
+import RowActions from '../../Components/RowActions';
 
 const ALL_TABS = ['Overview', 'Tasks', 'Notes', 'Messages', 'Time', 'Proposals', 'Billing', 'Expenses', 'Team'];
 const MANAGER_ONLY_TABS = ['Proposals', 'Billing', 'Expenses'];
@@ -199,43 +201,6 @@ function OverviewTab({ project }) {
     );
 }
 
-// The end of a list row: a delete button (when the item can be deleted)
-// and the "open" caret. The caret has no handler of its own -- its click
-// bubbles to the row, which opens the drawer; it's the keyboard-reachable
-// way in. Delete stops its click there, asks first with `confirmMessage`,
-// then runs `onDelete` (which should refresh the list). Pass no onDelete
-// for an item the API won't delete (accepted, paid, billed), and the
-// column keeps its width so rows stay aligned.
-function RowActions({ openLabel, deleteLabel, confirmMessage, onDelete }) {
-    const [deleting, setDeleting] = useState(false);
-
-    async function remove(e) {
-        e.stopPropagation();
-        if (deleting || !confirm(confirmMessage)) return;
-        setDeleting(true);
-        try {
-            await onDelete();
-        } catch (err) {
-            alert(err.message || 'Could not delete this.');
-        } finally {
-            setDeleting(false);
-        }
-    }
-
-    return (
-        <div className="grid-row__actions">
-            {onDelete && (
-                <button onClick={remove} disabled={deleting} title={deleteLabel} className="icon-btn icon-btn--danger grid-row__delete">
-                    <Trash />
-                </button>
-            )}
-            <button title={openLabel} className="row-action">
-                <CaretRight size={14} weight="bold" />
-            </button>
-        </div>
-    );
-}
-
 function TaskRow({ task, teamNames, onChange, onOpen }) {
     async function cycleStatus(e) {
         e.stopPropagation();
@@ -256,6 +221,9 @@ function TaskRow({ task, teamNames, onChange, onOpen }) {
         <div onClick={() => onOpen(task.id)} className="grid-row grid-row--action grid-row--link">
             <div className="task-list__title">
                 <span className="u-truncate">{task.title}</span>
+                {task.visible_to_client && (
+                    <Eye className="task-list__client" aria-label="Shown to the client" title="Shown to the client" />
+                )}
             </div>
             <div className="task-list__assignee" onClick={(e) => e.stopPropagation()}>
                 <select
@@ -546,6 +514,12 @@ function TaskDrawer({ task, teamNames, isNew, onClose, onChange }) {
         onChange();
     }
 
+    // A boolean, so not through updateField (which turns false into null).
+    async function updateVisibility(value) {
+        await api.patch(`/api/tasks/${task.id}`, { visible_to_client: value });
+        onChange();
+    }
+
     function handleDescriptionChange(value) {
         setDescription(value);
         descriptionSave.queue(task.id, value);
@@ -600,6 +574,18 @@ function TaskDrawer({ task, teamNames, isNew, onClose, onChange }) {
                         onChange={(e) => updateField('due_date', e.target.value)}
                         className="input input--xs"
                     />
+                </div>
+                <div className="form-grid__full">
+                    <Toggle
+                        checked={task.visible_to_client}
+                        onChange={(value) => updateVisibility(value)}
+                        label="Show client"
+                    />
+                    <div className="form-hint form-hint--attached">
+                        {task.visible_to_client
+                            ? 'This task appears in the client portal.'
+                            : 'Internal only. The client can\'t see this task.'}
+                    </div>
                 </div>
             </div>
 

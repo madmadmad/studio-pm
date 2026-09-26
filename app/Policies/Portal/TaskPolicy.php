@@ -8,9 +8,10 @@ use App\Models\Task;
 
 class TaskPolicy
 {
+    // Only tasks the studio has set to "Show client".
     public function view(Contact $contact, Task $task): bool
     {
-        return $contact->canAccessProject($task->project);
+        return $task->visible_to_client && $contact->canAccessProject($task->project);
     }
 
     public function create(Contact $contact, Project $project): bool
@@ -20,7 +21,7 @@ class TaskPolicy
 
     public function update(Contact $contact, Task $task): bool
     {
-        return $contact->canAccessProject($task->project);
+        return $this->view($contact, $task);
     }
 
     // Deliberately no delete() -- clients can view/create/edit tasks but

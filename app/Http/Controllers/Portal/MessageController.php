@@ -19,6 +19,7 @@ class MessageController extends Controller
         abort_unless($this->policy->view($request->user(), $project), 403);
 
         return $project->messages()
+            ->includingContact($request->user())
             ->withTrashed()
             ->with([
                 'senderUser', 'senderContact', 'attachments',
@@ -52,7 +53,7 @@ class MessageController extends Controller
     {
         abort_if($message->parent_id, 404);
 
-        abort_unless($this->policy->create($request->user(), $message->project), 403);
+        abort_unless($this->policy->viewThread($request->user(), $message), 403);
 
         $data = $this->validateMessage($request);
 
@@ -81,16 +82,8 @@ class MessageController extends Controller
         return response()->noContent();
     }
 
-    public function join(Request $request, Message $message)
-    {
-        abort_if($message->parent_id, 404);
-
-        abort_unless($this->policy->create($request->user(), $message->project), 403);
-
-        $this->threads->join($message, $request->user());
-
-        return $message->load('participants.user', 'participants.contact');
-    }
+    // No join() -- a client only ever sees threads they were included on
+    // (see MessagePolicy::viewThread), so there's nothing for them to join.
 
     protected function validateMessage(Request $request, array $extraRules = []): array
     {

@@ -11,9 +11,11 @@
         padding: var(--space-panel);
     }
 
-    // Holds an edge-to-edge table or list: clips rows to the rounded corners.
+    // Holds an edge-to-edge table or list. Square, so list rows (and their
+    // hover fill) run straight to the corners.
     &--flush {
         overflow: hidden;
+        border-radius: 0;
     }
 
     // Title row at the top of a card: heading plus an action on the right.

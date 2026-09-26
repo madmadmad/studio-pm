@@ -2,7 +2,12 @@
 // Components/StatusBadges.jsx; Components/Badge.jsx maps tone -> modifier.
 
 .badge {
-    padding: var(--space-0-5) var(--space-2);
+    // Same height as every other list-row control (--size-row-action).
+    display: inline-flex;
+    align-items: center;
+    height: var(--size-row-action);
+    padding-inline: var(--space-2);
+    white-space: nowrap;
     font-size: var(--font-size-xs);
     line-height: var(--line-height-xs);
     font-weight: var(--font-weight-medium);

@@ -134,6 +134,7 @@ class ClientHubAccessTest extends TestCase
     public function test_only_sent_or_paid_invoices_are_visible_to_a_client(): void
     {
         $contact = $this->portalContact();
+        $contact->update(['is_billing' => true]);
         $project = $contact->company->projects()->create(['name' => 'Brand refresh']);
         Invoice::create(['company_id' => $contact->company_id, 'project_id' => $project->id, 'status' => 'draft', 'surcharge' => false, 'issued_on' => now(), 'due_on' => now()->addDays(30)]);
         $paid = Invoice::create(['company_id' => $contact->company_id, 'project_id' => $project->id, 'status' => 'paid', 'surcharge' => false, 'issued_on' => now(), 'due_on' => now()->addDays(30)]);
@@ -143,6 +144,36 @@ class ClientHubAccessTest extends TestCase
         $ids = collect($response->viewData('page')['props']['project']['invoices'])->pluck('id');
         $this->assertTrue($ids->contains($paid->id));
         $this->assertEquals(1, $ids->count());
+    }
+
+    // Invoices are for billing and primary contacts only.
+    public function test_a_contact_who_is_neither_billing_nor_primary_sees_no_invoices_on_a_project(): void
+    {
+        $contact = $this->portalContact();
+        $project = $contact->company->projects()->create(['name' => 'Brand refresh']);
+        Invoice::create(['company_id' => $contact->company_id, 'project_id' => $project->id, 'status' => 'sent', 'surcharge' => false, 'issued_on' => now(), 'due_on' => now()->addDays(30)]);
+
+        $response = $this->actingAs($contact, 'client')->get("/portal/projects/{$project->id}");
+
+        $this->assertSame([], $response->viewData('page')['props']['project']['invoices']);
+        $this->assertFalse($response->viewData('page')['props']['canViewInvoices']);
+    }
+
+    // The Team drawer shows staff photos by link, never the stored path.
+    public function test_the_staff_roster_carries_photo_links_but_no_storage_paths(): void
+    {
+        $contact = $this->portalContact();
+        $project = $contact->company->projects()->create(['name' => 'Brand refresh']);
+        $manager = User::factory()->create(['name' => 'Bill Sattler']);
+        $manager->forceFill(['avatar_path' => 'avatars/users/secret.jpg'])->save();
+        $project->users()->attach($manager->id, ['assigned_at' => now()]);
+
+        $response = $this->actingAs($contact, 'client')->get("/portal/projects/{$project->id}");
+
+        $person = $response->viewData('page')['props']['project']['active_users'][0];
+        $this->assertNotNull($person['avatar_url']);
+        $this->assertArrayNotHasKey('avatar_path', $person);
+        $this->assertArrayNotHasKey('email', $person);
     }
 
     public function test_a_client_sees_the_assigned_staff_roster(): void

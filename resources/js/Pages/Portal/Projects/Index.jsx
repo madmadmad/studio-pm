@@ -1,36 +1,28 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head } from '@inertiajs/react';
 import PortalLayout from '../../../Layouts/PortalLayout';
-import EmptyState from '../../../Components/EmptyState';
-import { ProjectStatusBadge } from '../../../Components/StatusBadges';
 import PageHeader from '../../../Components/PageHeader';
+import EmptyState from '../../../Components/EmptyState';
+import ProjectsTable from '../../../Components/ProjectsTable';
 
+// Client Hub home: the company's active projects and any awaiting a
+// proposal, in the staff Projects list (read-only). Rows open the portal
+// project page.
 export default function PortalProjectsIndex({ projects }) {
     return (
         <PortalLayout>
-            <Head title="Your projects" />
-            <PageHeader
-                title="Your projects"
-                subtitle={
-                    <>
-                        {projects.length} project{projects.length !== 1 ? 's' : ''}.
-                    </>
-                }
-            />
+            <Head title="Projects" />
+            <PageHeader title="Projects" />
 
-            <div className="card">
+            <div className="card card--flush">
                 {projects.length === 0 ? (
-                    <EmptyState text="No projects yet." />
+                    <EmptyState text="No active projects right now." />
                 ) : (
-                    projects.map((project) => (
-                        <Link
-                            key={project.id}
-                            href={`/portal/projects/${project.id}`}
-                            className="list-row"
-                        >
-                            <div className="list-row__title">{project.name}</div>
-                            <ProjectStatusBadge project={project} />
-                        </Link>
-                    ))
+                    <ProjectsTable
+                        projects={projects}
+                        showClient={false}
+                        canChangeStatus={false}
+                        hrefFor={(project) => `/portal/projects/${project.id}`}
+                    />
                 )}
             </div>
         </PortalLayout>

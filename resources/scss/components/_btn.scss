@@ -35,8 +35,10 @@
     }
 
     // A compact CTA sitting inline in a row that already has content.
+    // Row height (--size-row-action), like badges and the open caret.
     &--sm {
-        padding: var(--space-1) var(--space-2-5);
+        height: var(--size-row-action);
+        padding: 0 var(--space-2-5);
         font-size: var(--font-size-xs);
     }
 

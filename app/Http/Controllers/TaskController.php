@@ -24,6 +24,7 @@ class TaskController extends Controller
             'assignee' => ['nullable', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'due_date' => ['nullable', 'date'],
+            'visible_to_client' => ['sometimes', 'boolean'],
         ]);
 
         return $project->tasks()->create($data);
@@ -39,6 +40,7 @@ class TaskController extends Controller
             'description' => ['nullable', 'string'],
             'status' => ['sometimes', 'in:todo,in_progress,done'],
             'due_date' => ['nullable', 'date'],
+            'visible_to_client' => ['sometimes', 'boolean'],
         ]);
 
         $task->update($data);

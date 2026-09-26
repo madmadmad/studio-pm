@@ -1,27 +1,28 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import AppLayout from '../../Layouts/AppLayout';
 import Button from '../../Components/Button';
 import EmptyState from '../../Components/EmptyState';
-import Badge from '../../Components/Badge';
-import { InvoiceStatusBadge, ProposalStatusBadge, CompanyStatusBadge } from '../../Components/StatusBadges';
+import { CompanyStatusBadge } from '../../Components/StatusBadges';
 import ProjectsTable from '../../Components/ProjectsTable';
-import { formatCurrency, formatDate, invoiceTotal, isOverdue } from '../../lib/format';
+import { formatCurrency, invoiceTotal, isOverdue } from '../../lib/format';
 import { CLIENT_PAYMENT_TERMS, paymentTermsLabel } from '../../lib/paymentTerms';
 import { api } from '../../lib/api';
-import { visitRow } from '../../lib/rowLink';
 import { useRememberedTab } from '../../lib/useRememberedTab';
 import PageHeader from '../../Components/PageHeader';
 import MetricCard from '../../Components/MetricCard';
 import TabBar from '../../Components/TabBar';
 import TabToolbar from '../../Components/TabToolbar';
-import Avatar from '../../Components/Avatar';
 import ActionMenu from '../../Components/ActionMenu';
 import Drawer from '../../Components/Drawer';
 import NewInvoiceDrawer from '../../Components/NewInvoiceDrawer';
 import ProposalEditor from '../../Components/ProposalEditor';
 import Toggle from '../../Components/Toggle';
 import AutoResizeTextarea from '../../Components/AutoResizeTextarea';
+import ClientFields, { Field } from '../../Components/client/ClientFields';
+import ContactCards from '../../Components/client/ContactCards';
+import ClientInvoicesTable from '../../Components/client/ClientInvoicesTable';
+import ClientProposalsTable from '../../Components/client/ClientProposalsTable';
 import { GearSix } from '@phosphor-icons/react';
 import BackLink from '../../Components/BackLink';
 
@@ -94,9 +95,6 @@ function DetailsCard({ company, firmDefaultTerms }) {
     }
 
     if (!editing) {
-        const cityStateZip = [company.city, [company.state, company.postal_code].filter(Boolean).join(' ')]
-            .filter(Boolean)
-            .join(', ');
         return (
             <>
                 <PageHeader
@@ -110,37 +108,20 @@ function DetailsCard({ company, firmDefaultTerms }) {
                         </>
                     }
                 />
-                <div className="field-grid page-section page-section--loose">
-                    <div>
-                        <div className="section-label section-label--ruled">Address</div>
-                        {company.address_line1 || cityStateZip ? (
-                            <div className="field-grid__value">
-                                {company.address_line1 && <div>{company.address_line1}</div>}
-                                {cityStateZip && <div>{cityStateZip}</div>}
-                            </div>
-                        ) : <div className="field-grid__empty">—</div>}
-                    </div>
-                    <div>
-                        <div className="section-label section-label--ruled">Phone</div>
-                        {company.phone
-                            ? <div className="field-grid__value">{company.phone}</div>
-                            : <div className="field-grid__empty">—</div>}
-                    </div>
-                    <div>
-                        <div className="section-label section-label--ruled">Payment terms</div>
+                <ClientFields company={company}>
+                    <Field label="Payment terms">
                         <div className="field-grid__value">
                             {paymentTermsLabel(company.effective_payment_terms)}
                             {!company.default_payment_terms && <span className="field-grid__note"> (firm default)</span>}
                         </div>
-                    </div>
-                    <div>
-                        <div className="section-label section-label--ruled">Automatic reminders</div>
+                    </Field>
+                    <Field label="Automatic reminders">
                         <div className="field-grid__value">
                             {company.effective_reminders_enabled ? 'On' : 'Off'}
                             {company.reminders_enabled === null && <span className="field-grid__note"> (app default)</span>}
                         </div>
-                    </div>
-                </div>
+                    </Field>
+                </ClientFields>
             </>
         );
     }
@@ -189,15 +170,6 @@ function DetailsCard({ company, firmDefaultTerms }) {
                 <Button type="submit" variant="confirm" disabled={saving}>Save</Button>
             </div>
         </form>
-    );
-}
-
-function ContactRoleBadges({ contact }) {
-    return (
-        <>
-            {contact.is_primary && <Badge tone="fern" label="Primary" />}
-            {contact.is_billing && <Badge tone="watermelon" label="Billing" />}
-        </>
     );
 }
 
@@ -369,46 +341,23 @@ function ContactsCard({ company }) {
             {contacts.length === 0 ? (
                 <EmptyState text="No contacts yet." />
             ) : (
-                <div className="contact-grid">
-                    {contacts.map((contact) => (
-                        <div key={contact.id} className="card card--padded contact-card">
-                            <div className="contact-card__header">
-                                <Avatar name={contact.name} avatarUrl={contact.avatar_url} id={contact.id} size={40} />
-                                <div className="contact-card__identity">
-                                    <div className="contact-card__name">{contact.name}</div>
-                                    {contact.role && <div className="contact-card__role">{contact.role}</div>}
-                                </div>
-                                <ActionMenu
-                                    label={`Settings for ${contact.name}`}
-                                    icon={<GearSix />}
-                                    items={[
-                                        { label: 'Edit contact', onSelect: () => setEditing(contact) },
-                                        { label: contact.is_primary ? 'Unset primary' : 'Make primary', onSelect: () => toggleFlag(contact, 'is_primary') },
-                                        { label: contact.is_billing ? 'Unset billing' : 'Make billing', onSelect: () => toggleFlag(contact, 'is_billing') },
-                                        !contact.has_portal_access && { label: 'Invite to portal', onSelect: () => inviteToPortal(contact) },
-                                        { label: 'Delete contact', onSelect: () => deleteContact(contact), danger: true },
-                                    ]}
-                                />
-                            </div>
-                            {(contact.email || contact.phone) && (
-                                <div className="contact-card__details">
-                                    {contact.email && (
-                                        <div>
-                                            <a href={`mailto:${contact.email}`} className="link link--muted">{contact.email}</a>
-                                        </div>
-                                    )}
-                                    {contact.phone && <div>{contact.phone}</div>}
-                                </div>
-                            )}
-                            {(contact.is_primary || contact.is_billing || contact.has_portal_access) && (
-                                <div className="contact-card__badges">
-                                    <ContactRoleBadges contact={contact} />
-                                    {contact.has_portal_access && <Badge tone="sage" label="Portal access" />}
-                                </div>
-                            )}
-                        </div>
-                    ))}
-                </div>
+                <ContactCards
+                    contacts={contacts}
+                    showPortalAccess
+                    menuFor={(contact) => (
+                        <ActionMenu
+                            label={`Settings for ${contact.name}`}
+                            icon={<GearSix />}
+                            items={[
+                                { label: 'Edit contact', onSelect: () => setEditing(contact) },
+                                { label: contact.is_primary ? 'Unset primary' : 'Make primary', onSelect: () => toggleFlag(contact, 'is_primary') },
+                                { label: contact.is_billing ? 'Unset billing' : 'Make billing', onSelect: () => toggleFlag(contact, 'is_billing') },
+                                !contact.has_portal_access && { label: 'Invite to portal', onSelect: () => inviteToPortal(contact) },
+                                { label: 'Delete contact', onSelect: () => deleteContact(contact), danger: true },
+                            ]}
+                        />
+                    )}
+                />
             )}
 
             {editing && (
@@ -538,34 +487,7 @@ function InvoicesCard({ company }) {
             {company.invoices.length === 0 ? (
                 <EmptyState text="No invoices yet." />
             ) : (
-                <div className="card card--flush">
-                    <table className="table">
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Project</th>
-                                <th>Issued</th>
-                                <th>Due</th>
-                                <th>Total</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {company.invoices.map((invoice) => (
-                                <tr key={invoice.id} onClick={(e) => visitRow(e, `/invoices/${invoice.id}`)} className="table__row--link">
-                                    <td className="table__cell--numeric table__cell--strong">
-                                        <Link href={`/invoices/${invoice.id}`} className="link">{invoice.invoice_number}</Link>
-                                    </td>
-                                    <td className="table__cell--muted">{invoice.project?.name ?? '—'}</td>
-                                    <td className="table__cell--muted">{formatDate(invoice.issued_on)}</td>
-                                    <td className="table__cell--muted">{formatDate(invoice.due_on)}</td>
-                                    <td className="table__cell--numeric">{formatCurrency(invoiceTotal(invoice.items, invoice.surcharge))}</td>
-                                    <td><InvoiceStatusBadge invoice={invoice} /></td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+                <ClientInvoicesTable invoices={company.invoices} hrefFor={(invoice) => `/invoices/${invoice.id}`} />
             )}
 
             {creating && (
@@ -629,32 +551,7 @@ function ProposalsCard({ company, services }) {
             {company.proposals.length === 0 ? (
                 <EmptyState text="No proposals yet." />
             ) : (
-                <div className="card card--flush">
-                    <table className="table">
-                        <thead>
-                            <tr>
-                                <th>Title</th>
-                                <th>Project</th>
-                                <th>Estimate</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {company.proposals.map((proposal) => (
-                                <tr key={proposal.id} onClick={(e) => visitRow(e, `/proposals/${proposal.id}/edit`)} className="table__row--link">
-                                    <td className="table__cell--strong">
-                                        <Link href={`/proposals/${proposal.id}/edit`} className="link">{proposal.title}</Link>
-                                    </td>
-                                    <td className="table__cell--muted">{proposal.project?.name ?? '—'}</td>
-                                    <td className="table__cell--numeric">
-                                        {proposal.estimate_amount ? formatCurrency(proposal.estimate_amount) : '—'}
-                                    </td>
-                                    <td><ProposalStatusBadge proposal={proposal} /></td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+                <ClientProposalsTable proposals={company.proposals} hrefFor={(proposal) => `/proposals/${proposal.id}/edit`} />
             )}
 
             {creating && <NewProposalDrawer company={company} services={services} onClose={() => setCreating(false)} />}

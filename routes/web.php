@@ -101,6 +101,9 @@ Route::prefix('portal')->name('portal.')->group(function () {
     Route::middleware('auth:client')->group(function () {
         Route::post('/logout', [PortalAuthController::class, 'logout'])->name('logout');
         Route::get('/', [PortalPageController::class, 'index'])->name('dashboard');
+        Route::get('/proposals', [PortalPageController::class, 'proposals'])->name('proposals.index');
+        Route::get('/invoices', [PortalPageController::class, 'invoices'])->name('invoices.index');
+        Route::get('/contacts', [PortalPageController::class, 'contacts'])->name('contacts.index');
         Route::get('/projects/{project}', [PortalPageController::class, 'show'])->name('projects.show');
         Route::get('/profile', [PortalProfilePageController::class, 'index'])->name('profile.index');
     });

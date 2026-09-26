@@ -45,8 +45,11 @@
     }
 
     // Tiny inline select sitting beside a badge in a table row.
+    // Row height (--size-row-action), like the badge beside it.
     &--micro {
-        padding: var(--space-0-5) var(--space-1);
+        height: var(--size-row-action);
+        padding-block: 0;
+        padding-inline: var(--space-1);
         font-size: var(--font-size-xs);
         line-height: var(--line-height-xs);
         color: var(--color-shadow-grey);
