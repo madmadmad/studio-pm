@@ -6,7 +6,7 @@ import EmptyState from '../../Components/EmptyState';
 import Badge from '../../Components/Badge';
 import { InvoiceStatusBadge, ProposalStatusBadge, ProjectStatusBadge, TaskStatusBadge, CompanyStatusBadge } from '../../Components/StatusBadges';
 import { formatCurrency, formatDate, invoiceTotal } from '../../lib/format';
-import { PAYMENT_TERMS, paymentTermsLabel } from '../../lib/paymentTerms';
+import { CLIENT_PAYMENT_TERMS, paymentTermsLabel } from '../../lib/paymentTerms';
 import { api } from '../../lib/api';
 import PageHeader from '../../Components/PageHeader';
 import BackLink from '../../Components/BackLink';
@@ -22,7 +22,7 @@ function formatAddress(company) {
     return [company.address_line1, cityStateZip].filter(Boolean).join(', ');
 }
 
-function DetailsCard({ company }) {
+function DetailsCard({ company, firmDefaultTerms }) {
     const [editing, setEditing] = useState(false);
     const [saving, setSaving] = useState(false);
     const [form, setForm] = useState({
@@ -94,8 +94,8 @@ function DetailsCard({ company }) {
                     onChange={(e) => setForm({ ...form, default_payment_terms: e.target.value })}
                     className="input"
                 >
-                    <option value="">Use firm default</option>
-                    {PAYMENT_TERMS.filter((t) => t.value !== 'custom').map((t) => (
+                    <option value="">Firm default ({paymentTermsLabel(firmDefaultTerms)})</option>
+                    {CLIENT_PAYMENT_TERMS.map((t) => (
                         <option key={t.value} value={t.value}>{t.label}</option>
                     ))}
                 </select>
@@ -388,12 +388,12 @@ function ProposalsCard({ company }) {
     );
 }
 
-export default function ClientsShow({ company }) {
+export default function ClientsShow({ company, firmPaymentTerms }) {
     return (
         <AppLayout>
             <Head title={company.name} />
             <BackLink href="/clients" label="Clients" />
-            <DetailsCard company={company} />
+            <DetailsCard company={company} firmDefaultTerms={firmPaymentTerms} />
 
             <ContactsCard company={company} />
             <ProjectsCard company={company} />

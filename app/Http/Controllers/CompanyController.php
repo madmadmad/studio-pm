@@ -23,9 +23,9 @@ class CompanyController extends Controller
             'city' => ['nullable', 'string', 'max:255'],
             'state' => ['nullable', 'string', 'max:255'],
             'postal_code' => ['nullable', 'string', 'max:20'],
-            // Custom isn't a valid firm-wide-default choice -- it only ever
-            // makes sense picked per-invoice.
-            'default_payment_terms' => ['nullable', Rule::enum(PaymentTerms::class)->except(PaymentTerms::Custom)],
+            // Net 30/60/90 only (PaymentTerms::forClients()); Custom and the
+            // other terms can still be picked on a single invoice.
+            'default_payment_terms' => ['nullable', Rule::enum(PaymentTerms::class)->only(PaymentTerms::forClients())],
             'reminders_enabled' => ['nullable', 'boolean'],
         ]);
 
@@ -52,7 +52,7 @@ class CompanyController extends Controller
             'state' => ['nullable', 'string', 'max:255'],
             'postal_code' => ['nullable', 'string', 'max:20'],
             'status' => ['sometimes', 'in:active,inactive'],
-            'default_payment_terms' => ['nullable', Rule::enum(PaymentTerms::class)->except(PaymentTerms::Custom)],
+            'default_payment_terms' => ['nullable', Rule::enum(PaymentTerms::class)->only(PaymentTerms::forClients())],
             'reminders_enabled' => ['nullable', 'boolean'],
         ]);
 

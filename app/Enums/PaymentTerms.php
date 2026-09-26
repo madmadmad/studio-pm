@@ -11,6 +11,7 @@ enum PaymentTerms: string
     case Net30 = 'net_30';
     case Net45 = 'net_45';
     case Net60 = 'net_60';
+    case Net90 = 'net_90';
     case Custom = 'custom';
 
     public function label(): string
@@ -21,6 +22,7 @@ enum PaymentTerms: string
             self::Net30 => 'Net 30',
             self::Net45 => 'Net 45',
             self::Net60 => 'Net 60',
+            self::Net90 => 'Net 90',
             self::Custom => 'Custom',
         };
     }
@@ -35,6 +37,7 @@ enum PaymentTerms: string
             self::Net30 => 30,
             self::Net45 => 45,
             self::Net60 => 60,
+            self::Net90 => 90,
             self::Custom => null,
         };
     }
@@ -55,5 +58,17 @@ enum PaymentTerms: string
     public static function selectable(): array
     {
         return array_values(array_filter(self::cases(), fn (self $term) => $term !== self::Custom));
+    }
+
+    // The terms a client can be set to (Clients > Edit). Narrower than
+    // selectable() on purpose: clients get one of the standard net terms,
+    // while a single invoice can still be set to anything, Custom included.
+    // Mirrored by CLIENT_PAYMENT_TERMS in resources/js/lib/paymentTerms.js.
+    /**
+     * @return array<int, self>
+     */
+    public static function forClients(): array
+    {
+        return [self::Net30, self::Net60, self::Net90];
     }
 }

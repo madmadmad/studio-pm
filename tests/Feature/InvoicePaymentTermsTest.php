@@ -120,6 +120,11 @@ class InvoicePaymentTermsTest extends TestCase
         $this->assertTermsProduceDueDate('net_60', 60);
     }
 
+    public function test_net_90_due_date_is_90_days_out(): void
+    {
+        $this->assertTermsProduceDueDate('net_90', 90);
+    }
+
     // The server ignores a submitted due_on for any non-Custom term, even
     // one that would otherwise look plausible -- it always recomputes.
     public function test_a_submitted_due_date_is_ignored_unless_terms_are_custom(): void
@@ -183,7 +188,7 @@ class InvoicePaymentTermsTest extends TestCase
         $company = $this->makeCompany();
 
         $this->actingAs($user)->postJson("/api/companies/{$company->id}/invoices", [
-            'payment_terms' => 'net_90',
+            'payment_terms' => 'net_120',
             'items' => [['description' => 'Design work', 'amount' => 1000]],
         ])->assertUnprocessable();
     }
@@ -198,6 +203,49 @@ class InvoicePaymentTermsTest extends TestCase
         $this->actingAs($user)->patchJson("/api/companies/{$company->id}", [
             'default_payment_terms' => 'custom',
         ])->assertUnprocessable();
+    }
+
+    public function test_a_client_can_be_set_to_net_30_60_or_90(): void
+    {
+        $user = User::factory()->create();
+        $company = $this->makeCompany();
+
+        foreach (['net_30', 'net_60', 'net_90'] as $terms) {
+            $this->actingAs($user)->patchJson("/api/companies/{$company->id}", [
+                'default_payment_terms' => $terms,
+            ])->assertOk();
+
+            $this->assertSame($terms, $company->fresh()->default_payment_terms->value);
+        }
+    }
+
+    // Other terms stay available on a single invoice, just not as a client's
+    // standing terms.
+    public function test_a_client_cannot_be_set_to_terms_outside_net_30_60_90(): void
+    {
+        $user = User::factory()->create();
+        $company = $this->makeCompany();
+
+        foreach (['due_on_receipt', 'net_15', 'net_45'] as $terms) {
+            $this->actingAs($user)->patchJson("/api/companies/{$company->id}", [
+                'default_payment_terms' => $terms,
+            ])->assertUnprocessable();
+        }
+    }
+
+    public function test_a_net_90_client_gets_a_90_day_due_date_by_default(): void
+    {
+        $user = User::factory()->create();
+        $company = $this->makeCompany('net_90');
+
+        $response = $this->actingAs($user)->postJson("/api/companies/{$company->id}/invoices", [
+            'issued_on' => '2026-05-01',
+            'items' => [['description' => 'Design work', 'amount' => 1000]],
+        ]);
+
+        $response->assertCreated();
+        $this->assertSame('net_90', $response->json('payment_terms'));
+        $this->assertSame('2026-07-30', $this->dateFrom($response->json('due_on')));
     }
 
     // The practical, testable form of "the backfill migration sets dates

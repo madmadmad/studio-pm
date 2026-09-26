@@ -27,6 +27,8 @@ class ClientPageController extends Controller
 
         return Inertia::render('Clients/Show', [
             'company' => $company,
+            // For the "Firm default (Net 30)" option in the terms dropdown.
+            'firmPaymentTerms' => config('invoicing.default_payment_terms'),
         ]);
     }
 }

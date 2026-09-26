@@ -9,8 +9,13 @@ export const PAYMENT_TERMS = [
     { value: 'net_30', label: 'Net 30', days: 30 },
     { value: 'net_45', label: 'Net 45', days: 45 },
     { value: 'net_60', label: 'Net 60', days: 60 },
+    { value: 'net_90', label: 'Net 90', days: 90 },
     { value: 'custom', label: 'Custom', days: null },
 ];
+
+// The terms a client can be set to -- mirrors PaymentTerms::forClients().
+// A single invoice can still use any of PAYMENT_TERMS.
+export const CLIENT_PAYMENT_TERMS = PAYMENT_TERMS.filter((t) => ['net_30', 'net_60', 'net_90'].includes(t.value));
 
 // The browser's *local* date, not UTC -- Date#toISOString() would be wrong
 // for anyone west of UTC in the evening (it'd show tomorrow). This is only
