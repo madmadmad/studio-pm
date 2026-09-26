@@ -4,9 +4,9 @@ import { displayInvoiceStatus } from '../lib/format';
 const INVOICE_STATUS = {
     draft: { tone: 'neutral', label: 'Draft' },
     scheduled: { tone: 'neutral', label: 'Scheduled' },
-    sent: { tone: 'watermelon', label: 'Sent' },
-    paid: { tone: 'fern', label: 'Paid' },
-    overdue: { tone: 'watermelon', label: 'Overdue' },
+    sent: { tone: 'accent', label: 'Sent' },
+    paid: { tone: 'success', label: 'Paid' },
+    overdue: { tone: 'danger', label: 'Overdue' },
 };
 
 export function InvoiceStatusBadge({ invoice }) {
@@ -17,8 +17,8 @@ export function InvoiceStatusBadge({ invoice }) {
 
 const PROPOSAL_STATUS = {
     draft: { tone: 'neutral', label: 'Draft' },
-    sent: { tone: 'watermelon', label: 'Sent' },
-    accepted: { tone: 'fern', label: 'Accepted' },
+    sent: { tone: 'accent', label: 'Sent' },
+    accepted: { tone: 'success', label: 'Accepted' },
 };
 
 export function ProposalStatusBadge({ proposal }) {
@@ -28,14 +28,14 @@ export function ProposalStatusBadge({ proposal }) {
 
 export function CompanyStatusBadge({ company }) {
     return company.status === 'active'
-        ? <Badge tone="fern" label="Active" />
+        ? <Badge tone="success" label="Active" />
         : <Badge tone="neutral" label="Inactive" />;
 }
 
 const TASK_STATUS = {
     todo: { tone: 'neutral', label: 'To do' },
-    in_progress: { tone: 'watermelon', label: 'In progress' },
-    done: { tone: 'fern', label: 'Done' },
+    in_progress: { tone: 'accent', label: 'In progress' },
+    done: { tone: 'success', label: 'Done' },
 };
 
 export function TaskStatusBadge({ task }) {
@@ -45,8 +45,8 @@ export function TaskStatusBadge({ task }) {
 
 const PROJECT_STATUS = {
     leads: { tone: 'neutral', label: 'Leads' },
-    estimated: { tone: 'watermelon', label: 'Estimated' },
-    active: { tone: 'fern', label: 'Active' },
+    estimated: { tone: 'accent', label: 'Estimated' },
+    active: { tone: 'success', label: 'Active' },
     inactive: { tone: 'neutral', label: 'Inactive' },
     completed: { tone: 'neutral', label: 'Completed' },
     archived: { tone: 'neutral', label: 'Archived' },
@@ -59,8 +59,8 @@ export function ProjectStatusBadge({ project }) {
 
 const EXPENSE_STATUS = {
     unbilled: { tone: 'neutral', label: 'Unbilled' },
-    billed: { tone: 'watermelon', label: 'Billed' },
-    billed_and_paid: { tone: 'fern', label: 'Paid' },
+    billed: { tone: 'accent', label: 'Billed' },
+    billed_and_paid: { tone: 'success', label: 'Paid' },
 };
 
 export function ExpenseStatusBadge({ expense }) {
@@ -72,6 +72,6 @@ export function ExpenseStatusBadge({ expense }) {
 // hour by hour, so there's no billed/unbilled state to show.
 export function TimeEntryStatusBadge({ entry }) {
     return entry.billable
-        ? <Badge tone="fern" label="Billable" />
+        ? <Badge tone="success" label="Billable" />
         : <Badge tone="neutral" label="Non-billable" />;
 }

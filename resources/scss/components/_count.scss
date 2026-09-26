@@ -1,4 +1,4 @@
-// A number in a small light fern circle (the fern badge's colors): tab
+// A number in a small primary-soft circle (primary text on its tint): tab
 // counts ("Invoices 4"), toolbar summaries ("Staff 3"). Grows into a pill
 // past two digits. The owner adds any spacing around it.
 
@@ -13,8 +13,8 @@
     line-height: 1;
     font-weight: var(--font-weight-semibold);
     font-variant-numeric: tabular-nums;
-    color: var(--color-fern);
-    background-color: var(--color-fern-soft);
+    color: var(--color-primary);
+    background-color: var(--color-primary-soft);
     border-radius: var(--radius-pill);
     vertical-align: middle;
 }

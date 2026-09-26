@@ -3,7 +3,7 @@
 .form-hint {
     font-size: var(--font-size-xs);
     line-height: var(--line-height-xs);
-    color: var(--color-shadow-grey);
+    color: var(--color-text-muted);
 
     // Directly under the field it explains.
     &--attached {

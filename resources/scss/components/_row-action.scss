@@ -8,17 +8,17 @@
     justify-content: center;
     width: var(--size-row-action);
     height: var(--size-row-action);
-    color: var(--color-white);
-    border: var(--border-width) solid var(--color-fern);
-    background-color: var(--color-fern);
+    color: var(--color-text-inverse);
+    border: var(--border-width) solid var(--color-primary);
+    background-color: var(--color-primary);
     border-radius: var(--radius-base);
     transition:
         color var(--duration-fast) var(--ease-standard),
         border-color var(--duration-fast) var(--ease-standard);
 
     &:hover {
-        color: var(--color-white);
-        border-color: var(--color-fern-soft);
-        background-color: var(--color-fern-soft);
+        color: var(--color-text-inverse);
+        border-color: var(--color-primary-soft);
+        background-color: var(--color-primary-soft);
     }
 }

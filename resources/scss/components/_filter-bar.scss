@@ -15,14 +15,14 @@
         padding: var(--space-1-5) var(--space-3);
         font-size: var(--font-size-sm);
         line-height: var(--line-height-sm);
-        color: var(--color-shadow-grey);
+        color: var(--color-text-muted);
         border: var(--border-width) solid var(--color-border);
         border-radius: var(--radius-base);
 
         // No border when active, matching the original pill exactly.
         &--active {
-            color: var(--color-white);
-            background-color: var(--color-gunmetal);
+            color: var(--color-text-inverse);
+            background-color: var(--color-secondary);
             border-width: 0;
         }
     }

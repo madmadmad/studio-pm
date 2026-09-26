@@ -1,5 +1,5 @@
 // A project schedule's gantt chart (Components/schedule/ScheduleChart.jsx):
-// a label column, then a timeline where each item is a fern bar. Rows are
+// a label column, then a timeline where each item is a primary bar. Rows are
 // list-row height (--space-row-y around a --size-row-action bar) so the
 // chart lines up with the list beneath it. JS places week labels,
 // gridlines, bars and the today line by percentage across the timeline.
@@ -40,7 +40,7 @@
         text-align: left;
 
         &:is(button):hover {
-            color: var(--color-fern);
+            color: var(--color-primary);
         }
     }
 
@@ -74,12 +74,12 @@
         top: 0;
         bottom: 0;
         min-width: var(--space-1); // a one-day item on a long schedule stays visible
-        background-color: var(--color-fern);
+        background-color: var(--color-primary);
         border-radius: var(--radius-base);
         transition: background-color var(--duration-fast) var(--ease-standard);
 
         &:hover {
-            background-color: var(--color-fern-hover);
+            background-color: var(--color-primary-hover);
         }
 
         &:focus-visible {
@@ -110,6 +110,6 @@
         top: 0;
         bottom: 0;
         width: var(--border-width-thick);
-        background-color: var(--color-watermelon);
+        background-color: var(--color-accent);
     }
 }

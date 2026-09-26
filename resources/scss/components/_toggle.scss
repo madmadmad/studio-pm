@@ -27,7 +27,7 @@
         transition: background-color var(--duration-fast) var(--ease-standard);
 
         &--on {
-            background-color: var(--color-fern);
+            background-color: var(--color-primary);
         }
     }
 
@@ -35,7 +35,7 @@
         display: inline-block;
         width: var(--toggle-knob-size);
         height: var(--toggle-knob-size);
-        background-color: var(--color-white);
+        background-color: var(--color-surface);
         border-radius: var(--radius-pill);
         box-shadow: var(--shadow-raised);
         transform: translateX(var(--toggle-inset));

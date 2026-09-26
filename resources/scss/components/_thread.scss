@@ -6,10 +6,10 @@
     &__load-earlier {
         font-size: var(--font-size-sm);
         line-height: var(--line-height-sm);
-        color: var(--color-shadow-grey);
+        color: var(--color-text-muted);
 
         &:hover {
-            color: var(--color-gunmetal);
+            color: var(--color-text);
         }
     }
 
@@ -37,7 +37,7 @@
         margin-top: var(--space-1);
         font-size: var(--font-size-xs);
         line-height: var(--line-height-xs);
-        color: var(--color-shadow-grey);
+        color: var(--color-text-muted);
     }
 
     &__body {
@@ -56,7 +56,7 @@
         font-size: var(--font-size-xs);
         line-height: var(--line-height-xs);
         font-weight: var(--font-weight-medium);
-        color: var(--color-shadow-grey);
+        color: var(--color-text-muted);
         text-align: center;
     }
 
@@ -77,6 +77,6 @@
     &__join-text {
         font-size: var(--font-size-sm);
         line-height: var(--line-height-sm);
-        color: var(--color-shadow-grey);
+        color: var(--color-text-muted);
     }
 }

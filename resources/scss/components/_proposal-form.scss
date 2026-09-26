@@ -27,7 +27,7 @@
 
     &__handle {
         padding-top: var(--space-3);
-        color: var(--color-shadow-grey);
+        color: var(--color-text-muted);
         cursor: grab;
     }
 
@@ -83,13 +83,13 @@
         grid-column: span 9;
         font-size: var(--font-size-xs);
         line-height: var(--line-height-xs);
-        color: var(--color-shadow-grey);
+        color: var(--color-text-muted);
     }
 
     &__remove {
         font-size: var(--font-size-xs);
         line-height: var(--line-height-xs);
-        color: var(--color-watermelon);
+        color: var(--color-danger);
     }
 
     &__total {

@@ -43,7 +43,7 @@
     &__details {
         font-size: var(--font-size-xs);
         line-height: var(--line-height-xs);
-        color: var(--color-shadow-grey);
+        color: var(--color-text-muted);
     }
 
     // "Bill [46.44] % of the budget  Bill the rest", then the running
@@ -71,6 +71,6 @@
     &__percent-unit {
         font-size: var(--font-size-sm);
         line-height: var(--line-height-sm);
-        color: var(--color-shadow-grey);
+        color: var(--color-text-muted);
     }
 }

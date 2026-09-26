@@ -2,7 +2,7 @@
 // Used by Components/Card.jsx or directly.
 
 .card {
-    background-color: var(--color-white);
+    background-color: var(--color-surface);
     // border: var(--border-width) solid var(--color-border);
     border: 0;
     border-radius: var(--radius-base);
@@ -30,7 +30,7 @@
         font-size: var(--font-size-sm);
         line-height: var(--line-height-sm);
         font-weight: var(--font-weight-semibold);
-        color: var(--color-shadow-grey);
+        color: var(--color-text-muted);
     }
 
     // A chunk of a card's content with room below it (an inline form above

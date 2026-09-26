@@ -6,17 +6,17 @@
     &__total {
         font-size: var(--font-size-sm);
         line-height: var(--line-height-sm);
-        color: var(--color-shadow-grey);
+        color: var(--color-text-muted);
     }
 
     &__total-value {
-        color: var(--color-watermelon);
+        color: var(--color-danger);
         font-variant-numeric: tabular-nums;
     }
 
     &__date {
         grid-column: span 2;
-        color: var(--color-shadow-grey);
+        color: var(--color-text-muted);
     }
 
     &__name {

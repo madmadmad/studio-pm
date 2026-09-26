@@ -206,8 +206,8 @@ function ProjectSummary({ project, proposedHours }) {
                 <MetricCard
                     label="Hours remaining"
                     value={hoursRemaining === null ? '—' : `${hoursRemaining}h`}
-                    // Fern, or watermelon once the sold hours are used up.
-                    tone={hoursRemaining !== null && hoursRemaining < 0 ? 'watermelon' : 'fern'}
+                    // Primary, or danger once the sold hours are used up.
+                    tone={hoursRemaining !== null && hoursRemaining < 0 ? 'danger' : 'primary'}
                 />
             </div>
             {invoices && (
@@ -1127,7 +1127,7 @@ function MessageThreadRow({ thread, currentUserId, onOpen }) {
         <div onClick={() => onOpen(thread.id)} className="grid-row grid-row--action grid-row--link">
             <div className="project-messages__subject">
                 <span className="u-truncate">{thread.subject}</span>
-                {!amParticipant && <Badge tone="watermelon" label="Not joined" />}
+                {!amParticipant && <Badge tone="accent" label="Not joined" />}
             </div>
             <div className="project-messages__participants">{participants.map((p) => p.name).join(', ') || '—'}</div>
             <div className="project-messages__date" title={formatDateTime(lastActivity)}>{formatDate(lastActivity)}</div>

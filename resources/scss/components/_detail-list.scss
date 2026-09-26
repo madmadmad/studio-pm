@@ -24,7 +24,7 @@
     }
 
     &__meta {
-        color: var(--color-shadow-grey);
+        color: var(--color-text-muted);
     }
 
     &__aside {
@@ -44,15 +44,15 @@
     // Inline outcome after an item ("· Sent", "· Failed").
     &__status {
         &--success {
-            color: var(--color-fern);
+            color: var(--color-success);
         }
 
         &--muted {
-            color: var(--color-shadow-grey);
+            color: var(--color-text-muted);
         }
 
         &--error {
-            color: var(--color-watermelon);
+            color: var(--color-danger);
         }
     }
 }

@@ -15,7 +15,7 @@
         flex-wrap: wrap;
         align-items: center;
         padding: var(--space-1);
-        background-color: var(--color-white);
+        background-color: var(--color-surface);
         border-bottom: var(--border-width) solid var(--color-border);
         border-radius: var(--radius-base) var(--radius-base) 0 0;
     }
@@ -40,12 +40,12 @@
         min-width: 2rem; // one-off: square icon button
         height: 2rem;
         padding: 0 var(--space-1);
-        color: var(--color-shadow-grey);
+        color: var(--color-text-muted);
         border-radius: var(--radius-base);
 
         &:hover {
-            background-color: var(--color-porcelain);
-            color: var(--color-gunmetal);
+            background-color: var(--color-surface-subtle);
+            color: var(--color-text);
         }
 
         &:focus-visible {
@@ -54,8 +54,8 @@
 
         &--active,
         &--active:hover {
-            background-color: var(--color-mist);
-            color: var(--color-gunmetal);
+            background-color: var(--color-surface-muted);
+            color: var(--color-text);
         }
     }
 
@@ -77,23 +77,23 @@
         gap: var(--space-2);
         padding: var(--space-1) var(--space-2);
         font-size: var(--font-size-sm);
-        color: var(--color-shadow-grey);
+        color: var(--color-text-muted);
         text-align: left;
         border-radius: var(--radius-base);
 
         &:hover {
-            background-color: var(--color-porcelain);
-            color: var(--color-gunmetal);
+            background-color: var(--color-surface-subtle);
+            color: var(--color-text);
         }
 
         &--active {
-            color: var(--color-gunmetal);
+            color: var(--color-text);
             font-weight: var(--font-weight-semibold);
         }
     }
 
     &__content {
-        background-color: var(--color-white);
+        background-color: var(--color-surface);
         border-radius: 0 0 var(--radius-base) var(--radius-base);
     }
 

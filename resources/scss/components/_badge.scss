@@ -14,17 +14,15 @@
     border-radius: var(--radius-base);
 
     &--neutral {
-        background-color: var(--color-mist);
-        color: var(--color-shadow-grey);
+        background-color: var(--color-surface-muted);
+        color: var(--color-text-muted);
     }
 
-    &--watermelon {
-        background-color: var(--color-watermelon-soft);
-        color: var(--color-watermelon);
-    }
-
-    &--fern {
-        background-color: var(--color-fern-soft);
-        color: var(--color-fern);
+    // One per intent: the intent's soft tint, with the intent as the text.
+    @each $intent in primary, secondary, accent, success, danger, warning, info {
+        &--#{$intent} {
+            background-color: var(--color-#{$intent}-soft);
+            color: var(--color-#{$intent});
+        }
     }
 }

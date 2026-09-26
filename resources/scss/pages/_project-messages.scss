@@ -16,11 +16,11 @@
     &__participants {
         @include truncate;
         grid-column: span 4;
-        color: var(--color-shadow-grey);
+        color: var(--color-text-muted);
     }
 
     &__date {
         grid-column: span 2;
-        color: var(--color-shadow-grey);
+        color: var(--color-text-muted);
     }
 }

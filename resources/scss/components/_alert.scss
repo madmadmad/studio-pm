@@ -9,20 +9,20 @@
 
     // Neutral context ("this invoice has already been sent").
     &--info {
-        color: var(--color-shadow-grey);
-        background-color: var(--color-porcelain);
+        color: var(--color-text-muted);
+        background-color: var(--color-surface-subtle);
     }
 
     // Something blocking the action.
     &--danger {
-        color: var(--color-watermelon);
-        background-color: var(--color-watermelon-soft);
+        color: var(--color-danger);
+        background-color: var(--color-danger-soft);
     }
 
     // Confirmation that an action went through.
     &--success {
-        color: var(--color-fern);
-        background-color: var(--color-fern-soft);
+        color: var(--color-success);
+        background-color: var(--color-success-soft);
     }
 
     // Smaller type, for alerts inside a dialog.

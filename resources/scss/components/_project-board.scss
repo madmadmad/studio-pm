@@ -1,5 +1,5 @@
 // The Projects page's board view (Components/ProjectBoard.jsx): a column
-// per status under a ruled heading, holding porcelain project cards (like
+// per status under a ruled heading, holding surface-subtle project cards (like
 // the metric and contact cards). Columns share the width and scroll
 // sideways below a minimum on narrow screens.
 
@@ -26,7 +26,7 @@
 
         // A card is being dragged over it.
         &--over {
-            outline-color: var(--color-fern);
+            outline-color: var(--color-primary);
         }
     }
 
@@ -55,19 +55,19 @@
         flex-direction: column;
         gap: var(--space-0-5);
         height: var(--size-board-card);
-        background-color: var(--color-porcelain);
+        background-color: var(--color-surface-subtle);
         cursor: pointer; // a card opens its project; it can also be dragged
         transition: background-color var(--duration-fast) var(--ease-standard);
 
-        // The whole card fills fern with white text, the way a list row
+        // The whole card fills primary with its -on text, the way a list row
         // highlights -- it's one click target.
         &:hover {
-            background-color: var(--color-fern);
+            background-color: var(--color-primary);
 
             .project-board__name,
             .project-board__client,
             .project-board__meta {
-                color: var(--color-white);
+                color: var(--color-text-inverse);
             }
         }
 
@@ -101,12 +101,12 @@
         margin-top: auto;
         font-size: var(--font-size-xs);
         line-height: var(--line-height-xs);
-        color: var(--color-shadow-grey);
+        color: var(--color-text-muted);
     }
 
     &__empty {
         font-size: var(--font-size-xs);
         line-height: var(--line-height-xs);
-        color: var(--color-shadow-grey);
+        color: var(--color-text-muted);
     }
 }

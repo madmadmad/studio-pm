@@ -32,9 +32,9 @@
         padding-inline: var(--space-1);
         font-size: var(--font-size-xs);
         line-height: var(--line-height-xs);
-        color: var(--color-shadow-grey);
+        color: var(--color-text-muted);
         text-align: center;
-        background-color: var(--color-white);
+        background-color: var(--color-surface);
     }
 
     &__remove {
@@ -46,8 +46,8 @@
         justify-content: center;
         width: var(--space-5);
         height: var(--space-5);
-        color: var(--color-white);
-        background-color: var(--color-gunmetal);
+        color: var(--color-text-inverse);
+        background-color: var(--color-secondary);
         border-radius: var(--radius-pill);
     }
 }

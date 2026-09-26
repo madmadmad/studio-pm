@@ -8,15 +8,15 @@
     padding: var(--space-1) var(--space-3);
     font-size: var(--font-size-sm);
     line-height: var(--line-height-sm);
-    color: var(--color-shadow-grey);
+    color: var(--color-text-muted);
     cursor: pointer;
     border: var(--border-width) solid var(--color-border);
     border-radius: var(--radius-pill);
 
     &--selected {
-        color: var(--color-fern);
-        background-color: var(--color-fern-soft);
-        border-color: var(--color-fern);
+        color: var(--color-primary);
+        background-color: var(--color-primary-soft);
+        border-color: var(--color-primary);
     }
 
     &__sublabel {

@@ -21,8 +21,8 @@ export default function PortalInvoicesIndex({ invoices }) {
             <PageHeader title="Invoices" />
 
             <div className="metric-grid metric-grid--loose">
-                <MetricCard label="Outstanding" value={formatCurrency(outstanding)} tone="fern" />
-                <MetricCard label="Overdue" value={formatCurrency(overdue)} tone="watermelon" />
+                <MetricCard label="Outstanding" value={formatCurrency(outstanding)} tone="primary" />
+                <MetricCard label="Overdue" value={formatCurrency(overdue)} tone="danger" />
             </div>
 
             {invoices.length === 0 ? (

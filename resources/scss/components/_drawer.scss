@@ -35,7 +35,7 @@
         width: var(--size-drawer);
         max-width: 95vw; // one-off: always leave a sliver of page visible
         height: 100%;
-        background-color: var(--color-white);
+        background-color: var(--color-surface);
         border-radius: var(--radius-drawer) 0 0 var(--radius-drawer);
         box-shadow: var(--shadow-drawer);
         animation: panel-slide-in var(--duration-drawer) var(--ease-enter);
@@ -115,7 +115,7 @@
     &__meta {
         font-size: var(--font-size-xs);
         line-height: var(--line-height-xs);
-        color: var(--color-shadow-grey);
+        color: var(--color-text-muted);
     }
 
     // The meta line above a drawer's title (author, date). Mixed onto
@@ -134,7 +134,7 @@
         gap: var(--space-1-5);
     }
 
-    // A date in the byline, led by a small fern calendar icon.
+    // A date in the byline, led by a small primary calendar icon.
     &__date {
         display: inline-flex;
         align-items: center;
@@ -145,7 +145,7 @@
         flex-shrink: 0;
         width: var(--size-icon-sm);
         height: var(--size-icon-sm);
-        color: var(--color-fern);
+        color: var(--color-primary);
     }
 
     // A value shown but not editable in a drawer's field layout (a time
@@ -160,6 +160,6 @@
     &__empty {
         font-size: var(--font-size-sm);
         line-height: var(--line-height-sm);
-        color: var(--color-shadow-grey);
+        color: var(--color-text-muted);
     }
 }

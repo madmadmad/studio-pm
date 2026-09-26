@@ -44,62 +44,62 @@
 
     // The default prominent action on a page ("Add client").
     &--primary {
-        background-color: var(--color-gunmetal);
-        color: var(--color-white);
+        background-color: var(--color-secondary);
+        color: var(--color-text-inverse);
 
         &:not(:disabled):hover {
-            background-color: var(--color-gunmetal-light);
+            background-color: var(--color-secondary-hover);
         }
     }
 
     // The affirmative action inside a form (Save, Send, Record...).
     &--confirm {
-        background-color: var(--color-fern);
-        color: var(--color-white);
+        background-color: var(--color-primary);
+        color: var(--color-text-inverse);
 
         &:not(:disabled):hover {
-            background-color: var(--color-fern-hover);
+            background-color: var(--color-primary-hover);
         }
     }
 
-    // A watermelon-flagged "in progress" flow (the time-entry tray). Rare.
+    // An accent-flagged "in progress" flow (the time-entry tray). Rare.
     &--accent {
-        background-color: var(--color-watermelon);
-        color: var(--color-white);
+        background-color: var(--color-accent);
+        color: var(--color-text-inverse);
 
         &:not(:disabled):hover {
-            background-color: var(--color-watermelon-hover);
+            background-color: var(--color-accent-hover);
         }
     }
 
     // Low emphasis, next to a primary action (Cancel).
     &--secondary {
         background-color: transparent;
-        color: var(--color-shadow-grey);
+        color: var(--color-text-muted);
 
         &:not(:disabled):hover {
-            color: var(--color-gunmetal);
+            color: var(--color-text);
         }
     }
 
     // An alternative to confirm for a secondary form action (Save as draft).
     &--outline {
         background-color: transparent;
-        color: var(--color-fern);
-        border-color: var(--color-fern);
+        color: var(--color-primary);
+        border-color: var(--color-primary);
 
         &:not(:disabled):hover {
-            background-color: var(--color-fern-soft);
+            background-color: var(--color-primary-soft);
         }
     }
 
     // Destructive actions (Remove, Delete).
     &--danger {
         background-color: transparent;
-        color: var(--color-watermelon);
+        color: var(--color-danger);
 
         &:not(:disabled):hover {
-            background-color: var(--color-watermelon-soft);
+            background-color: var(--color-danger-soft);
         }
     }
 }

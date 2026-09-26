@@ -4,8 +4,8 @@
 // `base` cascade layer by app.scss, so any component class overrides it.
 
 body {
-    background-color: var(--color-porcelain);
-    color: var(--color-gunmetal);
+    background-color: var(--color-surface-subtle);
+    color: var(--color-text);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
 }
@@ -36,7 +36,7 @@ button {
 }
 
 // Text inputs and dropdowns get a white fill app-wide so they stand out
-// against the porcelain page (the reset strips the native background).
+// against the subtle surfaces (the reset strips the native background).
 // Checkbox/radio/color/file inputs are excluded -- a background on them
 // does nothing or looks wrong.
 //
@@ -45,9 +45,9 @@ button {
 // dark on a dark-mode system unless told this app is light-only.
 //
 // Wrapped in :where() for zero specificity, so any class can override it
-// (e.g. .input--static, or a disabled/read-only .input going porcelain).
+// (e.g. .input--static, or a disabled/read-only .input going surface-subtle).
 :where(input:not([type='checkbox'], [type='radio'], [type='color'], [type='file']), select) {
-    background-color: var(--color-white);
+    background-color: var(--color-surface);
     color-scheme: light;
 }
 
@@ -57,7 +57,7 @@ button {
 select {
     appearance: none;
     // Data URIs can't read custom properties: the stroke is
-    // --color-shadow-grey (#595f64), hard-coded and URL-encoded.
+    // --color-text-muted (#595f64), hard-coded and URL-encoded -- update it by hand if that token changes.
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23595F64' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right var(--space-2-5) center;

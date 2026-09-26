@@ -16,11 +16,11 @@
     // "(firm default)" and other asides after a value.
     &__note {
         font-weight: var(--font-weight-normal);
-        color: var(--color-shadow-grey);
+        color: var(--color-text-muted);
     }
 
     // Nothing set yet.
     &__empty {
-        color: var(--color-shadow-grey);
+        color: var(--color-text-muted);
     }
 }

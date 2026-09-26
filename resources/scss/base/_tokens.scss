@@ -4,52 +4,93 @@
 
 :root {
     // -----------------------------------------------------------------
-    // Color -- brand palette: Porcelain / Fern / Shadow Grey / Gunmetal /
-    // Watermelon. Shadow Grey -> secondary text. Gunmetal -> navigation
-    // and primary text. Porcelain -> workspace background. Watermelon ->
-    // accent (links, active nav, "in progress") and danger/overdue; the
-    // palette has no separate danger color. Fern -> edit/save and "done".
+    // Color -- by role, never by hue, so any of these can be re-pointed
+    // without renaming anything. Components use only these names; each
+    // raw value appears once, here.
+    //
+    // Intents come as a set: the base (fills, strong text), -hover (a
+    // filled control under the pointer), -soft (a light tint for badge
+    // and banner backgrounds, with the base as its text), and -on (text
+    // and icons on a base fill).
     // -----------------------------------------------------------------
-    --color-white: #fff;
-    --color-gunmetal: #23262e;
-    --color-gunmetal-light: #373b45; // primary button hover
-    --color-porcelain: #f7f7f7;
+
+    // Primary -- the brand color: main actions (confirm, save), switched-
+    // on controls, the open caret, counts, schedule bars, headline cards.
+    --color-primary: #5aa329;
+    --color-primary-hover: color-mix(in srgb, var(--color-primary) 92%, black);
+    --color-primary-soft: #e7efe3;
+    --color-primary-on: #fff;
+
+    // Secondary -- the strong neutral: dark buttons, the active filter.
+    --color-secondary: #23262e;
+    --color-secondary-hover: #373b45;
+    --color-secondary-soft: #e7e7e9;
+    --color-secondary-on: #fff;
+
+    // Accent -- calls for attention without meaning trouble: sent / in
+    // progress, send actions, nav hover, the today line, the focus ring.
+    --color-accent: #f41347;
+    --color-accent-hover: color-mix(in srgb, var(--color-accent) 92%, black);
+    --color-accent-soft: #fce2e8;
+    --color-accent-on: #fff;
+
+    // Status intents. Success and danger start out matching primary and
+    // accent; they're separate so each can change on its own.
+    --color-success: var(--color-primary); // done, paid, accepted, billable
+    --color-success-hover: var(--color-primary-hover);
+    --color-success-soft: var(--color-primary-soft);
+    --color-success-on: var(--color-primary-on);
+
+    --color-danger: var(--color-accent); // destructive, errors, negative figures, overdue
+    --color-danger-hover: var(--color-accent-hover);
+    --color-danger-soft: var(--color-accent-soft);
+    --color-danger-on: var(--color-accent-on);
+
+    // Not used yet -- ready for "due soon", notices and the like.
+    --color-warning: #d97706;
+    --color-warning-hover: color-mix(in srgb, var(--color-warning) 92%, black);
+    --color-warning-soft: #fdf1dc;
+    --color-warning-on: #fff;
+
+    --color-info: #2f6fd6;
+    --color-info-hover: color-mix(in srgb, var(--color-info) 92%, black);
+    --color-info-soft: #e1ebfa;
+    --color-info-on: #fff;
+
+    // Text.
+    --color-text: #23262e;
+    --color-text-muted: #595f64; // secondary text, labels, meta
+    --color-text-inverse: #fff; // on a dark or colored fill
+
+    // Surfaces, lightest first, and the line between things.
+    --color-surface: #fff; // cards, inputs, drawers, the page panel
+    --color-surface-subtle: #f7f7f7; // filled cards, hover rows, toolbars
+    --color-surface-muted: #e7e7e9; // neutral badge/chip fill, a hair darker
     --color-border: #eee;
-    --color-mist: #e7e7e9; // neutral badge/chip fill, a hair darker than porcelain
-    --color-shadow-grey: #595f64;
-    --color-watermelon: #f41347;
-    --color-watermelon-soft: #fce2e8;
-    --color-fern: #5aa329;
-    --color-fern-soft: #e7efe3;
 
-    // Hover shades for filled fern/watermelon controls -- the same 8%
-    // darkening the old brightness(0.92) filter produced, now as a color.
-    --color-fern-hover: color-mix(in srgb, var(--color-fern) 92%, black);
-    --color-watermelon-hover: color-mix(in srgb, var(--color-watermelon) 92%, black);
+    // The dark frame around the app (the sidebar sits on it) and text on it.
+    --color-canvas: #23262e;
+    --color-on-canvas: #f7f7f7;
+    --color-on-canvas-strong: #fff; // the current nav item
+    --color-on-canvas-muted: color-mix(in srgb, var(--color-on-canvas) 80%, transparent);
+    --color-on-canvas-subtle: color-mix(in srgb, var(--color-on-canvas) 60%, transparent);
+    --color-on-canvas-border: color-mix(in srgb, var(--color-on-canvas) 15%, transparent);
+    --color-on-canvas-rule: color-mix(in srgb, var(--color-surface-muted) 3%, transparent); // resting nav rule
+    --color-on-canvas-rule-active: var(--color-surface-muted); // the current nav item's rule
 
-    // Text and rules on the dark gunmetal sidebar/header.
-    --color-on-dark: var(--color-porcelain);
-    --color-on-dark-muted: color-mix(in srgb, var(--color-porcelain) 80%, transparent);
-    --color-on-dark-subtle: color-mix(in srgb, var(--color-porcelain) 60%, transparent);
-    --color-on-dark-border: color-mix(in srgb, var(--color-porcelain) 15%, transparent);
-    --color-on-dark-rule: color-mix(in srgb, var(--color-mist) 3%, transparent); // resting nav rule
+    // App shell layers, back to front: canvas -> panel -> drawer.
+    --color-panel: var(--color-surface);
 
     // Backdrops behind overlays, lightest to heaviest.
-    --color-scrim: color-mix(in srgb, var(--color-gunmetal) 20%, transparent); // drawer, modal
-    --color-scrim-strong: color-mix(in srgb, var(--color-gunmetal) 40%, transparent); // modal stacked on a modal
-    --color-scrim-heavy: color-mix(in srgb, var(--color-gunmetal) 80%, transparent); // lightbox
+    --color-scrim: color-mix(in srgb, var(--color-canvas) 20%, transparent); // drawer, modal
+    --color-scrim-strong: color-mix(in srgb, var(--color-canvas) 40%, transparent); // modal stacked on a modal
+    --color-scrim-heavy: color-mix(in srgb, var(--color-canvas) 80%, transparent); // lightbox
 
-    // App shell layers, back to front: canvas -> panel -> drawer. The
-    // canvas is the dark frame around everything; the panel is the light
-    // surface each page sits in (porcelain, so pages look as they did).
-    --color-canvas: var(--color-gunmetal);
-    --color-panel: var(--color-white);
-
-    // Avatar fills -- a small curated set so an initials avatar always
-    // harmonizes with the palette. Avatar.jsx references these by name.
-    --color-avatar-1: #dce8f5;
-    --color-avatar-2: #f5e8d3;
-    --color-avatar-3: #e6dcf5;
+    // Decorative fills with no meaning of their own -- initials avatars
+    // (Avatar.jsx picks from these plus a few soft intents).
+    --color-decorative-1: #dce8f5;
+    --color-decorative-2: #f5e8d3;
+    --color-decorative-3: #e6dcf5;
 
     // -----------------------------------------------------------------
     // Typography

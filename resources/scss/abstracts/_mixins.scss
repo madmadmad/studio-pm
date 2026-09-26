@@ -1,6 +1,6 @@
 // The app-wide keyboard focus indicator (buttons, fields).
 @mixin focus-ring {
-    outline: var(--focus-ring-width) solid var(--color-watermelon);
+    outline: var(--focus-ring-width) solid var(--color-accent);
     outline-offset: var(--focus-ring-offset);
 }
 
@@ -14,7 +14,7 @@
     font-size: var(--font-size-xs);
     line-height: var(--line-height-xs);
     font-weight: var(--font-weight-normal);
-    color: var(--color-shadow-grey);
+    color: var(--color-text-muted);
     letter-spacing: -.02rem;
 }
 

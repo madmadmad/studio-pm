@@ -42,7 +42,7 @@
 
     // Rows highlight on hover (rows that link somewhere).
     &--hover tbody tr:hover {
-        background-color: var(--color-porcelain);
+        background-color: var(--color-surface-subtle);
     }
 
     // A whole row that opens something (a project): pointer + the same
@@ -51,7 +51,7 @@
         cursor: pointer;
 
         &:hover {
-            background-color: var(--color-porcelain);
+            background-color: var(--color-surface-subtle);
         }
     }
 
@@ -67,7 +67,7 @@
         gap: var(--space-1);
 
         &:hover {
-            color: var(--color-gunmetal);
+            color: var(--color-text);
         }
     }
 
@@ -83,7 +83,7 @@
         }
 
         &--muted {
-            color: var(--color-shadow-grey);
+            color: var(--color-text-muted);
         }
 
         &--end {
@@ -95,11 +95,11 @@
         }
 
         &--positive {
-            color: var(--color-fern);
+            color: var(--color-success);
         }
 
         &--negative {
-            color: var(--color-watermelon);
+            color: var(--color-danger);
         }
 
         &--capitalize {
@@ -159,7 +159,7 @@
     &__note {
         font-size: var(--font-size-xs);
         line-height: var(--line-height-xs);
-        color: var(--color-shadow-grey);
+        color: var(--color-text-muted);
     }
 
     // A cell holding an inline editable control, where the default cell

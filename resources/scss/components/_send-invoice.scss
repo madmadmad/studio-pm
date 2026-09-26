@@ -19,7 +19,7 @@
         padding: var(--space-3);
         font-size: var(--font-size-sm);
         line-height: var(--line-height-sm);
-        color: var(--color-shadow-grey);
+        color: var(--color-text-muted);
         border: var(--border-width) solid var(--color-border);
         border-radius: var(--radius-base);
         transition:
@@ -31,8 +31,8 @@
         }
 
         &--active {
-            color: var(--color-watermelon);
-            border-color: var(--color-watermelon);
+            color: var(--color-accent);
+            border-color: var(--color-accent);
         }
     }
 
@@ -75,19 +75,19 @@
     &__hint {
         font-size: var(--font-size-xs);
         line-height: var(--line-height-xs);
-        color: var(--color-shadow-grey);
+        color: var(--color-text-muted);
     }
 
     &__panel {
         @include stack(var(--space-3));
     }
 
-    // Small watermelon text actions ("+ Add CC", "Show Email Preview").
+    // Small accent text actions ("+ Add CC", "Show Email Preview").
     &__text-action {
         display: inline-block;
         font-size: var(--font-size-xs);
         line-height: var(--line-height-xs);
-        color: var(--color-watermelon);
+        color: var(--color-accent);
 
         &:hover {
             text-decoration: underline;
@@ -111,6 +111,6 @@
         margin-top: var(--space-3);
         font-size: var(--font-size-sm);
         line-height: var(--line-height-sm);
-        color: var(--color-watermelon);
+        color: var(--color-danger);
     }
 }

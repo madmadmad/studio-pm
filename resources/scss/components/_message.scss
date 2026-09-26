@@ -54,7 +54,7 @@
     &__time {
         font-size: var(--font-size-xs);
         line-height: var(--line-height-xs);
-        color: var(--color-shadow-grey);
+        color: var(--color-text-muted);
     }
 
     &__actions {
@@ -70,7 +70,7 @@
             font-size: var(--font-size-sm);
             line-height: var(--line-height-sm);
             font-style: italic;
-            color: var(--color-shadow-grey);
+            color: var(--color-text-muted);
         }
     }
 

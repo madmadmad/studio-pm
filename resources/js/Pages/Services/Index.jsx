@@ -179,7 +179,7 @@ export default function ServicesIndex({ services: servicesProp }) {
                                     <td className="table__cell--muted table__cell--capitalize">{service.unit}</td>
                                     <td>
                                         {service.billable
-                                            ? <Badge tone="fern" label="Billable" />
+                                            ? <Badge tone="success" label="Billable" />
                                             : <Badge tone="neutral" label="Non-billable" />}
                                     </td>
                                     <td className="table__cell--end">

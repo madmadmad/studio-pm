@@ -11,10 +11,10 @@
     }
 
     &--success {
-        color: var(--color-fern);
+        color: var(--color-success);
     }
 
     &--error {
-        color: var(--color-watermelon);
+        color: var(--color-danger);
     }
 }
