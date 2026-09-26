@@ -6,6 +6,7 @@ import { ProposalStatusBadge } from './StatusBadges';
 import { formatCurrency } from '../lib/format';
 import { api } from '../lib/api';
 import { copyToClipboard } from '../lib/clipboard';
+import { isBlankRichText, toPlainText, toRichText } from '../lib/richText';
 
 // The proposal editor, shared by the standalone page (Pages/Proposals/Form)
 // and the project page's proposal drawer. The caller supplies the frame
@@ -37,7 +38,7 @@ function emptyForm(proposal, presetCompanyId, presetProjectId) {
         items: proposal.items.map((item) => ({
             service_id: item.service_id ? String(item.service_id) : '',
             description: item.description,
-            details: item.details ?? '',
+            details: toRichText(item.details),
             quantity: item.quantity,
             rate: item.rate,
         })),
@@ -126,6 +127,10 @@ export default function ProposalEditor({ proposal, companies, services, presetCo
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
     const [dragIndex, setDragIndex] = useState(null);
+    // A line item is only draggable while its handle is held: a draggable
+    // ancestor stops the details editor (contenteditable) from selecting
+    // text with the mouse.
+    const [armedIndex, setArmedIndex] = useState(null);
 
     const itemsTotal = form.items.reduce((s, i) => s + lineAmount(i), 0);
     const selectedCompany = companies.find((c) => String(c.id) === String(form.company_id));
@@ -161,15 +166,17 @@ export default function ProposalEditor({ proposal, companies, services, presetCo
                 const service = services.find((s) => String(s.id) === String(value));
                 if (service) {
                     next.description = service.name;
-                    next.details = next.details || service.description || '';
+                    next.details = isBlankRichText(next.details) ? toRichText(service.description) : next.details;
                     next.rate = service.default_rate;
                 }
             }
+            // A custom item has no service name, so its details double as
+            // its name -- as plain text, since the name can't hold formatting.
             if (field === 'service_id' && !value) {
-                next.description = next.details;
+                next.description = toPlainText(next.details);
             }
             if (field === 'details' && !next.service_id) {
-                next.description = value;
+                next.description = toPlainText(value);
             }
             return next;
         });
@@ -198,7 +205,9 @@ export default function ProposalEditor({ proposal, companies, services, presetCo
             setError('Pick a project for this proposal, or name a new one to create.');
             return;
         }
-        const validItems = form.items.filter((i) => i.description.trim() && parseFloat(i.rate) >= 0);
+        const validItems = form.items
+            .filter((i) => i.description.trim() && parseFloat(i.rate) >= 0)
+            .map((i) => ({ ...i, details: isBlankRichText(i.details) ? null : i.details }));
         setSaving(true);
         setError('');
         try {
@@ -319,19 +328,24 @@ export default function ProposalEditor({ proposal, companies, services, presetCo
                 {form.items.map((item, idx) => (
                     <div
                         key={idx}
-                        draggable
+                        draggable={armedIndex === idx}
                         onDragStart={() => setDragIndex(idx)}
                         onDragOver={(e) => e.preventDefault()}
                         onDrop={() => {
                             handleItemDrop(dragIndex, idx);
                             setDragIndex(null);
                         }}
-                        onDragEnd={() => setDragIndex(null)}
+                        onDragEnd={() => {
+                            setDragIndex(null);
+                            setArmedIndex(null);
+                        }}
                         className={`proposal-form__item${dragIndex === idx ? ' proposal-form__item--dragging' : ''}`}
                     >
                         <div
                             className="proposal-form__handle"
                             title="Drag to reorder"
+                            onPointerDown={() => setArmedIndex(idx)}
+                            onPointerUp={() => setArmedIndex(null)}
                         >
                             <DotsSixVertical size={14} weight="bold" />
                         </div>
@@ -368,13 +382,13 @@ export default function ProposalEditor({ proposal, companies, services, presetCo
                                 </div>
                             </div>
                             <div className="proposal-form__item-notes">
-                                <textarea
-                                    placeholder="Description shown to the client"
-                                    value={item.details}
-                                    onChange={(e) => updateItem(idx, 'details', e.target.value)}
-                                    rows={2}
-                                    className="input input--xs proposal-form__details"
-                                />
+                                <div className="proposal-form__details">
+                                    <RichTextEditor
+                                        compact
+                                        value={item.details}
+                                        onChange={(details) => updateItem(idx, 'details', details)}
+                                    />
+                                </div>
                             </div>
                             <button
                                 type="button"

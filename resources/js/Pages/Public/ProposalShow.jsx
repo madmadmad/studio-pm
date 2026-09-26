@@ -2,6 +2,8 @@ import { Head } from '@inertiajs/react';
 import { useState } from 'react';
 import { formatCurrency, formatDate } from '../../lib/format';
 import { api } from '../../lib/api';
+import { isBlankRichText, toPlainText, toRichText } from '../../lib/richText';
+import RichTextView from '../../Components/RichTextView';
 
 function FeeSummary({ proposal }) {
     const total = proposal.items.reduce((s, item) => s + parseFloat(item.quantity) * parseFloat(item.rate), 0);
@@ -19,8 +21,10 @@ function FeeSummary({ proposal }) {
                 <div key={item.id} className="document__item">
                     <div>
                         <div className="document__item-name">{item.description}</div>
-                        {item.details && item.details !== item.description && (
-                            <div className="document__item-details">{item.details}</div>
+                        {!isBlankRichText(item.details) && toPlainText(item.details) !== item.description && (
+                            <div className="document__item-details document__item-details--rich">
+                                <RichTextView value={toRichText(item.details)} />
+                            </div>
                         )}
                     </div>
                     <div className="document__item-amount document__amount">

@@ -2,39 +2,99 @@
 // Used by Components/RichTextEditor.jsx; the editable element also
 // carries .prose so it renders exactly like the published text.
 
+@use '../abstracts' as *;
+
+// No overflow: hidden here -- it would clip the heading/list menus, so
+// the toolbar and content round their own corners instead.
 .rich-text-editor {
-    overflow: hidden;
     border: var(--border-width) solid var(--color-border);
     border-radius: var(--radius-base);
 
     &__toolbar {
         display: flex;
-        gap: var(--space-1);
-        padding: var(--space-1) var(--space-2);
-        background-color: var(--color-porcelain);
+        flex-wrap: wrap;
+        align-items: center;
+        padding: var(--space-1);
+        background-color: var(--color-white);
         border-bottom: var(--border-width) solid var(--color-border);
+        border-radius: var(--radius-base) var(--radius-base) 0 0;
+    }
+
+    // Tool groups, split by a thin rule like Tiptap's own toolbar.
+    &__group {
+        display: flex;
+        align-items: center;
+        gap: var(--space-1);
+        padding: 0 var(--space-1);
+
+        & + & {
+            border-left: var(--border-width) solid var(--color-border);
+        }
     }
 
     &__tool {
-        padding: var(--space-1) var(--space-2);
-        font-size: var(--font-size-xs);
-        line-height: var(--line-height-xs);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 2px; // one-off: caret tucked against the menu icon
+        min-width: 2rem; // one-off: square icon button
+        height: 2rem;
+        padding: 0 var(--space-1);
         color: var(--color-shadow-grey);
         border-radius: var(--radius-base);
 
         &:hover {
             background-color: var(--color-porcelain);
+            color: var(--color-gunmetal);
+        }
+
+        &:focus-visible {
+            @include focus-ring;
         }
 
         &--active,
         &--active:hover {
-            background-color: var(--color-gunmetal);
-            color: var(--color-white);
+            background-color: var(--color-mist);
+            color: var(--color-gunmetal);
+        }
+    }
+
+    &__menu {
+        position: relative;
+    }
+
+    &__options {
+        left: 0;
+        display: flex;
+        flex-direction: column;
+        min-width: 10rem; // one-off: fits "Numbered list" on one line
+        padding: var(--space-1);
+    }
+
+    &__option {
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
+        padding: var(--space-1) var(--space-2);
+        font-size: var(--font-size-sm);
+        color: var(--color-shadow-grey);
+        text-align: left;
+        border-radius: var(--radius-base);
+
+        &:hover {
+            background-color: var(--color-porcelain);
+            color: var(--color-gunmetal);
+        }
+
+        &--active {
+            color: var(--color-gunmetal);
+            font-weight: var(--font-weight-semibold);
         }
     }
 
     &__content {
         background-color: var(--color-white);
+        border-radius: 0 0 var(--radius-base) var(--radius-base);
     }
 
     &__input {
@@ -44,6 +104,11 @@
 
         &:focus {
             outline: none;
+        }
+
+        &--compact {
+            min-height: 4rem; // one-off: about two lines, like the textarea it replaced
+            font-size: var(--font-size-xs);
         }
     }
 }

@@ -139,6 +139,16 @@
         line-height: var(--line-height-xs);
         color: var(--color-shadow-grey);
         white-space: pre-wrap;
+
+        // Rich text (proposal items): paragraphs carry the line breaks,
+        // and the last block shouldn't add space below the item.
+        &--rich {
+            white-space: normal;
+
+            .prose > :last-child {
+                margin-bottom: 0;
+            }
+        }
     }
 
     &__item-amount {

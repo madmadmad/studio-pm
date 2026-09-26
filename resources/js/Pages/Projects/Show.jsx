@@ -16,6 +16,7 @@ import { ProjectStatusBadge, TaskStatusBadge, InvoiceStatusBadge, ProposalStatus
 import { formatCurrency, formatDate, formatDateTime, formatFileSize, invoiceSubtotal, invoiceTotal } from '../../lib/format';
 import { calculateDueDate, todayLocal } from '../../lib/paymentTerms';
 import { api } from '../../lib/api';
+import { isBlankRichText, toPlainText, toRichText } from '../../lib/richText';
 import PageHeader from '../../Components/PageHeader';
 import Drawer, { DrawerByline, DrawerDate } from '../../Components/Drawer';
 import ProposalEditor, { ProposalActions } from '../../Components/ProposalEditor';
@@ -29,21 +30,6 @@ function reload() {
     router.reload({ only: ['project'] });
 }
 
-// True for rich text with no visible text -- Tiptap saves an emptied
-// editor as "<p></p>", not an empty string.
-function isBlankRichText(html) {
-    return !html || html.replace(/<[^>]*>/g, '').trim() === '';
-}
-
-// Rich text for the editor/viewer from a stored value that may predate
-// rich text (task descriptions were plain text): plain text is escaped
-// and each line becomes a paragraph, so its line breaks survive.
-function toRichText(value) {
-    if (isBlankRichText(value)) return '';
-    if (/^\s*</.test(value)) return value;
-    const escape = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    return value.split('\n').map((line) => `<p>${escape(line)}</p>`).join('');
-}
 
 // Debounced save for a field that changes on every keystroke (rich text).
 // queue() restarts the timer, flush() saves now, cancel() drops it. A
@@ -1408,13 +1394,18 @@ function ProposalsTab({ project, services }) {
 // proposal amount remains in the project's budget (some of it already
 // invoiced), scales each item down proportionally so the new invoice starts
 // at exactly what's left, rather than re-billing the full proposal total.
+// Proposal details are rich text; invoice details are plain, so the
+// formatting is dropped.
 function proposalToInvoiceItems(proposal, remaining) {
-    const items = proposal.items.map((item) => ({
-        description: item.description,
-        details: item.details && item.details !== item.description ? item.details : '',
-        amount: parseFloat(item.quantity) * parseFloat(item.rate),
-        service_id: item.service_id ? String(item.service_id) : '',
-    }));
+    const items = proposal.items.map((item) => {
+        const details = toPlainText(item.details);
+        return {
+            description: item.description,
+            details: details && details !== item.description ? details : '',
+            amount: parseFloat(item.quantity) * parseFloat(item.rate),
+            service_id: item.service_id ? String(item.service_id) : '',
+        };
+    });
     const proposalTotal = items.reduce((s, i) => s + i.amount, 0);
     const scale = proposalTotal > 0 && remaining < proposalTotal ? Math.max(remaining, 0) / proposalTotal : 1;
     return items.map((item) => ({ ...item, amount: (item.amount * scale).toFixed(2) }));
