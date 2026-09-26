@@ -197,6 +197,8 @@
     // so a row's controls all line up.
     --size-row-action: 1.75rem; // 28px
     --size-metric-card-min: 13.75rem; // 220px: narrowest a metric card gets before the grid wraps
+    --size-board-card: 7.5rem; // 120px: a Projects board card -- two-line name, client, tasks
+    --size-board-column-min: 14rem; // 224px: narrowest a Projects board column gets before scrolling
     --size-schedule-label: 12rem; // the gantt chart's item-name column
     --size-field-min: 11rem; // 176px: narrowest a .field-grid column gets before wrapping
     --size-contact-card-min: 16rem; // 256px: narrowest a contact card gets before the grid wraps
