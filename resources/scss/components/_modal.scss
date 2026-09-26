@@ -33,7 +33,7 @@
         max-width: var(--size-modal);
         max-height: 90vh; // one-off: keep a margin of page visible
         overflow-y: auto;
-        background-color: var(--color-white);
+        background-color: var(--color-surface);
         border-radius: var(--radius-base);
         box-shadow: var(--shadow-overlay);
         animation: panel-slide-in var(--duration-base) var(--ease-enter);

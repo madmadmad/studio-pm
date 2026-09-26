@@ -5,7 +5,7 @@
 .icon-btn {
     display: inline-flex;
     align-items: center;
-    color: var(--color-shadow-grey);
+    color: var(--color-text-muted);
     transition:
         color var(--duration-fast) var(--ease-standard),
         opacity var(--duration-fast) var(--ease-standard);
@@ -23,36 +23,36 @@
 
     // Neutral actions that don't change anything (Preview, Copy, Download).
     &--secondary:hover {
-        color: var(--color-gunmetal);
+        color: var(--color-text);
     }
 
     // Affirmative row actions (Edit, Mark paid). Lightens on hover -- a
     // small glyph reads better going lighter than darker.
     &--confirm {
-        color: var(--color-fern);
+        color: var(--color-primary);
 
         &:hover {
             opacity: 0.7;
         }
     }
 
-    // A watermelon-flagged action (Send).
+    // An accent-flagged action (Send).
     &--accent {
-        color: var(--color-watermelon);
+        color: var(--color-accent);
 
         &:hover {
             opacity: 0.7;
         }
     }
 
-    // Undo a removal (Reactivate): neutral until hovered, then fern.
+    // Undo a removal (Reactivate): neutral until hovered, then primary.
     &--restore:hover {
-        color: var(--color-fern);
+        color: var(--color-primary);
     }
 
     // Destructive (Delete): neutral until hovered, so a row of actions
     // doesn't read as alarming until you're about to click it.
     &--danger:hover {
-        color: var(--color-watermelon);
+        color: var(--color-danger);
     }
 }

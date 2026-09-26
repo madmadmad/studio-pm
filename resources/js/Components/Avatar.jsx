@@ -1,10 +1,10 @@
 const PALETTE = [
-    'var(--color-avatar-1)',
-    'var(--color-avatar-2)',
-    'var(--color-avatar-3)',
-    'var(--color-watermelon-soft)',
-    'var(--color-fern-soft)',
-    'var(--color-mist)',
+    'var(--color-decorative-1)',
+    'var(--color-decorative-2)',
+    'var(--color-decorative-3)',
+    'var(--color-accent-soft)',
+    'var(--color-primary-soft)',
+    'var(--color-surface-muted)',
 ];
 
 // A simple deterministic hash so the same author always lands on the same

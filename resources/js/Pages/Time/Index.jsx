@@ -98,10 +98,10 @@ export default function TimeIndex({ timeEntries, companies, projects }) {
                                 </div>
                                 <div className="time-list__status">
                                     {entry.billed ? (
-                                        <Badge tone="fern" label="Billed" />
+                                        <Badge tone="success" label="Billed" />
                                     ) : queuedIds.has(entry.id) ? (
                                         <button onClick={() => removeFromTray(entry.id)} title="Remove from the invoice tray">
-                                            <Badge tone="watermelon" label="Queued" />
+                                            <Badge tone="accent" label="Queued" />
                                         </button>
                                     ) : (
                                         <Button variant="link-accent" onClick={() => billEntry(entry)}>Bill this</Button>

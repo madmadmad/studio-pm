@@ -19,11 +19,11 @@
     &__author {
         @include truncate;
         grid-column: span 3;
-        color: var(--color-shadow-grey);
+        color: var(--color-text-muted);
     }
 
     &__date {
         grid-column: span 2;
-        color: var(--color-shadow-grey);
+        color: var(--color-text-muted);
     }
 }

@@ -43,17 +43,24 @@ function Swatch({ name, varName }) {
     );
 }
 
+// The intents, each as base / hover / soft -- see base/_tokens.scss.
+const INTENTS = ['primary', 'secondary', 'accent', 'success', 'danger', 'warning', 'info'];
+
 const COLORS = [
-    ['Gunmetal', '--color-gunmetal'],
-    ['Gunmetal light', '--color-gunmetal-light'],
-    ['Porcelain', '--color-porcelain'],
+    ...INTENTS.flatMap((intent) => {
+        const name = intent[0].toUpperCase() + intent.slice(1);
+        return [
+            [name, `--color-${intent}`],
+            [`${name} hover`, `--color-${intent}-hover`],
+            [`${name} soft`, `--color-${intent}-soft`],
+        ];
+    }),
+    ['Text', '--color-text'],
+    ['Text muted', '--color-text-muted'],
+    ['Surface', '--color-surface'],
+    ['Surface subtle', '--color-surface-subtle'],
+    ['Surface muted', '--color-surface-muted'],
     ['Border', '--color-border'],
-    ['Mist', '--color-mist'],
-    ['Shadow grey', '--color-shadow-grey'],
-    ['Watermelon', '--color-watermelon'],
-    ['Watermelon soft', '--color-watermelon-soft'],
-    ['Fern', '--color-fern'],
-    ['Fern soft', '--color-fern-soft'],
 ];
 
 const SHELL_COLORS = [
@@ -252,11 +259,12 @@ export default function StyleGuide() {
                     </select>
                 </Section>
 
-                <Section title="Badges" description="Tone -> color mapping lives in Components/Badge.jsx (.badge--neutral, --watermelon, --fern).">
+                <Section title="Badges" description="A badge's tone is neutral or an intent (Components/Badge.jsx): the intent's soft tint with the intent as its text.">
                     <div className="style-guide__row style-guide__row--compact">
                         <Badge tone="neutral" label="Neutral" />
-                        <Badge tone="watermelon" label="Watermelon" />
-                        <Badge tone="fern" label="Fern" />
+                        {INTENTS.map((intent) => (
+                            <Badge key={intent} tone={intent} label={intent[0].toUpperCase() + intent.slice(1)} />
+                        ))}
                     </div>
                 </Section>
 
@@ -273,12 +281,12 @@ export default function StyleGuide() {
                             <tr>
                                 <td className="style-guide__strong">Studio site redesign</td>
                                 <td>Acme Co.</td>
-                                <td><Badge tone="fern" label="Active" /></td>
+                                <td><Badge tone="success" label="Active" /></td>
                             </tr>
                             <tr>
                                 <td className="style-guide__strong">Brand refresh</td>
                                 <td>Globex</td>
-                                <td><Badge tone="watermelon" label="Estimated" /></td>
+                                <td><Badge tone="accent" label="Estimated" /></td>
                             </tr>
                         </tbody>
                     </table>

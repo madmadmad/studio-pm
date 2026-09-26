@@ -12,7 +12,7 @@
     display: flex;
     flex-direction: column;
     gap: var(--space-3);
-    background-color: var(--color-porcelain);
+    background-color: var(--color-surface-subtle);
 
     &__header {
         display: flex;
@@ -34,13 +34,13 @@
     &__role {
         font-size: var(--font-size-xs);
         line-height: var(--line-height-xs);
-        color: var(--color-shadow-grey);
+        color: var(--color-text-muted);
     }
 
     &__details {
         font-size: var(--font-size-sm);
         line-height: var(--line-height-sm);
-        color: var(--color-shadow-grey);
+        color: var(--color-text-muted);
         overflow-wrap: anywhere;
     }
 

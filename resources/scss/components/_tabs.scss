@@ -19,13 +19,13 @@
         padding: var(--space-2) 0;
         font-size: var(--font-size-sm);
         line-height: var(--line-height-sm);
-        color: var(--color-shadow-grey);
+        color: var(--color-text-muted);
         white-space: nowrap;
         border-bottom: var(--border-width-thick) solid transparent;
 
         &--active {
-            color: var(--color-gunmetal);
-            border-bottom-color: var(--color-gunmetal);
+            color: var(--color-text);
+            border-bottom-color: var(--color-text);
         }
     }
 

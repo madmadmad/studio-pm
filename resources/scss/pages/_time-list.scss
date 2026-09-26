@@ -11,7 +11,7 @@
     }
 
     &__date {
-        color: var(--color-shadow-grey);
+        color: var(--color-text-muted);
     }
 
     &__hours {
@@ -20,7 +20,7 @@
 
     &__text {
         @include truncate;
-        color: var(--color-shadow-grey);
+        color: var(--color-text-muted);
     }
 
     &__status {
@@ -50,7 +50,7 @@
     &__project {
         font-size: var(--font-size-xs);
         line-height: var(--line-height-xs);
-        color: var(--color-shadow-grey);
+        color: var(--color-text-muted);
     }
 
     &__hours--narrow {

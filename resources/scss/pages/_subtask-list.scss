@@ -40,7 +40,7 @@
 
     &__handle {
         margin-top: var(--space-1);
-        color: var(--color-shadow-grey);
+        color: var(--color-text-muted);
         cursor: grab;
     }
 
@@ -63,8 +63,8 @@
         border-radius: var(--radius-base);
 
         &--done {
-            color: var(--color-white);
-            background-color: var(--color-fern);
+            color: var(--color-text-inverse);
+            background-color: var(--color-success);
             border-width: 0;
         }
     }
@@ -83,7 +83,7 @@
         }
 
         &--done {
-            color: var(--color-shadow-grey);
+            color: var(--color-text-muted);
             text-decoration: line-through;
         }
     }

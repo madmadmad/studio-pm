@@ -15,12 +15,12 @@ function emptyForm() {
 
 function StatusBadge({ user }) {
     if (user.deactivated_at) {
-        return <Badge tone="watermelon" label="Deactivated" />;
+        return <Badge tone="danger" label="Deactivated" />;
     }
     if (user.has_pending_invite) {
-        return <Badge tone="watermelon" label="Invite pending" />;
+        return <Badge tone="accent" label="Invite pending" />;
     }
-    return <Badge tone="fern" label="Active" />;
+    return <Badge tone="success" label="Active" />;
 }
 
 export default function UsersIndex({ users: usersProp }) {

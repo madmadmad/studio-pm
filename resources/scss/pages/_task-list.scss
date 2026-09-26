@@ -14,7 +14,7 @@
         flex-shrink: 0;
         width: var(--size-icon-sm);
         height: var(--size-icon-sm);
-        color: var(--color-fern);
+        color: var(--color-primary);
     }
 
     &__assignee {
@@ -37,7 +37,7 @@
         padding-inline: var(--space-2);
         font-size: var(--font-size-sm);
         line-height: var(--line-height-sm);
-        color: var(--color-shadow-grey);
+        color: var(--color-text-muted);
         background-color: transparent;
         border: var(--border-width) solid transparent;
         border-radius: var(--radius-base);

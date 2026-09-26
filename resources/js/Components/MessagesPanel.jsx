@@ -329,7 +329,7 @@ function MessageRow({ message, endpoints, currentActorType, currentActorId, curr
             <div className="message__main">
                 <div className="message__header">
                     <span className="message__sender">{sender?.name || 'Unknown'}</span>
-                    {isClientAuthor && <Badge tone="watermelon" label="Client" />}
+                    {isClientAuthor && <Badge tone="accent" label="Client" />}
                     <span className="message__time" title={formatDateTime(message.sent_at)}>
                         {formatRelativeTime(message.sent_at)}
                     </span>
@@ -605,7 +605,7 @@ export default function MessagesPanel({ project, currentActorType, currentActorI
                                 <div>
                                     <div className="thread-list__subject">
                                         {thread.subject}
-                                        {!amParticipant && <Badge tone="watermelon" label="Not joined" />}
+                                        {!amParticipant && <Badge tone="accent" label="Not joined" />}
                                     </div>
                                     <div className="thread-list__participants">{participants.map((p) => p.name).join(', ') || '—'}</div>
                                 </div>

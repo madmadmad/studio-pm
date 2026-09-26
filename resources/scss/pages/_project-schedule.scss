@@ -22,7 +22,7 @@
     &__handle {
         display: flex;
         flex-shrink: 0;
-        color: var(--color-shadow-grey);
+        color: var(--color-text-muted);
         cursor: grab;
     }
 
@@ -34,7 +34,7 @@
         font-size: var(--font-size-xs);
         line-height: var(--line-height-xs);
         font-weight: var(--font-weight-normal);
-        color: var(--color-shadow-grey);
+        color: var(--color-text-muted);
     }
 
     &__dates {
@@ -44,6 +44,6 @@
 
     &__length {
         grid-column: span 2;
-        color: var(--color-shadow-grey);
+        color: var(--color-text-muted);
     }
 }

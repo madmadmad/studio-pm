@@ -21,9 +21,9 @@
         padding-inline: var(--space-1);
         font-size: var(--font-size-2xs);
         line-height: var(--line-height-2xs);
-        color: var(--color-white);
+        color: var(--color-text-inverse);
         text-align: center;
-        background-color: var(--color-watermelon);
+        background-color: var(--color-accent);
         border-radius: var(--radius-pill);
     }
 
@@ -37,14 +37,14 @@
         max-height: 24rem; // one-off: scroll past ~10 alerts
         margin-top: 0;
         overflow-y: auto;
-        color: var(--color-gunmetal);
+        color: var(--color-text);
     }
 
     &__empty {
         padding: var(--space-4);
         font-size: var(--font-size-sm);
         line-height: var(--line-height-sm);
-        color: var(--color-shadow-grey);
+        color: var(--color-text-muted);
     }
 
     &__entry + &__entry {
@@ -59,17 +59,17 @@
         text-align: left;
 
         &:hover {
-            background-color: var(--color-porcelain);
+            background-color: var(--color-surface-subtle);
         }
 
         &--read {
-            color: var(--color-shadow-grey);
+            color: var(--color-text-muted);
         }
     }
 
     &__time {
         margin-top: var(--space-0-5);
         font-weight: var(--font-weight-normal);
-        color: var(--color-shadow-grey);
+        color: var(--color-text-muted);
     }
 }

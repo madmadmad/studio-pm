@@ -14,7 +14,7 @@ import { formatDate } from '../lib/format';
 // A create-mode drawer ("Log time") has no record yet, so it opens with
 // just the .drawer__title heading.
 
-// "Created Sep 19, 2026", led by a small fern calendar icon.
+// "Created Sep 19, 2026", led by a small primary calendar icon.
 export function DrawerDate({ label, date }) {
     return (
         <span className="drawer__date">

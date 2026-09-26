@@ -32,9 +32,9 @@ export default function ContactCards({ contacts, menuFor, showPortalAccess = fal
                         )}
                         {(contact.is_primary || contact.is_billing || portal) && (
                             <div className="contact-card__badges">
-                                {contact.is_primary && <Badge tone="fern" label="Primary" />}
-                                {contact.is_billing && <Badge tone="watermelon" label="Billing" />}
-                                {portal && <Badge tone="sage" label="Portal access" />}
+                                {contact.is_primary && <Badge tone="primary" label="Primary" />}
+                                {contact.is_billing && <Badge tone="accent" label="Billing" />}
+                                {portal && <Badge tone="success" label="Portal access" />}
                             </div>
                         )}
                     </div>

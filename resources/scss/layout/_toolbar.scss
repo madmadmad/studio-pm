@@ -15,7 +15,7 @@
     &__summary {
         font-size: var(--font-size-sm);
         line-height: var(--line-height-sm);
-        color: var(--color-shadow-grey);
+        color: var(--color-text-muted);
     }
 
     // A .count in a summary sits a little off the label before it.
@@ -25,12 +25,12 @@
 
     &__figure {
         font-weight: var(--font-weight-medium);
-        color: var(--color-gunmetal);
+        color: var(--color-text);
         font-variant-numeric: tabular-nums;
 
         // Gone the wrong way (over budget, overdue).
         &--negative {
-            color: var(--color-watermelon);
+            color: var(--color-danger);
         }
     }
 }

@@ -1,4 +1,5 @@
-const TONES = ['neutral', 'watermelon', 'fern'];
+// Intents, as in the color tokens (base/_tokens.scss).
+const TONES = ['neutral', 'primary', 'secondary', 'accent', 'success', 'danger', 'warning', 'info'];
 
 export default function Badge({ tone = 'neutral', label }) {
     return (

@@ -34,35 +34,35 @@
         height: auto;
     }
 
-    // Plain text rows divided by a rule: faint mist at rest, fern on
-    // hover, mist for the current page. No background, no side padding.
+    // Plain text rows divided by a rule: faint rule at rest, accent on
+    // hover, a bright rule for the current page. No background, no side padding.
     &__nav-link {
         padding-block: var(--space-1-5);
         font-size: var(--font-size-sm);
         line-height: var(--line-height-sm);
         font-weight: var(--font-weight-semibold);
-        color: var(--color-on-dark-subtle);
-        border-bottom: var(--border-width) solid var(--color-on-dark-rule);
+        color: var(--color-on-canvas-subtle);
+        border-bottom: var(--border-width) solid var(--color-on-canvas-rule);
         transition:
             color var(--duration-fast) var(--ease-standard),
             border-color var(--duration-fast) var(--ease-standard);
 
         &:hover {
-            color: var(--color-on-dark);
-            border-bottom-color: var(--color-watermelon);
+            color: var(--color-on-canvas);
+            border-bottom-color: var(--color-accent);
         }
 
         &--active,
         &--active:hover {
-            color: var(--color-white);
-            border-bottom-color: var(--color-mist);
+            color: var(--color-on-canvas-strong);
+            border-bottom-color: var(--color-on-canvas-rule-active);
         }
     }
 
     &__footer {
         margin-top: auto;
         padding-top: var(--space-4);
-        border-top: var(--border-width) solid var(--color-on-dark-border);
+        border-top: var(--border-width) solid var(--color-on-canvas-border);
     }
 
     &__user {
@@ -80,10 +80,10 @@
         @include truncate;
         font-size: var(--font-size-sm);
         line-height: var(--line-height-sm);
-        color: var(--color-on-dark-muted);
+        color: var(--color-on-canvas-muted);
 
         .app-shell__user:hover & {
-            color: var(--color-on-dark);
+            color: var(--color-on-canvas);
         }
     }
 
@@ -91,16 +91,16 @@
         @include truncate;
         font-size: var(--font-size-xs);
         line-height: var(--line-height-xs);
-        color: var(--color-on-dark-subtle);
+        color: var(--color-on-canvas-subtle);
     }
 
     &__logout {
         font-size: var(--font-size-sm);
         line-height: var(--line-height-sm);
-        color: var(--color-on-dark-subtle);
+        color: var(--color-on-canvas-subtle);
 
         &:hover {
-            color: var(--color-on-dark);
+            color: var(--color-on-canvas);
         }
     }
 

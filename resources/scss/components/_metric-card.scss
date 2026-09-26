@@ -1,35 +1,30 @@
 // A single headline number with its caption, on a .card -- filled
-// porcelain rather than the card's white. Used by Components/MetricCard.jsx.
+// surface-subtle rather than the card's surface. Used by Components/MetricCard.jsx.
 // (Loaded after .card, so this background wins at equal specificity.)
 
 @use '../abstracts' as *;
 
 .metric-card {
-    background-color: var(--color-porcelain);
+    background-color: var(--color-surface-subtle);
 
-    // Filled with a brand color, text reversed to white.
-    &--fern,
-    &--watermelon {
-        color: var(--color-white);
+    // Filled with an intent color (MetricCard's `tone`), text in the
+    // intent's -on color.
+    @each $intent in primary, secondary, accent, success, danger, warning, info {
+        &--#{$intent} {
+            background-color: var(--color-#{$intent});
+            color: var(--color-#{$intent}-on);
 
-        .metric-card__label {
-            color: color-mix(in srgb, var(--color-white) 85%, transparent);
+            .metric-card__label {
+                color: color-mix(in srgb, var(--color-#{$intent}-on) 85%, transparent);
+            }
         }
-    }
-
-    &--fern {
-        background-color: var(--color-fern);
-    }
-
-    &--watermelon {
-        background-color: var(--color-watermelon);
     }
 
     &__label {
         margin-bottom: var(--space-1);
         font-size: var(--font-size-xs);
         line-height: var(--line-height-xs);
-        color: var(--color-shadow-grey);
+        color: var(--color-text-muted);
     }
 
     // Smaller on phones, where cards can be a third of the screen wide
@@ -48,7 +43,7 @@
 
         // Over budget.
         &--negative {
-            color: var(--color-watermelon);
+            color: var(--color-danger);
         }
     }
 }

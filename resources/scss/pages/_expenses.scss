@@ -39,7 +39,7 @@
     }
 
     &__rate {
-        color: var(--color-shadow-grey);
+        color: var(--color-text-muted);
         font-variant-numeric: tabular-nums;
     }
 
@@ -52,7 +52,7 @@
     }
 
     &__receipt-icon {
-        color: var(--color-shadow-grey);
+        color: var(--color-text-muted);
     }
 
     &__receipt-input {
@@ -96,7 +96,7 @@
     }
 
     &__no-category {
-        color: var(--color-shadow-grey);
+        color: var(--color-text-muted);
     }
 
     // "Attach to invoice..." picker in a table row. The right padding

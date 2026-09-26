@@ -20,17 +20,17 @@
         font-size: var(--font-size-sm);
         line-height: var(--line-height-sm);
         font-weight: var(--font-weight-normal);
-        color: var(--color-gunmetal);
+        color: var(--color-text);
         text-align: left;
         white-space: nowrap;
         border-radius: var(--radius-base);
 
         &:hover {
-            background-color: var(--color-porcelain);
+            background-color: var(--color-surface-subtle);
         }
 
         &--danger {
-            color: var(--color-watermelon);
+            color: var(--color-danger);
         }
     }
 }
