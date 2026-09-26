@@ -4,6 +4,10 @@ import AppLayout from '../../Layouts/AppLayout';
 import Button from '../../Components/Button';
 import EmptyState from '../../Components/EmptyState';
 import ProjectsTable from '../../Components/ProjectsTable';
+import ProjectBoard from '../../Components/ProjectBoard';
+import ViewToggle from '../../Components/ViewToggle';
+import { useRememberedTab } from '../../lib/useRememberedTab';
+import { Kanban, ListBullets } from '@phosphor-icons/react';
 import { api } from '../../lib/api';
 import PageHeader from '../../Components/PageHeader';
 
@@ -20,8 +24,17 @@ function emptyForm() {
     return { company_id: '', contact_id: '', name: '', description: '' };
 }
 
+const VIEWS = [
+    { value: 'list', label: 'List', icon: <ListBullets /> },
+    { value: 'board', label: 'Board', icon: <Kanban /> },
+];
+
 export default function ProjectsIndex({ projects, companies, archivedView = false }) {
     const [filter, setFilter] = useState('all');
+    // List or Board, remembered in the browser. Archived projects are all
+    // one status, so they're always a list.
+    const [savedView, setView] = useRememberedTab('projects-view', VIEWS.map((v) => v.value));
+    const view = archivedView ? 'list' : savedView;
     const [showForm, setShowForm] = useState(false);
     const [form, setForm] = useState(emptyForm());
     const [saving, setSaving] = useState(false);
@@ -70,7 +83,10 @@ export default function ProjectsIndex({ projects, companies, archivedView = fals
                         All Projects
                     </Link>
                 ) : (
-                    <Button onClick={() => setShowForm(true)}>New project</Button>
+                    <>
+                        <ViewToggle views={VIEWS} value={view} onChange={setView} label="Projects view" />
+                        <Button onClick={() => setShowForm(true)}>New project</Button>
+                    </>
                 )}
                 subtitle={
                     <>
@@ -83,8 +99,9 @@ export default function ProjectsIndex({ projects, companies, archivedView = fals
 
             {archivedView ? null : (
                 <div className="filter-bar">
+                    {/* The board's columns are the statuses, so it has no filter. */}
                     <div className="filter-bar__pills">
-                        {STATUS_FILTERS.map((s) => (
+                        {view === 'list' && STATUS_FILTERS.map((s) => (
                             <button
                                 key={s.value}
                                 onClick={() => setFilter(s.value)}
@@ -147,13 +164,17 @@ export default function ProjectsIndex({ projects, companies, archivedView = fals
                 </form>
             )}
 
-            <div className="card card--flush">
-                {visibleProjects.length === 0 ? (
-                    <EmptyState text="No projects match this filter." />
-                ) : (
-                    <ProjectsTable projects={visibleProjects} onChange={() => router.reload({ only: ['projects'] })} />
-                )}
-            </div>
+            {view === 'board' ? (
+                <ProjectBoard projects={projects} onChange={() => router.reload({ only: ['projects'] })} />
+            ) : (
+                <div className="card card--flush">
+                    {visibleProjects.length === 0 ? (
+                        <EmptyState text="No projects match this filter." />
+                    ) : (
+                        <ProjectsTable projects={visibleProjects} onChange={() => router.reload({ only: ['projects'] })} />
+                    )}
+                </div>
+            )}
         </AppLayout>
     );
 }

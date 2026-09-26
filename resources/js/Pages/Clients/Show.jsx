@@ -443,13 +443,6 @@ function ProjectsCard({ company }) {
     return (
         <div>
             <TabToolbar
-                summary={company.projects.length > 0 && (
-                    <div className="toolbar__summary">
-                        Active<span className="count">{company.projects.filter((p) => p.status === 'active').length}</span>
-                        {' · '}
-                        Total<span className="count">{company.projects.length}</span>
-                    </div>
-                )}
                 addLabel="New project"
                 onAdd={() => setCreating(true)}
             />

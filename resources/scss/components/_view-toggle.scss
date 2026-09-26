@@ -1,0 +1,41 @@
+// A segmented switch between views of a page (Components/ViewToggle.jsx):
+// outlined options, the current one filled fern with white text.
+@use '../abstracts' as *;
+
+.view-toggle {
+    display: inline-flex;
+    padding: var(--space-0-5);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-base);
+
+    &__option {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--space-1-5);
+        height: var(--size-row-action);
+        padding-inline: var(--space-2-5);
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+        color: var(--color-shadow-grey);
+        border-radius: var(--radius-base);
+
+        svg {
+            width: var(--size-icon-sm);
+            height: var(--size-icon-sm);
+        }
+
+        &:hover {
+            color: var(--color-gunmetal);
+        }
+
+        &:focus-visible {
+            @include focus-ring;
+        }
+
+        &--active,
+        &--active:hover {
+            color: var(--color-white);
+            background-color: var(--color-fern);
+        }
+    }
+}
