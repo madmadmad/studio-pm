@@ -42,13 +42,14 @@
         font-size: var(--font-size-xs);
     }
 
-    // The default prominent action on a page ("Add client").
+    // The default prominent action on a page ("Add client"). Red, like
+    // every action button -- the grey is for Cancel (--secondary).
     &--primary {
-        background-color: var(--color-secondary);
-        color: var(--color-secondary-on);
+        background-color: var(--color-primary);
+        color: var(--color-primary-on);
 
         &:not(:disabled):hover {
-            background-color: var(--color-secondary-hover);
+            background-color: var(--color-primary-hover);
         }
     }
 
@@ -74,13 +75,13 @@
         }
     }
 
-    // Low emphasis, next to a primary action (Cancel).
+    // Low emphasis, next to a red action (Cancel): a subtle grey fill.
     &--secondary {
-        background-color: transparent;
-        color: var(--color-text-muted);
+        background-color: var(--color-neutral-fill);
+        color: var(--color-text);
 
         &:not(:disabled):hover {
-            color: var(--color-text);
+            background-color: var(--color-neutral-fill-hover);
         }
     }
 

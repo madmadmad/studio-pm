@@ -130,7 +130,7 @@
         right: 0;
         bottom: 0;
         width: 40%;
-        background-color: var(--color-surface);
+        background-color: var(--color-panel); // matches the real drawer
         border-radius: var(--radius-drawer) 0 0 var(--radius-drawer);
         box-shadow: var(--shadow-drawer);
     }

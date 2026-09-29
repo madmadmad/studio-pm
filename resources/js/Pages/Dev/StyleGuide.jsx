@@ -78,7 +78,7 @@ const COLOR_GROUPS = [
     },
     {
         title: 'Marks',
-        note: 'Red with no text of its own: thin marks (the nav hover rule), the keyboard focus ring, and the gradient on the headline metric card.',
+        note: 'Red with no text of its own: the keyboard focus ring, and the gradient on the headline metric card.',
         colors: [
             ['Indicator', '--color-indicator'],
             ['Focus ring', '--color-focus-ring'],
@@ -119,8 +119,8 @@ const COLOR_GROUPS = [
             ['On canvas muted', '--color-on-canvas-muted'],
             ['On canvas subtle', '--color-on-canvas-subtle'],
             ['On canvas border', '--color-on-canvas-border'],
-            ['On canvas rule', '--color-on-canvas-rule'],
-            ['On canvas rule active', '--color-on-canvas-rule-active'],
+            ['On canvas fill', '--color-on-canvas-fill'],
+            ['On canvas fill hover', '--color-on-canvas-fill-hover'],
             ['Panel', '--color-panel'],
         ],
     },
@@ -270,7 +270,7 @@ export default function StyleGuide() {
                     <ShellTokenTable />
                 </Section>
 
-                <Section title="Buttons" description=".btn plus one color modifier (.btn--primary, --confirm...), or .link-btn for an inline text action. Use the Button component or apply the classes directly. Red is for confirming; Primary is off-white; Outline is grey; Danger is grey with a trash glyph and only turns red on hover.">
+                <Section title="Buttons" description=".btn plus one color modifier (.btn--primary, --confirm...), or .link-btn for an inline text action. Use the Button component or apply the classes directly. Action buttons (Primary, Confirm, Accent) are red; Secondary -- Cancel and the like -- is a subtle grey fill; Outline is a grey outline; Danger is grey with a trash glyph and only turns red on hover.">
                     <div className="style-guide__row style-guide__row--spaced">
                         <Button variant="confirm" className="btn--sm">Small</Button>
                         <Button variant="primary">Primary</Button>

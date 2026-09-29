@@ -1637,15 +1637,12 @@ function ExpenseFields({ values, disabled, onField, onCommit, onBlurField }) {
             </div>
 
             <div className="form-grid drawer__section">
-                <label className="choice">
-                    <input
-                        type="checkbox"
-                        checked={values.is_billable}
-                        disabled={disabled}
-                        onChange={(e) => onCommit('is_billable', e.target.checked)}
-                    />
-                    Billable to this project
-                </label>
+                <Toggle
+                    checked={values.is_billable}
+                    disabled={disabled}
+                    onChange={(is_billable) => onCommit('is_billable', is_billable)}
+                    label="Billable to this project"
+                />
                 <div>
                     <div className="section-label section-label--tight">Markup %</div>
                     <input

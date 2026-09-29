@@ -36,6 +36,7 @@
 
     // No background of its own -- the canvas shows through.
     &__sidebar {
+
         display: flex;
         flex-direction: column;
         flex-shrink: 0;
@@ -54,28 +55,39 @@
         height: auto;
     }
 
-    // Plain text rows divided by a rule: faint rule at rest, accent on
-    // hover, a bright rule for the current page. No background, no side padding.
+    // Filled rows: a barely-there fill at rest, a touch lighter under the
+    // pointer, and the current page in red with white text. Block and
+    // left-aligned so the Alerts trigger (a <button>) matches the links.
     &__nav-link {
-        padding-block: var(--space-1-5);
-        font-size: var(--font-size-sm);
-        line-height: var(--line-height-sm);
+        display: block;
+        width: 100%;
+        padding: var(--space-2) var(--space-3);
+        font-size: var(--font-size-base);
+        line-height: var(--line-height-base);
         font-weight: var(--font-weight-semibold);
         color: var(--color-on-canvas-subtle);
-        border-bottom: var(--border-width) solid var(--color-on-canvas-rule);
+        text-align: left;
+        background-color: var(--color-on-canvas-fill);
+        border-radius: var(--radius-base);
         transition:
             color var(--duration-fast) var(--ease-standard),
-            border-color var(--duration-fast) var(--ease-standard);
+            background-color var(--duration-fast) var(--ease-standard);
 
         &:hover {
             color: var(--color-on-canvas);
-            border-bottom-color: var(--color-indicator);
+            background-color: var(--color-on-canvas-fill-hover);
         }
 
+        // After :hover, so the current page stays red under the pointer.
+        // The base red, not the brightest: white on it passes AA (4.75:1).
         &--active,
         &--active:hover {
-            color: var(--color-on-canvas-strong);
-            border-bottom-color: var(--color-on-canvas-rule-active);
+            color: var(--color-primary-on);
+            background-color: var(--color-primary);
+        }
+
+        &:focus-visible {
+            @include focus-ring;
         }
     }
 

@@ -15,6 +15,17 @@
     cursor: pointer;
     user-select: none;
 
+    // Disabled -- by its own prop or a disabled <fieldset> around it.
+    &:has(.toggle__switch:disabled) {
+        cursor: not-allowed;
+        opacity: 0.5;
+    }
+
+    // Quieter label text (the login screen's "Remember me").
+    &--muted {
+        color: var(--color-text-muted);
+    }
+
     &__switch {
         position: relative;
         display: inline-flex;

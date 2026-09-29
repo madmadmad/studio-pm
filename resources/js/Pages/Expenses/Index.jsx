@@ -1,6 +1,6 @@
 import { Head } from '@inertiajs/react';
 import { useEffect, useMemo, useState } from 'react';
-import { CaretDown, CaretRight, PaperclipHorizontal, PencilSimple, Trash, X } from '@phosphor-icons/react';
+import { CaretDown, CaretRight, PaperclipHorizontal, Trash, X } from '@phosphor-icons/react';
 import AppLayout from '../../Layouts/AppLayout';
 import Button from '../../Components/Button';
 import EmptyState from '../../Components/EmptyState';
@@ -10,6 +10,8 @@ import { formatCurrency, formatDate } from '../../lib/format';
 import { expenseCategoryIcon } from '../../lib/expenseCategoryIcon';
 import { api } from '../../lib/api';
 import PageHeader from '../../Components/PageHeader';
+import Drawer, { DrawerByline, DrawerDate } from '../../Components/Drawer';
+import Toggle from '../../Components/Toggle';
 
 function emptyForm() {
     return {
@@ -142,7 +144,11 @@ export default function ExpensesIndex({ expenses: expensesProp, categories: cate
     const [search, setSearch] = useState('');
     const [categoryFilter, setCategoryFilter] = useState('');
     const [showForm, setShowForm] = useState(false);
-    const [editingId, setEditingId] = useState(null);
+    // The expense open in the drawer (null while creating).
+    const [editing, setEditing] = useState(null);
+    const editingId = editing?.id ?? null;
+    // Billed expenses can't be changed (the API refuses) -- they open read-only.
+    const editable = !editing || editing.billing_status === 'unbilled';
     const [form, setForm] = useState(emptyForm());
     const [receiptFile, setReceiptFile] = useState(null);
     const [showAdditional, setShowAdditional] = useState(false);
@@ -165,7 +171,7 @@ export default function ExpensesIndex({ expenses: expensesProp, categories: cate
     }, [expenses, search, categoryFilter]);
 
     function startCreate() {
-        setEditingId(null);
+        setEditing(null);
         setForm(emptyForm());
         setReceiptFile(null);
         setError('');
@@ -173,7 +179,7 @@ export default function ExpensesIndex({ expenses: expensesProp, categories: cate
     }
 
     function startEdit(expense) {
-        setEditingId(expense.id);
+        setEditing(expense);
         setForm({
             name: expense.name,
             amount: expense.amount,
@@ -183,7 +189,7 @@ export default function ExpensesIndex({ expenses: expensesProp, categories: cate
             is_billable: expense.is_billable,
             markup_percent: expense.markup_percent,
             tax_id: expense.tax_id ?? '',
-            date: expense.date,
+            date: expense.date?.slice(0, 10) ?? '', // a date input takes YYYY-MM-DD, not the full timestamp
             is_recurring: expense.is_recurring,
             recurrence_interval: expense.recurrence_interval ?? 'monthly',
             source_label: expense.source_label ?? '',
@@ -195,7 +201,7 @@ export default function ExpensesIndex({ expenses: expensesProp, categories: cate
 
     function cancel() {
         setShowForm(false);
-        setEditingId(null);
+        setEditing(null);
         setForm(emptyForm());
         setReceiptFile(null);
         setError('');
@@ -232,6 +238,7 @@ export default function ExpensesIndex({ expenses: expensesProp, categories: cate
         try {
             await api.delete(`/api/expenses/${expense.id}`);
             setExpenses((current) => current.filter((x) => x.id !== expense.id));
+            if (expense.id === editingId) cancel();
         } catch (err) {
             alert(err.message || 'Could not delete this expense.');
         }
@@ -274,81 +281,101 @@ export default function ExpensesIndex({ expenses: expensesProp, categories: cate
             <CategoryAndTaxManager categories={categories} setCategories={setCategories} taxes={taxes} setTaxes={setTaxes} />
 
             {showForm && (
-                <form onSubmit={submit} className="card card--padded page-section">
-                    {error && <div className="form-message form-message--error form-message--spaced">{error}</div>}
-                    <div className="form-grid">
-                        <input required placeholder="Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="input form-grid__full" />
-                        <select value={form.category_id} onChange={(e) => setForm({ ...form, category_id: e.target.value })} className="input">
-                            <option value="">Category&hellip;</option>
-                            {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-                        </select>
-                        <input required type="number" min="0.01" step="0.01" placeholder="Amount" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} className="input u-tabular-nums" />
-                        <select value={form.tax_id} onChange={(e) => setForm({ ...form, tax_id: e.target.value })} className="input">
-                            <option value="">No tax</option>
-                            {taxes.map((t) => <option key={t.id} value={t.id}>{t.name} ({t.rate}%)</option>)}
-                        </select>
-                        <input required type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className="input" />
-
-                        <select value={form.project_id} onChange={(e) => setForm({ ...form, project_id: e.target.value })} className="input form-grid__full">
-                            <option value="">No project</option>
-                            {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-                        </select>
-
-                        <label className="choice">
-                            <input type="checkbox" checked={form.is_billable} onChange={(e) => setForm({ ...form, is_billable: e.target.checked })} />
-                            Billable to project
-                        </label>
-                        <input
-                            type="number" min="0" step="0.01" placeholder="Markup %"
-                            value={form.markup_percent}
-                            disabled={!form.is_billable}
-                            onChange={(e) => setForm({ ...form, markup_percent: e.target.value })}
-                            className="input u-tabular-nums"
-                        />
-
-                        <label className="choice form-grid__full expenses__receipt">
-                            <PaperclipHorizontal size={16} className="expenses__receipt-icon" />
-                            Add receipt image
-                            <input type="file" accept="image/*,.pdf" onChange={(e) => setReceiptFile(e.target.files?.[0] ?? null)} className="expenses__receipt-input" />
-                        </label>
-                    </div>
-
-                    <button type="button" onClick={() => setShowAdditional((o) => !o)} className="disclosure expenses__more">
-                        {showAdditional ? <CaretDown size={14} /> : <CaretRight size={14} />}
-                        Additional fields
-                    </button>
-                    {showAdditional && (
-                        <div className="form-grid">
-                            <select value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value })} className="input">
-                                <option value="USD">USD</option>
-                                <option value="CAD">CAD</option>
-                                <option value="EUR">EUR</option>
-                                <option value="GBP">GBP</option>
-                            </select>
-                            <input placeholder="Source label (e.g. bank/card name)" value={form.source_label} onChange={(e) => setForm({ ...form, source_label: e.target.value })} className="input" />
-                            <label className="choice">
-                                <input type="checkbox" checked={form.is_recurring} onChange={(e) => setForm({ ...form, is_recurring: e.target.checked })} />
-                                Recurring expense
-                            </label>
-                            <select
-                                value={form.recurrence_interval}
-                                disabled={!form.is_recurring}
-                                onChange={(e) => setForm({ ...form, recurrence_interval: e.target.value })}
-                                className="input"
-                            >
-                                <option value="weekly">Weekly</option>
-                                <option value="monthly">Monthly</option>
-                                <option value="quarterly">Quarterly</option>
-                                <option value="yearly">Yearly</option>
-                            </select>
-                        </div>
+                <Drawer
+                    onClose={cancel}
+                    actions={editing && editable && (
+                        <button onClick={() => remove(editing)} title="Delete expense" aria-label="Delete expense" className="icon-btn icon-btn--danger drawer__action">
+                            <Trash />
+                        </button>
                     )}
+                >
+                    {editing && (
+                        <DrawerByline>
+                            <DrawerDate label="Created" date={editing.created_at} />
+                            <ExpenseStatusBadge expense={editing} />
+                        </DrawerByline>
+                    )}
+                    <h2 className="drawer__title">{editing ? editing.name : 'New expense'}</h2>
+                    {!editable && (
+                        <p className="form-hint drawer__section">
+                            Billed expenses can't be edited. Detach it from its invoice first.
+                        </p>
+                    )}
+                    <form onSubmit={submit}>
+                        {error && <div className="form-message form-message--error form-message--spaced">{error}</div>}
+                        <fieldset disabled={!editable} className="drawer__fieldset">
+                            <div className="form-grid">
+                                <input required placeholder="Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="input form-grid__full" />
+                                <select value={form.category_id} onChange={(e) => setForm({ ...form, category_id: e.target.value })} className="input">
+                                    <option value="">Category&hellip;</option>
+                                    {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                </select>
+                                <input required type="number" min="0.01" step="0.01" placeholder="Amount" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} className="input u-tabular-nums" />
+                                <select value={form.tax_id} onChange={(e) => setForm({ ...form, tax_id: e.target.value })} className="input">
+                                    <option value="">No tax</option>
+                                    {taxes.map((t) => <option key={t.id} value={t.id}>{t.name} ({t.rate}%)</option>)}
+                                </select>
+                                <input required type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className="input" />
 
-                    <div className="form-actions form-actions--spaced">
-                        <Button type="button" variant="secondary" onClick={cancel}>Cancel</Button>
-                        <Button type="submit" variant="confirm" disabled={saving}>Save</Button>
-                    </div>
-                </form>
+                                <select value={form.project_id} onChange={(e) => setForm({ ...form, project_id: e.target.value })} className="input form-grid__full">
+                                    <option value="">No project</option>
+                                    {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+                                </select>
+
+                                <Toggle checked={form.is_billable} onChange={(is_billable) => setForm({ ...form, is_billable })} label="Billable to project" />
+                                <input
+                                    type="number" min="0" step="0.01" placeholder="Markup %"
+                                    value={form.markup_percent}
+                                    disabled={!form.is_billable}
+                                    onChange={(e) => setForm({ ...form, markup_percent: e.target.value })}
+                                    className="input u-tabular-nums"
+                                />
+
+                                <label className="choice form-grid__full expenses__receipt">
+                                    <PaperclipHorizontal size={16} className="expenses__receipt-icon" />
+                                    Add receipt image
+                                    <input type="file" accept="image/*,.pdf" onChange={(e) => setReceiptFile(e.target.files?.[0] ?? null)} className="expenses__receipt-input" />
+                                </label>
+                            </div>
+
+                            <button type="button" onClick={() => setShowAdditional((o) => !o)} className="disclosure expenses__more">
+                                {showAdditional ? <CaretDown size={14} /> : <CaretRight size={14} />}
+                                Additional fields
+                            </button>
+                            {/* Read-only (billed) shows them open -- the toggle is disabled with the rest. */}
+                            {(showAdditional || !editable) && (
+                                <div className="form-grid">
+                                    <select value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value })} className="input">
+                                        <option value="USD">USD</option>
+                                        <option value="CAD">CAD</option>
+                                        <option value="EUR">EUR</option>
+                                        <option value="GBP">GBP</option>
+                                    </select>
+                                    <input placeholder="Source label (e.g. bank/card name)" value={form.source_label} onChange={(e) => setForm({ ...form, source_label: e.target.value })} className="input" />
+                                    <Toggle checked={form.is_recurring} onChange={(is_recurring) => setForm({ ...form, is_recurring })} label="Recurring expense" />
+                                    <select
+                                        value={form.recurrence_interval}
+                                        disabled={!form.is_recurring}
+                                        onChange={(e) => setForm({ ...form, recurrence_interval: e.target.value })}
+                                        className="input"
+                                    >
+                                        <option value="weekly">Weekly</option>
+                                        <option value="monthly">Monthly</option>
+                                        <option value="quarterly">Quarterly</option>
+                                        <option value="yearly">Yearly</option>
+                                    </select>
+                                </div>
+                            )}
+                        </fieldset>
+
+                        {editable && (
+                            <div className="form-actions form-actions--spaced">
+                                <Button type="button" variant="secondary" onClick={cancel}>Cancel</Button>
+                                <Button type="submit" variant="confirm" disabled={saving}>{editing ? 'Save' : 'Add expense'}</Button>
+                            </div>
+                        )}
+                    </form>
+                </Drawer>
             )}
 
             <div className="expenses__filters">
@@ -389,12 +416,12 @@ export default function ExpensesIndex({ expenses: expensesProp, categories: cate
                             {filtered.map((expense) => {
                                 const projectDraftInvoices = draftInvoices.filter((inv) => inv.project_id === expense.project_id);
                                 return (
-                                    <tr key={expense.id} className="table__row--top">
+                                    <tr key={expense.id} onClick={() => startEdit(expense)} className="table__row--top table__row--link">
                                         <td>
                                             <div className="expenses__name">
                                                 {expense.name}
                                                 {expense.receipt_url && (
-                                                    <a href={expense.receipt_url} target="_blank" rel="noreferrer" title="View receipt" className="icon-btn icon-btn--secondary">
+                                                    <a href={expense.receipt_url} target="_blank" rel="noreferrer" title="View receipt" onClick={(e) => e.stopPropagation()} className="icon-btn icon-btn--secondary">
                                                         <PaperclipHorizontal />
                                                     </a>
                                                 )}
@@ -410,7 +437,8 @@ export default function ExpensesIndex({ expenses: expensesProp, categories: cate
                                         <td><ExpenseStatusBadge expense={expense} /></td>
                                         <td className="table__cell--end table__cell--numeric">{formatCurrency(expense.amount)}</td>
                                         <td className="table__cell--end">
-                                            <div className="table__actions">
+                                            {/* Controls in the row act on their own, without opening the drawer. */}
+                                            <div className="table__actions" onClick={(e) => e.stopPropagation()}>
                                                 {expense.billing_status === 'unbilled' && expense.is_billable && projectDraftInvoices.length > 0 && (
                                                     <select
                                                         disabled={attachingId === expense.id}
@@ -428,15 +456,14 @@ export default function ExpensesIndex({ expenses: expensesProp, categories: cate
                                                     <button onClick={() => detach(expense)} className="text-action text-action--xs text-action--underline">Detach</button>
                                                 )}
                                                 {expense.billing_status === 'unbilled' && (
-                                                    <>
-                                                        <button onClick={() => startEdit(expense)} title="Edit" className="icon-btn icon-btn--confirm">
-                                                            <PencilSimple />
-                                                        </button>
-                                                        <button onClick={() => remove(expense)} title="Delete" className="icon-btn icon-btn--danger">
-                                                            <Trash />
-                                                        </button>
-                                                    </>
+                                                    <button onClick={() => remove(expense)} title="Delete" className="icon-btn icon-btn--danger">
+                                                        <Trash />
+                                                    </button>
                                                 )}
+                                                {/* The keyboard way in; the row's own click does the same. */}
+                                                <button onClick={() => startEdit(expense)} title="Open expense" aria-label="Open expense" className="row-action">
+                                                    <CaretRight size={14} weight="bold" />
+                                                </button>
                                             </div>
                                         </td>
                                     </tr>
