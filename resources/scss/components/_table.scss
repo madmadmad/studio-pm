@@ -94,12 +94,13 @@
             font-variant-numeric: tabular-nums;
         }
 
+        // Neutral, not red: red here would read as a loss.
         &--positive {
-            color: var(--color-success);
+            color: var(--color-text);
         }
 
         &--negative {
-            color: var(--color-danger);
+            color: var(--color-danger-text);
         }
 
         &--capitalize {

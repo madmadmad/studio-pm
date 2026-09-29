@@ -1,6 +1,7 @@
 // An icon button with a dropdown of actions. Used by
 // Components/ActionMenu.jsx; the panel is a .popover, right-aligned under
 // the trigger so it stays inside a card at the right edge.
+@use '../abstracts' as *;
 
 .action-menu {
     position: relative;
@@ -26,11 +27,24 @@
         border-radius: var(--radius-base);
 
         &:hover {
-            background-color: var(--color-surface-subtle);
+            background-color: var(--color-surface-muted);
         }
 
+        // Destructive: grey with a trash glyph at rest -- red is the brand,
+        // so the glyph, not the color, is what marks it -- red on hover.
         &--danger {
-            color: var(--color-danger);
+            display: flex;
+            align-items: center;
+            gap: var(--space-1-5);
+            color: var(--color-text-muted);
+
+            &::before {
+                @include glyph(trash);
+            }
+
+            &:hover {
+                color: var(--color-danger-text);
+            }
         }
     }
 }

@@ -1,5 +1,6 @@
 import { Link, useForm } from '@inertiajs/react';
 import Button from '../../Components/Button';
+import Toggle from '../../Components/Toggle';
 import AuthLayout from '../../Layouts/AuthLayout';
 
 export default function Login() {
@@ -40,14 +41,12 @@ export default function Login() {
                 </div>
 
                 <div className="auth-shell__row">
-                    <label className="choice choice--muted">
-                        <input
-                            type="checkbox"
-                            checked={data.remember}
-                            onChange={(e) => setData('remember', e.target.checked)}
-                        />
-                        Remember me
-                    </label>
+                    <Toggle
+                        checked={data.remember}
+                        onChange={(remember) => setData('remember', remember)}
+                        label="Remember me"
+                        className="toggle--muted"
+                    />
                     <Link href="/forgot-password" className="text-action text-action--sm">
                         Forgot password?
                     </Link>

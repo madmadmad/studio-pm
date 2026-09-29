@@ -1,10 +1,12 @@
-// The white, bordered panel for metrics, list rows, and grouped content.
-// Used by Components/Card.jsx or directly.
+// The panel for metrics, list rows, and grouped content: a step lighter
+// than the page, lifted by a soft shadow rather than a border. Used by
+// Components/Card.jsx or directly.
 
 .card {
     background-color: var(--color-surface);
     // border: var(--border-width) solid var(--color-border);
     border: 0;
+    box-shadow: var(--shadow-card);
     border-radius: var(--radius-base);
 
     &--padded {
@@ -12,10 +14,20 @@
     }
 
     // Holds an edge-to-edge table or list. Square, so list rows (and their
-    // hover fill) run straight to the corners.
+    // hover fill) run straight to the corners. Flat -- no fill or shadow:
+    // a list sits on the page, divided by its row rules alone.
     &--flush {
         overflow: hidden;
+        background-color: transparent;
         border-radius: 0;
+        box-shadow: none;
+    }
+
+    // A plain .card that holds list rows (the dashboards' recent invoices
+    // and projects) is a list too, so it goes flat the same way.
+    &:has(> .list-row, > .empty-state) {
+        background-color: transparent;
+        box-shadow: none;
     }
 
     // Title row at the top of a card: heading plus an action on the right.

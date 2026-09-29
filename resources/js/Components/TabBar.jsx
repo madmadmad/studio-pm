@@ -1,8 +1,9 @@
 // `counts` (optional) maps a tab to a number shown beside its label
-// ("Invoices 4").
-export default function TabBar({ tabs, tab, setTab, counts = {} }) {
+// ("Invoices 4"). `size="lg"` for a page where the tabs are the main
+// navigation (a project).
+export default function TabBar({ tabs, tab, setTab, counts = {}, size }) {
     return (
-        <div className="tabs">
+        <div className={`tabs${size === 'lg' ? ' tabs--lg' : ''}`}>
             {tabs.map((t) => (
                 <button
                     key={t}

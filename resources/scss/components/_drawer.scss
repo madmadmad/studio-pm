@@ -27,6 +27,10 @@
     }
 
     &__panel {
+        // Cards inside take the lighter drawer shadow (anything using
+        // --shadow-card: the file list, cards).
+        --shadow-card: var(--shadow-card-drawer);
+
         position: absolute;
         top: 0;
         right: 0;
@@ -35,7 +39,9 @@
         width: var(--size-drawer);
         max-width: 95vw; // one-off: always leave a sliver of page visible
         height: 100%;
-        background-color: var(--color-surface);
+        // The content panel's color: the scrim darkens the page behind, so
+        // the drawer reads as another sheet of the same panel.
+        background-color: var(--color-panel);
         border-radius: var(--radius-drawer) 0 0 var(--radius-drawer);
         box-shadow: var(--shadow-drawer);
         animation: panel-slide-in var(--duration-drawer) var(--ease-enter);
@@ -74,6 +80,15 @@
     // An icon button beside the close button -- a little horizontal hit area.
     &__action {
         padding-inline: var(--space-1);
+    }
+
+    // Groups a drawer form's fields so one `disabled` locks them all (a
+    // billed expense), without the browser's fieldset box.
+    &__fieldset {
+        min-width: 0;
+        margin: 0;
+        padding: 0;
+        border: 0;
     }
 
     &__body {
@@ -145,7 +160,7 @@
         flex-shrink: 0;
         width: var(--size-icon-sm);
         height: var(--size-icon-sm);
-        color: var(--color-primary);
+        color: var(--color-primary-text);
     }
 
     // A value shown but not editable in a drawer's field layout (a time

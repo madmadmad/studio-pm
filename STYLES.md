@@ -32,8 +32,10 @@ Every design value is a custom property on `:root`, defined in `base/_tokens.scs
 
 | Group | Examples | Notes |
 |---|---|---|
-| Color | `--color-gunmetal`, `--color-watermelon-soft`, `--color-scrim` | Brand palette names, plus on-dark text, scrims and hover shades |
-| Shell color | `--color-canvas`, `--color-panel` | The dark frame and the light surface each page sits in |
+| Color | `--color-primary`, `--color-primary-text`, `--color-surface-raised`, `--color-border-strong` | By role, never hue. Dark-only, one hue (red); everything else is grey. Intents come as base / -hover / -soft / -text / -on — use -text for the intent as text on a dark surface. Raw values live once, in the `--palette-*` scale, which components never reference |
+| Shell color | `--color-canvas`, `--color-panel`, `--color-bg` | The darkest frame (sidebar), and the page each view sits on |
+| Paper scope | `.document` | The public invoice/proposal sheet re-points the role tokens to a light set (bottom of `_tokens.scss`), so it stays white paper |
+| Glyphs | `@include glyph(trash)` | CSS-drawn Phosphor icons (`abstracts/_mixins.scss`) that mark destructive actions and errors, since red alone can't |
 | Type | `--font-size-sm` + `--line-height-sm`, `--font-weight-semibold` | Sizes come in pairs; set both |
 | Tracking | `--letter-spacing-scale`, `--letter-spacing-offset` | Letter-spacing follows font size automatically (scale × size + offset, on every element), so don't set it per rule. Opt out with `--letter-spacing-display` (display headings) or `--letter-spacing-body` |
 | Spacing | `--space-1` … `--space-16` | Step numbers follow the old 4px scale (`--space-3` = 0.75rem) |

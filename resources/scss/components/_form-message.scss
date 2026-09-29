@@ -1,5 +1,7 @@
 // Form-level feedback line ("Saved", a request error) -- as opposed to
-// .form-error, which sits under one field.
+// .form-error, which sits under one field. Success is plain text (it needs
+// no emphasis); an error is red with a warning glyph.
+@use '../abstracts' as *;
 
 .form-message {
     font-size: var(--font-size-sm);
@@ -11,10 +13,15 @@
     }
 
     &--success {
-        color: var(--color-success);
+        color: var(--color-text);
     }
 
     &--error {
-        color: var(--color-danger);
+        color: var(--color-danger-text);
+
+        &::before {
+            @include glyph(warning-circle);
+            margin-right: var(--space-1);
+        }
     }
 }

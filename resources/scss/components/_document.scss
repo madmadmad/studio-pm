@@ -7,6 +7,10 @@
     max-width: var(--size-document);
     margin-inline: auto;
     padding: var(--space-15);
+    // Light paper tokens are scoped to .document in base/_tokens.scss.
+    // Text color is set here too: body's is inherited already resolved
+    // (to the dark theme's off-white), so the scope alone won't reach it.
+    color: var(--color-text);
     background-color: var(--color-surface);
     border: var(--border-width) solid var(--color-border);
     border-radius: var(--radius-base);
@@ -224,8 +228,8 @@
         font-size: var(--font-size-sm);
         line-height: var(--line-height-sm);
         font-weight: var(--font-weight-medium);
-        color: var(--color-success);
-        background-color: var(--color-success-soft);
+        color: var(--color-text);
+        background-color: var(--color-surface-subtle);
         border-radius: var(--radius-base);
     }
 

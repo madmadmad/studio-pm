@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Head } from '@inertiajs/react';
-import { CheckCircle, Copy, DownloadSimple, Eye, PaperPlaneTilt, PencilSimple, Trash } from '@phosphor-icons/react';
+import { CaretRight, CheckCircle, Copy, DownloadSimple, Eye, PaperPlaneTilt, PencilSimple, Trash } from '@phosphor-icons/react';
 import AppLayout from '../../Layouts/AppLayout';
 import Button from '../../Components/Button';
 import Card from '../../Components/Card';
@@ -34,7 +34,7 @@ function IconButtonExample({ icon, label, variant }) {
 function Swatch({ name, varName }) {
     return (
         <div className="style-guide__swatch">
-            <div className="style-guide__swatch-chip" style={{ backgroundColor: `var(${varName})` }} />
+            <div className="style-guide__swatch-chip" style={{ background: `var(${varName})` }} />
             <div>
                 <div className="style-guide__swatch-name">{name}</div>
                 <div className="style-guide__caption">{varName}</div>
@@ -43,24 +43,105 @@ function Swatch({ name, varName }) {
     );
 }
 
-// The intents, each as base / hover / soft -- see base/_tokens.scss.
+// The intents -- see base/_tokens.scss.
 const INTENTS = ['primary', 'secondary', 'accent', 'success', 'danger', 'warning', 'info'];
 
-const COLORS = [
-    ...INTENTS.flatMap((intent) => {
-        const name = intent[0].toUpperCase() + intent.slice(1);
-        return [
-            [name, `--color-${intent}`],
-            [`${name} hover`, `--color-${intent}-hover`],
-            [`${name} soft`, `--color-${intent}-soft`],
-        ];
-    }),
-    ['Text', '--color-text'],
-    ['Text muted', '--color-text-muted'],
-    ['Surface', '--color-surface'],
-    ['Surface subtle', '--color-surface-subtle'],
-    ['Surface muted', '--color-surface-muted'],
-    ['Border', '--color-border'],
+const capitalize = (word) => word[0].toUpperCase() + word.slice(1);
+
+// The color tokens by kind, in the order base/_tokens.scss defines them.
+// Intents come one to a row (base, hover, soft, text, on) in a five-column
+// grid, so the columns line up across them.
+const COLOR_GROUPS = [
+    {
+        title: 'Palette',
+        note: 'The raw brand scale, brightest to deepest, plus the tint lifted for red text on charcoal. Only the role tokens below reference these -- components never do. The brightest two fail AA under white text, so they are never fills behind text.',
+        colors: [
+            ['Red 100', '--palette-red-100'],
+            ['Red 200', '--palette-red-200'],
+            ['Red 300 (base)', '--palette-red-300'],
+            ['Red 400', '--palette-red-400'],
+            ['Red 500', '--palette-red-500'],
+            ['Red tint', '--palette-red-tint'],
+        ],
+    },
+    {
+        title: 'Intents',
+        note: 'By meaning, never hue -- and one hue: red, with grey separating states that would otherwise both be red. Base fills; -hover under the pointer; -soft (low alpha) for badge and banner backgrounds; -text for the intent as text on a dark surface or on its -soft; -on for text on a base fill.',
+        columns: 5,
+        colors: INTENTS.flatMap((intent) => [
+            [capitalize(intent), `--color-${intent}`],
+            [`${capitalize(intent)} hover`, `--color-${intent}-hover`],
+            [`${capitalize(intent)} soft`, `--color-${intent}-soft`],
+            [`${capitalize(intent)} text`, `--color-${intent}-text`],
+            [`${capitalize(intent)} on`, `--color-${intent}-on`],
+        ]),
+    },
+    {
+        title: 'Marks',
+        note: 'Red with no text of its own: the keyboard focus ring, and the gradient on the headline metric card.',
+        colors: [
+            ['Indicator', '--color-indicator'],
+            ['Focus ring', '--color-focus-ring'],
+            ['Primary gradient', '--gradient-primary'],
+        ],
+    },
+    {
+        title: 'Text',
+        note: 'Off-white body text, secondary text (labels, meta), tertiary text (disabled only -- below AA on raised surfaces), and text on a colored fill.',
+        colors: [
+            ['Text', '--color-text'],
+            ['Text muted', '--color-text-muted'],
+            ['Text subtle', '--color-text-subtle'],
+            ['Text inverse', '--color-text-inverse'],
+        ],
+    },
+    {
+        title: 'Surfaces and border',
+        note: 'Darkest first -- in a dark UI, higher means lighter: the page; cards; filled cards and hover rows; menus and modals; neutral chips. Fields have no border: a faint white lift over whatever they sit on. The border is a low-contrast divider; border strong edges an outlined control.',
+        colors: [
+            ['Background', '--color-bg'],
+            ['Surface', '--color-surface'],
+            ['Surface subtle', '--color-surface-subtle'],
+            ['Surface raised', '--color-surface-raised'],
+            ['Surface muted', '--color-surface-muted'],
+            ['Field', '--color-field'],
+            ['Border', '--color-border'],
+            ['Border strong', '--color-border-strong'],
+        ],
+    },
+    {
+        title: 'Canvas',
+        note: 'The darkest layer, which the sidebar sits on; text and rules on it; and the panel each page sits in (separated by a dithered shadow image, images/panel-shadow.png).',
+        colors: [
+            ['Canvas', '--color-canvas'],
+            ['On canvas', '--color-on-canvas'],
+            ['On canvas strong', '--color-on-canvas-strong'],
+            ['On canvas muted', '--color-on-canvas-muted'],
+            ['On canvas subtle', '--color-on-canvas-subtle'],
+            ['On canvas border', '--color-on-canvas-border'],
+            ['On canvas fill', '--color-on-canvas-fill'],
+            ['On canvas fill hover', '--color-on-canvas-fill-hover'],
+            ['Panel', '--color-panel'],
+        ],
+    },
+    {
+        title: 'Overlays',
+        note: 'Backdrops behind a drawer or modal, a modal on a modal, and the image lightbox.',
+        colors: [
+            ['Scrim', '--color-scrim'],
+            ['Scrim strong', '--color-scrim-strong'],
+            ['Scrim heavy', '--color-scrim-heavy'],
+        ],
+    },
+    {
+        title: 'Decorative',
+        note: 'Fills with no meaning of their own -- initials avatars pick from these.',
+        colors: [
+            ['Decorative 1', '--color-decorative-1'],
+            ['Decorative 2', '--color-decorative-2'],
+            ['Decorative 3', '--color-decorative-3'],
+        ],
+    },
 ];
 
 const SHELL_COLORS = [
@@ -158,12 +239,18 @@ export default function StyleGuide() {
             />
 
             <div className="style-guide">
-                <Section title="Colors" description="Defined in base/_tokens.scss, consumed everywhere via var(--color-...).">
-                    <div className="style-guide__swatches">
-                        {COLORS.map(([name, varName]) => (
-                            <Swatch key={varName} name={name} varName={varName} />
-                        ))}
-                    </div>
+                <Section title="Colors" description="Defined in base/_tokens.scss, consumed everywhere via var(--color-...). Named by role, so any can be re-pointed without renaming.">
+                    {COLOR_GROUPS.map((group) => (
+                        <div key={group.title} className="style-guide__color-group">
+                            <div className="section-label section-label--ruled">{group.title}</div>
+                            <p className="style-guide__description">{group.note}</p>
+                            <div className={`style-guide__swatches${group.columns === 5 ? ' style-guide__swatches--five' : ''}`}>
+                                {group.colors.map(([name, varName]) => (
+                                    <Swatch key={varName} name={name} varName={varName} />
+                                ))}
+                            </div>
+                        </div>
+                    ))}
                 </Section>
 
                 <Section title="Tracking" description="Letter-spacing follows font size: scale × size + offset, set on every element in base/_elements.scss. Tune the curve with --letter-spacing-scale and --letter-spacing-offset in base/_tokens.scss. Display headings opt out with --letter-spacing-display.">
@@ -183,7 +270,7 @@ export default function StyleGuide() {
                     <ShellTokenTable />
                 </Section>
 
-                <Section title="Buttons" description=".btn plus one color modifier (.btn--primary, --confirm...), or .link-btn for an inline text action. Use the Button component or apply the classes directly.">
+                <Section title="Buttons" description=".btn plus one color modifier (.btn--primary, --confirm...), or .link-btn for an inline text action. Use the Button component or apply the classes directly. Action buttons (Primary, Confirm, Accent) are red; Secondary -- Cancel and the like -- is a subtle grey fill; Outline is a grey outline; Danger is grey with a trash glyph and only turns red on hover.">
                     <div className="style-guide__row style-guide__row--spaced">
                         <Button variant="confirm" className="btn--sm">Small</Button>
                         <Button variant="primary">Primary</Button>
@@ -213,9 +300,11 @@ export default function StyleGuide() {
                     </div>
                 </Section>
 
-                <Section title="Cards" description="The .card class -- a white, bordered panel. Add .card--padded (or the Card component's default) for inner spacing.">
+                <Section title="Cards" description="The .card class -- a panel a step lighter than the page, lifted by a soft shadow (--shadow-card) rather than a border. Add .card--padded (or the Card component's default) for inner spacing. A MetricCard's primary tone is the red gradient for a headline figure; its danger tone is grey, edged in red, with a warning glyph -- it often sits beside a primary card, so it can't be red too.">
                     <div className="style-guide__grid">
                         <MetricCard label="Open invoices" value="12" />
+                        <MetricCard label="Hours remaining" value="137.5h" tone="primary" />
+                        <MetricCard label="Overdue" value="$2,400.00" tone="danger" />
                         <Card padded={false}>
                             <div className="style-guide__unpadded">card without card--padded</div>
                         </Card>
@@ -259,7 +348,7 @@ export default function StyleGuide() {
                     </select>
                 </Section>
 
-                <Section title="Badges" description="A badge's tone is neutral or an intent (Components/Badge.jsx): the intent's soft tint with the intent as its text.">
+                <Section title="Badges" description="A badge's tone is neutral or an intent (Components/Badge.jsx). Grey for everything but trouble: neutral is a grey fill (Draft); accent, warning and info a grey outline (Sent, In progress); primary and success a grey fill with brighter text (Paid, Active); danger solid red with a warning glyph (Overdue).">
                     <div className="style-guide__row style-guide__row--compact">
                         <Badge tone="neutral" label="Neutral" />
                         {INTENTS.map((intent) => (
@@ -292,6 +381,16 @@ export default function StyleGuide() {
                     </table>
 
                     <p className="style-guide__note style-guide__note--after-table">
+                        A row ends with .row-action, the open caret: grey at rest, red on hover. Tab and toolbar counts (.count) are grey:
+                    </p>
+                    <div className="style-guide__row style-guide__row--compact">
+                        <button title="Open" className="row-action">
+                            <CaretRight size={14} weight="bold" />
+                        </button>
+                        <span className="count">4</span>
+                    </div>
+
+                    <p className="style-guide__note style-guide__note--after-table">
                         Add .table--flush when the table is nested inside an already-padded .card (no horizontal cell padding, tighter rows):
                     </p>
                     <Card>
@@ -312,7 +411,14 @@ export default function StyleGuide() {
                     </Card>
                 </Section>
 
-                <Section title="Avatars" description="Avatar.jsx -- a photo when one's uploaded, otherwise initials on a color picked deterministically from the author's id (see --color-avatar-* in base/_tokens.scss).">
+                <Section title="Feedback" description="Errors are red with a warning glyph, so they never read as brand-red text; success is neutral, since a red box would read as an error.">
+                    <div className="alert alert--danger">This invoice can't be sent until it has a contact.</div>
+                    <div className="alert alert--success">Payment recorded.</div>
+                    <div className="alert alert--info">This invoice has already been sent.</div>
+                    <div className="form-error">Enter a valid email address.</div>
+                </Section>
+
+                <Section title="Avatars" description="Avatar.jsx -- a photo when one's uploaded, otherwise initials on a fill picked deterministically from the author's id (see --color-decorative-* in base/_tokens.scss).">
                     <div className="style-guide__row style-guide__row--loose">
                         <Avatar name="Bill Sattler" id={1} size={40} />
                         <Avatar name="Casey Client" id={2} size={40} />

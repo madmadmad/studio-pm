@@ -1,4 +1,5 @@
 // Inline notice box inside a form or dialog.
+@use '../abstracts' as *;
 
 .alert {
     margin-bottom: var(--space-4);
@@ -13,33 +14,28 @@
         background-color: var(--color-surface-subtle);
     }
 
-    // Something blocking the action.
+    // Something blocking the action: the red tint with a warning glyph.
     &--danger {
-        color: var(--color-danger);
+        color: var(--color-danger-text);
         background-color: var(--color-danger-soft);
+
+        &::before {
+            @include glyph(warning-circle);
+            margin-right: var(--space-1-5);
+        }
     }
 
-    // Confirmation that an action went through.
+    // Confirmation that an action went through. Neutral -- a red box
+    // would read as an error.
     &--success {
-        color: var(--color-success);
-        background-color: var(--color-success-soft);
+        color: var(--color-text);
+        background-color: var(--color-surface-subtle);
+        box-shadow: inset 0 0 0 var(--border-width) var(--color-border);
     }
 
     // Smaller type, for alerts inside a dialog.
     &--compact {
         font-size: var(--font-size-xs);
         line-height: var(--line-height-xs);
-    }
-
-    // The whole alert is a <label> around a checkbox and its text.
-    &--choice {
-        display: flex;
-        align-items: flex-start;
-        gap: var(--space-2);
-    }
-
-    // Nudges the checkbox down to sit on the first line of text.
-    &__control {
-        margin-top: var(--space-0-5);
     }
 }

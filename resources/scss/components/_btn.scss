@@ -42,63 +42,74 @@
         font-size: var(--font-size-xs);
     }
 
-    // The default prominent action on a page ("Add client").
+    // The default prominent action on a page ("Add client"). Red, like
+    // every action button -- the grey is for Cancel (--secondary).
     &--primary {
-        background-color: var(--color-secondary);
-        color: var(--color-text-inverse);
-
-        &:not(:disabled):hover {
-            background-color: var(--color-secondary-hover);
-        }
-    }
-
-    // The affirmative action inside a form (Save, Send, Record...).
-    &--confirm {
         background-color: var(--color-primary);
-        color: var(--color-text-inverse);
+        color: var(--color-primary-on);
 
         &:not(:disabled):hover {
             background-color: var(--color-primary-hover);
         }
     }
 
-    // An accent-flagged "in progress" flow (the time-entry tray). Rare.
-    &--accent {
-        background-color: var(--color-accent);
-        color: var(--color-text-inverse);
+    // The affirmative action inside a form (Save, Send, Record...).
+    &--confirm {
+        background-color: var(--color-primary);
+        color: var(--color-primary-on);
 
         &:not(:disabled):hover {
-            background-color: var(--color-accent-hover);
+            background-color: var(--color-primary-hover);
         }
     }
 
-    // Low emphasis, next to a primary action (Cancel).
+    // The call to action that closes an in-progress flow (the time-entry
+    // tray's "Create invoice", a public page's Pay / Accept). Filled red,
+    // like confirm.
+    &--accent {
+        background-color: var(--color-primary);
+        color: var(--color-primary-on);
+
+        &:not(:disabled):hover {
+            background-color: var(--color-primary-hover);
+        }
+    }
+
+    // Low emphasis, next to a red action (Cancel): a subtle grey fill.
     &--secondary {
+        background-color: var(--color-neutral-fill);
+        color: var(--color-text);
+
+        &:not(:disabled):hover {
+            background-color: var(--color-neutral-fill-hover);
+        }
+    }
+
+    // An alternative to confirm for a secondary form action (Save as
+    // draft). Grey outline, so it sits clearly below the red confirm.
+    &--outline {
+        background-color: transparent;
+        color: var(--color-text);
+        border-color: var(--color-border-strong);
+
+        &:not(:disabled):hover {
+            background-color: var(--color-surface-muted);
+        }
+    }
+
+    // Destructive actions (Remove, Delete). Grey with a trash glyph at
+    // rest -- red is the brand, so the glyph is what says "destructive" --
+    // turning red only under the pointer.
+    &--danger {
         background-color: transparent;
         color: var(--color-text-muted);
 
-        &:not(:disabled):hover {
-            color: var(--color-text);
+        &::before {
+            @include glyph(trash);
         }
-    }
-
-    // An alternative to confirm for a secondary form action (Save as draft).
-    &--outline {
-        background-color: transparent;
-        color: var(--color-primary);
-        border-color: var(--color-primary);
 
         &:not(:disabled):hover {
-            background-color: var(--color-primary-soft);
-        }
-    }
-
-    // Destructive actions (Remove, Delete).
-    &--danger {
-        background-color: transparent;
-        color: var(--color-danger);
-
-        &:not(:disabled):hover {
+            color: var(--color-danger-text);
             background-color: var(--color-danger-soft);
         }
     }

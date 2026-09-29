@@ -58,6 +58,23 @@
         @include respond-to('md') {
             grid-template-columns: repeat(4, minmax(0, 1fr));
         }
+
+        // The intents: one intent per row (base, hover, soft, text, on).
+        &--five {
+            @include respond-to('lg') {
+                grid-template-columns: repeat(5, minmax(0, 1fr));
+            }
+        }
+    }
+
+    // One kind of color token (Intents, Text, Surfaces...) in the Colors
+    // section, under a ruled subhead.
+    &__color-group {
+        margin-bottom: var(--space-8);
+
+        &:last-child {
+            margin-bottom: 0;
+        }
     }
 
     &__swatch {
@@ -113,7 +130,7 @@
         right: 0;
         bottom: 0;
         width: 40%;
-        background-color: var(--color-surface);
+        background-color: var(--color-panel); // matches the real drawer
         border-radius: var(--radius-drawer) 0 0 var(--radius-drawer);
         box-shadow: var(--shadow-drawer);
     }

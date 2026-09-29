@@ -21,16 +21,36 @@
         line-height: var(--line-height-sm);
         color: var(--color-text-muted);
         white-space: nowrap;
-        border-bottom: var(--border-width-thick) solid transparent;
+        border-bottom: var(--border-width-tab) solid transparent;
 
         &--active {
             color: var(--color-text);
-            border-bottom-color: var(--color-text);
+            border-bottom-color: var(--color-primary);
         }
     }
 
     // The .count beside a tab's label.
     &__count {
         margin-left: var(--space-1-5);
+    }
+
+    // A tab's content -- everything after the strip -- sits flat on the
+    // page: its lists and cards drop their fill and shadow, and the row
+    // rules alone divide the data. Metric cards keep theirs.
+    & ~ * .card:not(.metric-card) {
+        background-color: transparent;
+        box-shadow: none;
+    }
+
+    // Tabs as a page's main navigation (a project): a size up, wider apart,
+    // with more room above the underline.
+    &--lg {
+        gap: var(--space-8);
+
+        .tabs__tab {
+            padding-block: var(--space-3);
+            font-size: var(--font-size-lg);
+            line-height: var(--line-height-lg);
+        }
     }
 }

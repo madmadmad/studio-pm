@@ -1,6 +1,20 @@
 // Full-page backdrop the public invoice/proposal .document sheet sits on.
+// Light, like the sheet (tokens scoped in base/_tokens.scss); the colors
+// are set here because body's are inherited already resolved, dark.
+
+// The page scrollbar and overscroll belong to the root, which is dark
+// app-wide -- light them too while a public page is showing.
+:root:has(.document-page) {
+    color-scheme: light;
+
+    body {
+        background-color: #f7f7f7; // matches the page's --color-surface-subtle in the paper scope
+    }
+}
 
 .document-page {
     min-height: 100vh;
+    color: var(--color-text);
+    background-color: var(--color-surface-subtle);
     padding: var(--space-10) var(--space-4);
 }

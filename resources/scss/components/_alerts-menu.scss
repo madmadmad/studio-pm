@@ -21,9 +21,9 @@
         padding-inline: var(--space-1);
         font-size: var(--font-size-2xs);
         line-height: var(--line-height-2xs);
-        color: var(--color-text-inverse);
+        color: var(--color-primary-on);
         text-align: center;
-        background-color: var(--color-accent);
+        background-color: var(--color-primary);
         border-radius: var(--radius-pill);
     }
 
@@ -59,7 +59,7 @@
         text-align: left;
 
         &:hover {
-            background-color: var(--color-surface-subtle);
+            background-color: var(--color-surface-muted);
         }
 
         &--read {

@@ -59,16 +59,12 @@
         cursor: pointer; // a card opens its project; it can also be dragged
         transition: background-color var(--duration-fast) var(--ease-standard);
 
-        // The whole card fills primary with its -on text, the way a list row
-        // highlights -- it's one click target.
+        // The whole card lifts to the raised surface, edged in the red --
+        // it's one click target. (A full red fill would spend the accent
+        // on every pass of the pointer.)
         &:hover {
-            background-color: var(--color-primary);
-
-            .project-board__name,
-            .project-board__client,
-            .project-board__meta {
-                color: var(--color-text-inverse);
-            }
+            background-color: var(--color-surface-raised);
+            box-shadow: inset 0 0 0 var(--border-width) var(--color-primary);
         }
 
         &--dragging {

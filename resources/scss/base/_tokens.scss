@@ -3,94 +3,153 @@
 // var(--...). Breakpoints are the one exception -- see abstracts/_breakpoints.
 
 :root {
+    // The app is dark-only: native controls, scrollbars and a <select>'s
+    // open list render dark to match. (.document opts back into light.)
+    color-scheme: dark;
+
+    // -----------------------------------------------------------------
+    // Palette -- the raw brand scale. Referenced only by the role tokens
+    // below; components never use these directly.
+    // -----------------------------------------------------------------
+    --palette-red-100: #FF0D4A; // brightest -- non-text marks only (fails AA under white text)
+    --palette-red-200: #CF0034;
+    --palette-red-300: #CF0034; // base -- the lightest red that passes AA under white text (4.75:1)
+    --palette-red-400: #CF0034;
+    --palette-red-500: #CF0034; // deepest
+    --palette-red-tint: #CF0034; // lifted for red text on charcoal (6-7:1); the base reds read too dark
+
     // -----------------------------------------------------------------
     // Color -- by role, never by hue, so any of these can be re-pointed
     // without renaming anything. Components use only these names; each
     // raw value appears once, here.
     //
-    // Intents come as a set: the base (fills, strong text), -hover (a
-    // filled control under the pointer), -soft (a light tint for badge
-    // and banner backgrounds, with the base as its text), and -on (text
-    // and icons on a base fill).
+    // One hue: the red is the only color. Everything else is a neutral
+    // grey, and grey -- not a second hue -- is what separates states that
+    // would otherwise both be red (see success and danger below).
+    //
+    // Intents come as a set: the base (fills), -hover (a filled control
+    // under the pointer), -soft (a low-alpha tint for badge and banner
+    // backgrounds, so it works on any surface), -text (the intent as text
+    // on a dark surface or on its own -soft), and -on (text and icons on
+    // a base fill).
     // -----------------------------------------------------------------
 
-    // Primary -- the brand color: main actions (confirm, save), switched-
-    // on controls, the open caret, counts, schedule bars, headline cards.
-    --color-primary: #5aa329;
-    --color-primary-hover: color-mix(in srgb, var(--color-primary) 92%, black);
-    --color-primary-soft: #e7efe3;
+    // Primary -- the brand red: main actions (confirm, save), switched-on
+    // controls, the open caret, counts, schedule bars, headline cards.
+    // Hover steps one deeper along the scale, which keeps white text passing.
+    --color-primary: var(--palette-red-300);
+    --color-primary-hover: var(--palette-red-400);
+    --color-primary-soft: color-mix(in srgb, var(--palette-red-300) 16%, transparent);
+    --color-primary-text: var(--palette-red-tint);
     --color-primary-on: #fff;
+    --gradient-primary: linear-gradient(135deg, var(--palette-red-300), var(--palette-red-500)); // the headline metric card
 
-    // Secondary -- the strong neutral: dark buttons, the active filter.
-    --color-secondary: #23262e;
-    --color-secondary-hover: #373b45;
-    --color-secondary-soft: #e7e7e9;
-    --color-secondary-on: #fff;
+    // Secondary -- the strong neutral, reversed for a dark UI: an off-white
+    // fill for the page's prominent action ("Add client") and the active
+    // filter, so red stays reserved for confirming.
+    --color-secondary: #E6E8EB;
+    --color-secondary-hover: #fff;
+    --color-secondary-soft: var(--color-surface-muted);
+    --color-secondary-text: var(--color-text);
+    --color-secondary-on: #121418;
 
-    // Accent -- calls for attention without meaning trouble: sent / in
-    // progress, send actions, nav hover, the today line, the focus ring.
-    --color-accent: #f41347;
-    --color-accent-hover: color-mix(in srgb, var(--color-accent) 92%, black);
-    --color-accent-soft: #fce2e8;
-    --color-accent-on: #fff;
+    // Accent -- the quiet one now: a light grey for things that are moving
+    // but need no alarm -- sent / in progress, send actions, secondary
+    // inline links. (Nav hover and the focus ring have their own tokens
+    // below, in the red.)
+    --color-accent: #C9CDD2;
+    --color-accent-hover: #E6E8EB;
+    --color-accent-soft: var(--color-surface-muted);
+    --color-accent-text: var(--color-text);
+    --color-accent-on: #121418;
 
-    // Status intents. Success and danger start out matching primary and
-    // accent; they're separate so each can change on its own.
+    // Success and danger are both red; what separates them is treatment,
+    // not hue. Success badges take the soft tint; success as text or a
+    // notice goes neutral (components/_alert, _table...). Danger badges
+    // are a solid fill with a warning glyph; destructive actions sit grey
+    // with a trash glyph and only turn red under the pointer.
     --color-success: var(--color-primary); // done, paid, accepted, billable
     --color-success-hover: var(--color-primary-hover);
     --color-success-soft: var(--color-primary-soft);
+    --color-success-text: var(--color-primary-text);
     --color-success-on: var(--color-primary-on);
 
-    --color-danger: var(--color-accent); // destructive, errors, negative figures, overdue
-    --color-danger-hover: var(--color-accent-hover);
-    --color-danger-soft: var(--color-accent-soft);
-    --color-danger-on: var(--color-accent-on);
+    --color-danger: var(--color-primary); // destructive, errors, negative figures, overdue
+    --color-danger-hover: var(--color-primary-hover);
+    --color-danger-soft: var(--color-primary-soft);
+    --color-danger-text: var(--color-primary-text);
+    --color-danger-on: var(--color-primary-on);
 
-    // Not used yet -- ready for "due soon", notices and the like.
-    --color-warning: #d97706;
-    --color-warning-hover: color-mix(in srgb, var(--color-warning) 92%, black);
-    --color-warning-soft: #fdf1dc;
-    --color-warning-on: #fff;
+    // Not used outside the style guide yet. No extra hues, so both are
+    // neutral for now.
+    --color-warning: var(--color-accent);
+    --color-warning-hover: var(--color-accent-hover);
+    --color-warning-soft: var(--color-accent-soft);
+    --color-warning-text: var(--color-accent-text);
+    --color-warning-on: var(--color-accent-on);
 
-    --color-info: #2f6fd6;
-    --color-info-hover: color-mix(in srgb, var(--color-info) 92%, black);
-    --color-info-soft: #e1ebfa;
-    --color-info-on: #fff;
+    --color-info: var(--color-accent);
+    --color-info-hover: var(--color-accent-hover);
+    --color-info-soft: var(--color-accent-soft);
+    --color-info-text: var(--color-text-muted);
+    --color-info-on: var(--color-accent-on);
 
-    // Text.
-    --color-text: #23262e;
-    --color-text-muted: #595f64; // secondary text, labels, meta
-    --color-text-inverse: #fff; // on a dark or colored fill
+    // The neutral button fill -- Cancel and every other "not this" action
+    // beside a red one. A subtle grey, lifting a touch on hover.
+    --color-neutral-fill: var(--color-surface-muted);
+    --color-neutral-fill-hover: color-mix(in srgb, var(--color-surface-muted) 88%, #fff);
 
-    // Surfaces, lightest first, and the line between things.
-    --color-surface: #fff; // cards, inputs, drawers, the page panel
-    --color-surface-subtle: #f7f7f7; // filled cards, hover rows, toolbars
-    --color-surface-muted: #e7e7e9; // neutral badge/chip fill, a hair darker
-    --color-border: #eee;
+    // Marks with no text of their own, where the brightest red reads best
+    // (4.4:1+ on every surface).
+    --color-indicator: var(--palette-red-100);
 
-    // The dark frame around the app (the sidebar sits on it) and text on it.
-    --color-canvas: #23262e;
-    --color-on-canvas: #f7f7f7;
+    // The keyboard focus outline (abstracts/_mixins focus-ring). The text
+    // tint rather than a base red, so it stays visible against a red fill.
+    --color-focus-ring: var(--palette-red-tint);
+
+    // Text. Off-white, not #fff, to take the glare off.
+    --color-text: #E6E8EB; // 12-15:1 on every surface
+    --color-text-muted: #9AA1A9; // secondary text, labels, meta -- 5.2:1+ on every surface
+    --color-text-subtle: #808791; // tertiary and disabled only -- 4.76:1 on surface, below AA on raised
+    --color-text-inverse: #fff; // on a colored fill or the lightbox scrim
+
+    // Surfaces, darkest first -- in a dark UI, higher means lighter -- and
+    // the lines between things. A slight cool tint keeps them off pure black.
+    --color-bg: #23272F; // the page itself: the content panel, auth and public pages
+    --color-surface: #31343A; // cards, list cards
+    --color-surface-subtle: #31343A; // filled cards, hover rows, toolbars
+    --color-surface-raised: #23272F; // floats above the page: drawers, modals, popovers, menus
+    --color-surface-muted: #383C42; // neutral badge/chip fill, a step lighter
+    --color-field: rgb(255 255 255 / 0.06); // inputs and selects: a faint lift over whatever they sit on, so a borderless field reads on every layer
+    --color-border: #41464E; // dividers -- decorative, deliberately low contrast
+    --color-border-strong: #41464E; // the edge of an outlined control (outline buttons, badges), the toggle track
+
+    // The frame around the app (the sidebar sits on it) and text on it.
+    // The darkest layer; the content panel sits a step lighter.
+    --color-canvas: #171B21;
+    --color-on-canvas: #E6E8EB;
     --color-on-canvas-strong: #fff; // the current nav item
     --color-on-canvas-muted: color-mix(in srgb, var(--color-on-canvas) 80%, transparent);
     --color-on-canvas-subtle: color-mix(in srgb, var(--color-on-canvas) 60%, transparent);
-    --color-on-canvas-border: color-mix(in srgb, var(--color-on-canvas) 15%, transparent);
-    --color-on-canvas-rule: color-mix(in srgb, var(--color-surface-muted) 3%, transparent); // resting nav rule
-    --color-on-canvas-rule-active: var(--color-surface-muted); // the current nav item's rule
+    --color-on-canvas-border: color-mix(in srgb, var(--color-on-canvas) 10%, transparent);
+    --color-on-canvas-fill: color-mix(in srgb, var(--color-on-canvas) 4%, transparent); // a nav item at rest -- barely there
+    --color-on-canvas-fill-hover: color-mix(in srgb, var(--color-on-canvas) 8%, transparent); // a nav item under the pointer, a touch lighter
 
     // App shell layers, back to front: canvas -> panel -> drawer.
-    --color-panel: var(--color-surface);
+    --color-panel: var(--color-bg);
 
-    // Backdrops behind overlays, lightest to heaviest.
-    --color-scrim: color-mix(in srgb, var(--color-canvas) 20%, transparent); // drawer, modal
-    --color-scrim-strong: color-mix(in srgb, var(--color-canvas) 40%, transparent); // modal stacked on a modal
-    --color-scrim-heavy: color-mix(in srgb, var(--color-canvas) 80%, transparent); // lightbox
+    // Backdrops behind overlays, lightest to heaviest. Heavier than on a
+    // light UI: a thin scrim vanishes over dark surfaces.
+    --color-scrim: color-mix(in srgb, var(--color-canvas) 60%, transparent); // drawer, modal
+    --color-scrim-strong: color-mix(in srgb, var(--color-canvas) 72%, transparent); // modal stacked on a modal
+    --color-scrim-heavy: color-mix(in srgb, var(--color-canvas) 90%, transparent); // lightbox
 
     // Decorative fills with no meaning of their own -- initials avatars
-    // (Avatar.jsx picks from these plus a few soft intents).
-    --color-decorative-1: #dce8f5;
-    --color-decorative-2: #f5e8d3;
-    --color-decorative-3: #e6dcf5;
+    // (Avatar.jsx picks from these plus a few soft intents). Greys, and
+    // one warmed a touch toward the red.
+    --color-decorative-1: #2B2F36;
+    --color-decorative-2: #353A42;
+    --color-decorative-3: color-mix(in srgb, var(--palette-red-300) 14%, #2B2F36);
 
     // -----------------------------------------------------------------
     // Typography
@@ -177,13 +236,14 @@
     // Borders and radii
     // -----------------------------------------------------------------
     --border-width: 1px;
-    --border-width-thick: 2px; // active tab underline
+    --border-width-thick: 2px; // the today line, the billing tray's edge
+    --border-width-tab: 3px; // active tab underline
     --focus-ring-width: 2px;
     --focus-ring-offset: 1px;
 
     // Single knob for corner rounding app-wide. --radius-pill is a shape
     // (pills, circles), not an amount, so it's deliberately separate.
-    --radius-base: 0.35rem;
+    --radius-base: 0.25rem;
     --radius-pill: 9999px;
 
     // Shell layers only (content panel, drawer) -- large-scale rounding
@@ -194,10 +254,53 @@
     // -----------------------------------------------------------------
     // Elevation
     // -----------------------------------------------------------------
-    --shadow-raised: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1); // toggle knob
-    --shadow-popover: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1); // dropdowns
-    --shadow-overlay: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1); // modal
-    --shadow-drawer: -12px 0 32px -8px rgb(0 0 0 / 0.12), -2px 0 6px -2px rgb(0 0 0 / 0.07); // cast left, off the right-edge drawer
+    // Every shadow is layered: stacked copies that double in offset and
+    // blur (1, 2, 4, 8... px), each at the same low alpha, for a soft,
+    // natural falloff. Elevation is the number of layers -- a higher layer
+    // throws its shadow further -- not a darker color.
+    --shadow-raised:
+      0 1px 1px hsl(0deg 0% 0% / 0.1),
+      0 2px 2px hsl(0deg 0% 0% / 0.1),
+      0 4px 4px hsl(0deg 0% 0% / 0.1)
+    ; // toggle knob: small, close to its track
+    --shadow-card:
+      0 1px 1px hsl(0deg 0% 0% / 0.075),
+      0 2px 2px hsl(0deg 0% 0% / 0.075),
+      0 4px 4px hsl(0deg 0% 0% / 0.075),
+      0 8px 8px hsl(0deg 0% 0% / 0.075),
+      0 16px 16px hsl(0deg 0% 0% / 0.075)
+    ; // cards: soft lift, no border
+    --shadow-card-drawer:
+      0 1px 1px hsl(0deg 0% 0% / 0.05),
+      0 2px 2px hsl(0deg 0% 0% / 0.05),
+      0 4px 4px hsl(0deg 0% 0% / 0.05),
+      0 8px 8px hsl(0deg 0% 0% / 0.05),
+      0 16px 16px hsl(0deg 0% 0% / 0.05)
+    ; // the same lift inside a drawer, lighter to suit its lighter surface
+    --shadow-popover:
+      0 1px 1px hsl(0deg 0% 0% / 0.09),
+      0 2px 2px hsl(0deg 0% 0% / 0.09),
+      0 4px 4px hsl(0deg 0% 0% / 0.09),
+      0 8px 8px hsl(0deg 0% 0% / 0.09),
+      0 16px 16px hsl(0deg 0% 0% / 0.09),
+      0 32px 32px hsl(0deg 0% 0% / 0.09)
+    ; // dropdowns and menus: a layer above cards
+    --shadow-overlay:
+      0 1px 1px hsl(0deg 0% 0% / 0.09),
+      0 2px 2px hsl(0deg 0% 0% / 0.09),
+      0 4px 4px hsl(0deg 0% 0% / 0.09),
+      0 8px 8px hsl(0deg 0% 0% / 0.09),
+      0 16px 16px hsl(0deg 0% 0% / 0.09),
+      0 32px 32px hsl(0deg 0% 0% / 0.09),
+      0 64px 64px hsl(0deg 0% 0% / 0.09)
+    ; // modal: the highest layer
+    --shadow-drawer:
+      -1px 0 1px hsl(0deg 0% 0% / 0.07),
+      -1px 0 2px hsl(0deg 0% 0% / 0.08),
+      -3px 0 4px hsl(0deg 0% 0% / 0.075),
+      -6px 0 8px hsl(0deg 0% 0% / 0.075),
+      -16px 0 16px hsl(0deg 0% 0% / 0.075)
+    ; // cast left, off the right-edge drawer
 
     --z-dropdown: 10;
     --z-overlay: 50;
@@ -222,6 +325,7 @@
     // Sizes -- fixed widths for recurring containers.
     // -----------------------------------------------------------------
     --size-sidebar: 18rem;
+    --size-panel-shadow: 128px; // the width of images/panel-shadow.png, the panel's dithered shadow
     --size-popover-sm: 16rem;
     --size-popover: 18rem;
     --size-auth-card: 24rem;
@@ -249,4 +353,38 @@
     // Sizes here override that from CSS, for an icon given a class.
     --size-icon-sm: 0.875rem; // 14px: inline with small meta text
     --size-icon-lg: 1.5rem; // 24px: a tab's primary add action (.icon-btn--lg)
+}
+
+// The public invoice/proposal pages stay light -- white paper on a light
+// page; it's what the client sees and prints. These re-point the role
+// tokens to a light set for the whole page, so every component on it
+// (the sheet, buttons, labels, prose, any dialog...) reads as on paper.
+.document-page,
+.document {
+    color-scheme: light;
+
+    --color-primary-soft: color-mix(in srgb, var(--palette-red-300) 10%, #fff);
+    --color-primary-text: var(--palette-red-400); // 5.67:1 on white
+    --color-secondary: #23262e;
+    --color-secondary-hover: #373b45;
+    --color-secondary-on: #fff;
+    --color-accent: #595f64;
+    --color-accent-text: #23262e;
+    --color-danger-text: var(--palette-red-400);
+    --color-success-text: var(--palette-red-400);
+    --color-focus-ring: var(--palette-red-300);
+
+    --color-text: #23262e;
+    --color-text-muted: #595f64;
+    --color-text-subtle: #6c737c;
+    --color-bg: #fff;
+    --color-surface: #fff;
+    --color-surface-subtle: #f7f7f7;
+    --color-surface-raised: #fff;
+    --color-surface-muted: #e7e7e9;
+    --color-neutral-fill: #e7e7e9; // set here, not inherited: :root's alias resolves to the dark grey
+    --color-neutral-fill-hover: #dcdce0; // darkens on paper, rather than lifting
+    --color-field: #fff;
+    --color-border: #e7e7e9;
+    --color-border-strong: #8a9097;
 }

@@ -1,8 +1,15 @@
-// Validation message directly under a field.
+// Validation message directly under a field. The warning glyph marks it
+// as an error rather than brand-red text.
+@use '../abstracts' as *;
 
 .form-error {
     margin-top: var(--space-1);
     font-size: var(--font-size-xs);
     line-height: var(--line-height-xs);
-    color: var(--color-danger);
+    color: var(--color-danger-text);
+
+    &::before {
+        @include glyph(warning-circle);
+        margin-right: var(--space-1);
+    }
 }

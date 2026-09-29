@@ -44,7 +44,7 @@
     // Inline outcome after an item ("· Sent", "· Failed").
     &__status {
         &--success {
-            color: var(--color-success);
+            color: var(--color-text);
         }
 
         &--muted {
@@ -52,7 +52,7 @@
         }
 
         &--error {
-            color: var(--color-danger);
+            color: var(--color-danger-text);
         }
     }
 }

@@ -1,7 +1,33 @@
+@use 'sass:map';
+
 // The app-wide keyboard focus indicator (buttons, fields).
 @mixin focus-ring {
-    outline: var(--focus-ring-width) solid var(--color-accent);
+    outline: var(--focus-ring-width) solid var(--color-focus-ring);
     outline-offset: var(--focus-ring-offset);
+}
+
+// Phosphor glyphs (regular weight, 256 grid) for CSS-drawn icons: the
+// marks that tell a destructive action or an error apart from the brand
+// red when color alone can't. Taken from @phosphor-icons/react, so they
+// match the icons in the markup.
+$glyphs: (
+    trash: 'M216,48H176V40a24,24,0,0,0-24-24H104A24,24,0,0,0,80,40v8H40a8,8,0,0,0,0,16h8V208a16,16,0,0,0,16,16H192a16,16,0,0,0,16-16V64h8a8,8,0,0,0,0-16ZM96,40a8,8,0,0,1,8-8h48a8,8,0,0,1,8,8v8H96Zm96,168H64V64H192ZM112,104v64a8,8,0,0,1-16,0V104a8,8,0,0,1,16,0Zm48,0v64a8,8,0,0,1-16,0V104a8,8,0,0,1,16,0Z',
+    warning-circle: 'M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm-8-80V80a8,8,0,0,1,16,0v56a8,8,0,0,1-16,0Zm20,36a12,12,0,1,1-12-12A12,12,0,0,1,140,172Z',
+);
+
+// A glyph drawn in currentColor, as an inline pseudo-element -- include
+// inside ::before. A mask rather than a background image so it takes the
+// text color and follows it on hover.
+@mixin glyph($name, $size: 1em) {
+    $svg: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'%3E%3Cpath d='#{map.get($glyphs, $name)}'/%3E%3C/svg%3E";
+    content: '';
+    display: inline-block;
+    flex-shrink: 0;
+    width: $size;
+    height: $size;
+    vertical-align: -0.125em;
+    background-color: currentcolor;
+    mask: url("#{$svg}") center / contain no-repeat;
 }
 
 // Subhead: the small grey caption over a piece of content -- section

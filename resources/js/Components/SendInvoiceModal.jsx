@@ -231,17 +231,13 @@ export default function SendInvoiceModal({ invoice, studio, invoicingDefaults, o
                     )}
 
                     {invoice.needs_issue_date_update && blockingIssues.length === 0 && (
-                        <label className="alert alert--info alert--compact alert--choice">
-                            <input
-                                type="checkbox"
+                        <div className="alert alert--info alert--compact">
+                            <Toggle
                                 checked={updateIssueDate}
-                                onChange={(e) => setUpdateIssueDate(e.target.checked)}
-                                className="alert__control"
+                                onChange={setUpdateIssueDate}
+                                label={`The issue date is in the past. Update it to ${sendTiming === 'later' ? 'the scheduled send date' : 'today'} and recalculate the due date?`}
                             />
-                            <span>
-                                The issue date is in the past. Update it to {sendTiming === 'later' ? 'the scheduled send date' : 'today'} and recalculate the due date?
-                            </span>
-                        </label>
+                        </div>
                     )}
 
                     <div role="tablist" aria-label="Send method" className="send-invoice__methods">
@@ -361,10 +357,7 @@ export default function SendInvoiceModal({ invoice, studio, invoicingDefaults, o
                                 <textarea value={message} onChange={(e) => setMessage(e.target.value)} rows={5} className="input" />
                             </div>
 
-                            <label className="choice">
-                                <input type="checkbox" checked={sendCopyToSelf} onChange={(e) => setSendCopyToSelf(e.target.checked)} />
-                                Send me a copy
-                            </label>
+                            <Toggle checked={sendCopyToSelf} onChange={setSendCopyToSelf} label="Send me a copy" />
 
                             <button type="button" onClick={loadPreview} disabled={previewLoading} className="send-invoice__text-action">
                                 {previewLoading ? 'Loading preview…' : 'Show Email Preview'}
@@ -384,10 +377,7 @@ export default function SendInvoiceModal({ invoice, studio, invoicingDefaults, o
                                 <span className="u-sr-only" role="status" aria-live="polite">{copied ? 'Link copied to clipboard' : ''}</span>
                             </div>
 
-                            <label className="choice">
-                                <input type="checkbox" checked={markAsSent} onChange={(e) => setMarkAsSent(e.target.checked)} />
-                                Mark as sent
-                            </label>
+                            <Toggle checked={markAsSent} onChange={setMarkAsSent} label="Mark as sent" />
 
                             <a href={invoice.public_url} target="_blank" rel="noopener noreferrer" className="send-invoice__text-action">
                                 Open link (view as the client will see it)
