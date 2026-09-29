@@ -27,6 +27,10 @@
     }
 
     &__panel {
+        // Cards inside take the lighter drawer shadow (anything using
+        // --shadow-card: the file list, cards).
+        --shadow-card: var(--shadow-card-drawer);
+
         position: absolute;
         top: 0;
         right: 0;
@@ -145,7 +149,7 @@
         flex-shrink: 0;
         width: var(--size-icon-sm);
         height: var(--size-icon-sm);
-        color: var(--color-primary);
+        color: var(--color-primary-text);
     }
 
     // A value shown but not editable in a drawer's field layout (a time

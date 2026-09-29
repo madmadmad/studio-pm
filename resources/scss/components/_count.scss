@@ -1,5 +1,5 @@
-// A number in a small primary-soft circle (primary text on its tint): tab
-// counts ("Invoices 4"), toolbar summaries ("Staff 3"). Grows into a pill
+// A number in a small grey circle: tab counts ("Invoices 4"), toolbar
+// summaries ("Staff 3"). Neutral -- a count isn't news. Grows into a pill
 // past two digits. The owner adds any spacing around it.
 
 .count {
@@ -13,8 +13,8 @@
     line-height: 1;
     font-weight: var(--font-weight-semibold);
     font-variant-numeric: tabular-nums;
-    color: var(--color-primary);
-    background-color: var(--color-primary-soft);
+    color: var(--color-text-muted);
+    background-color: var(--color-surface-muted);
     border-radius: var(--radius-pill);
     vertical-align: middle;
 }

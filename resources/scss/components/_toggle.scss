@@ -22,7 +22,7 @@
         align-items: center;
         width: var(--toggle-track-width);
         height: var(--toggle-track-height);
-        background-color: var(--color-border);
+        background-color: var(--color-border-strong);
         border-radius: var(--radius-pill);
         transition: background-color var(--duration-fast) var(--ease-standard);
 
@@ -35,7 +35,7 @@
         display: inline-block;
         width: var(--toggle-knob-size);
         height: var(--toggle-knob-size);
-        background-color: var(--color-surface);
+        background-color: var(--color-text);
         border-radius: var(--radius-pill);
         box-shadow: var(--shadow-raised);
         transform: translateX(var(--toggle-inset));

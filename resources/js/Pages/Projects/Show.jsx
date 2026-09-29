@@ -1,6 +1,6 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
-import { Check, DotsSixVertical, Eye, GearSix, DownloadSimple, Paperclip, PencilSimple, Plus, Trash, X } from '@phosphor-icons/react';
+import { Check, DotsSixVertical, Eye, GearSix, DownloadSimple, Paperclip, PencilSimple, Plus, Trash, Users, X } from '@phosphor-icons/react';
 import AppLayout from '../../Layouts/AppLayout';
 import Button from '../../Components/Button';
 import EmptyState from '../../Components/EmptyState';
@@ -34,7 +34,8 @@ import ContactCards from '../../Components/client/ContactCards';
 import ActionMenu from '../../Components/ActionMenu';
 import { PROJECT_STATUS_OPTIONS } from '../../Components/ProjectsTable';
 
-const ALL_TABS = ['Schedule', 'Tasks', 'Notes', 'Messages', 'Time', 'Proposals', 'Billing', 'Expenses', 'Team'];
+// The team isn't a tab: it opens in a drawer from the header (TeamDrawer).
+const ALL_TABS = ['Schedule', 'Tasks', 'Notes', 'Messages', 'Time', 'Proposals', 'Billing', 'Expenses'];
 const MANAGER_ONLY_TABS = ['Proposals', 'Billing', 'Expenses'];
 
 function reload() {
@@ -1961,8 +1962,10 @@ function AddTeamMemberDrawer({ project, canManageTeam, assignableStaff, onClose 
 
 // Everyone on the project as cards, like the client portal's Team tab:
 // assigned staff (photo, name, role, email), then names added for people
-// without a login. The + adds someone; a card's gear removes them.
-function TeamTab({ project, canManageTeam, canEdit, assignableStaff }) {
+// without a login. Opened from the header's team button. The + swaps to
+// the Add to team drawer, which comes back here when it closes; a card's
+// gear removes someone.
+function TeamDrawer({ project, canManageTeam, canEdit, assignableStaff, onClose }) {
     const [adding, setAdding] = useState(false);
     const staff = project.active_users || [];
     const names = project.team_names || [];
@@ -1996,18 +1999,35 @@ function TeamTab({ project, canManageTeam, canEdit, assignableStaff }) {
         })),
     ];
 
+    if (adding) {
+        return (
+            <AddTeamMemberDrawer
+                project={project}
+                canManageTeam={canManageTeam}
+                assignableStaff={assignableStaff}
+                onClose={() => setAdding(false)}
+            />
+        );
+    }
+
     return (
-        <div>
-            <TabToolbar
-                summary={cards.length > 0 && (
+        <Drawer
+            onClose={onClose}
+            actions={canEdit && (
+                <button onClick={() => setAdding(true)} title="Add to team" aria-label="Add to team" className="icon-btn icon-btn--secondary drawer__action">
+                    <Plus />
+                </button>
+            )}
+        >
+            <h2 className="drawer__title">Team</h2>
+            {cards.length > 0 && (
+                <div className="toolbar toolbar--split page-section--tight">
                     <div className="toolbar__summary">
                         Staff<span className="count">{staff.length}</span>
                         {names.length > 0 && <>{' · '}Without a login<span className="count">{names.length}</span></>}
                     </div>
-                )}
-                addLabel="Add to team"
-                onAdd={canEdit ? () => setAdding(true) : null}
-            />
+                </div>
+            )}
 
             {cards.length === 0 ? (
                 <div className="card card--flush">
@@ -2025,16 +2045,7 @@ function TeamTab({ project, canManageTeam, canEdit, assignableStaff }) {
                     )}
                 />
             )}
-
-            {adding && (
-                <AddTeamMemberDrawer
-                    project={project}
-                    canManageTeam={canManageTeam}
-                    assignableStaff={assignableStaff}
-                    onClose={() => setAdding(false)}
-                />
-            )}
-        </div>
+        </Drawer>
     );
 }
 
@@ -2042,6 +2053,7 @@ export default function ProjectsShow({ project, canManageTeam, canEdit, assignab
     const tabs = canManageTeam ? ALL_TABS : ALL_TABS.filter((t) => !MANAGER_ONLY_TABS.includes(t));
     const [tab, setTab] = useRememberedTab('project-page-tab', tabs);
     const [settingsOpen, setSettingsOpen] = useState(false);
+    const [teamOpen, setTeamOpen] = useState(false);
 
     return (
         <AppLayout>
@@ -2049,15 +2061,22 @@ export default function ProjectsShow({ project, canManageTeam, canEdit, assignab
             <PageHeader
                 back={{ href: '/projects', label: 'Projects' }}
                 title={project.name}
-                actions={canEdit && (
-                    <button onClick={() => setSettingsOpen(true)} title="Project settings" aria-label="Project settings" className="icon-btn icon-btn--secondary icon-btn--lg">
-                        <GearSix />
-                    </button>
+                actions={(
+                    <>
+                        <button onClick={() => setTeamOpen(true)} title="Team" aria-label="Team" className="icon-btn icon-btn--secondary icon-btn--lg">
+                            <Users />
+                        </button>
+                        {canEdit && (
+                            <button onClick={() => setSettingsOpen(true)} title="Project settings" aria-label="Project settings" className="icon-btn icon-btn--secondary icon-btn--lg">
+                                <GearSix />
+                            </button>
+                        )}
+                    </>
                 )}
             />
             <ProjectSummary project={project} proposedHours={proposedHours} />
 
-            <TabBar tab={tab} setTab={setTab} tabs={tabs} />
+            <TabBar tab={tab} setTab={setTab} tabs={tabs} size="lg" />
 
             {tab === 'Tasks' && <TasksTab project={project} />}
             {tab === 'Schedule' && <ScheduleTab project={project} />}
@@ -2067,9 +2086,17 @@ export default function ProjectsShow({ project, canManageTeam, canEdit, assignab
             {tab === 'Proposals' && <ProposalsTab project={project} services={services} />}
             {tab === 'Billing' && <BillingTab project={project} />}
             {tab === 'Expenses' && <ExpensesTab project={project} />}
-            {tab === 'Team' && <TeamTab project={project} canManageTeam={canManageTeam} canEdit={canEdit} assignableStaff={assignableStaff} />}
 
             {settingsOpen && <ProjectSettingsDrawer project={project} onClose={() => setSettingsOpen(false)} />}
+            {teamOpen && (
+                <TeamDrawer
+                    project={project}
+                    canManageTeam={canManageTeam}
+                    canEdit={canEdit}
+                    assignableStaff={assignableStaff}
+                    onClose={() => setTeamOpen(false)}
+                />
+            )}
         </AppLayout>
     );
 }

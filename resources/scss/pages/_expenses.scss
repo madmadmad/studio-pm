@@ -34,7 +34,7 @@
     &__swatch-input {
         width: 2.25rem; // one-off: square, as tall as the field beside it
         height: 2.25rem;
-        border: var(--border-width) solid var(--color-border);
+        border: var(--border-width) solid transparent;
         border-radius: var(--radius-base);
     }
 
@@ -82,7 +82,8 @@
         font-weight: var(--font-weight-medium);
     }
 
-    // Tinted with the category's own color (inline style).
+    // Neutral grey; the icon (lib/expenseCategoryIcon.js, picked from the
+    // name) is what tells categories apart -- the app has one hue.
     &__category {
         display: inline-flex;
         align-items: center;
@@ -92,7 +93,16 @@
         font-size: var(--font-size-xs);
         line-height: var(--line-height-xs);
         font-weight: var(--font-weight-medium);
+        color: var(--color-text);
+        background-color: var(--color-surface-muted);
         border-radius: var(--radius-base);
+    }
+
+    &__category-icon {
+        flex-shrink: 0;
+        width: var(--size-icon-sm);
+        height: var(--size-icon-sm);
+        color: var(--color-text-muted);
     }
 
     &__no-category {
@@ -106,7 +116,7 @@
         padding: 0 var(--space-8) 0 var(--space-2);
         font-size: var(--font-size-xs);
         line-height: var(--line-height-xs);
-        border: var(--border-width) solid var(--color-border);
+        border: var(--border-width) solid transparent;
         border-radius: var(--radius-base);
     }
 }

@@ -31,7 +31,7 @@
         }
 
         &--active {
-            color: var(--color-accent);
+            color: var(--color-accent-text);
             border-color: var(--color-accent);
         }
     }
@@ -87,7 +87,7 @@
         display: inline-block;
         font-size: var(--font-size-xs);
         line-height: var(--line-height-xs);
-        color: var(--color-accent);
+        color: var(--color-accent-text);
 
         &:hover {
             text-decoration: underline;
@@ -111,6 +111,6 @@
         margin-top: var(--space-3);
         font-size: var(--font-size-sm);
         line-height: var(--line-height-sm);
-        color: var(--color-danger);
+        color: var(--color-danger-text);
     }
 }

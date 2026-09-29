@@ -7,7 +7,8 @@
 // No overflow: hidden here -- it would clip the heading/list menus, so
 // the toolbar and content round their own corners instead.
 .rich-text-editor {
-    border: var(--border-width) solid var(--color-border);
+    // No visible border, like .input -- transparent so the size holds.
+    border: var(--border-width) solid transparent;
     border-radius: var(--radius-base);
 
     &__toolbar {
@@ -15,7 +16,7 @@
         flex-wrap: wrap;
         align-items: center;
         padding: var(--space-1);
-        background-color: var(--color-surface);
+        background-color: var(--color-field);
         border-bottom: var(--border-width) solid var(--color-border);
         border-radius: var(--radius-base) var(--radius-base) 0 0;
     }
@@ -92,8 +93,9 @@
         }
     }
 
+    // Filled like any other field.
     &__content {
-        background-color: var(--color-surface);
+        background-color: var(--color-field);
         border-radius: 0 0 var(--radius-base) var(--radius-base);
     }
 

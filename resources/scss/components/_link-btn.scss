@@ -1,5 +1,6 @@
 // Inline text action with no button box ("Edit", "Remove", "Send").
-// Primary by default; --accent for the accent color.
+// Red by default, for the affirmative one; --accent is the light grey for
+// everything else (Remove, Cancel, Skip, + Add line item).
 // Used by Components/Button.jsx (variant="link" / "link-accent").
 
 .link-btn {
@@ -11,14 +12,14 @@
     border: none;
     font-size: var(--font-size-sm);
     font-weight: var(--font-weight-bold);
-    color: var(--color-primary);
+    color: var(--color-primary-text);
 
     &:not(:disabled):hover {
         text-decoration: underline;
     }
 
     &--accent {
-        color: var(--color-accent);
+        color: var(--color-accent-text);
     }
 
     &--xs {

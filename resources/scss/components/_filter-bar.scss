@@ -21,7 +21,7 @@
 
         // No border when active, matching the original pill exactly.
         &--active {
-            color: var(--color-text-inverse);
+            color: var(--color-secondary-on);
             background-color: var(--color-secondary);
             border-width: 0;
         }

@@ -4,7 +4,7 @@
 // `base` cascade layer by app.scss, so any component class overrides it.
 
 body {
-    background-color: var(--color-surface-subtle);
+    background-color: var(--color-bg);
     color: var(--color-text);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -35,20 +35,37 @@ button {
     font-weight: var(--font-weight-bold);
 }
 
-// Text inputs and dropdowns get a white fill app-wide so they stand out
-// against the subtle surfaces (the reset strips the native background).
+// Native checkboxes, radios and range inputs take the brand red when on.
+:root {
+    accent-color: var(--color-primary);
+}
+
+// Selected text: the red's soft tint, so a selection reads on any surface.
+::selection {
+    background-color: color-mix(in srgb, var(--color-primary) 40%, transparent);
+    color: var(--color-text);
+}
+
+// Text inputs and dropdowns get the field fill app-wide -- a faint white
+// lift, so a borderless field reads on any surface (the reset strips the
+// native background).
 // Checkbox/radio/color/file inputs are excluded -- a background on them
 // does nothing or looks wrong.
 //
-// color-scheme: light makes a <select>'s open dropdown list white too --
-// that popup is native OS chrome and ignores background-color, rendering
-// dark on a dark-mode system unless told this app is light-only.
+// A <select>'s open list is native OS chrome and ignores background-color;
+// color-scheme: dark (set on :root in base/_tokens.scss) renders it dark
+// to match, and .document switches it back to light.
 //
 // Wrapped in :where() for zero specificity, so any class can override it
 // (e.g. .input--static, or a disabled/read-only .input going surface-subtle).
 :where(input:not([type='checkbox'], [type='radio'], [type='color'], [type='file']), select) {
-    background-color: var(--color-surface);
-    color-scheme: light;
+    background-color: var(--color-field);
+}
+
+// Placeholders in the muted grey: the reset's half-strength text falls
+// below AA on the lifted field fill.
+::placeholder {
+    color: var(--color-text-muted);
 }
 
 // appearance: none removes a <select>'s native shading (which made it
@@ -57,8 +74,8 @@ button {
 select {
     appearance: none;
     // Data URIs can't read custom properties: the stroke is
-    // --color-text-muted (#595f64), hard-coded and URL-encoded -- update it by hand if that token changes.
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23595F64' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E");
+    // --color-text-muted (#9aa1a9), hard-coded and URL-encoded -- update it by hand if that token changes.
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%239AA1A9' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right var(--space-2-5) center;
     background-size: var(--space-3); // arrow glyph size, 12px

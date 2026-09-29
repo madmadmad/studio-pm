@@ -6,8 +6,11 @@
     align-items: center;
     justify-content: space-between;
     padding: var(--space-4);
-    background-color: var(--color-accent-soft);
+    // Raised grey with a red leading edge -- a red-tinted bar would read
+    // like a danger alert.
+    background-color: var(--color-surface-raised);
     border-radius: var(--radius-base);
+    box-shadow: inset var(--border-width-thick) 0 0 var(--color-primary);
 
     &__summary {
         font-size: var(--font-size-sm);

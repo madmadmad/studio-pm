@@ -40,7 +40,7 @@
         text-align: left;
 
         &:is(button):hover {
-            color: var(--color-primary);
+            color: var(--color-primary-text);
         }
     }
 
@@ -110,6 +110,7 @@
         top: 0;
         bottom: 0;
         width: var(--border-width-thick);
-        background-color: var(--color-accent);
+        // Off-white, not red: it runs through the red bars.
+        background-color: var(--color-text);
     }
 }

@@ -1,5 +1,6 @@
 // Tone-based status/category label. Status -> tone mapping lives in
 // Components/StatusBadges.jsx; Components/Badge.jsx maps tone -> modifier.
+@use '../abstracts' as *;
 
 .badge {
     // Same height as every other list-row control (--size-row-action).
@@ -18,11 +19,39 @@
         color: var(--color-text-muted);
     }
 
-    // One per intent: the intent's soft tint, with the intent as the text.
-    @each $intent in primary, secondary, accent, success, danger, warning, info {
+    // One hue, four weights -- the state reads from the treatment:
+    //   neutral           grey fill, muted text   (Draft, Inactive, To do)
+    //   accent/warn/info  grey outline, light text (Sent, In progress, Queued)
+    //   primary/success   grey fill, light text   (Paid, Active, Accepted, Done)
+    //   danger            solid red + warning glyph (Overdue)
+    &--secondary {
+        background-color: var(--color-secondary-soft);
+        color: var(--color-secondary-text);
+    }
+
+    @each $intent in accent, warning, info {
         &--#{$intent} {
-            background-color: var(--color-#{$intent}-soft);
-            color: var(--color-#{$intent});
+            color: var(--color-#{$intent}-text);
+            box-shadow: inset 0 0 0 var(--border-width) var(--color-border-strong);
+        }
+    }
+
+    // Grey, not red: a red badge reads as an alert. Brighter text than
+    // neutral's muted grey is what sets it apart.
+    @each $intent in primary, success {
+        &--#{$intent} {
+            background-color: var(--color-surface-muted);
+            color: var(--color-text);
+        }
+    }
+
+    &--danger {
+        gap: var(--space-1);
+        background-color: var(--color-danger);
+        color: var(--color-danger-on);
+
+        &::before {
+            @include glyph(warning-circle, var(--size-icon-sm));
         }
     }
 }

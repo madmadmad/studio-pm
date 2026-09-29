@@ -7,6 +7,7 @@ import EmptyState from '../../Components/EmptyState';
 import Badge from '../../Components/Badge';
 import { ExpenseStatusBadge } from '../../Components/StatusBadges';
 import { formatCurrency, formatDate } from '../../lib/format';
+import { expenseCategoryIcon } from '../../lib/expenseCategoryIcon';
 import { api } from '../../lib/api';
 import PageHeader from '../../Components/PageHeader';
 
@@ -42,11 +43,10 @@ function toFormData(form, receiptFile) {
 
 function CategoryPill({ category }) {
     if (!category) return <span className="expenses__no-category">&mdash;</span>;
+    const Icon = expenseCategoryIcon(category.name);
     return (
-        <span
-            className="expenses__category"
-            style={{ backgroundColor: `${category.color}22`, color: category.color }}
-        >
+        <span className="expenses__category">
+            <Icon className="expenses__category-icon" />
             {category.name}
         </span>
     );
