@@ -1,5 +1,6 @@
 // Contents of the Send Invoice dialog (the dialog frame itself is .modal):
-// send-method tabs, reminder/timing dropdowns, and the two tab panels.
+// the send-option grid, the schedule and reminder settings, and the email
+// and link panels.
 // Used by Components/SendInvoiceModal.jsx.
 @use '../abstracts' as *;
 
@@ -19,70 +20,66 @@
         padding: var(--space-3);
         font-size: var(--font-size-sm);
         line-height: var(--line-height-sm);
-        color: var(--color-text-muted);
-        border: var(--border-width) solid var(--color-border);
+        // Grey like any not-yet-chosen button; the chosen one fills red.
+        // The border stays, transparent, so nothing shifts.
+        color: var(--color-text);
+        background-color: var(--color-neutral-fill);
+        border: var(--border-width) solid transparent;
         border-radius: var(--radius-base);
         transition:
             color var(--duration-fast) var(--ease-standard),
-            border-color var(--duration-fast) var(--ease-standard);
+            background-color var(--duration-fast) var(--ease-standard);
+
+        &:not(:disabled):hover {
+            background-color: var(--color-neutral-fill-hover);
+        }
 
         &:disabled {
             opacity: 0.4;
         }
 
-        &--active {
-            color: var(--color-accent-text);
-            border-color: var(--color-accent);
+        &--active,
+        &--active:not(:disabled):hover {
+            color: var(--color-primary-on);
+            background-color: var(--color-primary);
         }
-    }
 
-    &__options {
-        display: flex;
-        align-items: center;
-        gap: var(--space-2);
-        margin-bottom: var(--space-4);
-    }
-
-    &__option {
-        position: relative;
-    }
-
-    // Dropdown trigger dressed as a compact field (mixed with .input).
-    &__trigger {
-        display: flex;
-        align-items: center;
-        gap: var(--space-1-5);
-        width: auto;
-    }
-
-    &__popover {
-        display: flex;
-        flex-direction: column;
-        gap: var(--space-2);
-        width: var(--size-popover-sm);
-
+        // Send Now: the full width, under Schedule and Send via URL.
         &--wide {
-            width: var(--size-popover);
+            grid-column: 1 / -1;
         }
+    }
+
+    // Under the grid: the schedule fields (Schedule only) and the reminders
+    // toggle, then a rule before the chosen option's panel.
+    &__settings {
+        @include stack(var(--space-3));
+        margin-bottom: var(--space-4);
+        padding-bottom: var(--space-4);
+        border-bottom: var(--border-width) solid var(--color-border);
     }
 
     &__schedule {
-        display: flex;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: var(--space-2);
-        padding-top: var(--space-1);
-    }
-
-    &__hint {
-        font-size: var(--font-size-xs);
-        line-height: var(--line-height-xs);
-        color: var(--color-text-muted);
     }
 
     &__panel {
         @include stack(var(--space-3));
     }
 
-    // Small accent text actions ("+ Add CC", "Show Email Preview").
+    // A toggle on the left and its related action on the right ("Send me a
+    // copy" / Show email preview, "Mark as sent" / Open client view).
+    &__option-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--space-3);
+    }
+
+    // Small accent text actions ("+ Add CC").
     &__text-action {
         display: inline-block;
         font-size: var(--font-size-xs);

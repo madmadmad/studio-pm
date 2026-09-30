@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { CalendarBlank, Check, Copy, Envelope, Lightning, LinkSimple, X } from '@phosphor-icons/react';
+import { CalendarBlank, Check, Copy, LinkSimple, PaperPlaneTilt, X } from '@phosphor-icons/react';
 import Button from './Button';
 import Toggle from './Toggle';
 import { api } from '../lib/api';
 import { copyToClipboard } from '../lib/clipboard';
 import { formatCurrency, formatDate } from '../lib/format';
 import { easternWallTimeToUtcIso, formatDateTimeEastern, utcToEasternParts } from '../lib/datetime';
+import { addDays } from '../lib/scheduleDates';
+import { hasQueuedEmail, waitForQueuedSend } from '../lib/invoiceSends';
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -37,28 +39,40 @@ function fillTemplate(template, invoice, studio, contact) {
         .replaceAll(':contact_first_name', firstName);
 }
 
+// A scheduled send defaults to 9:00 AM Eastern: today if that's still
+// ahead, otherwise tomorrow.
+const DEFAULT_SCHEDULE_TIME = '09:00';
+
 function defaultScheduleParts() {
-    return utcToEasternParts(new Date(Date.now() + 60 * 60000).toISOString());
+    const now = utcToEasternParts(new Date().toISOString());
+    const date = now.time < DEFAULT_SCHEDULE_TIME ? now.date : addDays(now.date, 1);
+    return { date, time: DEFAULT_SCHEDULE_TIME };
 }
 
-// Bonsai-style Send Invoice modal: Send Email / Send via URL tabs, optional
-// scheduling, optional automatic reminders. No modal/dialog component
+// Send Invoice modal. Three ways to send, picked from a grid -- Schedule
+// and Send via URL side by side, Send Now across the full width below --
+// plus automatic reminders as a plain toggle. No modal/dialog component
 // exists elsewhere in this app to build on (only a right-edge slide-in
 // drawer), so this is a from-scratch centered dialog -- it reuses the
 // drawer's fade-in backdrop animation and its manual Escape-listener idiom,
 // but adds its own focus trap since nothing else in the app has one.
-export default function SendInvoiceModal({ invoice, studio, invoicingDefaults, onClose, onSent }) {
+// `justCreated`: opened straight from a new-invoice form's Send invoice,
+// so it says the invoice is already saved (Cancel leaves it a draft).
+export default function SendInvoiceModal({ invoice, studio, invoicingDefaults, onClose, onSent, justCreated = false }) {
     const contact = resolveBillingContact(invoice);
     const alreadySent = Boolean(invoice.sent_at);
     const blockingIssues = invoice.send_blocking_issues || [];
     const emailBlocked = blockingIssues.length > 0 || invoice.contact_email_missing;
     const linkBlocked = blockingIssues.length > 0;
 
-    const [activeTab, setActiveTab] = useState(emailBlocked && !linkBlocked ? 'link' : 'email');
-    const [remindersOpen, setRemindersOpen] = useState(false);
-    const [remindersEnabled, setRemindersEnabled] = useState(invoice.effective_reminders_enabled);
-    const [timingOpen, setTimingOpen] = useState(false);
-    const [sendTiming, setSendTiming] = useState('now');
+    // How it goes out: 'now' (email it now), 'schedule' (email it later) or
+    // 'link' (share the URL yourself). The email/link method and now/later
+    // timing the API takes both follow from it.
+    const [mode, setMode] = useState(emailBlocked && !linkBlocked ? 'link' : 'now');
+    const activeTab = mode === 'link' ? 'link' : 'email';
+    const sendTiming = mode === 'schedule' ? 'later' : 'now';
+    // On by default for every send; turn it off here for this invoice.
+    const [remindersEnabled, setRemindersEnabled] = useState(true);
     const initialSchedule = useMemo(defaultScheduleParts, []);
     const [scheduleDate, setScheduleDate] = useState(initialSchedule.date);
     const [scheduleTime, setScheduleTime] = useState(initialSchedule.time);
@@ -192,11 +206,6 @@ export default function SendInvoiceModal({ invoice, studio, invoicingDefaults, o
         setTimeout(() => setCopied(false), 1500);
     }
 
-    function closeDropdowns() {
-        setRemindersOpen(false);
-        setTimingOpen(false);
-    }
-
     const footerLabel = activeTab === 'link' ? 'Done' : sendTiming === 'later' ? 'Schedule Invoice' : 'Send Invoice';
     const footerDisabled = submitting || (activeTab === 'email' ? emailBlocked : linkBlocked);
 
@@ -217,7 +226,13 @@ export default function SendInvoiceModal({ invoice, studio, invoicingDefaults, o
                     </button>
                 </div>
 
-                <div className="modal__body" onClick={closeDropdowns}>
+                <div className="modal__body">
+                    {justCreated && (
+                        <div className="alert alert--info alert--compact">
+                            Invoice #{invoice.invoice_number} is saved as a draft. Send it now, or cancel to leave it as a draft.
+                        </div>
+                    )}
+
                     {alreadySent && (
                         <div className="alert alert--info alert--compact">
                             This invoice has already been sent. The client won&rsquo;t see changes in their original email until you resend it; the online link always shows the latest version.
@@ -240,83 +255,39 @@ export default function SendInvoiceModal({ invoice, studio, invoicingDefaults, o
                         </div>
                     )}
 
-                    <div role="tablist" aria-label="Send method" className="send-invoice__methods">
-                        <button
-                            ref={firstFieldRef}
-                            type="button"
-                            role="tab"
-                            aria-selected={activeTab === 'email'}
-                            onClick={() => setActiveTab('email')}
-                            disabled={emailBlocked}
-                            className={`send-invoice__method${activeTab === 'email' ? ' send-invoice__method--active' : ''}`}
-                        >
-                            <Envelope /> Send Email
-                        </button>
-                        <button
-                            type="button"
-                            role="tab"
-                            aria-selected={activeTab === 'link'}
-                            onClick={() => setActiveTab('link')}
-                            disabled={linkBlocked}
-                            className={`send-invoice__method${activeTab === 'link' ? ' send-invoice__method--active' : ''}`}
-                        >
-                            <LinkSimple /> Send via URL
-                        </button>
+                    <div role="tablist" aria-label="How to send" className="send-invoice__methods">
+                        {[
+                            { value: 'schedule', label: 'Schedule', icon: <CalendarBlank />, disabled: emailBlocked },
+                            { value: 'link', label: 'Send via URL', icon: <LinkSimple />, disabled: linkBlocked },
+                            { value: 'now', label: 'Send Now', icon: <PaperPlaneTilt />, disabled: emailBlocked, wide: true },
+                        ].map((option) => (
+                            <button
+                                key={option.value}
+                                ref={option.value === 'now' ? firstFieldRef : undefined}
+                                type="button"
+                                role="tab"
+                                aria-selected={mode === option.value}
+                                onClick={() => setMode(option.value)}
+                                disabled={option.disabled}
+                                className={`send-invoice__method${option.wide ? ' send-invoice__method--wide' : ''}${mode === option.value ? ' send-invoice__method--active' : ''}`}
+                            >
+                                {option.icon} {option.label}
+                            </button>
+                        ))}
                     </div>
 
-                    <div className="send-invoice__options">
-                        <div className="send-invoice__option" onClick={(e) => e.stopPropagation()}>
-                            <button
-                                type="button"
-                                onClick={() => setRemindersOpen((v) => !v)}
-                                className="input input--sm send-invoice__trigger"
-                            >
-                                <Lightning size={14} />
-                                {remindersEnabled ? 'Automatic reminders enabled' : 'Automatic reminders off'}
-                            </button>
-                            {remindersOpen && (
-                                <div className="popover popover--padded send-invoice__popover">
-                                    <Toggle checked={remindersEnabled} onChange={setRemindersEnabled} label="Send automatic payment reminders" />
-                                    <p className="send-invoice__hint">
-                                        Uses the client&rsquo;s reminder setting (or the firm default) unless overridden here.
-                                    </p>
+                    <div className="send-invoice__settings">
+                        {mode === 'schedule' && (
+                            <div>
+                                <label className="label">Send on</label>
+                                <div className="send-invoice__schedule">
+                                    <input type="date" value={scheduleDate} onChange={(e) => setScheduleDate(e.target.value)} className="input" />
+                                    <input type="time" value={scheduleTime} onChange={(e) => setScheduleTime(e.target.value)} className="input" />
                                 </div>
-                            )}
-                        </div>
-
-                        {activeTab === 'email' && (
-                            <div className="send-invoice__option" onClick={(e) => e.stopPropagation()}>
-                                <button
-                                    type="button"
-                                    onClick={() => setTimingOpen((v) => !v)}
-                                    className="input input--sm send-invoice__trigger"
-                                >
-                                    <CalendarBlank size={14} />
-                                    {sendTiming === 'later' ? 'Scheduled' : 'Send immediately'}
-                                </button>
-                                {timingOpen && (
-                                    <div className="popover popover--padded send-invoice__popover send-invoice__popover--wide">
-                                        <label className="choice">
-                                            <input type="radio" checked={sendTiming === 'now'} onChange={() => setSendTiming('now')} />
-                                            Send immediately
-                                        </label>
-                                        <label className="choice">
-                                            <input type="radio" checked={sendTiming === 'later'} onChange={() => setSendTiming('later')} />
-                                            Schedule
-                                        </label>
-                                        {sendTiming === 'later' && (
-                                            <>
-                                                <div className="send-invoice__schedule">
-                                                    <input type="date" value={scheduleDate} onChange={(e) => setScheduleDate(e.target.value)} className="input input--sm" />
-                                                    <input type="time" value={scheduleTime} onChange={(e) => setScheduleTime(e.target.value)} className="input input--sm" />
-                                                </div>
-                                                <p className="send-invoice__hint">Times are in Eastern (America/New_York).</p>
-                                            </>
-                                        )}
-                                    </div>
-                                )}
+                                {/* Times are Eastern (America/New_York); the note saying so is hidden for now. */}
                             </div>
                         )}
+                        <Toggle checked={remindersEnabled} onChange={setRemindersEnabled} label="Automatic payment reminders" />
                     </div>
 
                     {activeTab === 'email' ? (
@@ -357,11 +328,12 @@ export default function SendInvoiceModal({ invoice, studio, invoicingDefaults, o
                                 <textarea value={message} onChange={(e) => setMessage(e.target.value)} rows={5} className="input" />
                             </div>
 
-                            <Toggle checked={sendCopyToSelf} onChange={setSendCopyToSelf} label="Send me a copy" />
-
-                            <button type="button" onClick={loadPreview} disabled={previewLoading} className="send-invoice__text-action">
-                                {previewLoading ? 'Loading preview…' : 'Show Email Preview'}
-                            </button>
+                            <div className="send-invoice__option-row">
+                                <Toggle checked={sendCopyToSelf} onChange={setSendCopyToSelf} label="Send me a copy" />
+                                <Button type="button" variant="secondary" className="btn--sm" onClick={loadPreview} disabled={previewLoading}>
+                                    {previewLoading ? 'Loading preview…' : 'Show email preview'}
+                                </Button>
+                            </div>
                         </div>
                     ) : (
                         <div role="tabpanel" className="send-invoice__panel">
@@ -377,11 +349,12 @@ export default function SendInvoiceModal({ invoice, studio, invoicingDefaults, o
                                 <span className="u-sr-only" role="status" aria-live="polite">{copied ? 'Link copied to clipboard' : ''}</span>
                             </div>
 
-                            <Toggle checked={markAsSent} onChange={setMarkAsSent} label="Mark as sent" />
-
-                            <a href={invoice.public_url} target="_blank" rel="noopener noreferrer" className="send-invoice__text-action">
-                                Open link (view as the client will see it)
-                            </a>
+                            <div className="send-invoice__option-row">
+                                <Toggle checked={markAsSent} onChange={setMarkAsSent} label="Mark as sent" />
+                                <a href={invoice.public_url} target="_blank" rel="noopener noreferrer" title="View it as the client will see it" className="btn btn--secondary btn--sm">
+                                    Open client view
+                                </a>
+                            </div>
                         </div>
                     )}
 
@@ -412,4 +385,44 @@ export default function SendInvoiceModal({ invoice, studio, invoicingDefaults, o
             )}
         </div>
     );
+}
+
+// Open this dialog for an invoice from outside its detail view -- a new
+// invoice straight from its creation form, or a draft's row on a list:
+// `openFor(id)` loads it and opens the dialog. `justCreated` (the default)
+// adds the "saved as a draft" note; a list row passes false.
+// `onDone(sent)` runs when the dialog closes -- sent, or cancelled with
+// the invoice left a draft. An email goes out on the queue, so `refresh`
+// runs again once it has, to pick up the Sent status. Render `modal`
+// inside the form's own frame (a drawer keeps its Escape for the dialog
+// while one is inside it).
+export function useSendAfterCreate(onDone, refresh) {
+    const [detail, setDetail] = useState(null); // the /api/invoices/{id} payload
+    const [justCreated, setJustCreated] = useState(true);
+
+    async function openFor(invoiceId, { justCreated: created = true } = {}) {
+        setJustCreated(created);
+        setDetail(await api.get(`/api/invoices/${invoiceId}`));
+    }
+
+    function finish(sent, updated) {
+        setDetail(null);
+        onDone(sent);
+        if (sent && hasQueuedEmail(updated)) {
+            waitForQueuedSend(updated.id).then((latest) => latest && refresh?.());
+        }
+    }
+
+    const modal = detail && (
+        <SendInvoiceModal
+            invoice={detail.invoice}
+            studio={detail.studio}
+            invoicingDefaults={detail.invoicingDefaults}
+            justCreated={justCreated}
+            onClose={() => finish(false)}
+            onSent={(updated) => finish(true, updated)}
+        />
+    );
+
+    return { openFor, modal };
 }

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Check, Copy, DownloadSimple, Eye, PaperPlaneTilt } from '@phosphor-icons/react';
+import { Check, Copy, DownloadSimple, Eye, PaperPlaneTilt, PencilSimple } from '@phosphor-icons/react';
 import Button from './Button';
 import Toggle from './Toggle';
 import InvoiceDateFields from './InvoiceDateFields';
@@ -10,6 +10,7 @@ import { reminderRows } from '../lib/reminders';
 import { paymentTermsLabel } from '../lib/paymentTerms';
 import { api } from '../lib/api';
 import { copyToClipboard } from '../lib/clipboard';
+import { hasQueuedEmail, waitForQueuedSend } from '../lib/invoiceSends';
 
 // The invoice detail, shared by the standalone page (Pages/Invoices/Show)
 // and the project page's invoice drawer. The caller supplies the frame
@@ -24,7 +25,9 @@ function editFormFrom(invoice) {
         issued_on: invoice.issued_on ? invoice.issued_on.slice(0, 10) : '',
         payment_terms: invoice.payment_terms,
         due_on: invoice.due_on ? invoice.due_on.slice(0, 10) : '',
-        items: invoice.items.map((item) => ({ description: item.description, details: item.details ?? '', amount: item.amount })),
+        // Each line keeps its id, so the save updates it in place and the
+        // time and expenses billed to it stay billed.
+        items: invoice.items.map((item) => ({ id: item.id, description: item.description, details: item.details ?? '', amount: item.amount })),
     };
 }
 
@@ -73,6 +76,15 @@ export default function InvoiceDetail({ invoice: initialInvoice, studio, invoici
         setTimeout(() => setSuccessMessage(''), 6000);
         // Let the container catch up too (the project list's status badge).
         onChange();
+        // An email is still on the queue here; once it's gone out the
+        // status changes, so catch up again then.
+        if (hasQueuedEmail(updatedInvoice)) {
+            waitForQueuedSend(updatedInvoice.id).then((latest) => {
+                if (!latest) return;
+                setInvoice(latest);
+                onChange();
+            });
+        }
     }
 
     const pendingScheduledSend = (invoice.invoice_sends || []).find((s) => s.type === 'email' && s.status === 'scheduled');
@@ -161,6 +173,12 @@ export default function InvoiceDetail({ invoice: initialInvoice, studio, invoici
                 items: validItems,
             });
             setEditing(false);
+            // The client's email and PDF are the version they were sent; only
+            // the online link updates by itself.
+            if (invoice.sent_at) {
+                setSuccessMessage('Changes saved. The online link shows them now — resend the invoice if the client needs an updated email or PDF.');
+                setTimeout(() => setSuccessMessage(''), 8000);
+            }
             onChange();
         } catch (err) {
             setError(err.message);
@@ -192,8 +210,11 @@ export default function InvoiceDetail({ invoice: initialInvoice, studio, invoici
                     <PaperPlaneTilt />
                 </button>
             )}
-            {invoice.status === 'draft' && !editing && (
-                <Button variant="link" onClick={startEditing}>Edit</Button>
+            {/* Drafts and sent invoices can be edited; paid ones are locked. */}
+            {invoice.status !== 'paid' && !editing && (
+                <button onClick={startEditing} title="Edit invoice" aria-label="Edit invoice" className="icon-btn icon-btn--confirm">
+                    <PencilSimple />
+                </button>
             )}
         </>
     );
@@ -255,17 +276,19 @@ export default function InvoiceDetail({ invoice: initialInvoice, studio, invoici
                                             onChange={(e) => updateItem(idx, 'amount', e.target.value)}
                                             className="input invoice-form__amount"
                                         />
-                                        {form.items.length > 1 && (
-                                            <Button variant="link-accent" onClick={() => removeItemRow(idx)}>Remove</Button>
-                                        )}
                                     </div>
-                                    <textarea
-                                        placeholder="Additional notes shown to the client (optional, not required)"
-                                        value={item.details || ''}
-                                        onChange={(e) => updateItem(idx, 'details', e.target.value)}
-                                        rows={2}
-                                        className="input invoice-form__details"
-                                    />
+                                    <div className="invoice-form__item-notes">
+                                        <textarea
+                                            placeholder="Additional notes shown to the client (optional, not required)"
+                                            value={item.details || ''}
+                                            onChange={(e) => updateItem(idx, 'details', e.target.value)}
+                                            rows={2}
+                                            className="input invoice-form__details"
+                                        />
+                                    </div>
+                                    {form.items.length > 1 && (
+                                        <button type="button" onClick={() => removeItemRow(idx)} className="invoice-form__remove">Remove</button>
+                                    )}
                                 </div>
                             ))}
                             <Button variant="link-accent" onClick={addItemRow}>+ Add line item</Button>

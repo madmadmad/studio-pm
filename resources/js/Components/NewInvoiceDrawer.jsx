@@ -3,6 +3,7 @@ import Button from './Button';
 import Drawer from './Drawer';
 import InvoiceDateFields from './InvoiceDateFields';
 import Toggle from './Toggle';
+import { useSendAfterCreate } from './SendInvoiceModal';
 import { api } from '../lib/api';
 import { formatCurrency, invoiceSubtotal, invoiceTotal } from '../lib/format';
 import { calculateDueDate, todayLocal } from '../lib/paymentTerms';
@@ -167,8 +168,17 @@ export default function NewInvoiceDrawer({ company, projects, initialProjectId =
         setForm({ ...form, items: form.items.filter((_, i) => i !== idx) });
     }
 
-    async function createInvoice(e) {
-        e.preventDefault();
+    // Send invoice: the dialog opens over this drawer once the invoice is
+    // created; either way it ends, the drawer closes and the list refreshes.
+    const { openFor: openSendDialog, modal: sendDialog } = useSendAfterCreate(() => {
+        onCreated();
+        onClose();
+    }, onCreated);
+
+    // `send` opens the Send Invoice dialog after creating it; otherwise
+    // it's saved as a draft.
+    async function createInvoice(e, { send = false } = {}) {
+        e?.preventDefault();
         const validItems = form.items.filter((i) => i.description.trim() && parseFloat(i.amount) > 0);
         if (validItems.length === 0) {
             setError(
@@ -181,7 +191,7 @@ export default function NewInvoiceDrawer({ company, projects, initialProjectId =
         setSaving(true);
         setError('');
         try {
-            await api.post(`/api/companies/${company.id}/invoices`, {
+            const created = await api.post(`/api/companies/${company.id}/invoices`, {
                 project_id: project?.id ?? null,
                 surcharge: form.surcharge,
                 issued_on: form.issued_on,
@@ -189,6 +199,10 @@ export default function NewInvoiceDrawer({ company, projects, initialProjectId =
                 due_on: form.due_on,
                 items: validItems,
             });
+            if (send) {
+                await openSendDialog(created.id);
+                return;
+            }
             onCreated();
             onClose();
         } catch (err) {
@@ -285,17 +299,19 @@ export default function NewInvoiceDrawer({ company, projects, initialProjectId =
                                     onChange={(e) => updateItem(idx, 'amount', e.target.value)}
                                     className="input invoice-form__amount"
                                 />
-                                {form.items.length > 1 && (
-                                    <Button type="button" variant="link-accent" onClick={() => removeItemRow(idx)}>Remove</Button>
-                                )}
                             </div>
-                            <textarea
-                                placeholder="Additional notes shown to the client (optional, not required)"
-                                value={item.details || ''}
-                                onChange={(e) => updateItem(idx, 'details', e.target.value)}
-                                rows={2}
-                                className="input invoice-form__details"
-                            />
+                            <div className="invoice-form__item-notes">
+                                <textarea
+                                    placeholder="Additional notes shown to the client (optional, not required)"
+                                    value={item.details || ''}
+                                    onChange={(e) => updateItem(idx, 'details', e.target.value)}
+                                    rows={2}
+                                    className="input invoice-form__details"
+                                />
+                            </div>
+                            {form.items.length > 1 && (
+                                <button type="button" onClick={() => removeItemRow(idx)} className="invoice-form__remove">Remove</button>
+                            )}
                         </div>
                     ))}
                     <Button type="button" variant="link-accent" onClick={addItemRow}>+ Add line item</Button>
@@ -321,9 +337,11 @@ export default function NewInvoiceDrawer({ company, projects, initialProjectId =
                 </div>
                 {error && <div className="form-message form-message--error form-message--spaced">{error}</div>}
                 <div className="form-actions">
-                    <Button type="submit" variant="confirm" disabled={saving}>Create draft invoice</Button>
+                    <Button type="submit" variant="secondary" disabled={saving}>Save as draft</Button>
+                    <Button type="button" variant="confirm" disabled={saving} onClick={() => createInvoice(null, { send: true })}>Send invoice</Button>
                 </div>
             </form>
+            {sendDialog}
         </Drawer>
     );
 }

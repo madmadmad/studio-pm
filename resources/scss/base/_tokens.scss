@@ -122,7 +122,7 @@
     --color-surface-muted: #383C42; // neutral badge/chip fill, a step lighter
     --color-field: rgb(255 255 255 / 0.06); // inputs and selects: a faint lift over whatever they sit on, so a borderless field reads on every layer
     --color-border: #41464E; // dividers -- decorative, deliberately low contrast
-    --color-border-strong: #41464E; // the edge of an outlined control (outline buttons, badges), the toggle track
+    --color-border-strong: #41464E; // the toggle's off track, an inline edit's edge on hover or focus
 
     // The frame around the app (the sidebar sits on it) and text on it.
     // The darkest layer; the content panel sits a step lighter.
@@ -325,7 +325,7 @@
     // Sizes -- fixed widths for recurring containers.
     // -----------------------------------------------------------------
     --size-sidebar: 18rem;
-    --size-panel-shadow: 128px; // the width of images/panel-shadow.png, the panel's dithered shadow
+    --size-panel-shadow: 128px; // the width of resources/images/panel-shadow.png, the panel's dithered shadow
     --size-popover-sm: 16rem;
     --size-popover: 18rem;
     --size-auth-card: 24rem;

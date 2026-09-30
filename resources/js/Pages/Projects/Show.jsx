@@ -19,8 +19,8 @@ import { api } from '../../lib/api';
 import { isBlankRichText, toRichText } from '../../lib/richText';
 import PageHeader from '../../Components/PageHeader';
 import Drawer, { DrawerByline, DrawerDate } from '../../Components/Drawer';
-import ProposalEditor, { ProposalActions } from '../../Components/ProposalEditor';
-import InvoiceDetail, { InvoiceDueLine } from '../../Components/InvoiceDetail';
+import ProposalDrawer from '../../Components/ProposalDrawer';
+import { useInvoiceDrawer } from '../../Components/InvoiceDrawer';
 import NewInvoiceDrawer from '../../Components/NewInvoiceDrawer';
 import TabBar from '../../Components/TabBar';
 import TabToolbar from '../../Components/TabToolbar';
@@ -1344,51 +1344,19 @@ function ProposalRow({ proposal, onOpen }) {
     );
 }
 
-// Create or edit a proposal in the wide drawer, with the same editor the
-// standalone page uses. The client and project are this project's, so the
-// editor only needs a one-company list; it locks both for a new proposal.
-function ProposalDrawer({ project, proposal, services, onClose }) {
-    const companies = [{
-        ...project.company,
-        projects: [{ id: project.id, name: project.name }],
-    }];
-
-    function saved() {
-        reload();
-        onClose();
-    }
-
-    return (
-        <Drawer
-            size="wide"
-            onClose={onClose}
-            actions={proposal && <ProposalActions proposal={proposal} onChange={reload} showBadge={false} />}
-        >
-            {proposal && (
-                <DrawerByline>
-                    <DrawerDate label="Created" date={proposal.created_at} />
-                    <ProposalStatusBadge proposal={proposal} />
-                </DrawerByline>
-            )}
-            <h2 className="drawer__title">{proposal ? proposal.title : 'New proposal'}</h2>
-            <ProposalEditor
-                key={proposal?.id ?? 'new'}
-                proposal={proposal && { ...proposal, project: { id: project.id, name: project.name } }}
-                companies={companies}
-                services={services}
-                presetCompanyId={project.company_id}
-                presetProjectId={project.id}
-                onSaved={saved}
-                onCancel={onClose}
-            />
-        </Drawer>
-    );
-}
-
 function ProposalsTab({ project, services }) {
     const [creating, setCreating] = useState(false);
     const [selectedProposalId, setSelectedProposalId] = useState(null);
     const selectedProposal = project.proposals.find((p) => p.id === selectedProposalId) || null;
+    // The editor's client list: just this project's client, with this project.
+    const companies = [{ ...project.company, projects: [{ id: project.id, name: project.name }] }];
+    const drawerProps = {
+        companies,
+        services,
+        presetCompanyId: project.company_id,
+        presetProjectId: project.id,
+        onChange: reload,
+    };
 
     return (
         <div>
@@ -1413,76 +1381,16 @@ function ProposalsTab({ project, services }) {
 
             {selectedProposal && (
                 <ProposalDrawer
-                    project={project}
-                    proposal={selectedProposal}
-                    services={services}
+                    {...drawerProps}
+                    proposal={{ ...selectedProposal, project: { id: project.id, name: project.name } }}
                     onClose={() => setSelectedProposalId(null)}
                 />
             )}
 
             {creating && (
-                <ProposalDrawer
-                    project={project}
-                    proposal={null}
-                    services={services}
-                    onClose={() => setCreating(false)}
-                />
+                <ProposalDrawer {...drawerProps} proposal={null} onClose={() => setCreating(false)} />
             )}
         </div>
-    );
-}
-
-// An invoice in the wide drawer: the shared InvoiceDetail (as on the
-// standalone page) in the standard drawer frame -- byline, title, and the
-// invoice actions beside the close button, plus delete. `detail` is the
-// /api/invoices/{id} payload; `onRefresh` reloads it after a change.
-function InvoiceDrawer({ detail, onRefresh, onClose }) {
-    async function deleteInvoice(invoice) {
-        const amount = formatCurrency(invoiceTotal(invoice.items, invoice.surcharge));
-        if (!confirm(`Delete this ${amount} invoice? This can't be undone.`)) return;
-        try {
-            await api.delete(`/api/invoices/${invoice.id}`);
-            onClose();
-            reload();
-        } catch (err) {
-            alert(err.message || 'Could not delete this invoice.');
-        }
-    }
-
-    return (
-        <InvoiceDetail
-            invoice={detail.invoice}
-            studio={detail.studio}
-            invoicingDefaults={detail.invoicingDefaults}
-            onChange={onRefresh}
-            bare
-            renderFrame={({ invoice, actions, children }) => (
-                <Drawer
-                    size="wide"
-                    onClose={onClose}
-                    actions={
-                        <>
-                            {actions}
-                            {invoice.status !== 'paid' && (
-                                <button onClick={() => deleteInvoice(invoice)} title="Delete invoice" className="icon-btn icon-btn--danger drawer__action">
-                                    <Trash />
-                                </button>
-                            )}
-                        </>
-                    }
-                >
-                    <DrawerByline>
-                        <DrawerDate label="Issued" date={invoice.issued_on} />
-                        <InvoiceStatusBadge invoice={invoice} />
-                    </DrawerByline>
-                    <h2 className="drawer__title">Invoice #{invoice.invoice_number}</h2>
-                    <p className="drawer__meta drawer__section">
-                        <InvoiceDueLine invoice={invoice} />
-                    </p>
-                    {children}
-                </Drawer>
-            )}
-        />
     );
 }
 
@@ -1513,29 +1421,10 @@ function InvoiceRow({ invoice, onOpen, loading }) {
 
 function BillingTab({ project }) {
     const [creating, setCreating] = useState(false);
-    const [detail, setDetail] = useState(null); // the open invoice's /api/invoices/{id} payload
-    const [loadingId, setLoadingId] = useState(null);
+    const { openInvoice, loadingId, drawer: invoiceDrawer } = useInvoiceDrawer(reload);
     const budget = parseFloat(project.budget) || 0;
     const totalInvoiced = project.invoices.reduce((s, inv) => s + invoiceTotal(inv.items, inv.surcharge), 0);
     const remaining = budget - totalInvoiced;
-
-    // The drawer opens once its invoice has loaded, rather than opening
-    // empty and filling in -- swapping the content in would replay the
-    // drawer's entrance.
-    async function openInvoice(id) {
-        if (loadingId) return;
-        setLoadingId(id);
-        try {
-            setDetail(await api.get(`/api/invoices/${id}`));
-        } finally {
-            setLoadingId(null);
-        }
-    }
-
-    async function refreshInvoice() {
-        setDetail(await api.get(`/api/invoices/${detail.invoice.id}`));
-        reload();
-    }
 
     return (
         <div>
@@ -1575,14 +1464,7 @@ function BillingTab({ project }) {
                 )}
             </div>
 
-            {detail && (
-                <InvoiceDrawer
-                    key={detail.invoice.id}
-                    detail={detail}
-                    onRefresh={refreshInvoice}
-                    onClose={() => setDetail(null)}
-                />
-            )}
+            {invoiceDrawer}
 
             {creating && (
                 <NewInvoiceDrawer

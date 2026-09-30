@@ -3,7 +3,6 @@ const VARIANTS = {
     confirm: 'btn btn--confirm',
     accent: 'btn btn--accent',
     secondary: 'btn btn--secondary',
-    outline: 'btn btn--outline',
     danger: 'btn btn--danger',
     link: 'link-btn',
     'link-accent': 'link-btn link-btn--accent',

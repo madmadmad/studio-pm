@@ -16,7 +16,8 @@ import TabToolbar from '../../Components/TabToolbar';
 import ActionMenu from '../../Components/ActionMenu';
 import Drawer from '../../Components/Drawer';
 import NewInvoiceDrawer from '../../Components/NewInvoiceDrawer';
-import ProposalEditor from '../../Components/ProposalEditor';
+import ProposalDrawer from '../../Components/ProposalDrawer';
+import { useInvoiceDrawer } from '../../Components/InvoiceDrawer';
 import Toggle from '../../Components/Toggle';
 import AutoResizeTextarea from '../../Components/AutoResizeTextarea';
 import ClientFields, { Field } from '../../Components/client/ClientFields';
@@ -462,6 +463,8 @@ function ProjectsCard({ company }) {
 
 function InvoicesCard({ company }) {
     const [creating, setCreating] = useState(false);
+    // Invoices open in the wide drawer, as on a project's Billing tab.
+    const { openInvoice, drawer: invoiceDrawer } = useInvoiceDrawer(reload);
     const outstanding = outstandingBalance(company.invoices);
     const hasOverdue = company.invoices.some(isOverdue);
 
@@ -480,8 +483,10 @@ function InvoicesCard({ company }) {
             {company.invoices.length === 0 ? (
                 <EmptyState text="No invoices yet." />
             ) : (
-                <ClientInvoicesTable invoices={company.invoices} hrefFor={(invoice) => `/invoices/${invoice.id}`} />
+                <ClientInvoicesTable invoices={company.invoices} onOpen={(invoice) => openInvoice(invoice.id)} />
             )}
+
+            {invoiceDrawer}
 
             {creating && (
                 <NewInvoiceDrawer
@@ -495,38 +500,24 @@ function InvoicesCard({ company }) {
     );
 }
 
-// New proposal for this client, in the wide drawer with the same editor
-// the Proposals page uses. The client is fixed; the project is picked in
-// the editor (one of this client's, or a new one).
-function NewProposalDrawer({ company, services, onClose }) {
-    const companies = [{
-        id: company.id,
-        name: company.name,
-        contacts: company.contacts,
-        projects: company.projects.map((p) => ({ id: p.id, name: p.name })),
-    }];
-
-    return (
-        <Drawer size="wide" onClose={onClose}>
-            <h2 className="drawer__title">New proposal</h2>
-            <ProposalEditor
-                proposal={null}
-                companies={companies}
-                services={services}
-                presetCompanyId={company.id}
-                presetProjectId={null}
-                onSaved={() => {
-                    reload();
-                    onClose();
-                }}
-                onCancel={onClose}
-            />
-        </Drawer>
-    );
-}
-
+// Proposals open -- and new ones start -- in the wide drawer, with the same
+// editor the Proposals page uses. The client is fixed; the project is
+// picked in the editor (one of this client's, or a new one).
 function ProposalsCard({ company, services }) {
     const [creating, setCreating] = useState(false);
+    const [selectedProposalId, setSelectedProposalId] = useState(null);
+    const selectedProposal = company.proposals.find((p) => p.id === selectedProposalId) || null;
+    const drawerProps = {
+        companies: [{
+            id: company.id,
+            name: company.name,
+            contacts: company.contacts,
+            projects: company.projects.map((p) => ({ id: p.id, name: p.name })),
+        }],
+        services,
+        presetCompanyId: company.id,
+        onChange: reload,
+    };
 
     return (
         <div>
@@ -544,10 +535,13 @@ function ProposalsCard({ company, services }) {
             {company.proposals.length === 0 ? (
                 <EmptyState text="No proposals yet." />
             ) : (
-                <ClientProposalsTable proposals={company.proposals} hrefFor={(proposal) => `/proposals/${proposal.id}/edit`} />
+                <ClientProposalsTable proposals={company.proposals} onOpen={(proposal) => setSelectedProposalId(proposal.id)} />
             )}
 
-            {creating && <NewProposalDrawer company={company} services={services} onClose={() => setCreating(false)} />}
+            {selectedProposal && (
+                <ProposalDrawer {...drawerProps} proposal={selectedProposal} onClose={() => setSelectedProposalId(null)} />
+            )}
+            {creating && <ProposalDrawer {...drawerProps} proposal={null} onClose={() => setCreating(false)} />}
         </div>
     );
 }

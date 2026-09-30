@@ -140,8 +140,10 @@
 
     // A line item's title (invoice detail), above its details in
     // .table__meta.
+    // An invoice line item's name, over its details.
     &__item-name {
-        font-size: var(--font-size-xs);
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
         font-weight: var(--font-weight-medium);
     }
 
@@ -150,17 +152,21 @@
         margin-top: var(--space-1);
     }
 
-    // Keeps the line breaks a user typed (line-item details).
-    &__meta--multiline {
-        white-space: pre-wrap;
-        max-width: 80%;
-    }
-
     &__meta,
     &__note {
         font-size: var(--font-size-xs);
         line-height: var(--line-height-xs);
         color: var(--color-text-muted);
+    }
+
+    // Line-item details: keeps the line breaks a user typed, a size up
+    // from other meta so a line's description reads easily. (After the
+    // shared meta rule, so its size wins.)
+    &__meta--multiline {
+        max-width: 80%;
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+        white-space: pre-wrap;
     }
 
     // A cell holding an inline editable control, where the default cell

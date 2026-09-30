@@ -1,5 +1,6 @@
 // Small square button at the end of a list row ("open"): quiet grey at
-// rest, so a long list isn't a column of red; filled red on hover.
+// rest, so a long list isn't a column of red; filled red while the row
+// (or the button) is hovered.
 
 .row-action {
     display: flex;
@@ -17,7 +18,10 @@
         background-color var(--duration-fast) var(--ease-standard),
         border-color var(--duration-fast) var(--ease-standard);
 
-    &:hover {
+    // Red under the pointer -- its own, or anywhere on the row, since the
+    // whole row opens the same thing.
+    &:hover,
+    :is(.grid-row--link, .table__row--link):hover & {
         color: var(--color-primary-on);
         border-color: var(--color-primary);
         background-color: var(--color-primary);

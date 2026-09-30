@@ -70,7 +70,7 @@
     &__actions {
         position: absolute;
         top: var(--space-8);
-        right: var(--space-12);
+        right: var(--space-page); // in line with the body's padding
         z-index: 1; // one-off: above any positioned content in the body
         display: flex;
         align-items: center;
@@ -94,7 +94,9 @@
     &__body {
         flex: 1;
         overflow-y: auto;
-        padding: var(--space-16) var(--space-12) var(--space-12) var(--space-12);
+        // The content panel's padding, so a drawer's content sits the same
+        // distance from its edges as a page's does.
+        padding: var(--space-page);
     }
 
     // Heading of a create-mode drawer ("Log time"), sized to match the
@@ -135,11 +137,14 @@
 
     // The meta line above a drawer's title (author, date). Mixed onto
     // .drawer__meta, which supplies the small grey type.
+    // Room above the title so the date line reads as its own line, not
+    // the title's first line. Every drawer's byline is DrawerByline, so
+    // this is the one place the gap is set.
     &__byline {
         display: flex;
         align-items: center;
         gap: var(--space-1-5);
-        margin-bottom: var(--space-2);
+        margin-bottom: var(--space-4);
     }
 
     // One byline item, with the "·" before it when it isn't first.

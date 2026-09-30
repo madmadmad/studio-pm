@@ -18,32 +18,58 @@
         margin-bottom: var(--space-3);
     }
 
+    // One line item, laid out like a proposal line (components/
+    // _proposal-form): a 12-column grid, the description across the first
+    // nine columns and the amount at the right edge with a column of space
+    // between, the notes under the description, then Remove.
     &__item {
-        margin-bottom: var(--space-2);
-        padding-bottom: var(--space-2);
+        margin-bottom: var(--space-3);
+        padding-bottom: var(--space-3);
         border-bottom: var(--border-width) solid var(--color-border);
     }
 
-    &__item-row {
-        display: flex;
+    &__item-row,
+    &__item-notes {
+        display: grid;
+        grid-template-columns: repeat(12, minmax(0, 1fr));
         gap: var(--space-2);
+    }
+
+    &__item-row {
+        margin-bottom: var(--space-2);
+    }
+
+    &__item-notes {
         margin-bottom: var(--space-1);
     }
 
     &__description {
-        flex: 1;
+        grid-column: 1 / span 9;
     }
 
     &__amount {
-        width: 7rem; // one-off: fits a five-figure amount
+        grid-column: 11 / span 2;
+        text-align: right;
         font-variant-numeric: tabular-nums;
     }
 
-    // Client-facing notes under a line item: smaller and quieter.
+    // Client-facing notes under a line item: quieter, at the field size.
     &__details {
+        grid-column: 1 / span 9;
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+        color: var(--color-text-muted);
+    }
+
+    // Grey until hovered, like every destructive action -- red is the brand.
+    &__remove {
         font-size: var(--font-size-xs);
         line-height: var(--line-height-xs);
         color: var(--color-text-muted);
+
+        &:hover {
+            color: var(--color-danger-text);
+        }
     }
 
     // "Bill [46.44] % of the budget  Bill the rest", then the running

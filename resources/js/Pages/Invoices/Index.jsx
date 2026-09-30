@@ -1,6 +1,6 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
-import { Check, CheckCircle, Copy, DownloadSimple, Eye, PaperPlaneTilt, PencilSimple, Trash } from '@phosphor-icons/react';
+import { CaretRight, Check, CheckCircle, Copy, DownloadSimple, Eye, PaperPlaneTilt, Trash } from '@phosphor-icons/react';
 import AppLayout from '../../Layouts/AppLayout';
 import Button from '../../Components/Button';
 import EmptyState from '../../Components/EmptyState';
@@ -12,7 +12,10 @@ import { calculateDueDate, todayLocal } from '../../lib/paymentTerms';
 import { api } from '../../lib/api';
 import { getTray, clearTray } from '../../lib/tray';
 import { copyToClipboard } from '../../lib/clipboard';
+import { visitRow } from '../../lib/rowLink';
 import PageHeader from '../../Components/PageHeader';
+import { useSendAfterCreate } from '../../Components/SendInvoiceModal';
+import { useInvoiceDrawer } from '../../Components/InvoiceDrawer';
 
 function emptyDraft() {
     const issuedOn = todayLocal();
@@ -31,6 +34,8 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
     const [copiedId, setCopiedId] = useState(null);
     const [deletingId, setDeletingId] = useState(null);
     const [dueSort, setDueSort] = useState(null); // null | 'asc' | 'desc'
+    // Invoices open in the wide drawer, as on a project or client.
+    const { openInvoice, drawer: invoiceDrawer } = useInvoiceDrawer(() => router.reload({ only: ['invoices'] }));
 
     // Keeps local state in sync whenever a router.reload() elsewhere in this
     // component brings in a fresh copy of the prop.
@@ -127,6 +132,13 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
         setShowForm(true);
     }
 
+    // Send invoice: the dialog opens once the invoice is created; either
+    // way it ends, the form closes (the invoice is already on the list).
+    const { openFor: openSendDialog, modal: sendDialog } = useSendAfterCreate(() => {
+        setShowForm(false);
+        router.reload({ only: ['invoices'] });
+    }, () => router.reload({ only: ['invoices'] }));
+
     async function saveInvoice(status) {
         if (!draft.company_id) {
             setError('Select a client first.');
@@ -149,12 +161,15 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
                 due_on: draft.due_on,
                 items: validItems,
             });
-            if (status === 'sent') {
-                await api.post(`/api/invoices/${invoice.id}/send`);
-            }
             clearTray();
-            setShowForm(false);
             router.reload({ only: ['invoices'] });
+            // Send goes through the Send Invoice dialog (method, timing, the
+            // email itself) rather than straight out.
+            if (status === 'sent') {
+                await openSendDialog(invoice.id);
+                return;
+            }
+            setShowForm(false);
         } catch (err) {
             setError(err.message);
         } finally {
@@ -162,9 +177,13 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
         }
     }
 
-    async function sendInvoice(invoice) {
-        await api.post(`/api/invoices/${invoice.id}/send`);
-        router.reload({ only: ['invoices'] });
+    // A draft row's Send icon opens the Send Invoice dialog, as sending does
+    // everywhere else.
+    const reloadInvoices = () => router.reload({ only: ['invoices'] });
+    const { openFor: openRowSendDialog, modal: rowSendDialog } = useSendAfterCreate(reloadInvoices, reloadInvoices);
+
+    function sendInvoice(invoice) {
+        openRowSendDialog(invoice.id, { justCreated: false });
     }
 
     // Quick action for the common case (a check came in) -- anything else
@@ -257,17 +276,19 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
                                         onChange={(e) => updateItem(idx, 'amount', e.target.value)}
                                         className="input invoice-form__amount"
                                     />
-                                    {draft.items.length > 1 && (
-                                        <Button variant="link-accent" onClick={() => removeItemRow(idx)}>Remove</Button>
-                                    )}
                                 </div>
-                                <textarea
-                                    placeholder="Additional notes shown to the client (optional, not required)"
-                                    value={item.details || ''}
-                                    onChange={(e) => updateItem(idx, 'details', e.target.value)}
-                                    rows={2}
-                                    className="input invoice-form__details"
-                                />
+                                <div className="invoice-form__item-notes">
+                                    <textarea
+                                        placeholder="Additional notes shown to the client (optional, not required)"
+                                        value={item.details || ''}
+                                        onChange={(e) => updateItem(idx, 'details', e.target.value)}
+                                        rows={2}
+                                        className="input invoice-form__details"
+                                    />
+                                </div>
+                                {draft.items.length > 1 && (
+                                    <button type="button" onClick={() => removeItemRow(idx)} className="invoice-form__remove">Remove</button>
+                                )}
                             </div>
                         ))}
                         <Button variant="link-accent" onClick={addItemRow}>+ Add line item</Button>
@@ -296,7 +317,7 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
 
                     <div className="form-actions">
                         <Button type="button" variant="secondary" onClick={() => setShowForm(false)}>Cancel</Button>
-                        <Button type="button" variant="outline" disabled={saving} onClick={() => saveInvoice('draft')}>Save as draft</Button>
+                        <Button type="button" variant="secondary" disabled={saving} onClick={() => saveInvoice('draft')}>Save as draft</Button>
                         <Button type="button" disabled={saving} onClick={() => saveInvoice('sent')}>Send invoice</Button>
                     </div>
                 </div>
@@ -325,13 +346,9 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
                         </thead>
                         <tbody>
                             {visibleInvoices.map((invoice) => (
-                                <tr key={invoice.id}>
+                                <tr key={invoice.id} onClick={(e) => visitRow(e, null, { onOpen: () => openInvoice(invoice.id) })} className="table__row--link">
                                     <td className="table__cell--numeric table__cell--muted">{invoice.invoice_number}</td>
-                                    <td className="table__cell--strong">
-                                        <Link href={`/invoices/${invoice.id}`} className="link">
-                                            {invoice.company?.name}
-                                        </Link>
-                                    </td>
+                                    <td className="table__cell--strong">{invoice.company?.name}</td>
                                     <td className="table__cell--muted">{formatDate(invoice.issued_on)}</td>
                                     <td className="table__cell--muted">{formatDate(invoice.due_on)}</td>
                                     <td className="table__cell--numeric">{formatCurrency(invoiceTotal(invoice.items, invoice.surcharge))}</td>
@@ -341,11 +358,6 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
                                             <a href={`/i/${invoice.public_token}`} target="_blank" rel="noopener noreferrer" title="Preview" className="icon-btn icon-btn--secondary">
                                                 <Eye />
                                             </a>
-                                            {invoice.status === 'draft' && (
-                                                <Link href={`/invoices/${invoice.id}`} title="Edit" className="icon-btn icon-btn--confirm">
-                                                    <PencilSimple />
-                                                </Link>
-                                            )}
                                             {invoice.status === 'draft' && (
                                                 <button onClick={() => sendInvoice(invoice)} title="Send" className="icon-btn icon-btn--accent">
                                                     <PaperPlaneTilt />
@@ -376,6 +388,10 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
                                                     <Trash />
                                                 </button>
                                             )}
+                                            {/* The keyboard way in; the row's own click does the same. */}
+                                            <button onClick={() => openInvoice(invoice.id)} title="Open invoice" aria-label="Open invoice" className="row-action">
+                                                <CaretRight size={14} weight="bold" />
+                                            </button>
                                         </div>
                                     </td>
                                 </tr>
@@ -384,6 +400,10 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
                     </table>
                 )}
             </div>
+
+            {invoiceDrawer}
+            {sendDialog}
+            {rowSendDialog}
         </AppLayout>
     );
 }

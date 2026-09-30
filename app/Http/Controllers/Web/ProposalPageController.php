@@ -15,7 +15,11 @@ class ProposalPageController extends Controller
     public function index(): Response
     {
         return Inertia::render('Proposals/Index', [
-            'proposals' => Proposal::with(['company', 'contact', 'project'])->latest()->get(),
+            // Items for the proposal drawer's editor; the client list and
+            // services it picks from, as on the create/edit pages.
+            'proposals' => Proposal::with(['company', 'contact', 'project', 'items'])->latest()->get(),
+            'companies' => Company::with(['contacts', 'projects'])->orderBy('name')->get(['id', 'name']),
+            'services' => Service::orderBy('name')->get(),
         ]);
     }
 

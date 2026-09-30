@@ -21,6 +21,20 @@
     }
 }
 
+// A centered dialog arriving: a quick fade up from just under full size,
+// in place -- dialogs don't travel the way the edge-anchored drawer does.
+@keyframes dialog-enter {
+    from {
+        opacity: 0;
+        transform: scale(0.96);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
 // Exits -- the enter keyframes in reverse. Run with fill-mode `forwards`
 // so the overlay stays gone until it unmounts.
 @keyframes overlay-fade-out {

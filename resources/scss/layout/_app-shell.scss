@@ -30,7 +30,9 @@
         bottom: 0;
         left: calc(var(--size-sidebar) - var(--size-panel-shadow));
         width: var(--size-panel-shadow);
-        background: url('/images/panel-shadow.png') repeat-y;
+        // Relative, so Vite serves it in dev and fingerprints it in the build
+        // (a root-relative /images/... path 404s from the dev server).
+        background: url('../../images/panel-shadow.png') repeat-y;
         pointer-events: none;
     }
 

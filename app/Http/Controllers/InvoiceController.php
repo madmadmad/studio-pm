@@ -87,11 +87,15 @@ class InvoiceController extends Controller
 
     public function update(Request $request, Invoice $invoice)
     {
-        abort_unless($invoice->status === 'draft', 422, 'Only draft invoices can be edited.');
+        // Drafts and sent invoices can be edited; paid ones can't -- their
+        // payment is already in bookkeeping, and an edit would disagree with it.
+        abort_if($invoice->status === 'paid', 422, 'Paid invoices cannot be edited.');
 
         $data = $this->validateInvoice($request, [
             'contact_id' => ['nullable', Rule::exists('contacts', 'id')->where('company_id', $invoice->company_id)],
             'items' => ['required', 'array', 'min:1'],
+            // An existing line keeps its id; a new line has none.
+            'items.*.id' => ['nullable', 'integer', Rule::exists('invoice_items', 'id')->where('invoice_id', $invoice->id)],
             'items.*.description' => ['required', 'string'],
             'items.*.details' => ['nullable', 'string'],
             'items.*.amount' => ['required', 'numeric', 'min:0.01'],
@@ -109,18 +113,28 @@ class InvoiceController extends Controller
                 'payment_terms' => $terms,
             ]);
 
-            // Replacing items wholesale (simplest, matches how proposal items
-            // are edited) would otherwise leave any time entries billed to
-            // the old items stuck "billed" with nothing to point at -- free
-            // them up so those hours can be invoiced again later.
-            $oldItemIds = $invoice->items()->pluck('id');
-            TimeEntry::whereIn('invoice_item_id', $oldItemIds)->update(['billed' => false, 'invoice_item_id' => null]);
-            Expense::whereIn('invoice_item_id', $oldItemIds)->update([
+            // Line items are updated in place, not replaced: time entries
+            // and expenses are billed by pointing at a line item, so a line
+            // that survives the edit keeps what's billed to it. Only lines
+            // the edit removes free theirs up to be invoiced again.
+            $keptIds = collect($data['items'])->pluck('id')->filter();
+            $removedIds = $invoice->items()->whereNotIn('id', $keptIds)->pluck('id');
+
+            TimeEntry::whereIn('invoice_item_id', $removedIds)->update(['billed' => false, 'invoice_item_id' => null]);
+            Expense::whereIn('invoice_item_id', $removedIds)->update([
                 'invoice_id' => null, 'invoice_item_id' => null, 'billing_status' => 'unbilled',
             ]);
-            $invoice->items()->delete();
+            $invoice->items()->whereIn('id', $removedIds)->delete();
 
-            $invoice->items()->createMany($data['items']);
+            foreach ($data['items'] as $item) {
+                $fields = collect($item)->only(['description', 'details', 'amount', 'service_id'])->all();
+
+                if (! empty($item['id'])) {
+                    $invoice->items()->whereKey($item['id'])->update($fields);
+                } else {
+                    $invoice->items()->create($fields);
+                }
+            }
         });
 
         return $invoice->fresh()->load('items');

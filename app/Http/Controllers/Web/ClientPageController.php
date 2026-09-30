@@ -35,6 +35,8 @@ class ClientPageController extends Controller
             'invoices.payments',
             'proposals' => fn ($query) => $query->latest(),
             'proposals.project',
+            // For the proposal drawer's editor (its line items).
+            'proposals.items',
         ]);
 
         return Inertia::render('Clients/Show', [

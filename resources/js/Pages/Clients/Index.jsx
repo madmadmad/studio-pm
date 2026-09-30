@@ -1,11 +1,13 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
+import { CaretRight } from '@phosphor-icons/react';
 import AppLayout from '../../Layouts/AppLayout';
 import Button from '../../Components/Button';
 import EmptyState from '../../Components/EmptyState';
 import { CompanyStatusBadge } from '../../Components/StatusBadges';
 import { api } from '../../lib/api';
 import PageHeader from '../../Components/PageHeader';
+import { visitRow } from '../../lib/rowLink';
 
 export default function ClientsIndex({ companies }) {
     const [showForm, setShowForm] = useState(false);
@@ -74,7 +76,7 @@ export default function ClientsIndex({ companies }) {
                 {companies.length === 0 ? (
                     <EmptyState text="No clients yet." />
                 ) : (
-                    <table className="table table--hover">
+                    <table className="table">
                         <thead>
                             <tr>
                                 <th>Client</th>
@@ -85,12 +87,8 @@ export default function ClientsIndex({ companies }) {
                         </thead>
                         <tbody>
                             {companies.map((c) => (
-                                <tr key={c.id}>
-                                    <td className="table__cell--strong">
-                                        <Link href={`/clients/${c.id}`} className="link">
-                                            {c.name}
-                                        </Link>
-                                    </td>
+                                <tr key={c.id} onClick={(e) => visitRow(e, `/clients/${c.id}`)} className="table__row--link">
+                                    <td className="table__cell--strong">{c.name}</td>
                                     <td className="table__cell--muted">
                                         {c.contacts?.[0] ? `${c.contacts[0].name} · ${c.contacts[0].email ?? ''}` : '—'}
                                     </td>
@@ -98,9 +96,12 @@ export default function ClientsIndex({ companies }) {
                                         <CompanyStatusBadge company={c} />
                                     </td>
                                     <td className="table__cell--end">
-                                        <Link href={`/clients/${c.id}`} className="link-btn">
-                                            Edit
-                                        </Link>
+                                        <div className="table__actions">
+                                            {/* The keyboard way in; the row's own click does the same. */}
+                                            <Link href={`/clients/${c.id}`} title="Open client" aria-label="Open client" className="row-action">
+                                                <CaretRight size={14} weight="bold" />
+                                            </Link>
+                                        </div>
                                     </td>
                                 </tr>
                             ))}

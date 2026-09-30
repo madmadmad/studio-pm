@@ -36,7 +36,11 @@
         background-color: var(--color-surface-raised);
         border-radius: var(--radius-base);
         box-shadow: var(--shadow-overlay);
-        animation: panel-slide-in var(--duration-base) var(--ease-enter);
+        animation: dialog-enter var(--duration-fast) var(--ease-enter);
+
+        @media (prefers-reduced-motion: reduce) {
+            animation-name: overlay-fade-in;
+        }
 
         // A tall panel that fills with a single iframe (email preview).
         &--frame {

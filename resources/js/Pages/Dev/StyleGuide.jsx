@@ -97,7 +97,7 @@ const COLOR_GROUPS = [
     },
     {
         title: 'Surfaces and border',
-        note: 'Darkest first -- in a dark UI, higher means lighter: the page; cards; filled cards and hover rows; menus and modals; neutral chips. Fields have no border: a faint white lift over whatever they sit on. The border is a low-contrast divider; border strong edges an outlined control.',
+        note: 'Darkest first -- in a dark UI, higher means lighter: the page; cards; filled cards and hover rows; menus and modals; neutral chips. Fields have no border: a faint white lift over whatever they sit on. The border is a low-contrast divider; border strong is the toggle\'s off track and an inline edit\'s edge while you edit it.',
         colors: [
             ['Background', '--color-bg'],
             ['Surface', '--color-surface'],
@@ -111,7 +111,7 @@ const COLOR_GROUPS = [
     },
     {
         title: 'Canvas',
-        note: 'The darkest layer, which the sidebar sits on; text and rules on it; and the panel each page sits in (separated by a dithered shadow image, images/panel-shadow.png).',
+        note: 'The darkest layer, which the sidebar sits on; text and rules on it; and the panel each page sits in (separated by a dithered shadow image, resources/images/panel-shadow.png).',
         colors: [
             ['Canvas', '--color-canvas'],
             ['On canvas', '--color-on-canvas'],
@@ -270,14 +270,13 @@ export default function StyleGuide() {
                     <ShellTokenTable />
                 </Section>
 
-                <Section title="Buttons" description=".btn plus one color modifier (.btn--primary, --confirm...), or .link-btn for an inline text action. Use the Button component or apply the classes directly. Action buttons (Primary, Confirm, Accent) are red; Secondary -- Cancel and the like -- is a subtle grey fill; Outline is a grey outline; Danger is grey with a trash glyph and only turns red on hover.">
+                <Section title="Buttons" description=".btn plus one color modifier (.btn--primary, --confirm...), or .link-btn for an inline text action. Use the Button component or apply the classes directly. Action buttons (Primary, Confirm, Accent) are red; Secondary -- Cancel, Save as draft and the like -- is a subtle grey fill; Danger is grey with a trash glyph and only turns red on hover.">
                     <div className="style-guide__row style-guide__row--spaced">
                         <Button variant="confirm" className="btn--sm">Small</Button>
                         <Button variant="primary">Primary</Button>
                         <Button variant="confirm">Confirm</Button>
                         <Button variant="accent">Accent</Button>
                         <Button variant="secondary">Secondary</Button>
-                        <Button variant="outline">Outline</Button>
                         <Button variant="danger">Danger</Button>
                         <Button variant="link">Link</Button>
                         <Button variant="link-accent">Link accent</Button>
@@ -348,7 +347,7 @@ export default function StyleGuide() {
                     </select>
                 </Section>
 
-                <Section title="Badges" description="A badge's tone is neutral or an intent (Components/Badge.jsx). Grey for everything but trouble: neutral is a grey fill (Draft); accent, warning and info a grey outline (Sent, In progress); primary and success a grey fill with brighter text (Paid, Active); danger solid red with a warning glyph (Overdue).">
+                <Section title="Badges" description="A badge's tone is neutral or an intent (Components/Badge.jsx). Neutral is a grey fill with muted text (Draft); accent, warning, info and primary a grey fill with light text (Sent, In progress, the Primary contact label); success solid red (Paid, Active, Accepted); danger solid red with a warning glyph (Overdue).">
                     <div className="style-guide__row style-guide__row--compact">
                         <Badge tone="neutral" label="Neutral" />
                         {INTENTS.map((intent) => (

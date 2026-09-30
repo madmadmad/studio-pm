@@ -2,9 +2,9 @@
 // invoice opens in the wide drawer.
 
 .project-billing {
+    // Same weight as the date and total beside it.
     &__number {
         grid-column: span 2;
-        color: var(--color-text-muted);
         font-variant-numeric: tabular-nums;
     }
 
