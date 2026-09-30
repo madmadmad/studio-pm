@@ -92,9 +92,11 @@ class Invoice extends Model
         return $this->belongsTo(Contact::class);
     }
 
+    // In the order they're arranged in the editor (dragged); id breaks ties
+    // for anything created before positions existed.
     public function items(): HasMany
     {
-        return $this->hasMany(InvoiceItem::class);
+        return $this->hasMany(InvoiceItem::class)->orderBy('position')->orderBy('id');
     }
 
     public function payments(): HasMany

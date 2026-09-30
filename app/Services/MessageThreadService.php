@@ -147,6 +147,25 @@ class MessageThreadService
         $this->addParticipant($thread, $actor);
     }
 
+    // Adds the actor's reaction with this emoji, or takes it back off if
+    // they've already reacted with it. Returns the message's reactions.
+    public function toggleReaction(Message $message, User|Contact $actor, string $emoji)
+    {
+        $reactor = $actor instanceof User
+            ? ['user_id' => $actor->id, 'contact_id' => null]
+            : ['user_id' => null, 'contact_id' => $actor->id];
+
+        $existing = $message->reactions()->where($reactor)->where('emoji', $emoji)->first();
+
+        if ($existing) {
+            $existing->delete();
+        } else {
+            $message->reactions()->create([...$reactor, 'emoji' => $emoji]);
+        }
+
+        return $message->reactions()->with('user:id,name', 'contact:id,name')->get();
+    }
+
     public function updateBody(Message $message, string $body): Message
     {
         $message->update(['body' => $body]);

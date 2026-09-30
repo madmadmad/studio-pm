@@ -70,7 +70,7 @@ export default function Drawer({ actions, onClose, size, children }) {
 
     useEffect(() => {
         // An overlay opened from inside the drawer (a message's image
-        // lightbox, the send-invoice modal) owns Escape while it's up --
+        // lightbox, a send dialog) owns Escape while it's up --
         // one press closes only the top layer.
         function onKeyDown(e) {
             if (e.key !== 'Escape') return;

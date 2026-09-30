@@ -4,11 +4,13 @@ namespace App\Http\Controllers\Portal;
 
 use App\Http\Controllers\Controller;
 use App\Models\Message;
+use App\Models\MessageReaction;
 use App\Models\Project;
 use App\Policies\Portal\MessagePolicy;
 use App\Services\MessageThreadService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 
 class MessageController extends Controller
 {
@@ -21,12 +23,7 @@ class MessageController extends Controller
         return $project->messages()
             ->includingContact($request->user())
             ->withTrashed()
-            ->with([
-                'senderUser', 'senderContact', 'attachments',
-                'participants.user', 'participants.contact',
-                'replies' => fn ($q) => $q->withTrashed(),
-                'replies.senderUser', 'replies.senderContact', 'replies.attachments',
-            ])
+            ->with(Message::threadRelations())
             ->get();
     }
 
@@ -80,6 +77,17 @@ class MessageController extends Controller
         $this->threads->deleteMessage($message);
 
         return response()->noContent();
+    }
+
+    // Toggles the client's reaction with an emoji, on a thread they're
+    // included on (as for replying).
+    public function react(Request $request, Message $message)
+    {
+        abort_unless($this->policy->viewThread($request->user(), $message), 403);
+
+        $data = $request->validate(['emoji' => ['required', Rule::in(MessageReaction::EMOJI)]]);
+
+        return $this->threads->toggleReaction($message, $request->user(), $data['emoji']);
     }
 
     // No join() -- a client only ever sees threads they were included on

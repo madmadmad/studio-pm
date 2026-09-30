@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
 use App\Models\Company;
+use App\Models\Message;
 use App\Models\Project;
 use App\Models\Service;
 use App\Models\User;
@@ -51,12 +52,7 @@ class ProjectPageController extends Controller
             'tasks.files',
             'notes.user',
             'scheduleItems',
-            'messages' => fn ($q) => $q->withTrashed()->with([
-                'senderUser', 'senderContact', 'attachments',
-                'participants.user', 'participants.contact',
-                'replies' => fn ($r) => $r->withTrashed(),
-                'replies.senderUser', 'replies.senderContact', 'replies.attachments',
-            ]),
+            'messages' => fn ($q) => $q->withTrashed()->with(Message::threadRelations()),
             'timeEntries.task',
             // Whose time each entry is (the Time tab's Team member column).
             'timeEntries.user:id,name,avatar_path',

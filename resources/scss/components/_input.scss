@@ -24,6 +24,12 @@
         background-color: var(--color-surface-subtle);
     }
 
+    // Multi-line text: the editor size (see --font-size-editor).
+    &:is(textarea) {
+        font-size: var(--font-size-editor);
+        line-height: var(--line-height-editor);
+    }
+
     // Keep the room elements.scss reserves for the custom dropdown arrow;
     // the padding shorthands here would otherwise remove it.
     &:is(select) {

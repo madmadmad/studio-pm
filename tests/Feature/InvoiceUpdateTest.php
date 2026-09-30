@@ -144,6 +144,24 @@ class InvoiceUpdateTest extends TestCase
         $this->assertSame($item->id, $expense->invoice_item_id);
     }
 
+    public function test_line_items_keep_the_order_they_are_saved_in(): void
+    {
+        $user = User::factory()->create();
+        $invoice = $this->makeDraftInvoice();
+        $first = $invoice->items()->first();
+        $second = $invoice->items()->create(['description' => 'Copywriting', 'amount' => 400, 'position' => 1]);
+
+        // Dragged: the second line first.
+        $this->actingAs($user)->patchJson("/api/invoices/{$invoice->id}", [
+            'items' => [
+                ['id' => $second->id, 'description' => 'Copywriting', 'amount' => 400],
+                ['id' => $first->id, 'description' => 'Design work', 'amount' => 1000],
+            ],
+        ])->assertOk();
+
+        $this->assertSame([$second->id, $first->id], $invoice->fresh()->items->pluck('id')->all());
+    }
+
     public function test_a_line_id_from_another_invoice_is_rejected(): void
     {
         $user = User::factory()->create();

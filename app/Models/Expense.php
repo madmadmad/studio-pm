@@ -87,9 +87,11 @@ class Expense extends Model
             ]);
         }
 
+        // Added as the invoice's last line.
         $item = $invoice->items()->create([
             'description' => $this->name,
             'amount' => $this->billableAmount(),
+            'position' => ($invoice->items()->reorder()->max('position') ?? -1) + 1,
         ]);
 
         $this->update([

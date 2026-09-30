@@ -102,15 +102,17 @@
     &__input {
         min-height: 10rem; // one-off: comfortable empty-editor height
         padding: var(--space-2) var(--space-3);
-        font-size: var(--font-size-sm);
+        // The editor size and full text color, like every textarea.
+        font-size: var(--font-size-editor);
+        color: var(--color-text);
 
         &:focus {
             outline: none;
         }
 
+        // Shorter, for a line item's notes; same text size.
         &--compact {
             min-height: 4rem; // one-off: about two lines, like the textarea it replaced
-            font-size: var(--font-size-xs);
         }
     }
 }

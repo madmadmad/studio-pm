@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { CaretRight, Check, CheckCircle, Copy, DownloadSimple, Eye, PaperPlaneTilt, Trash } from '@phosphor-icons/react';
 import AppLayout from '../../Layouts/AppLayout';
 import Button from '../../Components/Button';
+import InvoiceLineItems from '../../Components/InvoiceLineItems';
 import EmptyState from '../../Components/EmptyState';
 import Toggle from '../../Components/Toggle';
 import InvoiceDateFields, { useInvoiceDateFields } from '../../Components/InvoiceDateFields';
@@ -115,16 +116,6 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
         setDueSort((current) => (current === 'asc' ? 'desc' : current === 'desc' ? null : 'asc'));
     }
 
-    function updateItem(idx, field, value) {
-        const items = draft.items.map((it, i) => (i === idx ? { ...it, [field]: value } : it));
-        setDraft({ ...draft, items });
-    }
-    function addItemRow() {
-        setDraft({ ...draft, items: [...draft.items, { description: '', amount: '' }] });
-    }
-    function removeItemRow(idx) {
-        setDraft({ ...draft, items: draft.items.filter((_, i) => i !== idx) });
-    }
 
     function openNewInvoice() {
         setDraft(emptyDraft());
@@ -253,46 +244,12 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
                         </select>
                     </div>
 
-                    <div className="invoice-form__section">
+                    <div className="form-panel">
+                        <div className="section-label section-label--ruled">Dates &amp; terms</div>
                         <InvoiceDateFields values={draft} onChange={(patch) => setDraft((current) => ({ ...current, ...patch }))} />
                     </div>
 
-                    <div className="invoice-form__items">
-                        {draft.items.map((item, idx) => (
-                            <div key={idx} className="invoice-form__item">
-                                <div className="invoice-form__item-row">
-                                    <input
-                                        placeholder="Line item description (required)"
-                                        value={item.description}
-                                        onChange={(e) => updateItem(idx, 'description', e.target.value)}
-                                        className="input invoice-form__description"
-                                    />
-                                    <input
-                                        placeholder="Amount"
-                                        type="number"
-                                        min="0"
-                                        step="0.01"
-                                        value={item.amount}
-                                        onChange={(e) => updateItem(idx, 'amount', e.target.value)}
-                                        className="input invoice-form__amount"
-                                    />
-                                </div>
-                                <div className="invoice-form__item-notes">
-                                    <textarea
-                                        placeholder="Additional notes shown to the client (optional, not required)"
-                                        value={item.details || ''}
-                                        onChange={(e) => updateItem(idx, 'details', e.target.value)}
-                                        rows={2}
-                                        className="input invoice-form__details"
-                                    />
-                                </div>
-                                {draft.items.length > 1 && (
-                                    <button type="button" onClick={() => removeItemRow(idx)} className="invoice-form__remove">Remove</button>
-                                )}
-                            </div>
-                        ))}
-                        <Button variant="link-accent" onClick={addItemRow}>+ Add line item</Button>
-                    </div>
+                    <InvoiceLineItems items={draft.items} onChange={(items) => setDraft((current) => ({ ...current, items }))} />
 
                     <div className="invoice-form__section totals">
                         <div className="totals__row totals__row--muted">
@@ -305,20 +262,19 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
                         </div>
                     </div>
 
-                    <div className="invoice-form__section">
+                    {error && <div className="form-message form-message--error form-message--spaced">{error}</div>}
+                    {/* The card-fee toggle on the left, the form's buttons on the right. */}
+                    <div className="invoice-form__footer">
                         <Toggle
                             checked={draft.surcharge}
                             onChange={(value) => setDraft({ ...draft, surcharge: value })}
                             label="Offer to pay by card (adds a 3% fee, shown only at checkout)"
                         />
-                    </div>
-
-                    {error && <div className="form-message form-message--error form-message--spaced">{error}</div>}
-
-                    <div className="form-actions">
-                        <Button type="button" variant="secondary" onClick={() => setShowForm(false)}>Cancel</Button>
-                        <Button type="button" variant="secondary" disabled={saving} onClick={() => saveInvoice('draft')}>Save as draft</Button>
-                        <Button type="button" disabled={saving} onClick={() => saveInvoice('sent')}>Send invoice</Button>
+                        <div className="form-actions">
+                            <Button type="button" variant="secondary" onClick={() => setShowForm(false)}>Cancel</Button>
+                            <Button type="button" variant="secondary" disabled={saving} onClick={() => saveInvoice('draft')}>Save as draft</Button>
+                            <Button type="button" disabled={saving} onClick={() => saveInvoice('sent')}>Send invoice</Button>
+                        </div>
                     </div>
                 </div>
             )}

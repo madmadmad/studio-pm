@@ -67,6 +67,27 @@ class Message extends Model
         return $this->sender()?->name;
     }
 
+    // Everything a thread is shown with -- its sender, attachments,
+    // reactions and participants, and its replies (deleted ones kept as
+    // placeholders) with theirs. One list for every place threads load:
+    // the messages APIs and the project pages, staff and portal.
+    public static function threadRelations(): array
+    {
+        return [
+            'senderUser', 'senderContact', 'attachments',
+            'reactions.user:id,name', 'reactions.contact:id,name',
+            'participants.user', 'participants.contact',
+            'replies' => fn ($query) => $query->withTrashed(),
+            'replies.senderUser', 'replies.senderContact', 'replies.attachments',
+            'replies.reactions.user:id,name', 'replies.reactions.contact:id,name',
+        ];
+    }
+
+    public function reactions(): HasMany
+    {
+        return $this->hasMany(MessageReaction::class);
+    }
+
     public function isSender(User|Contact $actor): bool
     {
         return $actor instanceof User

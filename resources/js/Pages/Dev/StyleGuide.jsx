@@ -292,7 +292,7 @@ export default function StyleGuide() {
                         <IconButtonExample icon={<Eye />} label="Preview" variant="secondary" />
                         <IconButtonExample icon={<Copy />} label="Copy link" variant="secondary" />
                         <IconButtonExample icon={<DownloadSimple />} label="Download" variant="secondary" />
-                        <IconButtonExample icon={<PencilSimple />} label="Edit" variant="confirm" />
+                        <IconButtonExample icon={<PencilSimple />} label="Edit" variant="edit" />
                         <IconButtonExample icon={<CheckCircle />} label="Mark paid" variant="confirm" />
                         <IconButtonExample icon={<PaperPlaneTilt />} label="Send" variant="accent" />
                         <IconButtonExample icon={<Trash />} label="Delete" variant="danger" />

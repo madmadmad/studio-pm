@@ -53,7 +53,7 @@ class MessageEditDeleteTest extends TestCase
         $this->actingAs($other)->patchJson("/api/messages/{$thread['id']}", ['body' => 'Hijacked'])->assertForbidden();
     }
 
-    public function test_a_manager_can_delete_anyones_message_but_a_team_member_cannot(): void
+    public function test_only_the_author_can_edit_or_delete_a_message_not_even_a_manager(): void
     {
         ['project' => $project, 'manager' => $manager, 'teammate' => $teammate, 'other' => $other] = $this->makeProjectWithPeople();
 
@@ -63,8 +63,25 @@ class MessageEditDeleteTest extends TestCase
             'recipients' => ["user:{$other->id}"],
         ])->json();
 
-        $this->actingAs($other)->deleteJson("/api/messages/{$thread['id']}")->assertForbidden();
-        $this->actingAs($manager)->deleteJson("/api/messages/{$thread['id']}")->assertNoContent();
+        foreach ([$other, $manager] as $notTheAuthor) {
+            $this->actingAs($notTheAuthor)->patchJson("/api/messages/{$thread['id']}", ['body' => 'Rewritten'])->assertForbidden();
+            $this->actingAs($notTheAuthor)->deleteJson("/api/messages/{$thread['id']}")->assertForbidden();
+        }
+
+        $this->assertDatabaseHas('messages', ['id' => $thread['id'], 'body' => 'Original text', 'deleted_at' => null]);
+    }
+
+    public function test_an_author_can_delete_their_own_message(): void
+    {
+        ['project' => $project, 'teammate' => $teammate, 'other' => $other] = $this->makeProjectWithPeople();
+
+        $thread = $this->actingAs($teammate)->postJson("/api/projects/{$project->id}/messages", [
+            'subject' => 'Kickoff',
+            'body' => 'Original text',
+            'recipients' => ["user:{$other->id}"],
+        ])->json();
+
+        $this->actingAs($teammate)->deleteJson("/api/messages/{$thread['id']}")->assertNoContent();
 
         $this->assertSoftDeleted('messages', ['id' => $thread['id']]);
     }
@@ -102,7 +119,8 @@ class MessageEditDeleteTest extends TestCase
             'recipients' => ["user:{$other->id}"],
         ])->json();
 
-        $this->actingAs($manager)->deleteJson("/api/messages/{$thread['id']}")->assertNoContent();
+        // Deleted by its author (the only one who can).
+        $this->actingAs($teammate)->deleteJson("/api/messages/{$thread['id']}")->assertNoContent();
 
         $threads = $this->actingAs($manager)->getJson("/api/projects/{$project->id}/messages")->json();
 

@@ -64,6 +64,62 @@
         margin-left: auto;
     }
 
+    // The add-reaction smiley: out of the way until the message is hovered
+    // or focused into -- and kept while its grid is open.
+    &__react {
+        display: inline-flex;
+        opacity: 0;
+        transition: opacity var(--duration-fast) var(--ease-standard);
+
+        .message:hover &,
+        .message:focus-within &,
+        &:has([aria-expanded='true']) {
+            opacity: 1;
+        }
+    }
+
+    // Reactions under the message: a chip per emoji with its count.
+    &__reactions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-1-5);
+        margin-top: var(--space-2);
+    }
+
+    &__reaction {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--space-1);
+        height: var(--size-row-action);
+        padding-inline: var(--space-2);
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+        background-color: var(--color-neutral-fill);
+        border: var(--border-width) solid transparent;
+        border-radius: var(--radius-pill);
+        transition:
+            background-color var(--duration-fast) var(--ease-standard),
+            border-color var(--duration-fast) var(--ease-standard);
+
+        &:not(:disabled):hover {
+            background-color: var(--color-neutral-fill-hover);
+        }
+
+        // Your reaction: the red's tint and edge.
+        &--mine,
+        &--mine:not(:disabled):hover {
+            background-color: var(--color-primary-soft);
+            border-color: var(--color-primary);
+        }
+    }
+
+    &__reaction-count {
+        font-size: var(--font-size-xs);
+        line-height: var(--line-height-xs);
+        font-weight: var(--font-weight-medium);
+        font-variant-numeric: tabular-nums;
+    }
+
     // No fill or padding: the text starts where the sender's name does.
     &__body {
         &--deleted {

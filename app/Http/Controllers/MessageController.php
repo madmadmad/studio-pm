@@ -3,10 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\Message;
+use App\Models\MessageReaction;
 use App\Models\Project;
 use App\Services\MessageThreadService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 
 class MessageController extends Controller
 {
@@ -24,12 +26,7 @@ class MessageController extends Controller
 
         return $project->messages()
             ->withTrashed()
-            ->with([
-                'senderUser', 'senderContact', 'attachments',
-                'participants.user', 'participants.contact',
-                'replies' => fn ($q) => $q->withTrashed(),
-                'replies.senderUser', 'replies.senderContact', 'replies.attachments',
-            ])
+            ->with(Message::threadRelations())
             ->get();
     }
 
@@ -83,6 +80,18 @@ class MessageController extends Controller
         $this->threads->deleteMessage($message);
 
         return response()->noContent();
+    }
+
+    // Toggles the user's reaction with an emoji. Anyone who can reply to
+    // the thread can react to its messages; a deleted message can't be
+    // reacted to (route binding skips it, so it's a 404).
+    public function react(Request $request, Message $message)
+    {
+        $this->authorize('update', $message->thread()->project);
+
+        $data = $request->validate(['emoji' => ['required', Rule::in(MessageReaction::EMOJI)]]);
+
+        return $this->threads->toggleReaction($message, $request->user(), $data['emoji']);
     }
 
     public function join(Request $request, Message $message)

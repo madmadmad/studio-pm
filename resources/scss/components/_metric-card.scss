@@ -21,6 +21,18 @@
         }
     }
 
+    // A figure picked out quietly (a project's Remaining budget): lighter
+    // than the other cards, with its text left as it is.
+    &--neutral {
+        background-color: var(--color-surface-highlight);
+
+        // The usual muted label is under AA on this lighter fill; the
+        // light grey keeps it readable (5.95:1).
+        .metric-card__label {
+            color: var(--color-accent);
+        }
+    }
+
     // The headline figure ("Hours remaining", "Outstanding"): the one
     // loud surface on a page, a gradient down the red scale.
     &--primary,

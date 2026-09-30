@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Paperclip, PencilSimple, Trash, X } from '@phosphor-icons/react';
+import EmojiPicker, { REACTION_EMOJI } from './EmojiPicker';
 import { formatDate, formatDateTime, formatDaySeparator, formatRelativeTime, isSameDay } from '../lib/format';
 import { api } from '../lib/api';
 import Badge from './Badge';
@@ -41,9 +42,25 @@ function linkify(text) {
     );
 }
 
-function canModifyMessage(message, currentActorType, currentActorId, currentActorRole) {
+// A message's reactions as chips: one per emoji (in the picker's order),
+// with its count, who reacted, and whether you did.
+function groupReactions(reactions, currentActorType, currentActorId) {
+    const byEmoji = new Map();
+    for (const reaction of reactions) {
+        const entry = byEmoji.get(reaction.emoji) ?? { emoji: reaction.emoji, count: 0, names: [], mine: false };
+        entry.count += 1;
+        entry.names.push(reaction.user?.name ?? reaction.contact?.name ?? 'Someone');
+        const reactorId = currentActorType === 'contact' ? reaction.contact_id : reaction.user_id;
+        if (reactorId != null && String(reactorId) === String(currentActorId)) entry.mine = true;
+        byEmoji.set(reaction.emoji, entry);
+    }
+    return [...byEmoji.values()].sort((a, b) => REACTION_EMOJI.indexOf(a.emoji) - REACTION_EMOJI.indexOf(b.emoji));
+}
+
+// Only a message's author can edit or delete it (MessagePolicy), whatever
+// their role.
+function canModifyMessage(message, currentActorType, currentActorId) {
     if (message.deleted_at) return false;
-    if (currentActorRole === 'manager') return true;
 
     const isClientAuthor = !!message.sender_contact;
     if (isClientAuthor !== (currentActorType === 'contact')) return false;
@@ -101,7 +118,27 @@ function PendingAttachments({ files, onRemove }) {
     );
 }
 
-function AutoGrowTextarea({ value, onChange, onKeyDown, onPaste, placeholder, autoFocus }) {
+// Types an emoji into a composer at the cursor (or over a selection), then
+// puts the cursor back just after it. `ref` goes on the textarea.
+function useEmojiInsert(value, setValue) {
+    const ref = useRef(null);
+
+    function insert(emoji) {
+        const el = ref.current;
+        const start = el?.selectionStart ?? value.length;
+        const end = el?.selectionEnd ?? value.length;
+        setValue(value.slice(0, start) + emoji + value.slice(end));
+        requestAnimationFrame(() => {
+            if (!el) return;
+            el.focus();
+            el.setSelectionRange(start + emoji.length, start + emoji.length);
+        });
+    }
+
+    return { ref, insert };
+}
+
+function AutoGrowTextarea({ value, onChange, onKeyDown, onPaste, placeholder, autoFocus, textareaRef }) {
     const ref = useRef(null);
 
     useEffect(() => {
@@ -112,7 +149,10 @@ function AutoGrowTextarea({ value, onChange, onKeyDown, onPaste, placeholder, au
 
     return (
         <textarea
-            ref={ref}
+            ref={(el) => {
+                ref.current = el;
+                if (textareaRef) textareaRef.current = el;
+            }}
             autoFocus={autoFocus}
             value={value}
             onChange={onChange}
@@ -129,6 +169,7 @@ function AutoGrowTextarea({ value, onChange, onKeyDown, onPaste, placeholder, au
 export function NewThreadForm({ recipientOptions, endpoints, onCreate, onCancel, bare = false }) {
     const [subject, setSubject] = useState('');
     const [body, setBody] = useState('');
+    const emoji = useEmojiInsert(body, setBody);
     const [selected, setSelected] = useState([]);
     const [saving, setSaving] = useState(false);
     const [progress, setProgress] = useState(0);
@@ -217,6 +258,7 @@ export function NewThreadForm({ recipientOptions, endpoints, onCreate, onCancel,
                 onKeyDown={onKeyDown}
                 onPaste={onPaste}
                 placeholder="Message… (⌘/Ctrl+Enter to send)"
+                textareaRef={emoji.ref}
             />
             <PendingAttachments files={attachments.files} onRemove={attachments.removeFile} />
             {error && <div className="composer__error">{error}</div>}
@@ -226,10 +268,13 @@ export function NewThreadForm({ recipientOptions, endpoints, onCreate, onCancel,
                 </div>
             )}
             <div className="composer__footer">
-                <label className="icon-btn icon-btn--secondary composer__attach" title="Attach files">
-                    <Paperclip size={20} />
-                    <input type="file" multiple hidden onChange={(e) => { attachments.addFiles(e.target.files); e.target.value = ''; }} />
-                </label>
+                <div className="composer__tools">
+                    <label className="icon-btn icon-btn--secondary composer__attach" title="Attach files">
+                        <Paperclip size={20} />
+                        <input type="file" multiple hidden onChange={(e) => { attachments.addFiles(e.target.files); e.target.value = ''; }} />
+                    </label>
+                    <EmojiPicker onPick={emoji.insert} placement="up" />
+                </div>
                 <div className="composer__actions">
                     <Button type="button" variant="secondary" onClick={onCancel}>Cancel</Button>
                     <Button type="submit" disabled={saving}>Send</Button>
@@ -292,7 +337,7 @@ function MessageAttachments({ message, endpoints, onOpenLightbox }) {
     );
 }
 
-function MessageRow({ message, endpoints, currentActorType, currentActorId, currentActorRole, onChange, onOpenLightbox }) {
+function MessageRow({ message, endpoints, currentActorType, currentActorId, onChange, onOpenLightbox }) {
     const [editing, setEditing] = useState(false);
     const [editBody, setEditBody] = useState(message.body || '');
     const [saving, setSaving] = useState(false);
@@ -300,7 +345,13 @@ function MessageRow({ message, endpoints, currentActorType, currentActorId, curr
     const sender = message.sender_user || message.sender_contact;
     const isClientAuthor = !!message.sender_contact;
     const isDeleted = !!message.deleted_at;
-    const canModify = canModifyMessage(message, currentActorType, currentActorId, currentActorRole);
+    const canModify = canModifyMessage(message, currentActorType, currentActorId);
+    const reactions = groupReactions(message.reactions || [], currentActorType, currentActorId);
+
+    async function toggleReaction(emoji) {
+        await api.post(endpoints.react(message.id), { emoji });
+        onChange();
+    }
 
     async function saveEdit() {
         if (!editBody.trim()) return;
@@ -333,14 +384,23 @@ function MessageRow({ message, endpoints, currentActorType, currentActorId, curr
                     <span className="message__time" title={formatDateTime(message.sent_at)}>
                         {formatRelativeTime(message.sent_at)}
                     </span>
-                    {canModify && !editing && (
+                    {!isDeleted && !editing && (
                         <span className="message__actions">
-                            <button onClick={() => { setEditBody(message.body || ''); setEditing(true); }} className="icon-btn icon-btn--confirm" title="Edit">
-                                <PencilSimple size={16} />
-                            </button>
-                            <button onClick={remove} className="icon-btn icon-btn--danger" title="Delete">
-                                <Trash size={16} />
-                            </button>
+                            {endpoints.react && (
+                                <span className="message__react">
+                                    <EmojiPicker emojis={REACTION_EMOJI} onPick={toggleReaction} label="Add reaction" size={16} align="right" />
+                                </span>
+                            )}
+                            {canModify && (
+                                <>
+                                    <button onClick={() => { setEditBody(message.body || ''); setEditing(true); }} className="icon-btn icon-btn--edit" title="Edit">
+                                        <PencilSimple size={16} />
+                                    </button>
+                                    <button onClick={remove} className="icon-btn icon-btn--danger" title="Delete">
+                                        <Trash size={16} />
+                                    </button>
+                                </>
+                            )}
                         </span>
                     )}
                 </div>
@@ -367,6 +427,27 @@ function MessageRow({ message, endpoints, currentActorType, currentActorId, curr
                         <MessageAttachments message={message} endpoints={endpoints} onOpenLightbox={onOpenLightbox} />
                     </div>
                 )}
+
+                {/* Reactions: one chip per emoji with its count; yours are
+                    picked out, and clicking a chip adds or removes yours. */}
+                {!isDeleted && reactions.length > 0 && (
+                    <div className="message__reactions">
+                        {reactions.map((reaction) => (
+                            <button
+                                key={reaction.emoji}
+                                type="button"
+                                onClick={() => endpoints.react && toggleReaction(reaction.emoji)}
+                                disabled={!endpoints.react}
+                                title={reaction.names.join(', ')}
+                                aria-pressed={reaction.mine}
+                                className={`message__reaction${reaction.mine ? ' message__reaction--mine' : ''}`}
+                            >
+                                <span className="message__reaction-emoji">{reaction.emoji}</span>
+                                <span className="message__reaction-count">{reaction.count}</span>
+                            </button>
+                        ))}
+                    </div>
+                )}
             </div>
         </div>
     );
@@ -376,8 +457,9 @@ const INITIAL_VISIBLE = 50;
 
 // `bare` drops the card framing (thread, reply box, join prompt), for use
 // inside a drawer; the drawer is the frame.
-export function ThreadView({ thread, currentActorType, currentActorId, currentActorRole, endpoints, onChange, onBack, bare = false }) {
+export function ThreadView({ thread, currentActorType, currentActorId, endpoints, onChange, onBack, bare = false }) {
     const [body, setBody] = useState('');
+    const emoji = useEmojiInsert(body, setBody);
     const [saving, setSaving] = useState(false);
     const [joining, setJoining] = useState(false);
     const [progress, setProgress] = useState(0);
@@ -491,7 +573,6 @@ export function ThreadView({ thread, currentActorType, currentActorId, currentAc
                                     endpoints={endpoints}
                                     currentActorType={currentActorType}
                                     currentActorId={currentActorId}
-                                    currentActorRole={currentActorRole}
                                     onChange={onChange}
                                     onOpenLightbox={(images, index) => setLightbox({ images, index })}
                                 />
@@ -515,6 +596,7 @@ export function ThreadView({ thread, currentActorType, currentActorId, currentAc
                         onKeyDown={onKeyDown}
                         onPaste={onPaste}
                         placeholder="Write a reply… (⌘/Ctrl+Enter to send)"
+                        textareaRef={emoji.ref}
                     />
                     <PendingAttachments files={attachments.files} onRemove={attachments.removeFile} />
                     {saving && attachments.files.length > 0 && (
@@ -523,10 +605,13 @@ export function ThreadView({ thread, currentActorType, currentActorId, currentAc
                         </div>
                     )}
                     <div className="composer__footer">
-                        <label className="icon-btn icon-btn--secondary composer__attach" title="Attach files">
-                            <Paperclip size={20} />
-                            <input type="file" multiple hidden onChange={(e) => { attachments.addFiles(e.target.files); e.target.value = ''; }} />
-                        </label>
+                        <div className="composer__tools">
+                            <label className="icon-btn icon-btn--secondary composer__attach" title="Attach files">
+                                <Paperclip size={20} />
+                                <input type="file" multiple hidden onChange={(e) => { attachments.addFiles(e.target.files); e.target.value = ''; }} />
+                            </label>
+                            <EmojiPicker onPick={emoji.insert} placement="up" />
+                        </div>
                         <Button type="submit" disabled={saving}>Reply</Button>
                     </div>
                 </form>
@@ -549,7 +634,7 @@ export function ThreadView({ thread, currentActorType, currentActorId, currentAc
     );
 }
 
-export default function MessagesPanel({ project, currentActorType, currentActorId, currentActorRole, recipientOptions, endpoints, onChange }) {
+export default function MessagesPanel({ project, currentActorType, currentActorId, recipientOptions, endpoints, onChange }) {
     const [showForm, setShowForm] = useState(false);
     const [openThreadId, setOpenThreadId] = useState(null);
 
@@ -562,7 +647,6 @@ export default function MessagesPanel({ project, currentActorType, currentActorI
                 thread={openThread}
                 currentActorType={currentActorType}
                 currentActorId={currentActorId}
-                currentActorRole={currentActorRole}
                 endpoints={endpoints}
                 onChange={onChange}
                 onBack={() => setOpenThreadId(null)}

@@ -1,10 +1,9 @@
-// Contents of the Send Invoice dialog (the dialog frame itself is .modal):
-// the send-option grid, the schedule and reminder settings, and the email
-// and link panels.
-// Used by Components/SendInvoiceModal.jsx.
+// Contents of a send dialog (the dialog frame itself is .modal): the
+// send-option grid, the settings under it, and the email and link panels.
+// Used by Components/SendInvoiceModal.jsx and SendProposalModal.jsx.
 @use '../abstracts' as *;
 
-.send-invoice {
+.send-dialog {
     &__methods {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));

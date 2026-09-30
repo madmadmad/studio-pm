@@ -1,7 +1,8 @@
 import { Head, router } from '@inertiajs/react';
 import AppLayout from '../../Layouts/AppLayout';
 import PageHeader from '../../Components/PageHeader';
-import ProposalEditor, { ProposalActions } from '../../Components/ProposalEditor';
+import ProposalEditor from '../../Components/ProposalEditor';
+import { ProposalStatusBadge } from '../../Components/StatusBadges';
 
 // The standalone proposal page (from the global Proposals list). A
 // project's proposals open the same editor in a drawer instead.
@@ -15,7 +16,7 @@ export default function ProposalsForm({ proposal, companies, services, presetCom
                 <PageHeader
                     back={{ href: '/proposals', label: 'Proposals' }}
                     title={isEditing ? 'Edit proposal' : 'New proposal'}
-                    actions={isEditing && <ProposalActions proposal={proposal} onChange={() => router.reload()} />}
+                    actions={isEditing && <ProposalStatusBadge proposal={proposal} />}
                 />
 
                 <div className="card card--padded">
@@ -27,6 +28,7 @@ export default function ProposalsForm({ proposal, companies, services, presetCom
                         presetProjectId={presetProjectId}
                         onSaved={() => router.visit('/proposals')}
                         onCancel={() => router.visit('/proposals')}
+                        onChange={() => router.reload()}
                     />
                 </div>
             </div>

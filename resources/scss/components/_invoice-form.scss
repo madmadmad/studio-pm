@@ -14,18 +14,33 @@
         gap: var(--space-3);
     }
 
-    &__items {
-        margin-bottom: var(--space-3);
-    }
-
-    // One line item, laid out like a proposal line (components/
-    // _proposal-form): a 12-column grid, the description across the first
-    // nine columns and the amount at the right edge with a column of space
-    // between, the notes under the description, then Remove.
+    // One line item (Components/InvoiceLineItems), laid out like a proposal
+    // line (components/_proposal-form): a drag handle, then a 12-column grid
+    // -- the description across the first nine columns and the amount at
+    // the right edge with a column of space between, the notes under the
+    // description, then Remove.
     &__item {
+        display: flex;
+        gap: var(--space-2);
         margin-bottom: var(--space-3);
         padding-bottom: var(--space-3);
         border-bottom: var(--border-width) solid var(--color-border);
+
+        // The line being dragged.
+        &--dragging {
+            opacity: 0.4;
+        }
+    }
+
+    &__handle {
+        padding-top: var(--space-3);
+        color: var(--color-text-muted);
+        cursor: grab;
+    }
+
+    &__item-body {
+        flex: 1;
+        min-width: 0;
     }
 
     &__item-row,
@@ -53,12 +68,10 @@
         font-variant-numeric: tabular-nums;
     }
 
-    // Client-facing notes under a line item: quieter, at the field size.
+    // Client-facing notes under a line item, at the editor size like any
+    // textarea. Grows with its text (AutoResizeTextarea) from four lines.
     &__details {
         grid-column: 1 / span 9;
-        font-size: var(--font-size-sm);
-        line-height: var(--line-height-sm);
-        color: var(--color-text-muted);
     }
 
     // Grey until hovered, like every destructive action -- red is the brand.
@@ -72,22 +85,34 @@
         }
     }
 
-    // "Bill [46.44] % of the budget  Bill the rest", then the running
-    // tally, under the proposal picker.
-    &__percent {
-        margin-top: var(--space-3);
+    // The last row: the card-fee toggle on the left, the form's buttons
+    // on the right, sharing a line. Wraps (buttons under the toggle) when
+    // the form is too narrow for both.
+    &__footer {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--space-3);
+
+        .form-actions {
+            margin-left: auto;
+        }
     }
 
-    &__percent-field {
+    // "Bill from proposal" (the new-invoice drawer, on a .form-panel): pick
+    // the proposal, set the share to bill, then see the budget split as a
+    // bar with its figures below.
+    &__billing-field {
+        margin-bottom: var(--space-4);
+    }
+
+    // [ 50 ] % of $25,060.00 budget ........ (25%) (50%) (The rest)
+    &__amount-row {
         display: flex;
         flex-wrap: wrap;
         align-items: center;
         gap: var(--space-2);
-        margin-bottom: var(--space-1);
-
-        .label {
-            margin-bottom: 0;
-        }
     }
 
     &__percent-input {
@@ -98,5 +123,82 @@
         font-size: var(--font-size-sm);
         line-height: var(--line-height-sm);
         color: var(--color-text-muted);
+    }
+
+    &__picks {
+        display: flex;
+        gap: var(--space-2);
+        margin-left: auto;
+    }
+
+    // The bar: invoiced so far (the lightest grey), then this invoice
+    // (red), on the track -- what's left -- in mid grey.
+    &__meter {
+        --invoice-meter-height: var(--space-2);
+
+        display: flex;
+        height: var(--invoice-meter-height);
+        margin-bottom: var(--space-3);
+        overflow: hidden;
+        background-color: var(--color-text-subtle);
+        border-radius: var(--radius-pill);
+    }
+
+    &__meter-invoiced {
+        background-color: var(--color-accent);
+    }
+
+    &__meter-this {
+        background-color: var(--color-primary);
+    }
+
+    &__figures {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: var(--space-3);
+    }
+
+    // Each figure's label leads with a dot in its part of the bar's color,
+    // tying the numbers to the bar without red text.
+    &__figure-label {
+        display: flex;
+        align-items: center;
+        gap: var(--space-1-5);
+        margin-bottom: var(--space-1);
+        font-size: var(--font-size-xs);
+        line-height: var(--line-height-xs);
+        color: var(--color-text-muted);
+
+        // What's left, by default: the bar's track color.
+        &::before {
+            content: '';
+            flex-shrink: 0;
+            width: var(--space-2);
+            height: var(--space-2);
+            background-color: var(--color-text-subtle);
+            border-radius: var(--radius-pill);
+        }
+
+        .invoice-form__figure:first-child &::before {
+            background-color: var(--color-accent);
+        }
+
+        .invoice-form__figure--this &::before {
+            background-color: var(--color-primary);
+        }
+    }
+
+    &__figure-value {
+        font-size: var(--font-size-base);
+        line-height: var(--line-height-base);
+        font-weight: var(--font-weight-medium);
+        font-variant-numeric: tabular-nums;
+    }
+
+    &__figure-pct {
+        font-size: var(--font-size-xs);
+        line-height: var(--line-height-xs);
+        color: var(--color-text-muted);
+        font-variant-numeric: tabular-nums;
     }
 }

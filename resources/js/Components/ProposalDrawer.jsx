@@ -1,5 +1,5 @@
 import Drawer, { DrawerByline, DrawerDate } from './Drawer';
-import ProposalEditor, { ProposalActions } from './ProposalEditor';
+import ProposalEditor from './ProposalEditor';
 import { ProposalStatusBadge } from './StatusBadges';
 
 // A proposal in the wide drawer, with the same editor the standalone page
@@ -14,12 +14,10 @@ export default function ProposalDrawer({ proposal, companies, services, presetCo
         onClose();
     }
 
+    // Its actions (preview, copy link, send, unaccept) are in the editor's
+    // toolbar at the end, so the drawer's corner holds only the close.
     return (
-        <Drawer
-            size="wide"
-            onClose={onClose}
-            actions={proposal && <ProposalActions proposal={proposal} onChange={onChange} showBadge={false} />}
-        >
+        <Drawer size="wide" onClose={onClose}>
             {proposal && (
                 <DrawerByline>
                     <DrawerDate label="Created" date={proposal.created_at} />
@@ -36,6 +34,7 @@ export default function ProposalDrawer({ proposal, companies, services, presetCo
                 presetProjectId={presetProjectId}
                 onSaved={saved}
                 onCancel={onClose}
+                onChange={onChange}
             />
         </Drawer>
     );

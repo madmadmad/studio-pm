@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Check, Copy, DownloadSimple, Eye, PaperPlaneTilt, PencilSimple } from '@phosphor-icons/react';
 import Button from './Button';
+import InvoiceLineItems from './InvoiceLineItems';
 import Toggle from './Toggle';
 import InvoiceDateFields from './InvoiceDateFields';
 import SendInvoiceModal from './SendInvoiceModal';
@@ -144,16 +145,6 @@ export default function InvoiceDetail({ invoice: initialInvoice, studio, invoici
         setEditing(true);
     }
 
-    function updateItem(idx, field, value) {
-        const items = form.items.map((it, i) => (i === idx ? { ...it, [field]: value } : it));
-        setForm({ ...form, items });
-    }
-    function addItemRow() {
-        setForm({ ...form, items: [...form.items, { description: '', amount: '' }] });
-    }
-    function removeItemRow(idx) {
-        setForm({ ...form, items: form.items.filter((_, i) => i !== idx) });
-    }
 
     async function save() {
         const validItems = form.items.filter((i) => i.description.trim() && parseFloat(i.amount) > 0);
@@ -212,7 +203,7 @@ export default function InvoiceDetail({ invoice: initialInvoice, studio, invoici
             )}
             {/* Drafts and sent invoices can be edited; paid ones are locked. */}
             {invoice.status !== 'paid' && !editing && (
-                <button onClick={startEditing} title="Edit invoice" aria-label="Edit invoice" className="icon-btn icon-btn--confirm">
+                <button onClick={startEditing} title="Edit invoice" aria-label="Edit invoice" className="icon-btn icon-btn--edit">
                     <PencilSimple />
                 </button>
             )}
@@ -253,46 +244,12 @@ export default function InvoiceDetail({ invoice: initialInvoice, studio, invoici
                             </select>
                         </div>
 
-                        <div className="invoice-form__section">
+                        <div className="form-panel">
+                            <div className="section-label section-label--ruled">Dates &amp; terms</div>
                             <InvoiceDateFields values={form} onChange={(patch) => setForm((current) => ({ ...current, ...patch }))} />
                         </div>
 
-                        <div className="invoice-form__items">
-                            {form.items.map((item, idx) => (
-                                <div key={idx} className="invoice-form__item">
-                                    <div className="invoice-form__item-row">
-                                        <input
-                                            placeholder="Line item description (required)"
-                                            value={item.description}
-                                            onChange={(e) => updateItem(idx, 'description', e.target.value)}
-                                            className="input invoice-form__description"
-                                        />
-                                        <input
-                                            type="number"
-                                            min="0"
-                                            step="0.01"
-                                            placeholder="Amount"
-                                            value={item.amount}
-                                            onChange={(e) => updateItem(idx, 'amount', e.target.value)}
-                                            className="input invoice-form__amount"
-                                        />
-                                    </div>
-                                    <div className="invoice-form__item-notes">
-                                        <textarea
-                                            placeholder="Additional notes shown to the client (optional, not required)"
-                                            value={item.details || ''}
-                                            onChange={(e) => updateItem(idx, 'details', e.target.value)}
-                                            rows={2}
-                                            className="input invoice-form__details"
-                                        />
-                                    </div>
-                                    {form.items.length > 1 && (
-                                        <button type="button" onClick={() => removeItemRow(idx)} className="invoice-form__remove">Remove</button>
-                                    )}
-                                </div>
-                            ))}
-                            <Button variant="link-accent" onClick={addItemRow}>+ Add line item</Button>
-                        </div>
+                        <InvoiceLineItems items={form.items} onChange={(items) => setForm((current) => ({ ...current, items }))} />
 
                         <div className="invoice-form__section totals">
                             <div className="totals__row totals__row--muted">
@@ -305,19 +262,18 @@ export default function InvoiceDetail({ invoice: initialInvoice, studio, invoici
                             </div>
                         </div>
 
-                        <div className="invoice-form__section">
+                        {error && <div className="form-message form-message--error form-message--spaced">{error}</div>}
+                        {/* The card-fee toggle on the left, the form's buttons on the right. */}
+                        <div className="invoice-form__footer">
                             <Toggle
                                 checked={form.surcharge}
                                 onChange={(value) => setForm({ ...form, surcharge: value })}
                                 label="Offer to pay by card (adds a 3% fee, shown only at checkout)"
                             />
-                        </div>
-
-                        {error && <div className="form-message form-message--error form-message--spaced">{error}</div>}
-
-                        <div className="form-actions">
-                            <Button variant="secondary" onClick={() => setEditing(false)}>Cancel</Button>
-                            <Button variant="confirm" disabled={saving} onClick={save}>Save</Button>
+                            <div className="form-actions">
+                                <Button variant="secondary" onClick={() => setEditing(false)}>Cancel</Button>
+                                <Button variant="confirm" disabled={saving} onClick={save}>Save</Button>
+                            </div>
                         </div>
                     </div>
                 ) : (

@@ -1,0 +1,52 @@
+// A smiley button that opens a grid of emoji -- the composer's (to type
+// one into a message) and a message's reactions. Used by
+// Components/EmojiPicker.jsx; the grid is a .popover.
+
+.emoji-picker {
+    position: relative;
+    display: inline-flex;
+
+    &__panel {
+        display: grid;
+        grid-template-columns: repeat(8, auto);
+        gap: var(--space-0-5);
+        width: max-content;
+        padding: var(--space-2);
+
+        &--left {
+            left: 0;
+        }
+
+        &--right {
+            right: 0;
+        }
+
+        &--down {
+            top: 100%;
+        }
+
+        // Above the button, for a composer at the bottom of the screen.
+        &--up {
+            bottom: 100%;
+            margin-top: 0;
+            margin-bottom: var(--space-1);
+        }
+    }
+
+    &__emoji {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: var(--space-8);
+        height: var(--space-8);
+        font-size: var(--font-size-lg);
+        line-height: 1;
+        border-radius: var(--radius-base);
+        transition: background-color var(--duration-fast) var(--ease-standard);
+
+        &:hover,
+        &:focus-visible {
+            background-color: var(--color-surface-muted);
+        }
+    }
+}

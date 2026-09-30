@@ -10,6 +10,7 @@ import { copyToClipboard } from '../../lib/clipboard';
 import PageHeader from '../../Components/PageHeader';
 import Button from '../../Components/Button';
 import ProposalDrawer from '../../Components/ProposalDrawer';
+import SendProposalModal from '../../Components/SendProposalModal';
 import { visitRow } from '../../lib/rowLink';
 
 function reload() {
@@ -32,8 +33,13 @@ export default function ProposalsIndex({ proposals: proposalsProp, companies, se
         setProposals(proposalsProp);
     }, [proposalsProp]);
 
-    async function sendProposal(proposal) {
-        await api.post(`/api/proposals/${proposal.id}/send`);
+    // A draft row's Send icon opens the Send Proposal dialog.
+    const [sendingProposal, setSendingProposal] = useState(null);
+    function sendProposal(proposal) {
+        setSendingProposal(proposal);
+    }
+    function closeSendDialog() {
+        setSendingProposal(null);
         reload();
     }
 
@@ -168,6 +174,7 @@ export default function ProposalsIndex({ proposals: proposalsProp, companies, se
                     onClose={() => setOpenId(null)}
                 />
             )}
+            {sendingProposal && <SendProposalModal proposal={sendingProposal} onClose={closeSendDialog} onSent={closeSendDialog} />}
             {creating && (
                 <ProposalDrawer
                     proposal={null}

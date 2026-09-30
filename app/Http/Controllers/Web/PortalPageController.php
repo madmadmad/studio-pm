@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
+use App\Models\Message;
 use App\Models\Project;
 use App\Policies\Portal\ProjectPolicy;
 use Illuminate\Http\Request;
@@ -127,12 +128,7 @@ class PortalPageController extends Controller
             // Only tasks set to "Show client".
             'tasks' => fn ($q) => $q->visibleToClient()->with('subtasks', 'files'),
             // Only threads this contact was included on.
-            'messages' => fn ($q) => $q->includingContact($request->user())->withTrashed()->with([
-                'senderUser', 'senderContact', 'attachments',
-                'participants.user', 'participants.contact',
-                'replies' => fn ($r) => $r->withTrashed(),
-                'replies.senderUser', 'replies.senderContact', 'replies.attachments',
-            ]),
+            'messages' => fn ($q) => $q->includingContact($request->user())->withTrashed()->with(Message::threadRelations()),
             'activeUsers:id,name,role,avatar_path',
             'scheduleItems:id,project_id,title,description,starts_on,ends_on,position',
             'proposals' => fn ($q) => $q->where('status', 'accepted')->with('items'),

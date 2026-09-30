@@ -61,12 +61,13 @@ class InvoiceController extends Controller
                 'payment_terms' => $terms,
             ]);
 
-            foreach ($data['items'] as $item) {
+            foreach (array_values($data['items']) as $position => $item) {
                 $invoiceItem = $invoice->items()->create([
                     'description' => $item['description'],
                     'details' => $item['details'] ?? null,
                     'amount' => $item['amount'],
                     'service_id' => $item['service_id'] ?? null,
+                    'position' => $position,
                 ]);
 
                 if (! empty($item['time_entry_ids'])) {
@@ -126,8 +127,10 @@ class InvoiceController extends Controller
             ]);
             $invoice->items()->whereIn('id', $removedIds)->delete();
 
-            foreach ($data['items'] as $item) {
+            // The order they arrive in is the order they're shown in.
+            foreach (array_values($data['items']) as $position => $item) {
                 $fields = collect($item)->only(['description', 'details', 'amount', 'service_id'])->all();
+                $fields['position'] = $position;
 
                 if (! empty($item['id'])) {
                     $invoice->items()->whereKey($item['id'])->update($fields);

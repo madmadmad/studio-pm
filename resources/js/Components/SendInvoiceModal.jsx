@@ -216,11 +216,11 @@ export default function SendInvoiceModal({ invoice, studio, invoicingDefaults, o
                 ref={panelRef}
                 role="dialog"
                 aria-modal="true"
-                aria-labelledby="send-invoice-title"
+                aria-labelledby="send-dialog-title"
                 className="modal__panel"
             >
                 <div className="modal__header">
-                    <h2 id="send-invoice-title" className="modal__title">Send Invoice</h2>
+                    <h2 id="send-dialog-title" className="modal__title">Send Invoice</h2>
                     <button onClick={onClose} className="icon-btn icon-btn--secondary" aria-label="Close">
                         <X />
                     </button>
@@ -255,7 +255,7 @@ export default function SendInvoiceModal({ invoice, studio, invoicingDefaults, o
                         </div>
                     )}
 
-                    <div role="tablist" aria-label="How to send" className="send-invoice__methods">
+                    <div role="tablist" aria-label="How to send" className="send-dialog__methods">
                         {[
                             { value: 'schedule', label: 'Schedule', icon: <CalendarBlank />, disabled: emailBlocked },
                             { value: 'link', label: 'Send via URL', icon: <LinkSimple />, disabled: linkBlocked },
@@ -269,18 +269,18 @@ export default function SendInvoiceModal({ invoice, studio, invoicingDefaults, o
                                 aria-selected={mode === option.value}
                                 onClick={() => setMode(option.value)}
                                 disabled={option.disabled}
-                                className={`send-invoice__method${option.wide ? ' send-invoice__method--wide' : ''}${mode === option.value ? ' send-invoice__method--active' : ''}`}
+                                className={`send-dialog__method${option.wide ? ' send-dialog__method--wide' : ''}${mode === option.value ? ' send-dialog__method--active' : ''}`}
                             >
                                 {option.icon} {option.label}
                             </button>
                         ))}
                     </div>
 
-                    <div className="send-invoice__settings">
+                    <div className="send-dialog__settings">
                         {mode === 'schedule' && (
                             <div>
                                 <label className="label">Send on</label>
-                                <div className="send-invoice__schedule">
+                                <div className="send-dialog__schedule">
                                     <input type="date" value={scheduleDate} onChange={(e) => setScheduleDate(e.target.value)} className="input" />
                                     <input type="time" value={scheduleTime} onChange={(e) => setScheduleTime(e.target.value)} className="input" />
                                 </div>
@@ -291,7 +291,7 @@ export default function SendInvoiceModal({ invoice, studio, invoicingDefaults, o
                     </div>
 
                     {activeTab === 'email' ? (
-                        <div role="tabpanel" className="send-invoice__panel">
+                        <div role="tabpanel" className="send-dialog__panel">
                             <div>
                                 <label className="label">To</label>
                                 <input
@@ -302,7 +302,7 @@ export default function SendInvoiceModal({ invoice, studio, invoicingDefaults, o
                             </div>
 
                             {!ccOpen ? (
-                                <button type="button" onClick={() => setCcOpen(true)} className="send-invoice__text-action">
+                                <button type="button" onClick={() => setCcOpen(true)} className="send-dialog__text-action">
                                     + Add CC
                                 </button>
                             ) : (
@@ -328,7 +328,7 @@ export default function SendInvoiceModal({ invoice, studio, invoicingDefaults, o
                                 <textarea value={message} onChange={(e) => setMessage(e.target.value)} rows={5} className="input" />
                             </div>
 
-                            <div className="send-invoice__option-row">
+                            <div className="send-dialog__option-row">
                                 <Toggle checked={sendCopyToSelf} onChange={setSendCopyToSelf} label="Send me a copy" />
                                 <Button type="button" variant="secondary" className="btn--sm" onClick={loadPreview} disabled={previewLoading}>
                                     {previewLoading ? 'Loading preview…' : 'Show email preview'}
@@ -336,20 +336,20 @@ export default function SendInvoiceModal({ invoice, studio, invoicingDefaults, o
                             </div>
                         </div>
                     ) : (
-                        <div role="tabpanel" className="send-invoice__panel">
+                        <div role="tabpanel" className="send-dialog__panel">
                             <div>
                                 <label className="label">Client link</label>
-                                <div className="send-invoice__link-row">
-                                    <input value={invoice.public_url} readOnly className="input send-invoice__link-input" />
+                                <div className="send-dialog__link-row">
+                                    <input value={invoice.public_url} readOnly className="input send-dialog__link-input" />
                                     <Button type="button" variant="secondary" onClick={copyLink}>
                                         {copied ? <Check size={14} /> : <Copy size={14} />}
-                                        <span className="send-invoice__copy-label">{copied ? 'Copied' : 'Copy link'}</span>
+                                        <span className="send-dialog__copy-label">{copied ? 'Copied' : 'Copy link'}</span>
                                     </Button>
                                 </div>
                                 <span className="u-sr-only" role="status" aria-live="polite">{copied ? 'Link copied to clipboard' : ''}</span>
                             </div>
 
-                            <div className="send-invoice__option-row">
+                            <div className="send-dialog__option-row">
                                 <Toggle checked={markAsSent} onChange={setMarkAsSent} label="Mark as sent" />
                                 <a href={invoice.public_url} target="_blank" rel="noopener noreferrer" title="View it as the client will see it" className="btn btn--secondary btn--sm">
                                     Open client view
@@ -358,7 +358,7 @@ export default function SendInvoiceModal({ invoice, studio, invoicingDefaults, o
                         </div>
                     )}
 
-                    {error && <div className="send-invoice__error">{error}</div>}
+                    {error && <div className="send-dialog__error">{error}</div>}
                 </div>
 
                 <div className="modal__footer">

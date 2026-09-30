@@ -99,6 +99,13 @@
     --color-neutral-fill: var(--color-surface-muted);
     --color-neutral-fill-hover: color-mix(in srgb, var(--color-surface-muted) 88%, #fff);
 
+    // Red icons -- confirm, edit, restore and delete (on hover), the drawer
+    // date's calendar, the task list's client eye: the brightest red, so
+    // they're easy to spot on the dark surfaces (3.2:1 on a card, 3.9:1 on
+    // the page -- the 3:1 an icon needs; the base red falls short).
+    --color-primary-icon: var(--palette-red-100);
+    --color-edit: var(--color-primary-icon); // the edit pencil, everywhere
+
     // Marks with no text of their own, where the brightest red reads best
     // (4.4:1+ on every surface).
     --color-indicator: var(--palette-red-100);
@@ -120,6 +127,7 @@
     --color-surface-subtle: #31343A; // filled cards, hover rows, toolbars
     --color-surface-raised: #23272F; // floats above the page: drawers, modals, popovers, menus
     --color-surface-muted: #383C42; // neutral badge/chip fill, a step lighter
+    --color-surface-highlight: #41464E; // a card picked out quietly (a project's Remaining), a step lighter again
     --color-field: rgb(255 255 255 / 0.06); // inputs and selects: a faint lift over whatever they sit on, so a borderless field reads on every layer
     --color-border: #41464E; // dividers -- decorative, deliberately low contrast
     --color-border-strong: #41464E; // the toggle's off track, an inline edit's edge on hover or focus
@@ -175,6 +183,12 @@
     --line-height-xl: 1.75rem;
     --font-size-2xl: 1.85rem; // page titles, headline numerals
     --line-height-2xl: 2rem;
+
+    // Text you type at length -- every textarea and rich-text editor --
+    // a size up from other fields and at full text color, so long entries
+    // are easy to read and edit.
+    --font-size-editor: var(--font-size-sm);
+    --line-height-editor: var(--line-height-base);
 
     --line-height-body: 1.5;
     --line-height-prose: 1.6; // long-form rich text (proposals)

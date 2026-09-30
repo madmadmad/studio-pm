@@ -126,7 +126,7 @@ function TaskDrawer({ task, isNew, onClose }) {
                 <div className="drawer__section-header">
                     <div className="section-label section-label--flush">Description</div>
                     {!editingDescription && (
-                        <button onClick={() => setEditingDescription(true)} title="Edit description" className="icon-btn icon-btn--secondary">
+                        <button onClick={() => setEditingDescription(true)} title="Edit description" className="icon-btn icon-btn--edit">
                             <PencilSimple />
                         </button>
                     )}
@@ -252,6 +252,7 @@ const MESSAGE_ENDPOINTS = {
     reply: (id) => `/api/portal/messages/${id}/replies`,
     update: (id) => `/api/portal/messages/${id}`,
     destroy: (id) => `/api/portal/messages/${id}`,
+    react: (id) => `/api/portal/messages/${id}/reactions`,
     attachmentUrl: (id) => `/api/portal/attachments/${id}`,
     attachmentThumbnailUrl: (id) => `/api/portal/attachments/${id}/thumbnail`,
 };

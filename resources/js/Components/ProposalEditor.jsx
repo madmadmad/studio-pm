@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { Check, Copy, DotsSixVertical, Eye } from '@phosphor-icons/react';
 import Button from './Button';
 import RichTextEditor from './RichTextEditor';
-import { ProposalStatusBadge } from './StatusBadges';
+import RichTextView from './RichTextView';
+import SendProposalModal from './SendProposalModal';
 import { formatCurrency } from '../lib/format';
 import { api } from '../lib/api';
 import { copyToClipboard } from '../lib/clipboard';
@@ -14,16 +15,20 @@ import { isBlankRichText, toPlainText, toRichText } from '../lib/richText';
 
 const NEW_PROJECT = '__new__';
 
-function emptyForm(proposal, presetCompanyId, presetProjectId) {
+// A new proposal whose client is already set (started from a project or
+// a client) addresses that client's primary contact, as picking the client
+// from the list does.
+function emptyForm(proposal, presetCompanyId, presetProjectId, companies = []) {
     if (!proposal) {
+        const presetCompany = presetCompanyId ? companies.find((c) => String(c.id) === String(presetCompanyId)) : null;
+        const primaryContact = presetCompany?.contacts?.find((c) => c.is_primary);
         return {
             company_id: presetCompanyId ? String(presetCompanyId) : '',
-            contact_id: '',
+            contact_id: primaryContact ? String(primaryContact.id) : '',
             project_id: presetProjectId ? String(presetProjectId) : '',
             new_project_name: '',
             title: '',
             body: '',
-            estimate_amount: '',
             items: [],
         };
     }
@@ -34,7 +39,6 @@ function emptyForm(proposal, presetCompanyId, presetProjectId) {
         new_project_name: '',
         title: proposal.title,
         body: proposal.body,
-        estimate_amount: proposal.estimate_amount ?? '',
         items: proposal.items.map((item) => ({
             service_id: item.service_id ? String(item.service_id) : '',
             description: item.description,
@@ -53,79 +57,21 @@ function lineAmount(item) {
     return (parseFloat(item.quantity) || 0) * (parseFloat(item.rate) || 0);
 }
 
-// Status badge plus the actions for a saved proposal: preview, send (a
-// draft) or copy its link (once sent), and unaccept. `onChange` runs after
-// a send or unaccept so the caller can refresh. The drawer shows the badge
-// in its byline instead, so it passes showBadge={false}.
-export function ProposalActions({ proposal, onChange, showBadge = true }) {
-    const [sending, setSending] = useState(false);
-    const [copied, setCopied] = useState(false);
-    const [unaccepting, setUnaccepting] = useState(false);
-
-    async function sendProposal() {
-        setSending(true);
-        try {
-            await api.post(`/api/proposals/${proposal.id}/send`);
-            onChange();
-        } finally {
-            setSending(false);
-        }
-    }
-
-    async function copyLink() {
-        const ok = await copyToClipboard(`${window.location.origin}/p/${proposal.accept_token}`);
-        if (!ok) {
-            alert('Could not copy the link. Copy it manually instead.');
-            return;
-        }
-        setCopied(true);
-        setTimeout(() => setCopied(false), 1500);
-    }
-
-    async function unacceptProposal() {
-        if (!confirm('Revert this proposal to sent? The client will be able to accept it again.')) return;
-        setUnaccepting(true);
-        try {
-            await api.post(`/api/proposals/${proposal.id}/unaccept`);
-            onChange();
-        } finally {
-            setUnaccepting(false);
-        }
-    }
-
-    return (
-        <>
-            {showBadge && <ProposalStatusBadge proposal={proposal} />}
-            <a href={`/p/${proposal.accept_token}`} target="_blank" rel="noopener noreferrer" title="Preview" className="icon-btn icon-btn--secondary">
-                <Eye />
-            </a>
-            {proposal.status === 'draft' ? (
-                <Button variant="link-accent" disabled={sending} onClick={sendProposal}>
-                    {sending ? 'Sending…' : 'Send'}
-                </Button>
-            ) : (
-                <button type="button" onClick={copyLink} title={copied ? 'Copied!' : 'Copy link'} className="icon-btn icon-btn--secondary">
-                    {copied ? <Check /> : <Copy />}
-                </button>
-            )}
-            {proposal.status === 'accepted' && (
-                <Button variant="link-accent" disabled={unaccepting} onClick={unacceptProposal}>
-                    {unaccepting ? 'Reverting…' : 'Unaccept'}
-                </Button>
-            )}
-        </>
-    );
-}
-
 // `companies` needs each company's contacts and projects. A preset
 // project (arriving from a project) pins both the client and the project
 // so the proposal can't end up attached elsewhere. `onSaved` runs after a
 // successful save; `onCancel` backs out.
-export default function ProposalEditor({ proposal, companies, services, presetCompanyId, presetProjectId, onSaved, onCancel }) {
+// `onSaved` runs after a save or a send (the caller closes and refreshes);
+// `onChange` after an unaccept, which leaves the editor open.
+export default function ProposalEditor({ proposal, companies, services, presetCompanyId, presetProjectId, onSaved, onCancel, onChange = onSaved }) {
     const isEditing = !!proposal;
-    const [form, setForm] = useState(() => emptyForm(proposal, presetCompanyId, presetProjectId));
+    const [form, setForm] = useState(() => emptyForm(proposal, presetCompanyId, presetProjectId, companies));
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
+    const [copied, setCopied] = useState(false);
+    const [unaccepting, setUnaccepting] = useState(false);
+    // The saved proposal the Send dialog is open for (Send saves first).
+    const [sendTarget, setSendTarget] = useState(null);
     const [dragIndex, setDragIndex] = useState(null);
     // A line item is only draggable while its handle is held: a draggable
     // ancestor stops the details editor (contenteditable) from selecting
@@ -137,6 +83,19 @@ export default function ProposalEditor({ proposal, companies, services, presetCo
     const contactsForCompany = selectedCompany?.contacts || [];
     const projectsForCompany = selectedCompany?.projects || [];
     const contextLocked = !isEditing && !!presetProjectId;
+    // Fixed (shown, not picked) wherever they're already decided: the client
+    // when editing, or when started from a project or a client's page (the
+    // editor then gets just that one client); the project when editing or
+    // started from a project.
+    const companyFixed = isEditing || (!!presetCompanyId && (contextLocked || companies.length === 1));
+    const projectFixed = isEditing || contextLocked;
+    // Accepted: the services (and so the estimate) are locked -- the
+    // estimate went into the project's budget on accept, and comes back off
+    // on unaccept. The rest of the proposal can still change.
+    const servicesLocked = proposal?.status === 'accepted';
+    const fixedProjectName = isEditing
+        ? proposal.project?.name
+        : projectsForCompany.find((p) => String(p.id) === String(presetProjectId))?.name;
 
     function handleCompanyChange(value) {
         const company = companies.find((c) => String(c.id) === String(value));
@@ -196,14 +155,23 @@ export default function ProposalEditor({ proposal, companies, services, presetCo
         setForm({ ...form, items });
     }
 
-    async function save() {
-        if (!form.company_id || !form.title || !form.body) {
-            setError('Client, title, and scope of work are all required.');
-            return;
+    // Saves the form and resolves with the saved proposal, or null when a
+    // required field is missing or the save fails (the error is shown).
+    async function persist() {
+        // Name exactly what's missing. An emptied scope editor still holds an
+        // empty paragraph, so it counts as blank too.
+        const missing = [
+            !form.company_id && 'a client',
+            !form.title.trim() && 'a title',
+            isBlankRichText(form.body) && 'the scope of work',
+        ].filter(Boolean);
+        if (missing.length > 0) {
+            setError(`Add ${missing.length > 1 ? `${missing.slice(0, -1).join(', ')} and ${missing.at(-1)}` : missing[0]} before saving.`);
+            return null;
         }
         if (!isEditing && !form.project_id && !form.new_project_name.trim()) {
             setError('Pick a project for this proposal, or name a new one to create.');
-            return;
+            return null;
         }
         const validItems = form.items
             .filter((i) => i.description.trim() && parseFloat(i.rate) >= 0)
@@ -215,210 +183,312 @@ export default function ProposalEditor({ proposal, companies, services, presetCo
                 title: form.title,
                 body: form.body,
                 contact_id: form.contact_id || null,
-                estimate_amount: validItems.length > 0 ? undefined : (form.estimate_amount || null),
-                items: validItems.length > 0 ? validItems : undefined,
+                // The estimate is the services' total, worked out on save.
+                // Left out when locked, so the server keeps them as they are.
+                ...(servicesLocked ? {} : { items: validItems }),
             };
             if (!isEditing) {
                 payload.project_id = form.project_id || null;
                 payload.new_project_name = form.project_id ? null : form.new_project_name.trim();
             }
-            if (isEditing) {
-                await api.patch(`/api/proposals/${proposal.id}`, payload);
-            } else {
-                await api.post(`/api/companies/${form.company_id}/proposals`, payload);
-            }
-            onSaved();
+            return isEditing
+                ? await api.patch(`/api/proposals/${proposal.id}`, payload)
+                : await api.post(`/api/companies/${form.company_id}/proposals`, payload);
         } catch (err) {
             setError(err.message);
+            return null;
         } finally {
             setSaving(false);
         }
     }
 
+    async function save() {
+        if (await persist()) onSaved();
+    }
+
+    // Saves any changes first, so what's sent is what's on screen, then
+    // opens the Send dialog. However the dialog ends, the proposal is saved.
+    async function saveAndSend() {
+        const saved = await persist();
+        if (saved) setSendTarget(saved);
+    }
+
+    function closeSendDialog() {
+        setSendTarget(null);
+        onSaved();
+    }
+
+    async function copyLink() {
+        const ok = await copyToClipboard(`${window.location.origin}/p/${proposal.accept_token}`);
+        if (!ok) {
+            setError('Could not copy the link. Copy it manually instead.');
+            return;
+        }
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1500);
+    }
+
+    async function unaccept() {
+        if (!confirm('Revert this proposal to sent? The client will be able to accept it again, and its estimate comes off the project budget.')) return;
+        setUnaccepting(true);
+        try {
+            await api.post(`/api/proposals/${proposal.id}/unaccept`);
+            onChange();
+        } finally {
+            setUnaccepting(false);
+        }
+    }
+
     return (
         <div className="proposal-form">
-            <div className="form-grid proposal-form__field">
-                <select
-                    value={form.company_id}
-                    disabled={isEditing || contextLocked}
-                    onChange={(e) => handleCompanyChange(e.target.value)}
-                    className="input"
-                >
-                    <option value="">Select client</option>
-                    {companies.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-                </select>
-                <select
-                    value={form.contact_id}
-                    disabled={!form.company_id}
-                    onChange={(e) => setForm({ ...form, contact_id: e.target.value })}
-                    className="input"
-                >
-                    <option value="">
-                        {form.company_id ? 'Send to (no specific contact)' : 'Select a client first'}
-                    </option>
-                    {contactsForCompany.map((contact) => (
-                        <option key={contact.id} value={contact.id}>
-                            {contact.name}{contact.email ? ` (${contact.email})` : ''}
-                        </option>
-                    ))}
-                </select>
-            </div>
-            <div className="proposal-form__field">
-                {isEditing ? (
-                    <div className="input input--static">
-                        Project: {proposal.project?.name ?? '—'}
-                    </div>
-                ) : (
-                    <div className="form-grid">
-                        <select
-                            value={form.company_id ? (form.project_id || NEW_PROJECT) : ''}
-                            disabled={!form.company_id || contextLocked}
-                            onChange={(e) => handleProjectChange(e.target.value)}
-                            className="input"
-                        >
-                            {!form.company_id ? (
-                                <option value="">Select a client first</option>
-                            ) : (
-                                <>
-                                    {projectsForCompany.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-                                    <option value={NEW_PROJECT}>+ New project</option>
-                                </>
-                            )}
-                        </select>
-                        {!form.project_id && (
-                            <input
-                                placeholder="New project name"
-                                value={form.new_project_name}
-                                disabled={!form.company_id}
-                                onChange={(e) => setForm({ ...form, new_project_name: e.target.value })}
+            {/* Grouped on panels like the invoice forms: who and what for, the
+                proposal itself, then its services. */}
+            <div className="form-panel">
+                <div className="section-label section-label--ruled">Client, project &amp; contact</div>
+                {/* Client, project and contact side by side. */}
+                <div className="form-grid form-grid--3">
+                    <div>
+                        <label className="label">Client</label>
+                        {companyFixed ? (
+                            <div className="proposal-form__fixed">{selectedCompany?.name ?? '—'}</div>
+                        ) : (
+                            <select
+                                value={form.company_id}
+                                onChange={(e) => handleCompanyChange(e.target.value)}
                                 className="input"
-                            />
+                            >
+                                <option value="">Select client</option>
+                                {companies.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                            </select>
                         )}
                     </div>
-                )}
-            </div>
-            <div className="proposal-form__field">
-                {form.items.length === 0 ? (
-                    <input
-                        type="number"
-                        min="0"
-                        placeholder="Estimate amount ($)"
-                        value={form.estimate_amount}
-                        onChange={(e) => setForm({ ...form, estimate_amount: e.target.value })}
-                        className="input u-tabular-nums"
-                    />
-                ) : (
-                    <div className="input input--static u-tabular-nums">
-                        Estimate: {formatCurrency(itemsTotal)} (from line items)
+                    <div>
+                        <label className="label">Project</label>
+                        {projectFixed ? (
+                            <div className="proposal-form__fixed">{fixedProjectName ?? '—'}</div>
+                        ) : (
+                            <>
+                                <select
+                                    value={form.company_id ? (form.project_id || NEW_PROJECT) : ''}
+                                    disabled={!form.company_id}
+                                    onChange={(e) => handleProjectChange(e.target.value)}
+                                    className="input"
+                                >
+                                    {!form.company_id ? (
+                                        <option value="">Select a client first</option>
+                                    ) : (
+                                        <>
+                                            {projectsForCompany.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+                                            <option value={NEW_PROJECT}>+ New project</option>
+                                        </>
+                                    )}
+                                </select>
+                                {/* Naming a new project, under its picker. */}
+                                {!form.project_id && (
+                                    <input
+                                        placeholder="New project name"
+                                        value={form.new_project_name}
+                                        disabled={!form.company_id}
+                                        onChange={(e) => setForm({ ...form, new_project_name: e.target.value })}
+                                        className="input proposal-form__new-project"
+                                    />
+                                )}
+                            </>
+                        )}
                     </div>
-                )}
+                    <div>
+                        <label className="label">Contact</label>
+                        <select
+                            value={form.contact_id}
+                            disabled={!form.company_id}
+                            onChange={(e) => setForm({ ...form, contact_id: e.target.value })}
+                            className="input"
+                        >
+                            <option value="">
+                                {form.company_id ? 'Send to (no specific contact)' : 'Select a client first'}
+                            </option>
+                            {contactsForCompany.map((contact) => (
+                                <option key={contact.id} value={contact.id}>
+                                    {contact.name}{contact.email ? ` (${contact.email})` : ''}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                </div>
             </div>
-            <input
-                placeholder="Proposal title"
-                value={form.title}
-                onChange={(e) => setForm({ ...form, title: e.target.value })}
-                className="input proposal-form__field"
-            />
-            <div className="proposal-form__group">
+            <div className="form-panel">
+                <div className="section-label section-label--ruled">Proposal</div>
+                <input
+                    placeholder="Proposal title"
+                    value={form.title}
+                    onChange={(e) => setForm({ ...form, title: e.target.value })}
+                    className="input proposal-form__field"
+                />
                 <RichTextEditor value={form.body} onChange={(body) => setForm({ ...form, body })} />
             </div>
 
-            <div className="proposal-form__group">
-                <div className="section-label">Services</div>
-                {form.items.map((item, idx) => (
-                    <div
-                        key={idx}
-                        draggable={armedIndex === idx}
-                        onDragStart={() => setDragIndex(idx)}
-                        onDragOver={(e) => e.preventDefault()}
-                        onDrop={() => {
-                            handleItemDrop(dragIndex, idx);
-                            setDragIndex(null);
-                        }}
-                        onDragEnd={() => {
-                            setDragIndex(null);
-                            setArmedIndex(null);
-                        }}
-                        className={`proposal-form__item${dragIndex === idx ? ' proposal-form__item--dragging' : ''}`}
-                    >
+            <div className="form-panel">
+                <div className="section-label section-label--ruled">Services</div>
+                {servicesLocked ? (
+                    <>
+                        <p className="form-hint proposal-form__locked-note">
+                            This proposal is accepted, so its services are locked. Unaccept it to change them.
+                        </p>
+                        {form.items.map((item, idx) => (
+                            <div key={idx} className="proposal-form__item proposal-form__item--locked">
+                                <div className="proposal-form__item-body">
+                                    <div className="proposal-form__item-fields">
+                                        <div className="proposal-form__service proposal-form__cell">
+                                            {services.find((svc) => String(svc.id) === String(item.service_id))?.name ?? item.description}
+                                        </div>
+                                        <div className="proposal-form__qty proposal-form__cell">{item.quantity}</div>
+                                        <div className="proposal-form__rate proposal-form__cell">{formatCurrency(item.rate)}</div>
+                                        <div className="proposal-form__line-total">{formatCurrency(lineAmount(item))}</div>
+                                    </div>
+                                    {!isBlankRichText(item.details) && (
+                                        <div className="proposal-form__item-notes">
+                                            <div className="proposal-form__details">
+                                                <RichTextView value={item.details} />
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        ))}
+                    </>
+                ) : (
+                    <>
+                    {form.items.map((item, idx) => (
                         <div
-                            className="proposal-form__handle"
-                            title="Drag to reorder"
-                            onPointerDown={() => setArmedIndex(idx)}
-                            onPointerUp={() => setArmedIndex(null)}
+                            key={idx}
+                            draggable={armedIndex === idx}
+                            onDragStart={() => setDragIndex(idx)}
+                            onDragOver={(e) => e.preventDefault()}
+                            onDrop={() => {
+                                handleItemDrop(dragIndex, idx);
+                                setDragIndex(null);
+                            }}
+                            onDragEnd={() => {
+                                setDragIndex(null);
+                                setArmedIndex(null);
+                            }}
+                            className={`proposal-form__item${dragIndex === idx ? ' proposal-form__item--dragging' : ''}`}
                         >
-                            <DotsSixVertical size={14} weight="bold" />
-                        </div>
-                        <div className="proposal-form__item-body">
-                            <div className="proposal-form__item-fields">
-                                <select
-                                    value={item.service_id}
-                                    onChange={(e) => updateItem(idx, 'service_id', e.target.value)}
-                                    className="input input--xs proposal-form__service"
-                                >
-                                    <option value="">Custom</option>
-                                    {services.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-                                </select>
-                                <input
-                                    type="number"
-                                    min="0"
-                                    step="0.25"
-                                    placeholder="Qty"
-                                    value={item.quantity}
-                                    onChange={(e) => updateItem(idx, 'quantity', e.target.value)}
-                                    className="input input--xs proposal-form__qty"
-                                />
-                                <input
-                                    type="number"
-                                    min="0"
-                                    step="0.01"
-                                    placeholder="Rate"
-                                    value={item.rate}
-                                    onChange={(e) => updateItem(idx, 'rate', e.target.value)}
-                                    className="input input--xs proposal-form__rate"
-                                />
-                                <div className="proposal-form__line-total">
-                                    {formatCurrency(lineAmount(item))}
-                                </div>
-                            </div>
-                            <div className="proposal-form__item-notes">
-                                <div className="proposal-form__details">
-                                    <RichTextEditor
-                                        compact
-                                        value={item.details}
-                                        onChange={(details) => updateItem(idx, 'details', details)}
-                                    />
-                                </div>
-                            </div>
-                            <button
-                                type="button"
-                                onClick={() => removeItem(idx)}
-                                className="proposal-form__remove"
+                            <div
+                                className="proposal-form__handle"
+                                title="Drag to reorder"
+                                onPointerDown={() => setArmedIndex(idx)}
+                                onPointerUp={() => setArmedIndex(null)}
                             >
-                                Remove
-                            </button>
+                                <DotsSixVertical size={14} weight="bold" />
+                            </div>
+                            <div className="proposal-form__item-body">
+                                <div className="proposal-form__item-fields">
+                                    <select
+                                        value={item.service_id}
+                                        onChange={(e) => updateItem(idx, 'service_id', e.target.value)}
+                                        className="input input--xs proposal-form__service"
+                                    >
+                                        <option value="">Custom</option>
+                                        {services.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+                                    </select>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        step="0.25"
+                                        placeholder="Qty"
+                                        value={item.quantity}
+                                        onChange={(e) => updateItem(idx, 'quantity', e.target.value)}
+                                        className="input input--xs proposal-form__qty"
+                                    />
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        step="0.01"
+                                        placeholder="Rate"
+                                        value={item.rate}
+                                        onChange={(e) => updateItem(idx, 'rate', e.target.value)}
+                                        className="input input--xs proposal-form__rate"
+                                    />
+                                    <div className="proposal-form__line-total">
+                                        {formatCurrency(lineAmount(item))}
+                                    </div>
+                                </div>
+                                <div className="proposal-form__item-notes">
+                                    <div className="proposal-form__details">
+                                        <RichTextEditor
+                                            compact
+                                            value={item.details}
+                                            onChange={(details) => updateItem(idx, 'details', details)}
+                                        />
+                                    </div>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => removeItem(idx)}
+                                    className="proposal-form__remove"
+                                >
+                                    Remove
+                                </button>
+                            </div>
                         </div>
-                    </div>
-                ))}
-                <Button variant="link-accent" onClick={addItem}>+ Add line item</Button>
-
-                {form.items.length > 0 && (
-                    <div className="proposal-form__total">
-                        <div className="proposal-form__total-value">
-                            Total: <span className="u-tabular-nums">{formatCurrency(itemsTotal)}</span>
-                        </div>
-                    </div>
+                    ))}
+                    <Button variant="link-accent" onClick={addItem}>+ Add line item</Button>
+                    </>
                 )}
+
+            </div>
+
+            {/* The estimate: never entered by hand, always what the services
+                add up to (and locked with them once accepted). */}
+            <div className="form-panel proposal-form__estimate">
+                <div className="section-label section-label--ruled">Estimate</div>
+                <div className="proposal-form__estimate-row">
+                    <span className="proposal-form__estimate-note">
+                        {form.items.length > 0 ? 'Total of the services above' : 'Add services above to build the estimate'}
+                    </span>
+                    <span className="proposal-form__estimate-value u-tabular-nums">{formatCurrency(itemsTotal)}</span>
+                </div>
             </div>
 
             {error && <div className="form-message form-message--error form-message--spaced">{error}</div>}
 
-            <div className="form-actions">
-                <Button type="button" variant="secondary" onClick={onCancel}>Cancel</Button>
-                <Button type="button" variant="confirm" disabled={saving} onClick={save}>
-                    {isEditing ? 'Save changes' : 'Save draft'}
-                </Button>
+            {/* Every action in one place, at the end: the proposal's own tools
+                on the left (once it exists), saving and sending on the right. */}
+            <div className="proposal-form__toolbar">
+                {proposal && (
+                    <div className="proposal-form__tools">
+                        <a href={`/p/${proposal.accept_token}`} target="_blank" rel="noopener noreferrer" title="Preview as the client sees it" aria-label="Preview" className="icon-btn icon-btn--secondary">
+                            <Eye />
+                        </a>
+                        <button type="button" onClick={copyLink} title={copied ? 'Copied!' : 'Copy link'} aria-label="Copy link" className="icon-btn icon-btn--secondary">
+                            {copied ? <Check /> : <Copy />}
+                        </button>
+                        {proposal.status === 'accepted' && (
+                            <Button variant="link-accent" disabled={unaccepting} onClick={unaccept}>
+                                {unaccepting ? 'Reverting…' : 'Unaccept'}
+                            </Button>
+                        )}
+                    </div>
+                )}
+                <div className="form-actions">
+                    <Button type="button" variant="secondary" onClick={onCancel}>Cancel</Button>
+                    {servicesLocked ? (
+                        <Button type="button" variant="confirm" disabled={saving} onClick={save}>Save changes</Button>
+                    ) : (
+                        <>
+                            <Button type="button" variant="secondary" disabled={saving} onClick={save}>
+                                {isEditing ? 'Save changes' : 'Save draft'}
+                            </Button>
+                            <Button type="button" variant="confirm" disabled={saving} onClick={saveAndSend}>
+                                {proposal?.status === 'sent' ? 'Resend proposal' : 'Send proposal'}
+                            </Button>
+                        </>
+                    )}
+                </div>
             </div>
+
+            {sendTarget && <SendProposalModal proposal={sendTarget} onClose={closeSendDialog} onSent={closeSendDialog} />}
         </div>
     );
 }

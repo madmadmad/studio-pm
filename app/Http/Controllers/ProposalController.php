@@ -2,12 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\ProposalEmail;
 use App\Models\Company;
+use App\Models\Contact;
 use App\Models\Project;
 use App\Models\Proposal;
+use App\Models\StudioProfile;
 use App\Notifications\ProposalAccepted;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Validation\Rule;
 
@@ -30,12 +34,19 @@ class ProposalController extends Controller
         ];
     }
 
+    // A proposal's estimate: its services' total, or empty with none.
+    private function estimateFor(Proposal $proposal): ?float
+    {
+        $proposal->load('items');
+
+        return $proposal->items->isEmpty() ? null : $proposal->itemsTotal();
+    }
+
     public function store(Request $request, Company $company)
     {
         $data = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'body' => ['required', 'string'], // rich text HTML from the editor
-            'estimate_amount' => ['nullable', 'numeric', 'min:0'],
             'contact_id' => ['nullable', Rule::exists('contacts', 'id')->where('company_id', $company->id)],
             'project_id' => ['required_without:new_project_name', 'nullable', Rule::exists('projects', 'id')->where('company_id', $company->id)],
             'new_project_name' => ['required_without:project_id', 'nullable', 'string', 'max:255'],
@@ -57,14 +68,15 @@ class ProposalController extends Controller
                 'contact_id' => $data['contact_id'] ?? null,
                 'title' => $data['title'],
                 'body' => $data['body'],
-                'estimate_amount' => $data['estimate_amount'] ?? null,
                 'status' => 'draft',
             ]);
 
+            // The estimate is always what the services add up to -- never
+            // entered by hand -- and empty until there are any.
             if (! empty($data['items'])) {
                 $proposal->items()->createMany($data['items']);
-                $proposal->update(['estimate_amount' => $proposal->fresh('items')->itemsTotal()]);
             }
+            $proposal->update(['estimate_amount' => $this->estimateFor($proposal)]);
 
             return $proposal;
         });
@@ -77,18 +89,27 @@ class ProposalController extends Controller
         $data = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'body' => ['required', 'string'],
-            'estimate_amount' => ['nullable', 'numeric', 'min:0'],
             'contact_id' => ['nullable', Rule::exists('contacts', 'id')->where('company_id', $proposal->company_id)],
             ...$this->itemRules(),
         ]);
 
-        DB::transaction(function () use ($data, $proposal) {
+        // An accepted proposal's services -- and so its estimate -- are
+        // locked: accepting added that estimate to the project's budget, and
+        // unaccepting takes the same amount back off, so it can't drift in
+        // between. Its title, scope and contact can still change.
+        $servicesLocked = $proposal->status === 'accepted';
+        abort_if($servicesLocked && array_key_exists('items', $data), 422, 'This proposal is accepted, so its services are locked. Unaccept it to change them.');
+
+        DB::transaction(function () use ($data, $proposal, $servicesLocked) {
             $proposal->update([
                 'contact_id' => $data['contact_id'] ?? null,
                 'title' => $data['title'],
                 'body' => $data['body'],
-                'estimate_amount' => $data['estimate_amount'] ?? null,
             ]);
+
+            if ($servicesLocked) {
+                return;
+            }
 
             // Replace the line items wholesale rather than diffing -- simpler,
             // and proposal items don't carry any state worth preserving by ID.
@@ -96,25 +117,101 @@ class ProposalController extends Controller
 
             if (! empty($data['items'])) {
                 $proposal->items()->createMany($data['items']);
-                $proposal->update(['estimate_amount' => $proposal->fresh('items')->itemsTotal()]);
             }
+            $proposal->update(['estimate_amount' => $this->estimateFor($proposal)]);
         });
 
         return $proposal->fresh()->load('items', 'project');
     }
 
-    public function send(Proposal $proposal)
+    // What the Send Proposal dialog opens with: who it goes to, and the
+    // subject and message filled in from the templates (config/proposals).
+    public function sendContext(Proposal $proposal)
     {
-        $proposal->update(['status' => 'sent', 'sent_at' => now()]);
+        $proposal->loadMissing('company.contacts', 'contact');
+        $recipient = $proposal->recipientContact();
 
-        // Email the client a link built from $proposal->accept_token,
-        // pointing at the public showPublic() route below.
+        return [
+            'to' => $recipient?->email,
+            'to_name' => $recipient?->name,
+            'subject' => $this->fillTemplate(config('proposals.email_subject_template'), $proposal, $recipient),
+            'message' => $this->fillTemplate(config('proposals.email_template'), $proposal, $recipient),
+            'public_url' => url('/p/'.$proposal->accept_token),
+        ];
+    }
+
+    // The exact HTML the client would receive, for the dialog's preview --
+    // subject and message straight from its unsaved fields.
+    public function emailPreview(Request $request, Proposal $proposal)
+    {
+        $data = $request->validate([
+            'subject' => ['required', 'string', 'max:255'],
+            'message' => ['required', 'string'],
+        ]);
+
+        $proposal->loadMissing('company', 'project');
+
+        return ['html' => (new ProposalEmail($proposal, $data['subject'], $data['message']))->render()];
+    }
+
+    // Backs the Send Proposal dialog: email it to the client now, or share
+    // its link yourself (optionally marking it sent). Either way a draft
+    // becomes sent and its project moves to estimated.
+    public function send(Request $request, Proposal $proposal)
+    {
+        $data = $request->validate([
+            'method' => ['required', 'in:email,link'],
+            'subject' => ['required_if:method,email', 'nullable', 'string', 'max:255'],
+            'message' => ['required_if:method,email', 'nullable', 'string'],
+            'cc' => ['nullable', 'array'],
+            'cc.*' => ['email'],
+            'send_copy_to_self' => ['boolean'],
+            'mark_as_sent' => ['boolean'],
+        ]);
+
+        if ($data['method'] === 'email') {
+            $proposal->loadMissing('company.contacts', 'contact');
+            $recipient = $proposal->recipientContact();
+            abort_unless(filled($recipient?->email), 422, "This proposal's client has no contact with an email address. Add one, or send it via its link.");
+
+            $cc = collect($data['cc'] ?? [])->filter()->values()->all();
+            if ($data['send_copy_to_self'] ?? false) {
+                $cc[] = $request->user()->email;
+            }
+
+            // Queued (ProposalEmail is ShouldQueue), like invoice emails.
+            Mail::to($recipient->email)->send(new ProposalEmail($proposal, $data['subject'], $data['message'], array_values(array_unique($cc))));
+            $this->markSent($proposal);
+        } elseif ($data['mark_as_sent'] ?? false) {
+            $this->markSent($proposal);
+        }
+
+        return $proposal->fresh()->load('items', 'project');
+    }
+
+    // A draft (or re-sent proposal) becomes sent and its project estimated.
+    // An accepted one is left as it is -- sharing its link again changes
+    // nothing, and its project is already active.
+    private function markSent(Proposal $proposal): void
+    {
+        if ($proposal->status === 'accepted') {
+            return;
+        }
+
+        $proposal->update(['status' => 'sent', 'sent_at' => $proposal->sent_at ?? now()]);
 
         if ($proposal->project_id) {
             $this->moveProjectToStatus($proposal->project, 'estimated');
         }
+    }
 
-        return $proposal;
+    private function fillTemplate(string $template, Proposal $proposal, ?Contact $contact): string
+    {
+        return strtr($template, [
+            ':firm_name' => StudioProfile::current()->name,
+            ':proposal_title' => $proposal->title,
+            ':contact_first_name' => $contact?->name ? explode(' ', trim($contact->name))[0] : 'there',
+        ]);
     }
 
     // Completed/archived are deliberate, manually-chosen end states --

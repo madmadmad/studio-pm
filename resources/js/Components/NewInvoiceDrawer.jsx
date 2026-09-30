@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import Button from './Button';
+import InvoiceLineItems from './InvoiceLineItems';
 import Drawer from './Drawer';
 import InvoiceDateFields from './InvoiceDateFields';
 import Toggle from './Toggle';
@@ -77,6 +78,9 @@ function billingPlan(project, proposal) {
     const remainingCents = Math.max(baseCents - invoicedCents, 0);
     return {
         baseCents,
+        // Whether the percentage is of the project's budget (true) or, with
+        // no budget yet, the proposal's own total.
+        fromBudget: budgetCents > 0,
         invoicedCents,
         remainingCents,
         // Starts at whatever's left, so leaving it alone bills the rest.
@@ -156,17 +160,19 @@ export default function NewInvoiceDrawer({ company, projects, initialProjectId =
     }
 
     const pct = (cents) => (plan.baseCents > 0 ? `${round2((cents / plan.baseCents) * 100)}%` : '0%');
+    // A share of the base as a bar width.
+    const share = (cents) => `${plan.baseCents > 0 ? Math.min((cents / plan.baseCents) * 100, 100) : 0}%`;
 
-    function updateItem(idx, field, value) {
-        const items = form.items.map((it, i) => (i === idx ? { ...it, [field]: value } : it));
-        setForm({ ...form, items });
-    }
-    function addItemRow() {
-        setForm({ ...form, items: [...form.items, { description: '', amount: '' }] });
-    }
-    function removeItemRow(idx) {
-        setForm({ ...form, items: form.items.filter((_, i) => i !== idx) });
-    }
+    // Quick picks for the amount: common shares that still fit, then the
+    // rest of the budget. The chosen one is red, like the send options.
+    const percentPicks = plan
+        ? [
+            ...[25, 50].filter((value) => value < plan.remainingPercent).map((value) => ({ label: `${value}%`, value: String(value) })),
+            { label: 'The rest', value: String(plan.remainingPercent) },
+        ]
+        : [];
+    const isPickActive = (value) => parseFloat(form.percent) === parseFloat(value);
+
 
     // Send invoice: the dialog opens over this drawer once the invoice is
     // created; either way it ends, the drawer closes and the list refreshes.
@@ -228,94 +234,96 @@ export default function NewInvoiceDrawer({ company, projects, initialProjectId =
                 )}
 
                 {proposalsWithItems.length > 0 && (
-                    <div className="invoice-form__section">
-                        <select
-                            value={form.proposal_id}
-                            onChange={(e) => copyFromProposal(e.target.value)}
-                            className="input"
-                        >
-                            <option value="">Copy line items from a proposal…</option>
-                            {proposalsWithItems.map((p) => (
-                                <option key={p.id} value={p.id}>{p.title} ({formatCurrency(p.estimate_amount)})</option>
-                            ))}
-                        </select>
+                    <div className="form-panel">
+                        <div className="section-label section-label--ruled">Bill from proposal</div>
+
+                        <div className="invoice-form__billing-field">
+                            <label className="label" htmlFor="invoice-proposal">Proposal</label>
+                            <select
+                                id="invoice-proposal"
+                                value={form.proposal_id}
+                                onChange={(e) => copyFromProposal(e.target.value)}
+                                className="input"
+                            >
+                                <option value="">Copy line items from a proposal…</option>
+                                {proposalsWithItems.map((p) => (
+                                    <option key={p.id} value={p.id}>{p.title} ({formatCurrency(p.estimate_amount)})</option>
+                                ))}
+                            </select>
+                        </div>
+
                         {plan && (
                             plan.remainingCents <= 0 ? (
-                                <div className="form-error">
+                                <div className="alert alert--danger">
                                     This project's budget is already fully invoiced — increase the budget or enter amounts manually below.
                                 </div>
                             ) : (
-                                <div className="invoice-form__percent">
-                                    <div className="invoice-form__percent-field">
-                                        <label className="label" htmlFor="invoice-percent">Bill</label>
-                                        <input
-                                            id="invoice-percent"
-                                            type="number"
-                                            min="0.01"
-                                            max={plan.remainingPercent}
-                                            step="0.01"
-                                            value={form.percent}
-                                            onChange={(e) => setPercent(e.target.value)}
-                                            className="input invoice-form__percent-input u-tabular-nums"
-                                        />
-                                        <span className="invoice-form__percent-unit">% of the budget</span>
-                                        {parseFloat(form.percent) < plan.remainingPercent && (
-                                            <button type="button" onClick={() => setPercent(String(plan.remainingPercent))} className="link-btn link-btn--accent link-btn--xs">
-                                                Bill the rest
-                                            </button>
-                                        )}
+                                <>
+                                    <div className="invoice-form__billing-field">
+                                        <label className="label" htmlFor="invoice-percent">Amount to bill</label>
+                                        <div className="invoice-form__amount-row">
+                                            <input
+                                                id="invoice-percent"
+                                                type="number"
+                                                min="0.01"
+                                                max={plan.remainingPercent}
+                                                step="0.01"
+                                                value={form.percent}
+                                                onChange={(e) => setPercent(e.target.value)}
+                                                className="input invoice-form__percent-input u-tabular-nums"
+                                            />
+                                            <span className="invoice-form__percent-unit">
+                                                % of {formatCurrency(plan.baseCents / 100)} {plan.fromBudget ? 'budget' : 'proposal total'}
+                                            </span>
+                                            <div className="invoice-form__picks">
+                                                {percentPicks.map((pick) => (
+                                                    <button
+                                                        key={pick.label}
+                                                        type="button"
+                                                        onClick={() => setPercent(pick.value)}
+                                                        className={`btn btn--sm${isPickActive(pick.value) ? ' btn--confirm' : ' btn--secondary'}`}
+                                                    >
+                                                        {pick.label}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div className="form-hint">
-                                        Invoiced so far {pct(plan.invoicedCents)} ({formatCurrency(plan.invoicedCents / 100)})
-                                        {' · '}This invoice {pct(thisCents)} ({formatCurrency(thisCents / 100)})
-                                        {' · '}Left after this {pct(plan.remainingCents - thisCents)} ({formatCurrency((plan.remainingCents - thisCents) / 100)})
+
+                                    {/* The budget at a glance: invoiced, this invoice, what's left. */}
+                                    <div className="invoice-form__meter" aria-hidden="true">
+                                        <span className="invoice-form__meter-invoiced" style={{ width: share(plan.invoicedCents) }} />
+                                        <span className="invoice-form__meter-this" style={{ width: share(thisCents) }} />
                                     </div>
-                                </div>
+                                    <div className="invoice-form__figures">
+                                        <div className="invoice-form__figure">
+                                            <div className="invoice-form__figure-label">Invoiced so far</div>
+                                            <div className="invoice-form__figure-value">{formatCurrency(plan.invoicedCents / 100)}</div>
+                                            <div className="invoice-form__figure-pct">{pct(plan.invoicedCents)}</div>
+                                        </div>
+                                        <div className="invoice-form__figure invoice-form__figure--this">
+                                            <div className="invoice-form__figure-label">This invoice</div>
+                                            <div className="invoice-form__figure-value">{formatCurrency(thisCents / 100)}</div>
+                                            <div className="invoice-form__figure-pct">{pct(thisCents)}</div>
+                                        </div>
+                                        <div className="invoice-form__figure">
+                                            <div className="invoice-form__figure-label">Left after this</div>
+                                            <div className="invoice-form__figure-value">{formatCurrency((plan.remainingCents - thisCents) / 100)}</div>
+                                            <div className="invoice-form__figure-pct">{pct(plan.remainingCents - thisCents)}</div>
+                                        </div>
+                                    </div>
+                                </>
                             )
                         )}
                     </div>
                 )}
 
-                <div className="invoice-form__section">
+                <div className="form-panel">
+                    <div className="section-label section-label--ruled">Dates &amp; terms</div>
                     <InvoiceDateFields values={form} onChange={(patch) => setForm((current) => ({ ...current, ...patch }))} />
                 </div>
 
-                <div className="invoice-form__items">
-                    {form.items.map((item, idx) => (
-                        <div key={idx} className="invoice-form__item">
-                            <div className="invoice-form__item-row">
-                                <input
-                                    placeholder="Line item description (required)"
-                                    value={item.description}
-                                    onChange={(e) => updateItem(idx, 'description', e.target.value)}
-                                    className="input invoice-form__description"
-                                />
-                                <input
-                                    type="number"
-                                    min="0"
-                                    step="0.01"
-                                    placeholder="Amount"
-                                    value={item.amount}
-                                    onChange={(e) => updateItem(idx, 'amount', e.target.value)}
-                                    className="input invoice-form__amount"
-                                />
-                            </div>
-                            <div className="invoice-form__item-notes">
-                                <textarea
-                                    placeholder="Additional notes shown to the client (optional, not required)"
-                                    value={item.details || ''}
-                                    onChange={(e) => updateItem(idx, 'details', e.target.value)}
-                                    rows={2}
-                                    className="input invoice-form__details"
-                                />
-                            </div>
-                            {form.items.length > 1 && (
-                                <button type="button" onClick={() => removeItemRow(idx)} className="invoice-form__remove">Remove</button>
-                            )}
-                        </div>
-                    ))}
-                    <Button type="button" variant="link-accent" onClick={addItemRow}>+ Add line item</Button>
-                </div>
+                <InvoiceLineItems items={form.items} onChange={(items) => setForm((current) => ({ ...current, items }))} />
 
                 <div className="invoice-form__section totals">
                     <div className="totals__row totals__row--muted">
@@ -328,17 +336,18 @@ export default function NewInvoiceDrawer({ company, projects, initialProjectId =
                     </div>
                 </div>
 
-                <div className="invoice-form__section">
+                {error && <div className="form-message form-message--error form-message--spaced">{error}</div>}
+                {/* The card-fee toggle on the left, the form's buttons on the right. */}
+                <div className="invoice-form__footer">
                     <Toggle
                         checked={form.surcharge}
                         onChange={(value) => setForm({ ...form, surcharge: value })}
                         label="Offer to pay by card (adds a 3% fee, shown only at checkout)"
                     />
-                </div>
-                {error && <div className="form-message form-message--error form-message--spaced">{error}</div>}
-                <div className="form-actions">
-                    <Button type="submit" variant="secondary" disabled={saving}>Save as draft</Button>
-                    <Button type="button" variant="confirm" disabled={saving} onClick={() => createInvoice(null, { send: true })}>Send invoice</Button>
+                    <div className="form-actions">
+                        <Button type="submit" variant="secondary" disabled={saving}>Save as draft</Button>
+                        <Button type="button" variant="confirm" disabled={saving} onClick={() => createInvoice(null, { send: true })}>Send invoice</Button>
+                    </div>
                 </div>
             </form>
             {sendDialog}

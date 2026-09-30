@@ -215,7 +215,7 @@ function ProjectSummary({ project, proposedHours }) {
                 <div className="metric-grid metric-grid--one-row metric-grid--loose">
                     {budget > 0 && <MetricCard label="Budget" value={formatCurrency(budget)} />}
                     <MetricCard label="Total invoiced" value={formatCurrency(totalInvoiced)} />
-                    {budget > 0 && <MetricCard label="Remaining" value={formatCurrency(remaining)} negative={remaining < 0} />}
+                    {budget > 0 && <MetricCard label="Remaining" value={formatCurrency(remaining)} negative={remaining < 0} tone="neutral" />}
                 </div>
             )}
         </>
@@ -617,7 +617,7 @@ function TaskDrawer({ task, teamNames, isNew, onClose, onChange }) {
                         <button
                             onClick={() => setEditingDescription(true)}
                             title="Edit description"
-                            className="icon-btn icon-btn--secondary"
+                            className="icon-btn icon-btn--edit"
                         >
                             <PencilSimple />
                         </button>
@@ -1025,7 +1025,7 @@ function NoteDrawer({ note, onClose, onChange }) {
             actions={
                 <>
                     {!editing && (
-                        <button onClick={() => setEditing(true)} title="Edit note" className="icon-btn icon-btn--secondary drawer__action">
+                        <button onClick={() => setEditing(true)} title="Edit note" className="icon-btn icon-btn--edit drawer__action">
                             <PencilSimple />
                         </button>
                     )}
@@ -1163,6 +1163,7 @@ function MessagesTab({ project }) {
         join: (id) => `/api/messages/${id}/join`,
         update: (id) => `/api/messages/${id}`,
         destroy: (id) => `/api/messages/${id}`,
+        react: (id) => `/api/messages/${id}/reactions`,
         attachmentUrl: (id) => `/api/attachments/${id}`,
         attachmentThumbnailUrl: (id) => `/api/attachments/${id}/thumbnail`,
     };
@@ -1199,7 +1200,6 @@ function MessagesTab({ project }) {
                         thread={openThread}
                         currentActorType="user"
                         currentActorId={currentUser?.id}
-                        currentActorRole={currentUser?.role}
                         endpoints={endpoints}
                         onChange={reload}
                         bare

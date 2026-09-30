@@ -29,7 +29,7 @@ class ProjectStatusTest extends TestCase
             'project_id' => $project->id, 'title' => 'Brand refresh', 'body' => '<p>Scope</p>', 'status' => 'draft',
         ]);
 
-        $this->actingAs($user)->postJson("/api/proposals/{$proposal->id}/send")->assertOk();
+        $this->actingAs($user)->postJson("/api/proposals/{$proposal->id}/send", ['method' => 'link', 'mark_as_sent' => true])->assertOk();
 
         $this->assertSame('estimated', $project->fresh()->status);
     }
@@ -43,7 +43,7 @@ class ProjectStatusTest extends TestCase
             'project_id' => $project->id, 'title' => 'Brand refresh', 'body' => '<p>Scope</p>', 'status' => 'draft',
         ]);
 
-        $this->actingAs($user)->postJson("/api/proposals/{$proposal->id}/send")->assertOk();
+        $this->actingAs($user)->postJson("/api/proposals/{$proposal->id}/send", ['method' => 'link', 'mark_as_sent' => true])->assertOk();
 
         $this->assertSame('estimated', $project->fresh()->status);
     }
@@ -71,7 +71,7 @@ class ProjectStatusTest extends TestCase
             'project_id' => $project->id, 'title' => 'Phase 2', 'body' => '<p>Scope</p>', 'status' => 'draft',
         ]);
 
-        $this->actingAs($user)->postJson("/api/proposals/{$proposal->id}/send")->assertOk();
+        $this->actingAs($user)->postJson("/api/proposals/{$proposal->id}/send", ['method' => 'link', 'mark_as_sent' => true])->assertOk();
 
         $this->assertSame('completed', $project->fresh()->status);
     }

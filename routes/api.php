@@ -45,6 +45,7 @@ Route::middleware('auth:sanctum')->name('api.')->group(function () {
     Route::delete('messages/{message}', [MessageController::class, 'destroy']);
     Route::post('messages/{message}/replies', [MessageController::class, 'reply']);
     Route::post('messages/{message}/join', [MessageController::class, 'join']);
+    Route::post('messages/{message}/reactions', [MessageController::class, 'react']);
     Route::get('attachments/{attachment}', [MessageAttachmentController::class, 'show']);
     Route::get('attachments/{attachment}/thumbnail', [MessageAttachmentController::class, 'thumbnail']);
 
@@ -81,6 +82,8 @@ Route::middleware('auth:sanctum')->name('api.')->group(function () {
         Route::post('invoices/{invoice}/mark-paid', [InvoiceController::class, 'markPaid']);
 
         Route::apiResource('companies.proposals', ProposalController::class)->shallow()->only(['index', 'store', 'update', 'destroy']);
+        Route::get('proposals/{proposal}/send-context', [ProposalController::class, 'sendContext']);
+        Route::post('proposals/{proposal}/email-preview', [ProposalController::class, 'emailPreview']);
         Route::post('proposals/{proposal}/send', [ProposalController::class, 'send']);
         Route::post('proposals/{proposal}/unaccept', [ProposalController::class, 'unaccept']);
 
@@ -113,6 +116,7 @@ Route::middleware('auth:client')->prefix('portal')->name('api.portal.')->group(f
     Route::patch('messages/{message}', [PortalMessageController::class, 'update']);
     Route::delete('messages/{message}', [PortalMessageController::class, 'destroy']);
     Route::post('messages/{message}/replies', [PortalMessageController::class, 'reply']);
+    Route::post('messages/{message}/reactions', [PortalMessageController::class, 'react']);
     Route::get('attachments/{attachment}', [PortalMessageAttachmentController::class, 'show']);
     Route::get('attachments/{attachment}/thumbnail', [PortalMessageAttachmentController::class, 'thumbnail']);
 

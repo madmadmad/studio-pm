@@ -139,11 +139,12 @@ class ProposalItemsTest extends TestCase
         $this->assertCount(3, $response->json('items'));
     }
 
-    public function test_a_manual_estimate_amount_is_kept_when_no_items_are_given(): void
+    public function test_the_estimate_cannot_be_set_by_hand(): void
     {
         $user = User::factory()->create();
         $company = Company::create(['name' => 'Alder & Finch Design']);
 
+        // No services: no estimate, whatever amount is sent.
         $response = $this->actingAs($user)->postJson("/api/companies/{$company->id}/proposals", [
             'title' => 'Flat quote',
             'body' => '<p>Scope</p>',
@@ -152,7 +153,7 @@ class ProposalItemsTest extends TestCase
         ]);
 
         $response->assertCreated();
-        $response->assertJsonPath('estimate_amount', 500);
+        $response->assertJsonPath('estimate_amount', null);
         $this->assertCount(0, $response->json('items'));
     }
 
@@ -194,7 +195,7 @@ class ProposalItemsTest extends TestCase
         $this->assertDatabaseCount('proposal_items', 2);
     }
 
-    public function test_editing_a_proposal_to_remove_items_falls_back_to_a_manual_estimate(): void
+    public function test_removing_every_service_clears_the_estimate(): void
     {
         $user = User::factory()->create();
         $company = Company::create(['name' => 'Alder & Finch Design']);
@@ -216,8 +217,52 @@ class ProposalItemsTest extends TestCase
         ]);
 
         $response->assertOk();
-        $response->assertJsonPath('estimate_amount', 750);
+        $response->assertJsonPath('estimate_amount', null);
         $this->assertCount(0, $response->json('items'));
         $this->assertDatabaseCount('proposal_items', 0);
+    }
+
+    private function makeAcceptedProposal(User $user): int
+    {
+        $company = Company::create(['name' => 'Alder & Finch Design']);
+        $created = $this->actingAs($user)->postJson("/api/companies/{$company->id}/proposals", [
+            'title' => 'Brand refresh',
+            'body' => '<p>Scope</p>',
+            'new_project_name' => 'Brand refresh',
+            'items' => [['description' => 'Design', 'quantity' => 10, 'rate' => 100]],
+        ]);
+        $id = $created->json('id');
+        \App\Models\Proposal::whereKey($id)->update(['status' => 'accepted', 'accepted_at' => now()]);
+
+        return $id;
+    }
+
+    public function test_an_accepted_proposals_services_are_locked(): void
+    {
+        $user = User::factory()->create();
+        $id = $this->makeAcceptedProposal($user);
+
+        $this->actingAs($user)->patchJson("/api/proposals/{$id}", [
+            'title' => 'Brand refresh',
+            'body' => '<p>Scope</p>',
+            'items' => [['description' => 'Design', 'quantity' => 20, 'rate' => 100]],
+        ])->assertStatus(422);
+
+        $this->assertDatabaseHas('proposals', ['id' => $id, 'estimate_amount' => 1000]);
+        $this->assertDatabaseHas('proposal_items', ['proposal_id' => $id, 'quantity' => 10]);
+    }
+
+    public function test_an_accepted_proposals_title_and_scope_can_still_change(): void
+    {
+        $user = User::factory()->create();
+        $id = $this->makeAcceptedProposal($user);
+
+        $this->actingAs($user)->patchJson("/api/proposals/{$id}", [
+            'title' => 'Brand refresh (final)',
+            'body' => '<p>Revised scope</p>',
+        ])->assertOk();
+
+        $this->assertDatabaseHas('proposals', ['id' => $id, 'title' => 'Brand refresh (final)', 'estimate_amount' => 1000]);
+        $this->assertDatabaseCount('proposal_items', 1);
     }
 }

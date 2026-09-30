@@ -38,6 +38,18 @@ class Proposal extends Model
         return $this->belongsTo(Contact::class);
     }
 
+    // Who a sent proposal goes to: its own contact when one was picked,
+    // otherwise the client's primary contact, otherwise any contact with an
+    // email -- the same precedence invoices use for their billing contact.
+    public function recipientContact(): ?Contact
+    {
+        $contacts = $this->company->contacts;
+
+        return $this->contact
+            ?? $contacts->firstWhere('is_primary', true)
+            ?? $contacts->first(fn (Contact $contact) => filled($contact->email));
+    }
+
     public function items(): HasMany
     {
         return $this->hasMany(ProposalItem::class);
