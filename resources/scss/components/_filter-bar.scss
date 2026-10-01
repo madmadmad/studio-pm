@@ -62,6 +62,11 @@
         }
     }
 
+    // A button pushed to the far end of the row (Categories & taxes).
+    &__end {
+        margin-left: auto;
+    }
+
     // Pushed to the far end of the row.
     &__link {
         margin-left: auto;

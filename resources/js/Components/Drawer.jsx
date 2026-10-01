@@ -43,8 +43,8 @@ export function DrawerByline({ children }) {
 
 // Right-edge slide-in panel. `actions` (icon buttons, given the
 // `drawer__action` class, or small text actions) sit to the left of the
-// built-in close button, pinned to the panel's top-right corner
-// independent of the body padding. The caller owns the open/closed state;
+// built-in close button, in a row at the top of the body -- part of the
+// content's flow, so they scroll with it rather than float over it. The caller owns the open/closed state;
 // the drawer handles Escape, the close button and backdrop clicks itself,
 // playing its exit animation before calling `onClose`. A caller that calls
 // its own close directly (e.g. after a delete) closes it instantly.
@@ -96,13 +96,15 @@ export default function Drawer({ actions, onClose, size, children }) {
         <div className={`drawer${size === 'wide' ? ' drawer--wide' : ''}${closing ? ' drawer--closing' : ''}`}>
             <div className="drawer__backdrop" onClick={requestClose} />
             <div className="drawer__panel" ref={panelRef}>
-                <div className="drawer__actions">
-                    {actions}
-                    <button onClick={requestClose} className="icon-btn icon-btn--secondary drawer__action">
-                        <X />
-                    </button>
+                <div className="drawer__body">
+                    <div className="drawer__actions">
+                        {actions}
+                        <button onClick={requestClose} title="Close" aria-label="Close" className="icon-btn icon-btn--secondary drawer__action">
+                            <X />
+                        </button>
+                    </div>
+                    {children}
                 </div>
-                <div className="drawer__body">{children}</div>
             </div>
         </div>
     );

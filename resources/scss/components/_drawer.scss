@@ -64,22 +64,36 @@
         }
     }
 
-    // Close button (plus any caller actions), pinned to the panel's
-    // top-right corner -- positioned against the panel, not the body, so
-    // changing its padding doesn't move it.
+    // Close button (plus any caller actions): the body's first row, at
+    // its right edge, in the flow -- it scrolls away with the content
+    // instead of floating over it.
     &__actions {
-        position: absolute;
-        top: var(--space-8);
-        right: var(--space-page); // in line with the body's padding
-        z-index: 1; // one-off: above any positioned content in the body
         display: flex;
         align-items: center;
+        justify-content: flex-end;
         gap: var(--space-3);
+        margin-bottom: var(--space-4);
     }
 
     // An icon button beside the close button -- a little horizontal hit area.
     &__action {
         padding-inline: var(--space-1);
+    }
+
+    // Every icon in the strip the same: white, bright red on hover --
+    // whatever its kind elsewhere (send, edit, delete, close), so the row
+    // reads as one set.
+    &__actions .icon-btn {
+        color: var(--color-text);
+        opacity: 1;
+
+        &:not(:disabled):hover {
+            color: var(--color-primary-icon);
+        }
+
+        &:disabled {
+            opacity: 0.5;
+        }
     }
 
     // Groups a drawer form's fields so one `disabled` locks them all (a
@@ -95,8 +109,9 @@
         flex: 1;
         overflow-y: auto;
         // The content panel's padding, so a drawer's content sits the same
-        // distance from its edges as a page's does.
-        padding: var(--space-page);
+        // distance from its edges as a page's does -- less above, where the
+        // action row starts it (at the height the actions always sat).
+        padding: var(--space-8) var(--space-page) var(--space-page);
     }
 
     // Heading of a create-mode drawer ("Log time"), sized to match the

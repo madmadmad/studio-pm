@@ -1,12 +1,14 @@
 import { Head } from '@inertiajs/react';
-import { useEffect, useMemo, useState } from 'react';
-import { CaretDown, CaretRight, PaperclipHorizontal, Trash, X } from '@phosphor-icons/react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { CaretDown, CaretRight, DownloadSimple, Paperclip, PaperclipHorizontal, Trash, X } from '@phosphor-icons/react';
 import AppLayout from '../../Layouts/AppLayout';
 import Button from '../../Components/Button';
 import EmptyState from '../../Components/EmptyState';
 import Badge from '../../Components/Badge';
 import { ExpenseStatusBadge } from '../../Components/StatusBadges';
-import { formatCurrency, formatDate } from '../../lib/format';
+import { formatCurrency, formatDate, formatFileSize, todayInAppTimezone } from '../../lib/format';
+import MetricCard from '../../Components/MetricCard';
+import { useListMotion } from '../../lib/listMotion';
 import { expenseCategoryIcon } from '../../lib/expenseCategoryIcon';
 import { api } from '../../lib/api';
 import PageHeader from '../../Components/PageHeader';
@@ -54,8 +56,9 @@ function CategoryPill({ category }) {
     );
 }
 
+// The expense categories and taxes, in a drawer opened from the filter
+// bar's "Categories & taxes" button.
 function CategoryAndTaxManager({ categories, setCategories, taxes, setTaxes }) {
-    const [open, setOpen] = useState(false);
     const [categoryForm, setCategoryForm] = useState({ name: '', color: '#595F64' });
     const [taxForm, setTaxForm] = useState({ name: '', rate: '' });
 
@@ -88,53 +91,131 @@ function CategoryAndTaxManager({ categories, setCategories, taxes, setTaxes }) {
     }
 
     return (
-        <div className="page-section">
-            <button onClick={() => setOpen((o) => !o)} className="disclosure">
-                {open ? <CaretDown size={14} /> : <CaretRight size={14} />}
-                Manage categories &amp; taxes
-            </button>
-            {open && (
-                <div className="expenses__manager">
-                    <div className="card card--padded">
-                        <h3 className="expenses__manager-title">Categories</h3>
-                        <div className="expenses__manager-list">
-                            {categories.map((category) => (
-                                <div key={category.id} className="expenses__manager-item">
-                                    <CategoryPill category={category} />
-                                    <button onClick={() => removeCategory(category)} className="icon-btn icon-btn--danger">
-                                        <X />
-                                    </button>
-                                </div>
-                            ))}
+        <div className="expenses__manager">
+            <div className="form-panel">
+                <h3 className="expenses__manager-title">Categories</h3>
+                <div className="expenses__manager-list">
+                    {categories.map((category) => (
+                        <div key={category.id} className="expenses__manager-item">
+                            <CategoryPill category={category} />
+                            <button onClick={() => removeCategory(category)} className="icon-btn icon-btn--danger">
+                                <X />
+                            </button>
                         </div>
-                        <form onSubmit={addCategory} className="inline-form">
-                            <input type="color" value={categoryForm.color} onChange={(e) => setCategoryForm({ ...categoryForm, color: e.target.value })} className="expenses__swatch-input" />
-                            <input placeholder="New category" value={categoryForm.name} onChange={(e) => setCategoryForm({ ...categoryForm, name: e.target.value })} className="input inline-form__grow" />
-                            <Button type="submit">Add</Button>
-                        </form>
-                    </div>
-                    <div className="card card--padded">
-                        <h3 className="expenses__manager-title">Taxes</h3>
-                        <div className="expenses__manager-list">
-                            {taxes.map((tax) => (
-                                <div key={tax.id} className="expenses__manager-item">
-                                    <span>{tax.name} <span className="expenses__rate">({tax.rate}%)</span></span>
-                                    <button onClick={() => removeTax(tax)} className="icon-btn icon-btn--danger">
-                                        <X />
-                                    </button>
-                                </div>
-                            ))}
+                    ))}
+                </div>
+                <form onSubmit={addCategory} className="inline-form">
+                    <input type="color" value={categoryForm.color} onChange={(e) => setCategoryForm({ ...categoryForm, color: e.target.value })} className="expenses__swatch-input" />
+                    <input placeholder="New category" value={categoryForm.name} onChange={(e) => setCategoryForm({ ...categoryForm, name: e.target.value })} className="input inline-form__grow" />
+                    <Button type="submit">Add</Button>
+                </form>
+            </div>
+            <div className="form-panel">
+                <h3 className="expenses__manager-title">Taxes</h3>
+                <div className="expenses__manager-list">
+                    {taxes.map((tax) => (
+                        <div key={tax.id} className="expenses__manager-item">
+                            <span>{tax.name} <span className="expenses__rate">({tax.rate}%)</span></span>
+                            <button onClick={() => removeTax(tax)} className="icon-btn icon-btn--danger">
+                                <X />
+                            </button>
                         </div>
-                        <form onSubmit={addTax} className="inline-form">
-                            <input placeholder="Tax name" value={taxForm.name} onChange={(e) => setTaxForm({ ...taxForm, name: e.target.value })} className="input inline-form__grow" />
-                            <input type="number" min="0" max="100" step="0.01" placeholder="Rate %" value={taxForm.rate} onChange={(e) => setTaxForm({ ...taxForm, rate: e.target.value })} className="input u-tabular-nums expenses__rate-input" />
-                            <Button type="submit">Add</Button>
-                        </form>
+                    ))}
+                </div>
+                <form onSubmit={addTax} className="inline-form">
+                    <input placeholder="Tax name" value={taxForm.name} onChange={(e) => setTaxForm({ ...taxForm, name: e.target.value })} className="input inline-form__grow" />
+                    <input type="number" min="0" max="100" step="0.01" placeholder="Rate %" value={taxForm.rate} onChange={(e) => setTaxForm({ ...taxForm, rate: e.target.value })} className="input u-tabular-nums expenses__rate-input" />
+                    <Button type="submit">Add</Button>
+                </form>
+            </div>
+        </div>
+    );
+}
+
+// The expense's receipt, laid out like a task's Files: a panel with the
+// paperclip to add (or replace) it, and the file as a row with its
+// actions. A newly picked file is saved with the expense, so until then
+// it can be taken off again; a saved one opens in a new tab.
+function ReceiptPanel({ expense, file, onPick, onClear }) {
+    const inputRef = useRef(null);
+    const current = file
+        ? { name: file.name, meta: `${formatFileSize(file.size)} · Saved with the expense`, pending: true }
+        : expense?.receipt_url ? { name: expense.receipt_filename || 'Receipt', meta: 'Attached', url: expense.receipt_url } : null;
+
+    return (
+        <div className="form-panel expenses__receipt">
+            <div className="form-panel__header">
+                <div className="section-label section-label--flush">Receipt</div>
+                <button
+                    type="button"
+                    onClick={() => inputRef.current.click()}
+                    title={current ? 'Replace receipt' : 'Add receipt'}
+                    aria-label={current ? 'Replace receipt' : 'Add receipt'}
+                    className="icon-btn icon-btn--secondary"
+                >
+                    <Paperclip />
+                </button>
+                <input
+                    ref={inputRef}
+                    type="file"
+                    accept="image/*,.pdf"
+                    onChange={(e) => {
+                        onPick(e.target.files?.[0] ?? null);
+                        e.target.value = '';
+                    }}
+                    hidden
+                />
+            </div>
+            {!current ? (
+                <EmptyState text="No receipt yet." />
+            ) : (
+                <div className="task-files__list">
+                    <div className="task-files__item">
+                        <div className="task-files__info">
+                            <div className="task-files__name">{current.name}</div>
+                            <div className="task-files__size">{current.meta}</div>
+                        </div>
+                        <div className="task-files__actions">
+                            {current.url && (
+                                <a href={current.url} target="_blank" rel="noreferrer" title="View receipt" className="icon-btn icon-btn--secondary task-files__action">
+                                    <DownloadSimple />
+                                </a>
+                            )}
+                            {current.pending && (
+                                <button type="button" onClick={onClear} title="Remove" aria-label="Remove" className="icon-btn icon-btn--danger task-files__action">
+                                    <X />
+                                </button>
+                            )}
+                        </div>
                     </div>
                 </div>
             )}
         </div>
     );
+}
+
+const STATUS_FILTERS = [
+    { value: 'all', label: 'All' },
+    { value: 'unbilled', label: 'Unbilled' },
+    { value: 'billed', label: 'Billed' },
+    { value: 'billed_and_paid', label: 'Paid' },
+];
+
+// The figures across the top, as on the Invoices page: what's been spent
+// this month and this year, billable costs not yet on an invoice, and
+// ones invoiced but not yet paid -- each a count and an amount. Months
+// are calendar ones (an expense's date is a plain date).
+function expenseMetrics(expenses) {
+    const today = todayInAppTimezone();
+    const figure = (list) => ({ count: list.length, amount: list.reduce((s, e) => s + (parseFloat(e.amount) || 0), 0) });
+    const dated = (prefix) => expenses.filter((e) => e.date?.slice(0, prefix.length) === prefix);
+
+    return {
+        month: figure(dated(today.slice(0, 7))),
+        year: figure(dated(today.slice(0, 4))),
+        ready: figure(expenses.filter((e) => e.is_billable && e.billing_status === 'unbilled')),
+        billed: figure(expenses.filter((e) => e.billing_status === 'billed')),
+    };
 }
 
 export default function ExpensesIndex({ expenses: expensesProp, categories: categoriesProp, taxes: taxesProp, projects, draftInvoices }) {
@@ -143,6 +224,9 @@ export default function ExpensesIndex({ expenses: expensesProp, categories: cate
     const [taxes, setTaxes] = useState(taxesProp);
     const [search, setSearch] = useState('');
     const [categoryFilter, setCategoryFilter] = useState('');
+    const [statusFilter, setStatusFilter] = useState('all');
+    const [managing, setManaging] = useState(false);
+    const rowsRef = useListMotion();
     const [showForm, setShowForm] = useState(false);
     // The expense open in the drawer (null while creating).
     const [editing, setEditing] = useState(null);
@@ -166,9 +250,11 @@ export default function ExpensesIndex({ expenses: expensesProp, categories: cate
             if (q && !e.name.toLowerCase().includes(q)) return false;
             if (categoryFilter === 'uncategorized' && e.category_id) return false;
             if (categoryFilter && categoryFilter !== 'uncategorized' && String(e.category_id) !== categoryFilter) return false;
+            if (statusFilter !== 'all' && e.billing_status !== statusFilter) return false;
             return true;
         });
-    }, [expenses, search, categoryFilter]);
+    }, [expenses, search, categoryFilter, statusFilter]);
+    const metrics = expenseMetrics(expenses);
 
     function startCreate() {
         setEditing(null);
@@ -275,10 +361,56 @@ export default function ExpensesIndex({ expenses: expensesProp, categories: cate
             <PageHeader
                 title="Expenses"
                 actions={<Button onClick={startCreate}>New expense</Button>}
-                subtitle="Track costs, mark them billable to a project, and attach them to an invoice with markup applied."
             />
 
-            <CategoryAndTaxManager categories={categories} setCategories={setCategories} taxes={taxes} setTaxes={setTaxes} />
+            <div className="metric-grid">
+                <MetricCard label={`Spent this month (${metrics.month.count})`} value={formatCurrency(metrics.month.amount)} />
+                <MetricCard label={`Spent this year (${metrics.year.count})`} value={formatCurrency(metrics.year.amount)} />
+                <MetricCard label={`Ready to bill (${metrics.ready.count})`} value={formatCurrency(metrics.ready.amount)} />
+                <MetricCard label={`Billed, awaiting payment (${metrics.billed.count})`} value={formatCurrency(metrics.billed.amount)} />
+            </div>
+
+            <div className="filter-bar">
+                <input
+                    type="search"
+                    placeholder="Search expenses&hellip;"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    aria-label="Search expenses"
+                    className="input filter-bar__search"
+                />
+                <select
+                    value={categoryFilter}
+                    onChange={(e) => setCategoryFilter(e.target.value)}
+                    aria-label="Category"
+                    className="input input--inline"
+                >
+                    <option value="">All categories</option>
+                    <option value="uncategorized">Uncategorized</option>
+                    {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
+                <div className="filter-bar__pills">
+                    {STATUS_FILTERS.map((f) => (
+                        <button
+                            key={f.value}
+                            onClick={() => setStatusFilter(f.value)}
+                            className={`filter-bar__pill${statusFilter === f.value ? ' filter-bar__pill--active' : ''}`}
+                        >
+                            {f.label}
+                        </button>
+                    ))}
+                </div>
+                <Button variant="secondary" onClick={() => setManaging(true)} className="filter-bar__end">
+                    Categories &amp; taxes
+                </Button>
+            </div>
+
+            {managing && (
+                <Drawer onClose={() => setManaging(false)}>
+                    <h2 className="drawer__title">Categories &amp; taxes</h2>
+                    <CategoryAndTaxManager categories={categories} setCategories={setCategories} taxes={taxes} setTaxes={setTaxes} />
+                </Drawer>
+            )}
 
             {showForm && (
                 <Drawer
@@ -331,12 +463,14 @@ export default function ExpensesIndex({ expenses: expensesProp, categories: cate
                                     className="input u-tabular-nums"
                                 />
 
-                                <label className="choice form-grid__full expenses__receipt">
-                                    <PaperclipHorizontal size={16} className="expenses__receipt-icon" />
-                                    Add receipt image
-                                    <input type="file" accept="image/*,.pdf" onChange={(e) => setReceiptFile(e.target.files?.[0] ?? null)} className="expenses__receipt-input" />
-                                </label>
                             </div>
+
+                            <ReceiptPanel
+                                expense={editing}
+                                file={receiptFile}
+                                onPick={setReceiptFile}
+                                onClear={() => setReceiptFile(null)}
+                            />
 
                             <button type="button" onClick={() => setShowAdditional((o) => !o)} className="disclosure expenses__more">
                                 {showAdditional ? <CaretDown size={14} /> : <CaretRight size={14} />}
@@ -378,27 +512,9 @@ export default function ExpensesIndex({ expenses: expensesProp, categories: cate
                 </Drawer>
             )}
 
-            <div className="expenses__filters">
-                <input
-                    placeholder="Search expenses by name&hellip;"
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    className="input expenses__search"
-                />
-                <select
-                    value={categoryFilter}
-                    onChange={(e) => setCategoryFilter(e.target.value)}
-                    className="input"
-                >
-                    <option value="">All categories</option>
-                    <option value="uncategorized">Uncategorized</option>
-                    {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-                </select>
-            </div>
-
             <div className="card card--flush">
                 {filtered.length === 0 ? (
-                    <EmptyState text="No expenses found." />
+                    <EmptyState text={expenses.length === 0 ? 'No expenses yet.' : 'No expenses match these filters.'} />
                 ) : (
                     <table className="table">
                         <thead>
@@ -412,7 +528,7 @@ export default function ExpensesIndex({ expenses: expensesProp, categories: cate
                                 <th></th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody ref={rowsRef}>
                             {filtered.map((expense) => {
                                 const projectDraftInvoices = draftInvoices.filter((inv) => inv.project_id === expense.project_id);
                                 return (

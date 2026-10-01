@@ -1,0 +1,21 @@
+// Settings (Pages/Settings/Index.jsx): the sales tax name and rate share a
+// row, the rate narrow with its % after it.
+
+.settings {
+    &__tax {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 8rem; // one-off: room for "7.750"
+        gap: var(--space-2);
+    }
+
+    &__rate {
+        display: flex;
+        align-items: center;
+        gap: var(--space-1-5);
+    }
+
+    &__unit {
+        font-size: var(--font-size-sm);
+        color: var(--color-text-muted);
+    }
+}

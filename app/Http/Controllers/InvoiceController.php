@@ -10,6 +10,7 @@ use App\Models\Expense;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
 use App\Models\InvoiceSend;
+use App\Models\StudioProfile;
 use App\Models\TimeEntry;
 use App\Services\StripeCheckoutService;
 use Illuminate\Http\Request;
@@ -161,7 +162,7 @@ class InvoiceController extends Controller
 
     // The invoice's sales tax from the form's `tax` switch: on keeps the
     // rate it already has (so an edit never re-rates a sent invoice), or
-    // takes the current one from config; off clears it. Left out, an edit
+    // takes the current one from Settings; off clears it. Left out, an edit
     // leaves the tax as it is.
     private function taxFields(array $data, ?Invoice $invoice = null): array
     {
@@ -175,7 +176,10 @@ class InvoiceController extends Controller
             return [];
         }
 
-        return ['tax_name' => config('invoicing.sales_tax.name'), 'tax_rate' => config('invoicing.sales_tax.rate')];
+        $tax = StudioProfile::current()->salesTax();
+        abort_unless($tax, 422, 'Set up a sales tax rate in Settings first.');
+
+        return ['tax_name' => $tax['name'], 'tax_rate' => $tax['rate']];
     }
 
     // Bills one of the project's expenses on a new line of its invoice. Any

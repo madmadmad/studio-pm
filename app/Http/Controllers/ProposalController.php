@@ -70,7 +70,7 @@ class ProposalController extends Controller
                 'title' => $data['title'],
                 'body' => $data['body'],
                 // A new proposal starts from the default unless one's sent.
-                'disclaimer' => array_key_exists('disclaimer', $data) ? $data['disclaimer'] : config('proposals.default_disclaimer'),
+                'disclaimer' => array_key_exists('disclaimer', $data) ? $data['disclaimer'] : StudioProfile::current()->proposal_disclaimer,
                 'status' => 'draft',
             ]);
 

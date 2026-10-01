@@ -5,7 +5,6 @@ import AppLayout from '../../Layouts/AppLayout';
 import Badge from '../../Components/Badge';
 import Button from '../../Components/Button';
 import EmptyState from '../../Components/EmptyState';
-import { formatDate } from '../../lib/format';
 import { api } from '../../lib/api';
 import PageHeader from '../../Components/PageHeader';
 
@@ -171,9 +170,6 @@ export default function UsersIndex({ users: usersProp }) {
                                     </td>
                                     <td>
                                         <StatusBadge user={user} />
-                                        {user.invited_at && !user.deactivated_at && (
-                                            <div className="table__meta">Invited {formatDate(user.invited_at)}</div>
-                                        )}
                                     </td>
                                     <td className="table__cell--end">
                                         <div className="table__actions">

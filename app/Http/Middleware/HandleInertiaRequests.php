@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Models\Contact;
+use App\Models\StudioProfile;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -44,16 +45,16 @@ class HandleInertiaRequests extends Middleware
             // What a new proposal starts from (config/proposals.php). Staff
             // only -- the portal never creates proposals.
             'proposalDefaults' => fn () => $request->user() instanceof Contact ? null : [
-                'disclaimer' => config('proposals.default_disclaimer'),
+                'disclaimer' => StudioProfile::current()->proposal_disclaimer,
             ],
             // A manager's read-only look at this portal (PortalPreviewController):
             // whom it's showing, for the banner across the top.
             'portalPreview' => fn () => $request->session()->has('portal_preview') && $request->user() instanceof Contact
                 ? ['contact' => $request->user()->name, 'company' => $request->user()->company?->name]
                 : null,
-            // The sales tax an invoice takes when it's switched on
-            // (config/invoicing.php). Staff only.
-            'salesTax' => fn () => $request->user() instanceof Contact ? null : config('invoicing.sales_tax'),
+            // The sales tax an invoice takes when it's switched on (Settings).
+            // Staff only.
+            'salesTax' => fn () => $request->user() instanceof Contact ? null : StudioProfile::current()->salesTax(),
         ];
     }
 

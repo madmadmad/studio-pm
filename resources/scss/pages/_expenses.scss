@@ -1,12 +1,17 @@
-// Expenses/Index: category & tax manager, filters, the expense form's
+// Expenses/Index: category & tax manager, the expense form's
 // extras, and the category pill in the table.
 
 .expenses {
+    // The "Categories & taxes" drawer: the two lists on their panels,
+    // one above the other.
     &__manager {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        display: flex;
+        flex-direction: column;
         gap: var(--space-4);
-        margin-top: var(--space-3);
+
+        .form-panel {
+            margin-bottom: 0;
+        }
     }
 
     &__manager-title {
@@ -47,32 +52,14 @@
         width: 6rem; // one-off: fits "100.00"
     }
 
+    // The receipt panel, below the form's fields (as a task's Files).
     &__receipt {
-        cursor: pointer;
-    }
-
-    &__receipt-icon {
-        color: var(--color-text-muted);
-    }
-
-    &__receipt-input {
-        font-size: var(--font-size-sm);
-        line-height: var(--line-height-sm);
+        margin-top: var(--space-4);
     }
 
     &__more {
         margin-top: var(--space-4);
         margin-bottom: var(--space-2);
-    }
-
-    &__filters {
-        display: flex;
-        gap: var(--space-2);
-        margin-bottom: var(--space-4);
-    }
-
-    &__search {
-        max-width: 24rem; // one-off: search box never spans the page
     }
 
     &__name {

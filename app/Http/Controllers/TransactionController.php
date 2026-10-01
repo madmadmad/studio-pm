@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\StudioProfile;
 use App\Models\Transaction;
 use Illuminate\Http\Request;
 
@@ -34,7 +35,7 @@ class TransactionController extends Controller
         $data['tax_amount'] ??= 0;
         // Manual income gives only the tax it includes; the taxable sales
         // behind it are worked back from the studio's rate.
-        $rate = (float) config('invoicing.sales_tax.rate');
+        $rate = (float) (StudioProfile::current()->salesTax()['rate'] ?? 0);
         $data['taxable_amount'] = $data['tax_amount'] > 0 && $rate > 0 ? round($data['tax_amount'] / ($rate / 100), 2) : 0;
 
         return Transaction::create($data);

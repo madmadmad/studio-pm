@@ -21,8 +21,10 @@ return [
     | Sales Tax
     |--------------------------------------------------------------------------
     |
-    | Switched on per invoice (for the occasional taxable job, like printing
-    | the studio manages) and charged only on the lines marked taxable. The
+    | The starting default only -- the name and rate are edited in Settings
+    | (studio_profiles). Switched on per invoice (for the occasional taxable
+    | job, like printing the studio manages), charged only on lines marked
+    | taxable. The
     | rate is a percentage: Ohio's 5.75% plus the county's, 7.75% combined
     | for the studio (override with SALES_TAX_RATE). Turning tax on
     | copies the name and rate onto the invoice, so changing these later

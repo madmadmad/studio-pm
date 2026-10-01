@@ -19,7 +19,8 @@ return [
     |--------------------------------------------------------------------------
     |
     | The scope note a new proposal starts with, shown between its scope of
-    | work and its services. Editable on each proposal.
+    | work and its services. The starting default only -- it's edited in
+    | Settings (studio_profiles), and on each proposal.
     |
     */
 

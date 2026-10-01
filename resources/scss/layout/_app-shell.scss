@@ -23,16 +23,26 @@
     // --color-canvas -- regenerate it (bin/panel-shadow.py) if that changes.
     // Sits on the strip just left of the panel, above the canvas; never
     // takes a click.
+    //
+    // It runs on under the panel by the panel's corner radius, in the
+    // image's darkest shade (its last column, about a third black), so the
+    // panel's rounded corners curve into shadow rather than cutting a light
+    // notch out of it. The panel sits above (z-index), hiding all but the
+    // corners.
     &::after {
         content: '';
         position: absolute;
+        z-index: 0;
         top: 0;
         bottom: 0;
         left: calc(var(--size-sidebar) - var(--size-panel-shadow));
-        width: var(--size-panel-shadow);
+        width: calc(var(--size-panel-shadow) + var(--radius-panel));
         // Relative, so Vite serves it in dev and fingerprints it in the build
         // (a root-relative /images/... path 404s from the dev server).
-        background: url('../../images/panel-shadow.png') repeat-y;
+        background-image: url('../../images/panel-shadow.png'), linear-gradient(rgb(0 0 0 / 0.335), rgb(0 0 0 / 0.335));
+        background-position: left top, right top;
+        background-size: var(--size-panel-shadow) auto, var(--radius-panel) 100%;
+        background-repeat: repeat-y, no-repeat;
         pointer-events: none;
     }
 
@@ -147,6 +157,9 @@
     // this runs on navigation and nothing else. No fill mode: once done,
     // no transform is left behind to trap the page's fixed overlays.
     &__main {
+        // Above the shadow strip, which runs on under its corners.
+        position: relative;
+        z-index: 1;
         flex: 1;
         min-width: 0;
         padding: var(--space-page);
