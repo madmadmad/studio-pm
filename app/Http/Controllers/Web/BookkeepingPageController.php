@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Web;
 use App\Http\Controllers\Controller;
 use App\Models\Transaction;
 use App\Models\Invoice;
+use App\Services\HostingProfitabilityReport;
 use App\Services\InvoiceCategoryReport;
 use App\Services\SalesTaxReport;
 use Illuminate\Http\Request;
@@ -87,6 +88,32 @@ class BookkeepingPageController extends Controller
             }
             fclose($out);
         }, "invoices-by-category-{$year}.csv", ['Content-Type' => 'text/csv']);
+    }
+
+    // Hosting profitability for a year (this year by default).
+    public function hosting(Request $request): Response
+    {
+        return Inertia::render('Bookkeeping/Hosting', [
+            'report' => HostingProfitabilityReport::forYear($this->reportYear($request)),
+            'years' => Invoice::whereIn('status', ['sent', 'paid'])->whereNotNull('issued_on')->pluck('issued_on')
+                ->map(fn ($date) => $date->year)
+                ->push(now()->year)
+                ->unique()->sortDesc()->values(),
+        ]);
+    }
+
+    public function hostingCsv(Request $request): StreamedResponse
+    {
+        $year = $this->reportYear($request);
+        $rows = HostingProfitabilityReport::csvRows(HostingProfitabilityReport::forYear($year));
+
+        return response()->streamDownload(function () use ($rows) {
+            $out = fopen('php://output', 'w');
+            foreach ($rows as $row) {
+                fputcsv($out, $row);
+            }
+            fclose($out);
+        }, "hosting-profitability-{$year}.csv", ['Content-Type' => 'text/csv']);
     }
 
     private function reportYear(Request $request): int

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
@@ -59,6 +60,12 @@ class Expense extends Model
     public function invoice(): BelongsTo
     {
         return $this->belongsTo(Invoice::class);
+    }
+
+    // How a shared cost is divided between clients (hosting), if it is.
+    public function splits(): HasMany
+    {
+        return $this->hasMany(ExpenseSplit::class);
     }
 
     public function invoiceItem(): BelongsTo

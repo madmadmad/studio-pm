@@ -57,6 +57,55 @@
         margin-top: var(--space-4);
     }
 
+    // Split across clients: a client and their share per row, then the
+    // add / use-last actions and what's left to split.
+    &__split {
+        margin-top: var(--space-4);
+    }
+
+    &__split-rows {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-2);
+        margin-top: var(--space-2);
+    }
+
+    &__split-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 8rem auto; // one-off: room for "$1,250.00"
+        gap: var(--space-2);
+        align-items: center;
+    }
+
+    &__split-amount {
+        text-align: right;
+    }
+
+    &__split-foot {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--space-3);
+        margin-top: var(--space-3);
+    }
+
+    &__split-actions {
+        display: flex;
+        gap: var(--space-4);
+    }
+
+    &__split-left {
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+        color: var(--color-text-muted);
+        font-variant-numeric: tabular-nums;
+
+        &--off {
+            color: var(--color-danger-text);
+        }
+    }
+
     &__more {
         margin-top: var(--space-4);
         margin-bottom: var(--space-2);

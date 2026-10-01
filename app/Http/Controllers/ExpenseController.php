@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\Expense;
 use App\Models\Invoice;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 
 class ExpenseController extends Controller
@@ -25,6 +27,11 @@ class ExpenseController extends Controller
     {
         $data = $this->validated($request);
 
+        $splits = $this->validatedSplits($request, (float) $data['amount']);
+        if ($splits) {
+            $data['is_billable'] = false; // a split cost is the studio's, never billed
+        }
+
         if (! empty($data['is_billable']) && empty($data['project_id'])) {
             abort(422, 'A billable expense must be tied to a project.');
         }
@@ -34,7 +41,14 @@ class ExpenseController extends Controller
             $data['receipt_filename'] = $request->file('receipt')->getClientOriginalName();
         }
 
-        return Expense::create($data)->load(['category', 'project', 'tax']);
+        $expense = DB::transaction(function () use ($data, $splits) {
+            $expense = Expense::create($data);
+            $this->saveSplits($expense, $splits);
+
+            return $expense;
+        });
+
+        return $expense->load(['category', 'project', 'tax', 'splits.company:id,name']);
     }
 
     public function update(Request $request, Expense $expense)
@@ -42,6 +56,10 @@ class ExpenseController extends Controller
         abort_unless($expense->billing_status === 'unbilled', 422, 'Billed expenses cannot be edited -- detach from the invoice first.');
 
         $data = $this->validated($request, $expense);
+        $splits = $request->has('splits') ? $this->validatedSplits($request, (float) ($data['amount'] ?? $expense->amount)) : null;
+        if ($splits) {
+            $data['is_billable'] = false;
+        }
 
         $isBillable = $data['is_billable'] ?? $expense->is_billable;
         $projectId = $data['project_id'] ?? $expense->project_id;
@@ -57,9 +75,14 @@ class ExpenseController extends Controller
             $data['receipt_filename'] = $request->file('receipt')->getClientOriginalName();
         }
 
-        $expense->update($data);
+        DB::transaction(function () use ($expense, $data, $splits) {
+            $expense->update($data);
+            if ($splits !== null) {
+                $this->saveSplits($expense, $splits);
+            }
+        });
 
-        return $expense->fresh()->load(['category', 'project', 'tax']);
+        return $expense->fresh()->load(['category', 'project', 'tax', 'splits.company:id,name']);
     }
 
     public function destroy(Expense $expense)
@@ -99,6 +122,38 @@ class ExpenseController extends Controller
         $expense->detachFromInvoice();
 
         return $expense->fresh()->load(['category', 'project', 'tax']);
+    }
+
+    // A split across clients, sent from the form as JSON (it rides along
+    // with the receipt upload): [{company_id, amount}], each client once,
+    // adding up to the expense to the cent. An empty list is no split.
+    private function validatedSplits(Request $request, float $total): array
+    {
+        $splits = json_decode((string) $request->input('splits', '[]'), true);
+        abort_unless(is_array($splits), 422, 'The split could not be read.');
+
+        $validator = Validator::make(['splits' => $splits], [
+            'splits' => ['array', 'max:100'],
+            'splits.*.company_id' => ['required', 'integer', 'distinct', 'exists:companies,id'],
+            'splits.*.amount' => ['required', 'numeric', 'min:0.01'],
+        ], ['splits.*.company_id.distinct' => 'Each client can only be in the split once.']);
+        $validator->after(function ($validator) use ($splits, $total) {
+            $sum = round(array_sum(array_column($splits, 'amount')), 2);
+            if ($splits && abs($sum - round($total, 2)) > 0.004) {
+                $validator->errors()->add('splits', sprintf('The split adds up to $%s, not the expense\'s $%s.', number_format($sum, 2), number_format($total, 2)));
+            }
+        });
+        $validator->validate();
+
+        return $splits;
+    }
+
+    private function saveSplits(Expense $expense, array $splits): void
+    {
+        $expense->splits()->delete();
+        foreach ($splits as $split) {
+            $expense->splits()->create(['company_id' => $split['company_id'], 'amount' => round((float) $split['amount'], 2)]);
+        }
     }
 
     private function validated(Request $request, ?Expense $expense = null): array

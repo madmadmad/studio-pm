@@ -1,8 +1,11 @@
+// "$1,234.50", and a loss as "-$20.00" (the sign before the dollar).
 export function formatCurrency(n) {
-    return `$${Number(n || 0).toLocaleString('en-US', {
+    const value = Number(n || 0);
+    const text = Math.abs(value).toLocaleString('en-US', {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
-    })}`;
+    });
+    return `${value < 0 && text !== '0.00' ? '-' : ''}$${text}`;
 }
 
 export function formatDate(value) {

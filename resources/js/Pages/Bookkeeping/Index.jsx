@@ -43,6 +43,7 @@ export default function BookkeepingIndex({ transactions, summary }) {
                 title="Bookkeeping"
                 actions={(
                     <>
+                        <Link href="/bookkeeping/hosting" className="btn btn--secondary">Hosting profitability</Link>
                         <Link href="/bookkeeping/invoice-categories" className="btn btn--secondary">Invoices by category</Link>
                         <Link href="/bookkeeping/sales-tax" className="btn btn--secondary">Sales tax report</Link>
                         <Button onClick={() => setShowForm(true)}>Add income</Button>

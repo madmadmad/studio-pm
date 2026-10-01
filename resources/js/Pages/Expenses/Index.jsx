@@ -14,6 +14,7 @@ import { api } from '../../lib/api';
 import PageHeader from '../../Components/PageHeader';
 import Drawer, { DrawerByline, DrawerDate } from '../../Components/Drawer';
 import Toggle from '../../Components/Toggle';
+import CurrencyInput from '../../Components/CurrencyInput';
 
 function emptyForm() {
     return {
@@ -194,6 +195,85 @@ function ReceiptPanel({ expense, file, onPick, onClear }) {
     );
 }
 
+let splitKey = 0;
+const splitRow = (companyId = '', amount = '') => ({ key: `split-${++splitKey}`, company_id: companyId ? String(companyId) : '', amount: amount === '' ? '' : String(amount) });
+
+// A saved split ({ amount, splits }) fitted to a new total: each client's
+// share scaled by the same proportion, in whole cents that add up to the
+// total exactly (leftover cents to the shares that lost most to rounding).
+function scaleSplit(saved, total) {
+    const rows = saved.splits.map((s) => ({ company_id: s.company_id, amount: parseFloat(s.amount) }));
+    const target = Math.round((parseFloat(total) || 0) * 100);
+    const base = rows.reduce((sum, r) => sum + r.amount, 0);
+    if (!(target > 0) || !(base > 0)) return rows.map((r) => splitRow(r.company_id, r.amount.toFixed(2)));
+    const exact = rows.map((r) => (target * r.amount) / base);
+    const cents = exact.map(Math.floor);
+    let leftover = target - cents.reduce((a, b) => a + b, 0);
+    exact.map((v, i) => ({ i, rem: v - Math.floor(v) })).sort((a, b) => b.rem - a.rem).forEach(({ i }) => {
+        if (leftover-- > 0) cents[i] += 1;
+    });
+    return rows.map((r, i) => splitRow(r.company_id, (cents[i] / 100).toFixed(2)));
+}
+
+// "Split across clients": a shared cost (a month's Linode bill) divided
+// between the clients it covers, for hosting profitability. A list of
+// client and amount, adding up to the expense; "Use last split" fits the
+// last one made to this total. A split cost is never billed. `rows` is
+// null while off.
+function SplitPanel({ rows, onChange, total, companies, lastSplit }) {
+    const on = rows !== null;
+    const sum = (rows || []).reduce((s, r) => s + (parseFloat(r.amount) || 0), 0);
+    const left = Math.round(((parseFloat(total) || 0) - sum) * 100) / 100;
+    const update = (key, field, value) => onChange(rows.map((r) => (r.key === key ? { ...r, [field]: value } : r)));
+    const used = (rows || []).map((r) => r.company_id);
+
+    return (
+        <div className="form-panel expenses__split">
+            <div className="form-panel__header">
+                <div className="section-label section-label--flush">Split across clients</div>
+                <Toggle
+                    checked={on}
+                    onChange={(value) => onChange(value ? (lastSplit ? scaleSplit(lastSplit, total) : [splitRow()]) : null)}
+                    label="Split"
+                />
+            </div>
+            {!on ? (
+                <p className="form-hint">For a shared cost, like one hosting bill covering several clients: each client&rsquo;s share counts against their hosting in the profitability report.</p>
+            ) : (
+                <>
+                    <div className="expenses__split-rows">
+                        {rows.map((row) => (
+                            <div key={row.key} className="expenses__split-row">
+                                <select value={row.company_id} onChange={(e) => update(row.key, 'company_id', e.target.value)} aria-label="Client" className="input">
+                                    <option value="">Client&hellip;</option>
+                                    {companies.map((c) => (
+                                        <option key={c.id} value={c.id} disabled={used.includes(String(c.id)) && row.company_id !== String(c.id)}>{c.name}</option>
+                                    ))}
+                                </select>
+                                <CurrencyInput value={row.amount} onChange={(value) => update(row.key, 'amount', value)} placeholder="Share" aria-label="Share" className="input expenses__split-amount" />
+                                <button type="button" onClick={() => onChange(rows.filter((r) => r.key !== row.key))} title="Remove" aria-label="Remove client" className="icon-btn icon-btn--danger">
+                                    <X />
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                    <div className="expenses__split-foot">
+                        <div className="expenses__split-actions">
+                            <Button type="button" variant="link-accent" onClick={() => onChange([...rows, splitRow()])}>+ Add client</Button>
+                            {lastSplit && <Button type="button" variant="link" onClick={() => onChange(scaleSplit(lastSplit, total))}>Use last split</Button>}
+                        </div>
+                        <span className={`expenses__split-left${Math.abs(left) > 0.004 ? ' expenses__split-left--off' : ''}`}>
+                            {Math.abs(left) > 0.004
+                                ? `${formatCurrency(Math.abs(left))} ${left > 0 ? 'left to split' : 'over the total'}`
+                                : `${formatCurrency(sum)} split`}
+                        </span>
+                    </div>
+                </>
+            )}
+        </div>
+    );
+}
+
 const STATUS_FILTERS = [
     { value: 'all', label: 'All' },
     { value: 'unbilled', label: 'Unbilled' },
@@ -218,7 +298,7 @@ function expenseMetrics(expenses) {
     };
 }
 
-export default function ExpensesIndex({ expenses: expensesProp, categories: categoriesProp, taxes: taxesProp, projects, draftInvoices }) {
+export default function ExpensesIndex({ expenses: expensesProp, categories: categoriesProp, taxes: taxesProp, projects, draftInvoices, companies = [], lastSplit = null }) {
     const [expenses, setExpenses] = useState(expensesProp);
     const [categories, setCategories] = useState(categoriesProp);
     const [taxes, setTaxes] = useState(taxesProp);
@@ -256,8 +336,21 @@ export default function ExpensesIndex({ expenses: expensesProp, categories: cate
     }, [expenses, search, categoryFilter, statusFilter]);
     const metrics = expenseMetrics(expenses);
 
+    // The open expense's split across clients (null: not split).
+    const [split, setSplit] = useState(null);
+    const hostingCategoryId = categories.find((c) => c.name.toLowerCase() === 'hosting')?.id;
+
+    function changeCategory(value) {
+        setForm({ ...form, category_id: value });
+        // A new hosting bill starts from the last split, fitted to its total.
+        if (!editing && split === null && lastSplit && String(value) === String(hostingCategoryId)) {
+            setSplit(scaleSplit(lastSplit, form.amount));
+        }
+    }
+
     function startCreate() {
         setEditing(null);
+        setSplit(null);
         setForm(emptyForm());
         setReceiptFile(null);
         setError('');
@@ -266,6 +359,7 @@ export default function ExpensesIndex({ expenses: expensesProp, categories: cate
 
     function startEdit(expense) {
         setEditing(expense);
+        setSplit(expense.splits?.length ? expense.splits.map((s) => splitRow(s.company_id, parseFloat(s.amount).toFixed(2))) : null);
         setForm({
             name: expense.name,
             amount: expense.amount,
@@ -295,14 +389,22 @@ export default function ExpensesIndex({ expenses: expensesProp, categories: cate
 
     async function submit(e) {
         e.preventDefault();
-        if (form.is_billable && !form.project_id) {
+        if (form.is_billable && !form.project_id && split === null) {
             setError('A billable expense must be tied to a project.');
+            return;
+        }
+        if (split !== null && split.some((r) => !r.company_id || !(parseFloat(r.amount) > 0))) {
+            setError('Each client in the split needs a share.');
             return;
         }
         setSaving(true);
         setError('');
         try {
-            const fd = toFormData(form, receiptFile);
+            const fd = toFormData(split !== null ? { ...form, is_billable: false } : form, receiptFile);
+            // Sent when split, and to clear one that was.
+            if (split !== null || editing?.splits?.length) {
+                fd.append('splits', JSON.stringify((split || []).map((r) => ({ company_id: Number(r.company_id), amount: parseFloat(r.amount) }))));
+            }
             if (editingId) {
                 fd.append('_method', 'put');
                 const updated = await api.postForm(`/api/expenses/${editingId}`, fd);
@@ -438,7 +540,7 @@ export default function ExpensesIndex({ expenses: expensesProp, categories: cate
                         <fieldset disabled={!editable} className="drawer__fieldset">
                             <div className="form-grid">
                                 <input required placeholder="Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="input form-grid__full" />
-                                <select value={form.category_id} onChange={(e) => setForm({ ...form, category_id: e.target.value })} className="input">
+                                <select value={form.category_id} onChange={(e) => changeCategory(e.target.value)} className="input">
                                     <option value="">Category&hellip;</option>
                                     {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                                 </select>
@@ -454,7 +556,7 @@ export default function ExpensesIndex({ expenses: expensesProp, categories: cate
                                     {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
                                 </select>
 
-                                <Toggle checked={form.is_billable} onChange={(is_billable) => setForm({ ...form, is_billable })} label="Billable to project" />
+                                <Toggle checked={form.is_billable && split === null} disabled={split !== null} onChange={(is_billable) => setForm({ ...form, is_billable })} label="Billable to project" />
                                 <input
                                     type="number" min="0" step="0.01" placeholder="Markup %"
                                     value={form.markup_percent}
@@ -464,6 +566,8 @@ export default function ExpensesIndex({ expenses: expensesProp, categories: cate
                                 />
 
                             </div>
+
+                            <SplitPanel rows={split} onChange={setSplit} total={form.amount} companies={companies} lastSplit={lastSplit} />
 
                             <ReceiptPanel
                                 expense={editing}
@@ -543,7 +647,9 @@ export default function ExpensesIndex({ expenses: expensesProp, categories: cate
                                                 )}
                                             </div>
                                             <div className="table__note">
-                                                {expense.is_billable ? 'Billable' : 'Not billable'}
+                                                {expense.splits?.length
+                                                    ? `Split across ${expense.splits.length} client${expense.splits.length === 1 ? '' : 's'}`
+                                                    : expense.is_billable ? 'Billable' : 'Not billable'}
                                                 {expense.source_label ? ` · ${expense.source_label}` : ''}
                                             </div>
                                         </td>
