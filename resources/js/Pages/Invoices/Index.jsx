@@ -1,11 +1,12 @@
 import { Head, router } from '@inertiajs/react';
-import { useEffect, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import { CaretRight, Check, CheckCircle, Copy, DownloadSimple, Eye, PaperPlaneTilt, Trash } from '@phosphor-icons/react';
 import AppLayout from '../../Layouts/AppLayout';
 import Button from '../../Components/Button';
 import InvoiceLineItems from '../../Components/InvoiceLineItems';
 import EmptyState from '../../Components/EmptyState';
 import { TaxRow, TaxToggle, useSalesTax } from '../../Components/InvoiceTax';
+import { InvoiceCategoryBadge, InvoiceCategorySelect, PROJECT_WORK, RepeatIcon, categoryName, useInvoiceCategories } from '../../Components/InvoiceCategory';
 import InvoiceDateFields, { useInvoiceDateFields } from '../../Components/InvoiceDateFields';
 import { InvoiceStatusBadge } from '../../Components/StatusBadges';
 import { displayInvoiceStatus, formatCurrency, formatDate, invoiceSubtotal, invoiceTotal, monthInAppTimezone, todayInAppTimezone } from '../../lib/format';
@@ -52,6 +53,55 @@ function invoiceMetrics(invoices) {
     };
 }
 
+// The 'YYYY-MM' an invoice was issued in ('' with no issue date).
+function issuedMonth(invoice) {
+    return invoice.issued_on ? String(invoice.issued_on).slice(0, 7) : '';
+}
+
+// Each month's figures for its divider, over the invoices listed (every
+// category, as filtered): what was invoiced -- sent or paid -- and any
+// drafts not yet sent, apart.
+function totalsByMonth(invoices) {
+    const months = {};
+    for (const invoice of invoices) {
+        const key = issuedMonth(invoice);
+        months[key] ??= { count: 0, invoiced: 0, drafts: 0, draftCount: 0 };
+        const amount = invoiceTotal(invoice.items, invoice.surcharge, invoice.tax_rate);
+        if (invoice.status === 'draft') {
+            months[key].drafts += amount;
+            months[key].draftCount += 1;
+        } else {
+            months[key].invoiced += amount;
+            months[key].count += 1;
+        }
+    }
+    return months;
+}
+
+// "October 2026"
+function monthLabel(key) {
+    if (!key) return 'No issue date';
+    const [y, m] = key.split('-').map(Number);
+    return new Date(y, m - 1, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+}
+
+// The divider above a month's invoices, with what was invoiced in it.
+function MonthDivider({ month, totals }) {
+    return (
+        <tr className="invoice-month">
+            <td colSpan={7}>
+                <div className="invoice-month__bar">
+                    <span className="invoice-month__label">{monthLabel(month)}</span>
+                    <span className="invoice-month__figures">
+                        {totals.count} invoiced &middot; <strong>{formatCurrency(totals.invoiced)}</strong>
+                        {totals.draftCount > 0 && <span className="invoice-month__drafts"> &middot; {formatCurrency(totals.drafts)} in {totals.draftCount === 1 ? 'a draft' : `${totals.draftCount} drafts`}</span>}
+                    </span>
+                </div>
+            </td>
+        </tr>
+    );
+}
+
 function emptyDraft() {
     const issuedOn = todayLocal();
     return {
@@ -72,6 +122,8 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
     const [search, setSearch] = useState('');
     const rowsRef = useListMotion();
     const [filter, setFilter] = useState('all');
+    const [categoryFilter, setCategoryFilter] = useState('all');
+    const categories = useInvoiceCategories();
     // Invoices open in the wide drawer, as on a project or client.
     const { openInvoice, drawer: invoiceDrawer } = useInvoiceDrawer(() => router.reload({ only: ['invoices'] }));
 
@@ -151,15 +203,21 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
     const statuses = STATUS_FILTERS.find((f) => f.value === filter).statuses;
     const filteredInvoices = invoices.filter((invoice) => {
         if (statuses && !statuses.includes(displayInvoiceStatus(invoice))) return false;
+        if (categoryFilter !== 'all' && categoryName(invoice) !== categoryFilter) return false;
         if (!query) return true;
         return String(invoice.invoice_number).includes(query)
             || invoice.company?.name.toLowerCase().includes(query)
             || invoice.project?.name.toLowerCase().includes(query);
     });
 
+    // Newest first by issue date, under a divider per month -- unless
+    // they're sorted by due date, which runs across months.
     const visibleInvoices = dueSort
         ? [...filteredInvoices].sort((a, b) => (dueSort === 'asc' ? 1 : -1) * (new Date(a.due_on) - new Date(b.due_on)))
-        : filteredInvoices;
+        : [...filteredInvoices].sort((a, b) => issuedMonth(b).localeCompare(issuedMonth(a))
+            || String(b.issued_on).localeCompare(String(a.issued_on))
+            || b.invoice_number - a.invoice_number);
+    const monthTotals = dueSort ? {} : totalsByMonth(visibleInvoices);
 
     function toggleDueSort() {
         setDueSort((current) => (current === 'asc' ? 'desc' : current === 'desc' ? null : 'asc'));
@@ -195,6 +253,7 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
         try {
             const invoice = await api.post(`/api/companies/${draft.company_id}/invoices`, {
                 contact_id: draft.contact_id || null,
+                category_id: draft.category_id || null,
                 tax: draft.tax_rate != null,
                 issued_on: draft.issued_on,
                 payment_terms: draft.payment_terms,
@@ -298,6 +357,7 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
                                 </option>
                             ))}
                         </select>
+                        <InvoiceCategorySelect value={draft.category_id ?? ''} onChange={(value) => setDraft({ ...draft, category_id: value })} />
                     </div>
 
                     <div className="form-panel">
@@ -342,6 +402,13 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
                         aria-label="Search invoices"
                         className="input filter-bar__search"
                     />
+                    {categories.length > 0 && (
+                        <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)} aria-label="Category" className="input input--inline">
+                            <option value="all">All categories</option>
+                            <option value={PROJECT_WORK}>{PROJECT_WORK}</option>
+                            {categories.map((c) => <option key={c.id} value={c.name}>{c.name}</option>)}
+                        </select>
+                    )}
                     <div className="filter-bar__pills">
                         {STATUS_FILTERS.map((f) => (
                             <button
@@ -380,56 +447,67 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
                             </tr>
                         </thead>
                         <tbody ref={rowsRef}>
-                            {visibleInvoices.map((invoice) => (
-                                <tr key={invoice.id} onClick={(e) => visitRow(e, null, { onOpen: () => openInvoice(invoice.id) })} className="table__row--link">
-                                    <td className="table__cell--numeric table__cell--muted">{invoice.invoice_number}</td>
-                                    <td className="table__cell--strong">{invoice.company?.name}</td>
-                                    <td className="table__cell--muted">{formatDate(invoice.issued_on)}</td>
-                                    <td className="table__cell--muted">{formatDate(invoice.due_on)}</td>
-                                    <td className="table__cell--numeric">{formatCurrency(invoiceTotal(invoice.items, invoice.surcharge, invoice.tax_rate))}</td>
-                                    <td><InvoiceStatusBadge invoice={invoice} /></td>
-                                    <td className="table__cell--end">
-                                        <div className="table__actions">
-                                            <a href={`/i/${invoice.public_token}`} target="_blank" rel="noopener noreferrer" title="Preview" className="icon-btn icon-btn--secondary">
-                                                <Eye />
-                                            </a>
-                                            {invoice.status === 'draft' && (
-                                                <button onClick={() => sendInvoice(invoice)} title="Send" className="icon-btn icon-btn--accent">
-                                                    <PaperPlaneTilt />
-                                                </button>
-                                            )}
-                                            {invoice.status !== 'draft' && (
-                                                <button onClick={() => copyLink(invoice)} title={copiedId === invoice.id ? 'Copied!' : 'Copy link'} className="icon-btn icon-btn--secondary">
-                                                    {copiedId === invoice.id ? <Check /> : <Copy />}
-                                                </button>
-                                            )}
-                                            {invoice.status !== 'draft' && (
-                                                <a href={`/invoices/${invoice.id}/pdf`} title="Download PDF" className="icon-btn icon-btn--secondary">
-                                                    <DownloadSimple />
+                            {visibleInvoices.map((invoice, index) => (
+                                <Fragment key={invoice.id}>
+                                    {!dueSort && (index === 0 || issuedMonth(visibleInvoices[index - 1]) !== issuedMonth(invoice)) && (
+                                        <MonthDivider key={`month-${issuedMonth(invoice)}`} month={issuedMonth(invoice)} totals={monthTotals[issuedMonth(invoice)]} />
+                                    )}
+                                    <tr onClick={(e) => visitRow(e, null, { onOpen: () => openInvoice(invoice.id) })} className="table__row--link">
+                                        <td className="table__cell--numeric table__cell--muted">{invoice.invoice_number}</td>
+                                        <td className="table__cell--strong">
+                                            <div className="table__group">
+                                                {invoice.company?.name}
+                                                <InvoiceCategoryBadge invoice={invoice} />
+                                                <RepeatIcon invoice={invoice} />
+                                            </div>
+                                        </td>
+                                        <td className="table__cell--muted">{formatDate(invoice.issued_on)}</td>
+                                        <td className="table__cell--muted">{formatDate(invoice.due_on)}</td>
+                                        <td className="table__cell--numeric">{formatCurrency(invoiceTotal(invoice.items, invoice.surcharge, invoice.tax_rate))}</td>
+                                        <td><InvoiceStatusBadge invoice={invoice} /></td>
+                                        <td className="table__cell--end">
+                                            <div className="table__actions">
+                                                <a href={`/i/${invoice.public_token}`} target="_blank" rel="noopener noreferrer" title="Preview" className="icon-btn icon-btn--secondary">
+                                                    <Eye />
                                                 </a>
-                                            )}
-                                            {invoice.status === 'sent' && (
-                                                <button onClick={() => markPaid(invoice)} title="Mark paid (check)" className="icon-btn icon-btn--confirm">
-                                                    <CheckCircle />
+                                                {invoice.status === 'draft' && (
+                                                    <button onClick={() => sendInvoice(invoice)} title="Send" className="icon-btn icon-btn--accent">
+                                                        <PaperPlaneTilt />
+                                                    </button>
+                                                )}
+                                                {invoice.status !== 'draft' && (
+                                                    <button onClick={() => copyLink(invoice)} title={copiedId === invoice.id ? 'Copied!' : 'Copy link'} className="icon-btn icon-btn--secondary">
+                                                        {copiedId === invoice.id ? <Check /> : <Copy />}
+                                                    </button>
+                                                )}
+                                                {invoice.status !== 'draft' && (
+                                                    <a href={`/invoices/${invoice.id}/pdf`} title="Download PDF" className="icon-btn icon-btn--secondary">
+                                                        <DownloadSimple />
+                                                    </a>
+                                                )}
+                                                {invoice.status === 'sent' && (
+                                                    <button onClick={() => markPaid(invoice)} title="Mark paid (check)" className="icon-btn icon-btn--confirm">
+                                                        <CheckCircle />
+                                                    </button>
+                                                )}
+                                                {invoice.status !== 'paid' && (
+                                                    <button
+                                                        onClick={() => deleteInvoice(invoice)}
+                                                        disabled={deletingId === invoice.id}
+                                                        title="Delete"
+                                                        className="icon-btn icon-btn--danger"
+                                                    >
+                                                        <Trash />
+                                                    </button>
+                                                )}
+                                                {/* The keyboard way in; the row's own click does the same. */}
+                                                <button onClick={() => openInvoice(invoice.id)} title="Open invoice" aria-label="Open invoice" className="row-action">
+                                                    <CaretRight size={14} weight="bold" />
                                                 </button>
-                                            )}
-                                            {invoice.status !== 'paid' && (
-                                                <button
-                                                    onClick={() => deleteInvoice(invoice)}
-                                                    disabled={deletingId === invoice.id}
-                                                    title="Delete"
-                                                    className="icon-btn icon-btn--danger"
-                                                >
-                                                    <Trash />
-                                                </button>
-                                            )}
-                                            {/* The keyboard way in; the row's own click does the same. */}
-                                            <button onClick={() => openInvoice(invoice.id)} title="Open invoice" aria-label="Open invoice" className="row-action">
-                                                <CaretRight size={14} weight="bold" />
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </Fragment>
                             ))}
                         </tbody>
                     </table>

@@ -57,6 +57,12 @@ class Message extends Model
         return $this->hasMany(MessageAttachment::class);
     }
 
+    // Links shared in the message (MessageLink), in the order added.
+    public function links(): HasMany
+    {
+        return $this->hasMany(MessageLink::class)->oldest('id');
+    }
+
     public function sender(): User|Contact|null
     {
         return $this->senderUser ?? $this->senderContact;
@@ -74,11 +80,11 @@ class Message extends Model
     public static function threadRelations(): array
     {
         return [
-            'senderUser', 'senderContact', 'attachments',
+            'senderUser', 'senderContact', 'attachments', 'links',
             'reactions.user:id,name', 'reactions.contact:id,name',
             'participants.user', 'participants.contact',
             'replies' => fn ($query) => $query->withTrashed(),
-            'replies.senderUser', 'replies.senderContact', 'replies.attachments',
+            'replies.senderUser', 'replies.senderContact', 'replies.attachments', 'replies.links',
             'replies.reactions.user:id,name', 'replies.reactions.contact:id,name',
         ];
     }
@@ -123,7 +129,12 @@ class Message extends Model
         }
 
         $count = $this->attachments->count();
+        if ($count > 0) {
+            return "Sent {$count} ".Str::plural('attachment', $count);
+        }
 
-        return $count > 0 ? "Sent {$count} ".Str::plural('attachment', $count) : '';
+        $links = $this->links->count();
+
+        return $links > 0 ? "Shared {$links} ".Str::plural('link', $links) : '';
     }
 }

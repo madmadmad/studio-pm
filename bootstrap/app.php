@@ -18,6 +18,8 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withSchedule(function (Schedule $schedule): void {
+        // Repeating invoices' copies first, so their 9 AM sends are queued.
+        $schedule->command('invoices:create-repeats')->dailyAt('06:00')->timezone('America/New_York');
         $schedule->command('invoices:dispatch-scheduled-sends')->everyFiveMinutes();
         $schedule->command('invoices:send-reminders')->dailyAt('09:00')->timezone('America/New_York');
     })

@@ -6,6 +6,7 @@ import EmptyState from '../../../Components/EmptyState';
 import MetricCard from '../../../Components/MetricCard';
 import FilterBar from '../../../Components/FilterBar';
 import ClientInvoicesTable from '../../../Components/client/ClientInvoicesTable';
+import { categoryFilters, categoryName } from '../../../Components/InvoiceCategory';
 import { displayInvoiceStatus, formatCurrency, monthInAppTimezone, todayInAppTimezone } from '../../../lib/format';
 
 const FILTERS = [
@@ -22,6 +23,9 @@ const FILTERS = [
 export default function PortalInvoicesIndex({ invoices }) {
     const [search, setSearch] = useState('');
     const [filter, setFilter] = useState('all');
+    // By what they're for (project work, Hosting...), when there's more than one kind.
+    const [category, setCategory] = useState('all');
+    const categoryPills = categoryFilters(invoices);
 
     const matchesFilter = (invoice) => {
         const status = displayInvoiceStatus(invoice);
@@ -30,6 +34,7 @@ export default function PortalInvoicesIndex({ invoices }) {
     };
     const query = search.trim().toLowerCase();
     const visibleInvoices = invoices.filter((i) => matchesFilter(i)
+        && (category === 'all' || categoryName(i) === category)
         && (!query || String(i.invoice_number).includes(query) || i.project?.name?.toLowerCase().includes(query)));
 
     // What's still owed: each unpaid invoice's balance after payments.
@@ -63,7 +68,22 @@ export default function PortalInvoicesIndex({ invoices }) {
                     filters={FILTERS}
                     value={filter}
                     onChange={setFilter}
-                />
+                >
+                    {categoryPills.length > 0 && (
+                        <div className="filter-bar__pills">
+                            {categoryPills.map((f) => (
+                                <button
+                                    key={f.value}
+                                    type="button"
+                                    onClick={() => setCategory(f.value)}
+                                    className={`filter-bar__pill${category === f.value ? ' filter-bar__pill--active' : ''}`}
+                                >
+                                    {f.label}
+                                </button>
+                            ))}
+                        </div>
+                    )}
+                </FilterBar>
             )}
 
             {invoices.length === 0 || visibleInvoices.length === 0 ? (

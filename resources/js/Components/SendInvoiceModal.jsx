@@ -7,6 +7,7 @@ import { copyToClipboard } from '../lib/clipboard';
 import { formatCurrency, formatDate } from '../lib/format';
 import { easternWallTimeToUtcIso, formatDateTimeEastern, utcToEasternParts } from '../lib/datetime';
 import { addDays } from '../lib/scheduleDates';
+import { todayLocal } from '../lib/paymentTerms';
 import { hasQueuedEmail, waitForQueuedSend } from '../lib/invoiceSends';
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -73,6 +74,9 @@ export default function SendInvoiceModal({ invoice, studio, invoicingDefaults, o
     const sendTiming = mode === 'schedule' ? 'later' : 'now';
     // On by default for every send; turn it off here for this invoice.
     const [remindersEnabled, setRemindersEnabled] = useState(true);
+    // Send it again every month or year (hosting), by email. A resend of a
+    // repeating invoice starts from how it repeats now.
+    const [repeat, setRepeat] = useState(invoice.repeat ?? '');
     const initialSchedule = useMemo(defaultScheduleParts, []);
     const [scheduleDate, setScheduleDate] = useState(initialSchedule.date);
     const [scheduleTime, setScheduleTime] = useState(initialSchedule.time);
@@ -148,6 +152,19 @@ export default function SendInvoiceModal({ invoice, studio, invoicingDefaults, o
         }
     }
 
+    // The first copy's date: a month or a year after the issue date this
+    // send leaves the invoice with (moved to the send date when that's
+    // being updated) -- as the server works it out.
+    function repeatStart(every) {
+        const base = invoice.needs_issue_date_update && updateIssueDate
+            ? (sendTiming === 'later' ? scheduleDate : todayLocal())
+            : invoice.issued_on.slice(0, 10);
+        const [y, m, d] = base.split('-').map(Number);
+        const months = every === 'yearly' ? 12 : 1;
+        const lastDay = new Date(y, m - 1 + months + 1, 0).getDate();
+        return `${new Date(y, m - 1 + months, 1).getFullYear()}-${String(((m - 1 + months) % 12) + 1).padStart(2, '0')}-${String(Math.min(d, lastDay)).padStart(2, '0')}`;
+    }
+
     async function submit() {
         if (submitting) return;
         setError('');
@@ -178,6 +195,7 @@ export default function SendInvoiceModal({ invoice, studio, invoicingDefaults, o
                     scheduled_for: scheduledForIso || undefined,
                     reminders_enabled: remindersEnabled,
                     update_issue_date: updateIssueDate,
+                    repeat: repeat || null,
                 };
 
             const updated = await api.post(`/api/invoices/${invoice.id}/send`, payload);
@@ -285,6 +303,22 @@ export default function SendInvoiceModal({ invoice, studio, invoicingDefaults, o
                                     <input type="time" value={scheduleTime} onChange={(e) => setScheduleTime(e.target.value)} className="input" />
                                 </div>
                                 {/* Times are Eastern (America/New_York); the note saying so is hidden for now. */}
+                            </div>
+                        )}
+                        {activeTab === 'email' && (
+                            <div>
+                                <label className="label" htmlFor="send-repeat">Repeat</label>
+                                <select id="send-repeat" value={repeat} onChange={(e) => setRepeat(e.target.value)} className="input">
+                                    <option value="">Doesn&rsquo;t repeat</option>
+                                    <option value="monthly">Every month</option>
+                                    <option value="yearly">Every year</option>
+                                </select>
+                                {repeat && (
+                                    <p className="form-hint form-hint--attached">
+                                        A new copy is sent {repeat === 'monthly' ? 'every month' : 'every year'} at 9:00 AM, with this subject and message
+                                        {' '}&mdash; the next on {formatDate(repeatStart(repeat))}. Stop it any time from the invoice.
+                                    </p>
+                                )}
                             </div>
                         )}
                         <Toggle checked={remindersEnabled} onChange={setRemindersEnabled} label="Automatic payment reminders" />

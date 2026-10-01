@@ -92,6 +92,8 @@ class PortalPageController extends Controller
                 'due_on' => $invoice->due_on,
                 'total' => $invoice->total(),
                 'balance' => $invoice->remainingBalance(),
+                // What it's for (Hosting...); null is project work.
+                'category' => $invoice->category?->only('name'),
                 // When it was paid in full (the "Paid this year" card).
                 'paid_at' => $invoice->status === 'paid' ? $invoice->payments->max('paid_at') : null,
                 'public_token' => $invoice->public_token,

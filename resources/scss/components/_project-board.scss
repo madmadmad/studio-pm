@@ -65,12 +65,9 @@
         cursor: pointer; // a card opens its project; it can also be dragged
         transition: background-color var(--duration-fast) var(--ease-standard);
 
-        // The whole card lifts to the raised surface, edged in the red --
-        // it's one click target. (A full red fill would spend the accent
-        // on every pass of the pointer.)
+        // The whole card lightens a touch -- it's one click target.
         &:hover {
-            background-color: var(--color-surface-raised);
-            box-shadow: inset 0 0 0 var(--border-width) var(--color-primary);
+            background-color: var(--color-surface-hover);
         }
 
         &--dragging {

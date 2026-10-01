@@ -1,0 +1,13 @@
+// Marks a repeating invoice in a list (Components/InvoiceCategory's
+// RepeatIcon): a small arrows-in-a-circle glyph, its details in the tooltip.
+
+.repeat-icon {
+    display: inline-flex;
+    flex-shrink: 0;
+    color: var(--color-primary-icon);
+
+    svg {
+        width: var(--size-icon-sm);
+        height: var(--size-icon-sm);
+    }
+}

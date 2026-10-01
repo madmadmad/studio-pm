@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Models\Contact;
+use App\Models\InvoiceCategory;
 use App\Models\StudioProfile;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -52,6 +53,9 @@ class HandleInertiaRequests extends Middleware
             'portalPreview' => fn () => $request->session()->has('portal_preview') && $request->user() instanceof Contact
                 ? ['contact' => $request->user()->name, 'company' => $request->user()->company?->name]
                 : null,
+            // What an invoice can be categorised as, beyond project work
+            // (Settings). Staff only.
+            'invoiceCategories' => fn () => $request->user() instanceof Contact ? null : InvoiceCategory::orderBy('name')->get(['id', 'name']),
             // The sales tax an invoice takes when it's switched on (Settings).
             // Staff only.
             'salesTax' => fn () => $request->user() instanceof Contact ? null : StudioProfile::current()->salesTax(),

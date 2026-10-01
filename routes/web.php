@@ -76,6 +76,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/clients/{company}/portal-preview', [PortalPreviewController::class, 'start'])->name('clients.portal-preview');
         Route::get('/bookkeeping/sales-tax', [BookkeepingPageController::class, 'salesTax'])->name('bookkeeping.sales-tax');
         Route::get('/bookkeeping/sales-tax.csv', [BookkeepingPageController::class, 'salesTaxCsv'])->name('bookkeeping.sales-tax.csv');
+        Route::get('/bookkeeping/invoice-categories', [BookkeepingPageController::class, 'invoiceCategories'])->name('bookkeeping.invoice-categories');
+        Route::get('/bookkeeping/invoice-categories.csv', [BookkeepingPageController::class, 'invoiceCategoriesCsv'])->name('bookkeeping.invoice-categories.csv');
 
         Route::get('/expenses', [ExpensePageController::class, 'index'])->name('expenses.index');
 

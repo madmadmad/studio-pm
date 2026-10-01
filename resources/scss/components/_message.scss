@@ -142,14 +142,10 @@
         word-break: break-all;
     }
 
-    &__edit-input {
-        margin-bottom: var(--space-2);
-    }
-
-    &__edit-actions {
-        display: flex;
-        justify-content: flex-end;
-        gap: var(--space-2);
+    // Editing in place: the composer's field, attachment tiles, tools and
+    // buttons (.composer__*), with room above for the header.
+    &__edit {
+        margin-top: var(--space-1);
     }
 
     // Attachment groups get space above whenever something (the text, or

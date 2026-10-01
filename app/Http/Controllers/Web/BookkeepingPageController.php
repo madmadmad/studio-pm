@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
 use App\Models\Transaction;
+use App\Models\Invoice;
+use App\Services\InvoiceCategoryReport;
 use App\Services\SalesTaxReport;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -58,6 +60,33 @@ class BookkeepingPageController extends Controller
             }
             fclose($out);
         }, "sales-tax-{$year}.csv", ['Content-Type' => 'text/csv']);
+    }
+
+    // Invoices by category for a year (this year by default).
+    public function invoiceCategories(Request $request): Response
+    {
+        return Inertia::render('Bookkeeping/InvoiceCategories', [
+            'report' => InvoiceCategoryReport::forYear($this->reportYear($request)),
+            // The years with issued invoices, to switch between.
+            'years' => Invoice::whereIn('status', ['sent', 'paid'])->whereNotNull('issued_on')->pluck('issued_on')
+                ->map(fn ($date) => $date->year)
+                ->push(now()->year)
+                ->unique()->sortDesc()->values(),
+        ]);
+    }
+
+    public function invoiceCategoriesCsv(Request $request): StreamedResponse
+    {
+        $year = $this->reportYear($request);
+        $rows = InvoiceCategoryReport::csvRows(InvoiceCategoryReport::forYear($year));
+
+        return response()->streamDownload(function () use ($rows) {
+            $out = fopen('php://output', 'w');
+            foreach ($rows as $row) {
+                fputcsv($out, $row);
+            }
+            fclose($out);
+        }, "invoices-by-category-{$year}.csv", ['Content-Type' => 'text/csv']);
     }
 
     private function reportYear(Request $request): int

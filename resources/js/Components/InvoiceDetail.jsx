@@ -5,6 +5,7 @@ import InvoiceLineItems from './InvoiceLineItems';
 import InvoiceDateFields from './InvoiceDateFields';
 import SendInvoiceModal from './SendInvoiceModal';
 import { TaxRow, TaxToggle, useSalesTax } from './InvoiceTax';
+import { InvoiceCategorySelect } from './InvoiceCategory';
 import { formatCurrency, formatDate, invoiceSubtotal, invoiceTotal } from '../lib/format';
 import { formatDateTimeEastern, utcToEasternParts, easternWallTimeToUtcIso } from '../lib/datetime';
 import { reminderRows } from '../lib/reminders';
@@ -25,6 +26,7 @@ import { hasQueuedEmail, waitForQueuedSend } from '../lib/invoiceSends';
 function editFormFrom(invoice) {
     return {
         contact_id: invoice.contact_id ? String(invoice.contact_id) : '',
+        category_id: invoice.category_id ? String(invoice.category_id) : '',
         tax_rate: invoice.tax_rate,
         tax_name: invoice.tax_name,
         issued_on: invoice.issued_on ? invoice.issued_on.slice(0, 10) : '',
@@ -48,6 +50,7 @@ export function InvoiceDueLine({ invoice }) {
             {paymentTermsLabel(invoice.payment_terms) !== 'Custom' && ` (${paymentTermsLabel(invoice.payment_terms)})`}
             {invoice.contact && <> &middot; Billed to {invoice.contact.name}</>}
             {invoice.project?.po_number && <> &middot; PO #{invoice.project.po_number}</>}
+            {invoice.category && <> &middot; {invoice.category.name}</>}
         </>
     );
 }
@@ -104,6 +107,14 @@ export default function InvoiceDetail({ invoice: initialInvoice, studio, invoici
     }
 
     const pendingScheduledSend = (invoice.invoice_sends || []).find((s) => s.type === 'email' && s.status === 'scheduled');
+
+    // Ends a repeating series: no more copies.
+    async function stopRepeating() {
+        if (!confirm(`Stop sending this invoice ${invoice.repeat === 'yearly' ? 'every year' : 'every month'}? Copies already made stay as they are.`)) return;
+        const updated = await api.post(`/api/invoices/${invoice.id}/repeat/stop`);
+        setInvoice((current) => ({ ...current, ...updated }));
+        onChange();
+    }
 
     async function cancelScheduledSend(send) {
         const updated = await api.post(`/api/invoices/${invoice.id}/sends/${send.id}/cancel`);
@@ -178,6 +189,7 @@ export default function InvoiceDetail({ invoice: initialInvoice, studio, invoici
         try {
             await api.patch(`/api/invoices/${invoice.id}`, {
                 contact_id: form.contact_id || null,
+                category_id: form.category_id || null,
                 tax: form.tax_rate != null,
                 issued_on: form.issued_on,
                 payment_terms: form.payment_terms,
@@ -262,7 +274,7 @@ export default function InvoiceDetail({ invoice: initialInvoice, studio, invoici
 
                 {editing ? (
                     <div className={`${bare ? 'drawer__section' : section} invoice-form`}>
-                        <div className="invoice-form__section">
+                        <div className="invoice-form__section invoice-form__parties">
                             <select
                                 value={form.contact_id}
                                 onChange={(e) => setForm({ ...form, contact_id: e.target.value })}
@@ -275,6 +287,7 @@ export default function InvoiceDetail({ invoice: initialInvoice, studio, invoici
                                     </option>
                                 ))}
                             </select>
+                            <InvoiceCategorySelect value={form.category_id} onChange={(value) => setForm({ ...form, category_id: value })} />
                         </div>
 
                         <div className="form-panel">
@@ -363,6 +376,29 @@ export default function InvoiceDetail({ invoice: initialInvoice, studio, invoici
                                 </li>
                             ))}
                         </ul>
+                    </div>
+                )}
+
+                {/* A repeating series (set when it was sent), or a copy of one. */}
+                {!editing && invoice.repeat && (
+                    <div className={section}>
+                        <div className="invoice-detail__schedule">
+                            <span className="invoice-detail__schedule-text">
+                                Repeats {invoice.repeat === 'yearly' ? 'every year' : 'every month'}
+                                {invoice.next_repeat_on && <> &middot; next copy <strong>{formatDate(invoice.next_repeat_on.slice(0, 10))}</strong>, sent at 9:00 AM</>}
+                            </span>
+                            <div className="invoice-detail__schedule-actions">
+                                <Button variant="link-accent" onClick={stopRepeating}>Stop repeating</Button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+                {!editing && !invoice.repeat && invoice.repeated_from && (
+                    <div className={section}>
+                        <span className="invoice-detail__schedule-text">
+                            A copy of #{invoice.repeated_from.invoice_number}
+                            {invoice.repeated_from.repeat ? `, which repeats ${invoice.repeated_from.repeat === 'yearly' ? 'every year' : 'every month'}` : ''}.
+                        </span>
                     </div>
                 )}
 

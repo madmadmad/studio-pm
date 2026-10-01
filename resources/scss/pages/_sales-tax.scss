@@ -1,6 +1,7 @@
-// Bookkeeping > Sales tax (Pages/Bookkeeping/SalesTax.jsx): a table of
-// months, a month's taxed payments opening beneath it, and the year's
-// total along the bottom.
+// Bookkeeping's yearly reports -- Sales tax (Pages/Bookkeeping/SalesTax.jsx)
+// and Invoices by category (InvoiceCategories.jsx): a table of months or
+// categories, one's rows opening beneath it, and the year's total along
+// the bottom.
 
 .sales-tax {
     // A payment under an opened month: smaller, on the subtle fill, its

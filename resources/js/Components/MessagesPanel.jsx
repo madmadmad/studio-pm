@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Paperclip, PencilSimple, Trash, X } from '@phosphor-icons/react';
+import { LinkSimple, Paperclip, PencilSimple, Trash, X } from '@phosphor-icons/react';
 import EmojiPicker, { REACTION_EMOJI } from './EmojiPicker';
 import { formatDate, formatDateTime, formatDaySeparator, formatRelativeTime, isSameDay } from '../lib/format';
 import { api } from '../lib/api';
@@ -7,7 +7,8 @@ import Badge from './Badge';
 import Button from './Button';
 import EmptyState from './EmptyState';
 import Avatar from './Avatar';
-import AttachmentChip from './AttachmentChip';
+import AttachmentChip, { iconFor } from './AttachmentChip';
+import LinkChip, { describeLink } from './LinkChip';
 import Lightbox from './Lightbox';
 import { DrawerByline, DrawerDate } from './Drawer';
 
@@ -91,8 +92,21 @@ function usePendingAttachments() {
     return { files, addFiles, removeFile, clear: () => setFiles([]) };
 }
 
-function PendingAttachments({ files, onRemove }) {
-    if (files.length === 0) return null;
+// A non-image file's or a link's tile: its glyph over its name.
+function PendingTile({ Icon, name }) {
+    return (
+        <div className="pending-attachments__file" title={name}>
+            <Icon size={20} className="pending-attachments__icon" />
+            <span className="pending-attachments__name">{name}</span>
+        </div>
+    );
+}
+
+// Files -- and links (the link button) -- waiting to be sent, as tiles in
+// one row: a file's thumbnail or name, a link's service glyph and name,
+// each with the same remove button on its corner.
+function PendingAttachments({ files, onRemove, links = [], onRemoveLink }) {
+    if (files.length === 0 && links.length === 0) return null;
 
     return (
         <div className="pending-attachments">
@@ -101,9 +115,7 @@ function PendingAttachments({ files, onRemove }) {
                     {previewUrl ? (
                         <img src={previewUrl} alt={file.name} className="pending-attachments__thumb" />
                     ) : (
-                        <div className="pending-attachments__file">
-                            {file.name}
-                        </div>
+                        <PendingTile Icon={iconFor(file.name)} name={file.name} />
                     )}
                     <button
                         type="button"
@@ -114,8 +126,121 @@ function PendingAttachments({ files, onRemove }) {
                     </button>
                 </div>
             ))}
+            {links.map((url) => {
+                const { title, Icon } = describeLink(url);
+                return (
+                    <div key={url} className="pending-attachments__item" title={url}>
+                        <PendingTile Icon={Icon} name={title} />
+                        <button
+                            type="button"
+                            onClick={() => onRemoveLink(url)}
+                            title="Remove link"
+                            aria-label="Remove link"
+                            className="pending-attachments__remove"
+                        >
+                            <X size={12} weight="bold" />
+                        </button>
+                    </div>
+                );
+            })}
         </div>
     );
+}
+
+// A pasted link made whole: "dropbox.com/s/..." gets its https://, and
+// anything that isn't a web address comes back null.
+function normalizeLink(raw) {
+    let value = raw.trim();
+    if (!value) return null;
+    if (!/^[a-z][a-z0-9+.-]*:\/\//i.test(value)) value = `https://${value}`;
+    try {
+        const url = new URL(value);
+        return ['http:', 'https:'].includes(url.protocol) && url.hostname.includes('.') ? url.toString() : null;
+    } catch {
+        return null;
+    }
+}
+
+// Links waiting in a composer (the link button), sent with the message.
+function usePendingLinks() {
+    const [links, setLinks] = useState([]);
+    return {
+        links,
+        add: (url) => setLinks((current) => (current.includes(url) ? current : [...current, url])),
+        remove: (url) => setLinks((current) => current.filter((l) => l !== url)),
+        clear: () => setLinks([]),
+    };
+}
+
+// The composer's link button and what it opens: a field to paste a link
+// into (Enter or "Add link" adds it, Escape closes it). Returns { button,
+// panel } for the composer to place; added links wait as tiles beside any
+// files (PendingAttachments).
+function useLinkTool(pending) {
+    const [open, setOpen] = useState(false);
+    const [value, setValue] = useState('');
+    const [error, setError] = useState('');
+
+    function add() {
+        const url = normalizeLink(value);
+        if (!url) {
+            setError('That doesn’t look like a link.');
+            return;
+        }
+        pending.add(url);
+        setValue('');
+        setError('');
+        setOpen(false);
+    }
+
+    return {
+        button: (
+            <button
+                type="button"
+                onClick={() => setOpen((o) => !o)}
+                title="Share a link"
+                aria-label="Share a link"
+                aria-expanded={open}
+                className="icon-btn icon-btn--secondary composer__attach"
+            >
+                <LinkSimple size={20} />
+            </button>
+        ),
+        panel: (
+            <>
+                {open && (
+                    <div className="composer__link">
+                        <input
+                            autoFocus
+                            type="url"
+                            inputMode="url"
+                            placeholder="Paste a link — Dropbox, Google Drive, WeTransfer…"
+                            value={value}
+                            onChange={(e) => {
+                                setValue(e.target.value);
+                                setError('');
+                            }}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                    e.preventDefault();
+                                    add();
+                                }
+                                if (e.key === 'Escape') {
+                                    e.stopPropagation();
+                                    setOpen(false);
+                                }
+                            }}
+                            aria-label="Link"
+                            className="input composer__link-input"
+                        />
+                        <Button type="button" variant="secondary" onClick={add}>Add link</Button>
+                        <Button type="button" variant="secondary" onClick={() => setOpen(false)}>Cancel</Button>
+                    </div>
+                )}
+                {error && open && <div className="composer__error">{error}</div>}
+            </>
+        ),
+    };
 }
 
 // Types an emoji into a composer at the cursor (or over a selection), then
@@ -175,6 +300,8 @@ export function NewThreadForm({ recipientOptions, endpoints, onCreate, onCancel,
     const [progress, setProgress] = useState(0);
     const [error, setError] = useState('');
     const attachments = usePendingAttachments();
+    const links = usePendingLinks();
+    const linkTool = useLinkTool(links);
 
     function toggle(token) {
         setSelected((current) => (current.includes(token) ? current.filter((t) => t !== token) : [...current, token]));
@@ -197,8 +324,8 @@ export function NewThreadForm({ recipientOptions, endpoints, onCreate, onCancel,
 
     async function submit(e) {
         e.preventDefault();
-        if (!subject.trim() || (!body.trim() && attachments.files.length === 0) || selected.length === 0) {
-            setError('Add a subject, a recipient, and a message or attachment.');
+        if (!subject.trim() || (!body.trim() && attachments.files.length === 0 && links.links.length === 0) || selected.length === 0) {
+            setError('Add a subject, a recipient, and a message, file or link.');
             return;
         }
         setSaving(true);
@@ -210,6 +337,7 @@ export function NewThreadForm({ recipientOptions, endpoints, onCreate, onCancel,
             form.append('body', body);
             selected.forEach((token) => form.append('recipients[]', token));
             attachments.files.forEach(({ file }) => form.append('attachments[]', file));
+            links.links.forEach((url) => form.append('links[]', url));
 
             await api.postFormWithProgress(endpoints.create, form, setProgress);
             onCreate();
@@ -260,7 +388,8 @@ export function NewThreadForm({ recipientOptions, endpoints, onCreate, onCancel,
                 placeholder="Message… (⌘/Ctrl+Enter to send)"
                 textareaRef={emoji.ref}
             />
-            <PendingAttachments files={attachments.files} onRemove={attachments.removeFile} />
+            <PendingAttachments files={attachments.files} onRemove={attachments.removeFile} links={links.links} onRemoveLink={links.remove} />
+            {linkTool.panel}
             {error && <div className="composer__error">{error}</div>}
             {saving && attachments.files.length > 0 && (
                 <div className="progress composer__progress">
@@ -273,6 +402,7 @@ export function NewThreadForm({ recipientOptions, endpoints, onCreate, onCancel,
                         <Paperclip size={20} />
                         <input type="file" multiple hidden onChange={(e) => { attachments.addFiles(e.target.files); e.target.value = ''; }} />
                     </label>
+                    {linkTool.button}
                     <EmojiPicker onPick={emoji.insert} placement="up" />
                 </div>
                 <div className="composer__actions">
@@ -287,6 +417,7 @@ export function NewThreadForm({ recipientOptions, endpoints, onCreate, onCancel,
 function MessageAttachments({ message, endpoints, onOpenLightbox }) {
     const images = (message.attachments || []).filter((a) => a.is_image);
     const files = (message.attachments || []).filter((a) => !a.is_image);
+    const links = message.links || [];
     const lightboxImages = images.map((img) => ({
         src: endpoints.attachmentUrl(img.id),
         downloadUrl: endpoints.attachmentUrl(img.id),
@@ -326,11 +457,12 @@ function MessageAttachments({ message, endpoints, onOpenLightbox }) {
                     ))}
                 </div>
             )}
-            {files.length > 0 && (
+            {(files.length > 0 || links.length > 0) && (
                 <div className="message__files">
                     {files.map((file) => (
                         <AttachmentChip key={file.id} attachment={file} downloadUrl={endpoints.attachmentUrl(file.id)} />
                     ))}
+                    {links.map((link) => <LinkChip key={`link-${link.id}`} url={link.url} />)}
                 </div>
             )}
         </>
@@ -341,6 +473,15 @@ function MessageRow({ message, endpoints, currentActorType, currentActorId, onCh
     const [editing, setEditing] = useState(false);
     const [editBody, setEditBody] = useState(message.body || '');
     const [saving, setSaving] = useState(false);
+    const [editError, setEditError] = useState('');
+    // An edit can take files and links off (kept by id until Save) and
+    // add new ones, as the composer does.
+    const [removedFileIds, setRemovedFileIds] = useState([]);
+    const [removedLinkIds, setRemovedLinkIds] = useState([]);
+    const newFiles = usePendingAttachments();
+    const newLinks = usePendingLinks();
+    const linkTool = useLinkTool(newLinks);
+    const editEmoji = useEmojiInsert(editBody, setEditBody);
 
     const sender = message.sender_user || message.sender_contact;
     const isClientAuthor = !!message.sender_contact;
@@ -353,13 +494,62 @@ function MessageRow({ message, endpoints, currentActorType, currentActorId, onCh
         onChange();
     }
 
+    function startEditing() {
+        setEditBody(message.body || '');
+        setRemovedFileIds([]);
+        setRemovedLinkIds([]);
+        newFiles.clear();
+        newLinks.clear();
+        setEditError('');
+        setEditing(true);
+    }
+
+    // What the edit keeps of the message's own files and links.
+    const keptFiles = (message.attachments || []).filter((a) => !removedFileIds.includes(a.id));
+    const keptLinks = (message.links || []).filter((l) => !removedLinkIds.includes(l.id));
+    // As tiles beside the new ones: kept files take the composer's file
+    // shape (a thumbnail for an image), keyed so a remove can tell them apart.
+    const editTiles = [
+        ...keptFiles.map((a) => ({
+            key: `saved-${a.id}`,
+            file: { name: a.original_name },
+            previewUrl: a.is_image ? (a.thumbnail_status === 'ready' ? endpoints.attachmentThumbnailUrl(a.id) : endpoints.attachmentUrl(a.id)) : null,
+        })),
+        ...newFiles.files,
+    ];
+    const editLinkUrls = [...keptLinks.map((l) => l.url), ...newLinks.links];
+
+    function removeEditTile(key) {
+        if (key.startsWith('saved-')) setRemovedFileIds((ids) => [...ids, Number(key.slice(6))]);
+        else newFiles.removeFile(key);
+    }
+
+    function removeEditLink(url) {
+        const saved = keptLinks.find((l) => l.url === url);
+        if (saved) setRemovedLinkIds((ids) => [...ids, saved.id]);
+        else newLinks.remove(url);
+    }
+
     async function saveEdit() {
-        if (!editBody.trim()) return;
+        if (!editBody.trim() && editTiles.length === 0 && editLinkUrls.length === 0) {
+            setEditError('A message needs text, a file or a link.');
+            return;
+        }
         setSaving(true);
+        setEditError('');
         try {
-            await api.patch(endpoints.update(message.id), { body: editBody });
+            const form = new FormData();
+            form.append('_method', 'PATCH');
+            form.append('body', editBody);
+            newFiles.files.forEach(({ file }) => form.append('attachments[]', file));
+            newLinks.links.forEach((url) => form.append('links[]', url));
+            removedFileIds.forEach((id) => form.append('remove_attachment_ids[]', id));
+            removedLinkIds.forEach((id) => form.append('remove_link_ids[]', id));
+            await api.postForm(endpoints.update(message.id), form);
             setEditing(false);
             onChange();
+        } catch (err) {
+            setEditError(err.message || 'Could not save this message.');
         } finally {
             setSaving(false);
         }
@@ -393,7 +583,7 @@ function MessageRow({ message, endpoints, currentActorType, currentActorId, onCh
                             )}
                             {canModify && (
                                 <>
-                                    <button onClick={() => { setEditBody(message.body || ''); setEditing(true); }} className="icon-btn icon-btn--edit" title="Edit">
+                                    <button onClick={startEditing} className="icon-btn icon-btn--edit" title="Edit">
                                         <PencilSimple size={16} />
                                     </button>
                                     <button onClick={remove} className="icon-btn icon-btn--danger" title="Delete">
@@ -408,17 +598,34 @@ function MessageRow({ message, endpoints, currentActorType, currentActorId, onCh
                 {isDeleted ? (
                     <div className="message__body message__body--deleted">Message deleted</div>
                 ) : editing ? (
-                    <div className="message__body">
-                        <textarea
+                    <div
+                        className="message__body message__edit"
+                        onDragOver={(e) => e.preventDefault()}
+                        onDrop={(e) => { e.preventDefault(); if (e.dataTransfer.files?.length) newFiles.addFiles(e.dataTransfer.files); }}
+                    >
+                        <AutoGrowTextarea
                             value={editBody}
                             onChange={(e) => setEditBody(e.target.value)}
-                            rows={3}
-                            className="input message__edit-input"
+                            placeholder="Message…"
                             autoFocus
+                            textareaRef={editEmoji.ref}
                         />
-                        <div className="message__edit-actions">
-                            <Button variant="secondary" onClick={() => setEditing(false)}>Cancel</Button>
-                            <Button onClick={saveEdit} disabled={saving}>Save</Button>
+                        <PendingAttachments files={editTiles} onRemove={removeEditTile} links={editLinkUrls} onRemoveLink={removeEditLink} />
+                        {linkTool.panel}
+                        {editError && <div className="composer__error">{editError}</div>}
+                        <div className="composer__footer">
+                            <div className="composer__tools">
+                                <label className="icon-btn icon-btn--secondary composer__attach" title="Attach files">
+                                    <Paperclip size={20} />
+                                    <input type="file" multiple hidden onChange={(e) => { newFiles.addFiles(e.target.files); e.target.value = ''; }} />
+                                </label>
+                                {linkTool.button}
+                                <EmojiPicker onPick={editEmoji.insert} placement="up" />
+                            </div>
+                            <div className="composer__actions">
+                                <Button variant="secondary" onClick={() => setEditing(false)}>Cancel</Button>
+                                <Button onClick={saveEdit} disabled={saving}>Save</Button>
+                            </div>
                         </div>
                     </div>
                 ) : (
@@ -466,6 +673,8 @@ export function ThreadView({ thread, currentActorType, currentActorId, endpoints
     const [visibleCount, setVisibleCount] = useState(INITIAL_VISIBLE);
     const [lightbox, setLightbox] = useState(null); // { images, index }
     const attachments = usePendingAttachments();
+    const links = usePendingLinks();
+    const linkTool = useLinkTool(links);
     const bottomRef = useRef(null);
 
     const participants = threadParticipantActors(thread);
@@ -495,17 +704,19 @@ export function ThreadView({ thread, currentActorType, currentActorId, endpoints
 
     async function submitReply(e) {
         e.preventDefault();
-        if (!body.trim() && attachments.files.length === 0) return;
+        if (!body.trim() && attachments.files.length === 0 && links.links.length === 0) return;
         setSaving(true);
         setProgress(0);
         try {
             const form = new FormData();
             form.append('body', body);
             attachments.files.forEach(({ file }) => form.append('attachments[]', file));
+            links.links.forEach((url) => form.append('links[]', url));
 
             await api.postFormWithProgress(endpoints.reply(thread.id), form, setProgress);
             setBody('');
             attachments.clear();
+            links.clear();
             onChange();
         } finally {
             setSaving(false);
@@ -598,7 +809,8 @@ export function ThreadView({ thread, currentActorType, currentActorId, endpoints
                         placeholder="Write a reply… (⌘/Ctrl+Enter to send)"
                         textareaRef={emoji.ref}
                     />
-                    <PendingAttachments files={attachments.files} onRemove={attachments.removeFile} />
+                    <PendingAttachments files={attachments.files} onRemove={attachments.removeFile} links={links.links} onRemoveLink={links.remove} />
+                    {linkTool.panel}
                     {saving && attachments.files.length > 0 && (
                         <div className="progress composer__progress">
                             <div className="progress__bar" style={{ width: `${progress}%` }} />
@@ -610,6 +822,7 @@ export function ThreadView({ thread, currentActorType, currentActorId, endpoints
                                 <Paperclip size={20} />
                                 <input type="file" multiple hidden onChange={(e) => { attachments.addFiles(e.target.files); e.target.value = ''; }} />
                             </label>
+                            {linkTool.button}
                             <EmojiPicker onPick={emoji.insert} placement="up" />
                         </div>
                         <Button type="submit" disabled={saving}>Reply</Button>

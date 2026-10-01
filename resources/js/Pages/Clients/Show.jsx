@@ -23,6 +23,7 @@ import AutoResizeTextarea from '../../Components/AutoResizeTextarea';
 import ClientFields, { Field } from '../../Components/client/ClientFields';
 import ContactCards from '../../Components/client/ContactCards';
 import ClientInvoicesTable from '../../Components/client/ClientInvoicesTable';
+import { categoryFilters, categoryName } from '../../Components/InvoiceCategory';
 import ClientProposalsTable from '../../Components/client/ClientProposalsTable';
 import { GearSix } from '@phosphor-icons/react';
 import BackLink from '../../Components/BackLink';
@@ -463,6 +464,10 @@ function ProjectsCard({ company }) {
 
 function InvoicesCard({ company }) {
     const [creating, setCreating] = useState(false);
+    // By what they're for (project work, Hosting...), when there's more than one kind.
+    const [category, setCategory] = useState('all');
+    const filters = categoryFilters(company.invoices);
+    const shownInvoices = category === 'all' ? company.invoices : company.invoices.filter((i) => categoryName(i) === category);
     // Invoices open in the wide drawer, as on a project's Billing tab.
     const { openInvoice, drawer: invoiceDrawer } = useInvoiceDrawer(reload);
     const outstanding = outstandingBalance(company.invoices);
@@ -480,10 +485,24 @@ function InvoicesCard({ company }) {
                 addLabel="New invoice"
                 onAdd={() => setCreating(true)}
             />
+            {filters.length > 0 && (
+                <div className="filter-bar__pills page-section--tight">
+                    {filters.map((f) => (
+                        <button
+                            key={f.value}
+                            type="button"
+                            onClick={() => setCategory(f.value)}
+                            className={`filter-bar__pill${category === f.value ? ' filter-bar__pill--active' : ''}`}
+                        >
+                            {f.label}
+                        </button>
+                    ))}
+                </div>
+            )}
             {company.invoices.length === 0 ? (
                 <EmptyState text="No invoices yet." />
             ) : (
-                <ClientInvoicesTable invoices={company.invoices} onOpen={(invoice) => openInvoice(invoice.id)} />
+                <ClientInvoicesTable invoices={shownInvoices} onOpen={(invoice) => openInvoice(invoice.id)} />
             )}
 
             {invoiceDrawer}

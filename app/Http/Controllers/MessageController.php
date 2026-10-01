@@ -56,10 +56,10 @@ class MessageController extends Controller
         $recipients = $this->threads->resolveRecipients($project, $data['recipients']);
 
         $thread = $this->threads->createThread(
-            $project, $request->user(), $data['subject'], $data['body'] ?? null, $recipients, $request->file('attachments', [])
+            $project, $request->user(), $data['subject'], $data['body'] ?? null, $recipients, $request->file('attachments', []), $data['links'] ?? []
         );
 
-        return $thread->load('senderUser', 'senderContact', 'participants.user', 'participants.contact', 'attachments');
+        return $thread->load('senderUser', 'senderContact', 'participants.user', 'participants.contact', 'attachments', 'links');
     }
 
     public function reply(Request $request, Message $message)
@@ -70,20 +70,29 @@ class MessageController extends Controller
 
         $data = $this->validateMessage($request);
 
-        $reply = $this->threads->reply($message, $request->user(), $data['body'] ?? null, $request->file('attachments', []));
+        $reply = $this->threads->reply($message, $request->user(), $data['body'] ?? null, $request->file('attachments', []), $data['links'] ?? []);
 
-        return $reply->load('senderUser', 'senderContact', 'attachments');
+        return $reply->load('senderUser', 'senderContact', 'attachments', 'links');
     }
 
     public function update(Request $request, Message $message)
     {
         $this->authorize('update', $message);
 
-        $data = $request->validate(['body' => ['required', 'string']]);
+        // Text, plus files and links taken off or added (a multipart
+        // POST with _method=PATCH when files come along).
+        $data = $this->threads->editValidator($request, $message)->validate();
 
-        $this->threads->updateBody($message, $data['body']);
+        $this->threads->updateMessage(
+            $message,
+            $data['body'] ?? null,
+            $request->file('attachments', []),
+            $data['links'] ?? [],
+            $data['remove_attachment_ids'] ?? [],
+            $data['remove_link_ids'] ?? [],
+        );
 
-        return $message->load('senderUser', 'senderContact', 'attachments');
+        return $message->fresh()->load('senderUser', 'senderContact', 'attachments', 'links');
     }
 
     public function destroy(Message $message)
@@ -124,13 +133,13 @@ class MessageController extends Controller
     {
         $rules = array_merge([
             'body' => ['nullable', 'string'],
-        ], $this->threads->attachmentValidationRules(), $extraRules);
+        ], $this->threads->attachmentValidationRules(), $this->threads->linkValidationRules(), $extraRules);
 
         $validator = Validator::make($request->all(), $rules);
 
         $validator->after(function ($validator) use ($request) {
-            if (! trim((string) $request->input('body')) && empty($request->file('attachments', []))) {
-                $validator->errors()->add('body', 'Add a message or attach at least one file.');
+            if (! trim((string) $request->input('body')) && empty($request->file('attachments', [])) && empty($request->input('links', []))) {
+                $validator->errors()->add('body', 'Add a message, a file or a link.');
             }
         });
 

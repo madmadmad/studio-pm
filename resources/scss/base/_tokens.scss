@@ -128,6 +128,7 @@
     --color-surface: color-mix(in srgb, var(--color-bg) 97%, #EBEFF9); // cards, list cards
     --color-surface-subtle: color-mix(in srgb, var(--color-bg) 97%, #EBEFF9); // filled cards, hover rows, toolbars
     --color-surface-raised: color-mix(in srgb, var(--color-bg) 96%, #EBEFF9); // floats above the page: drawers, modals, popovers, menus
+    --color-surface-hover: color-mix(in srgb, var(--color-bg) 93%, #EBEFF9); // a filled card under the pointer (board cards), a touch lighter
     --color-surface-muted: color-mix(in srgb, var(--color-bg) 90%, #EBEFF9);; // neutral badge/chip fill, a step lighter
     --color-surface-highlight: color-mix(in srgb, var(--color-bg) 85%, #EBEFF9); // a card picked out quietly (a project's Remaining), a step lighter again
     --color-field: color-mix(in srgb, var(--color-bg) 92%, #EBEFF9); // inputs and selects: a faint lift over whatever they sit on, so a borderless field reads on every layer

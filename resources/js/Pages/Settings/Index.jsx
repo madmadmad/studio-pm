@@ -1,10 +1,64 @@
-import { Head } from '@inertiajs/react';
+import { Head, usePage } from '@inertiajs/react';
+import { X } from '@phosphor-icons/react';
 import { useState } from 'react';
 import AppLayout from '../../Layouts/AppLayout';
 import Button from '../../Components/Button';
 import { api } from '../../lib/api';
 import PageHeader from '../../Components/PageHeader';
 import AutoResizeTextarea from '../../Components/AutoResizeTextarea';
+
+// What invoices can be for beyond project work (Hosting...): added and
+// removed here, saved as you go. Removing one leaves its invoices as
+// project work.
+function InvoiceCategories() {
+    const [categories, setCategories] = useState(usePage().props.invoiceCategories || []);
+    const [name, setName] = useState('');
+    const [error, setError] = useState('');
+
+    async function add(e) {
+        e.preventDefault();
+        if (!name.trim()) return;
+        setError('');
+        try {
+            const created = await api.post('/api/invoice-categories', { name: name.trim() });
+            setCategories((current) => [...current, created].sort((a, b) => a.name.localeCompare(b.name)));
+            setName('');
+        } catch (err) {
+            setError(err.errors?.name?.[0] || err.message);
+        }
+    }
+
+    async function remove(category) {
+        if (!confirm(`Remove the "${category.name}" category? Its invoices become project work.`)) return;
+        await api.delete(`/api/invoice-categories/${category.id}`);
+        setCategories((current) => current.filter((c) => c.id !== category.id));
+    }
+
+    return (
+        <form onSubmit={add} className="card card--padded card--narrow form-stack page-section">
+            <div className="section-label">Invoice categories</div>
+            <p className="form-hint">
+                For invoices that aren&rsquo;t project work, like hosting. They need no project, stay off the project boards, and add up by year in Bookkeeping&rsquo;s Invoices by category report.
+            </p>
+            <div className="settings__categories">
+                <div className="settings__category settings__category--fixed">Project work <span className="settings__category-note">every other invoice</span></div>
+                {categories.map((category) => (
+                    <div key={category.id} className="settings__category">
+                        {category.name}
+                        <button type="button" onClick={() => remove(category)} title={`Remove ${category.name}`} aria-label={`Remove ${category.name}`} className="icon-btn icon-btn--danger">
+                            <X />
+                        </button>
+                    </div>
+                ))}
+            </div>
+            <div className="inline-form">
+                <input placeholder="New category, e.g. Maintenance" value={name} onChange={(e) => setName(e.target.value)} aria-label="New category" className="input inline-form__grow" />
+                <Button type="submit" variant="secondary">Add</Button>
+            </div>
+            {error && <div className="form-error">{error}</div>}
+        </form>
+    );
+}
 
 export default function SettingsIndex({ studioProfile }) {
     const [form, setForm] = useState({
@@ -136,6 +190,8 @@ export default function SettingsIndex({ studioProfile }) {
                     </Button>
                 </div>
             </form>
+
+            <InvoiceCategories />
         </AppLayout>
     );
 }

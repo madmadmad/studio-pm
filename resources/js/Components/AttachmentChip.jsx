@@ -12,7 +12,8 @@ const ICONS = {
     zip: FileZip,
 };
 
-function iconFor(filename) {
+// The file-type glyph for a filename (a PDF, a spreadsheet...).
+export function iconFor(filename) {
     const extension = filename.split('.').pop()?.toLowerCase();
     return ICONS[extension] || File;
 }

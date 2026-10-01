@@ -36,9 +36,9 @@
 
     // A tab's content -- everything after the strip -- sits flat on the
     // page: its lists and cards drop their fill and shadow, and the row
-    // rules alone divide the data. Metric and contact cards keep theirs
-    // (each is its own object, not a list's frame).
-    & ~ * .card:not(.metric-card, .contact-card) {
+    // rules alone divide the data. Metric, contact and board cards keep
+    // theirs (each is its own object, not a list's frame).
+    & ~ * .card:not(.metric-card, .contact-card, .project-board__card) {
         background-color: transparent;
         box-shadow: none;
     }

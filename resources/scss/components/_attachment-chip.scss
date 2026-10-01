@@ -1,5 +1,6 @@
 // A non-image attachment: file-type glyph + name + size + download icon.
-// Used by Components/AttachmentChip.jsx.
+// Used by Components/AttachmentChip.jsx, and for shared links by
+// Components/LinkChip.jsx (service glyph + name + where + open icon).
 @use '../abstracts' as *;
 
 .attachment-chip {

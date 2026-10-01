@@ -1,0 +1,36 @@
+// The Invoices list's month dividers (Pages/Invoices/Index.jsx): the month
+// on the left, what was invoiced in it on the right, on the subtle fill --
+// like a timesheet's day headings.
+
+.invoice-month {
+    td {
+        padding: 0;
+    }
+
+    &__bar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: var(--space-2);
+        padding: var(--space-2) var(--space-row-x);
+        font-size: var(--font-size-xs);
+        line-height: var(--line-height-xs);
+        color: var(--color-text-muted);
+        background-color: var(--color-surface-subtle);
+    }
+
+    &__label {
+        font-weight: var(--font-weight-semibold);
+        color: var(--color-text);
+    }
+
+    &__figures {
+        font-variant-numeric: tabular-nums;
+
+        strong {
+            font-size: var(--font-size-sm);
+            color: var(--color-text);
+        }
+    }
+}

@@ -28,3 +28,20 @@
         gap: var(--space-2);
     }
 }
+
+// The staff profile page: Photo, Details and Password panels in a narrow
+// column, as wide as a narrow card.
+.profile-page {
+    max-width: var(--size-form);
+
+    .profile-card__identity {
+        margin-top: var(--space-3);
+    }
+}
+
+// Under the starred-projects board's empty state: where to star some.
+.profile-page__hint {
+    margin-top: calc(var(--space-4) * -1);
+    padding: 0 var(--space-4) var(--space-8);
+    text-align: center;
+}

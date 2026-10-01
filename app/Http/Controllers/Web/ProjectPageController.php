@@ -11,6 +11,7 @@ use App\Services\UnreadMessages;
 use App\Models\Service;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -18,21 +19,8 @@ class ProjectPageController extends Controller
 {
     public function index(Request $request): Response
     {
-        $projects = Project::where('status', '!=', 'archived')->with(['company', 'tasks']);
-        $this->scopeToRole($request, $projects);
-        $this->withFavorite($request, $projects);
-        // What each has billed so far, before tax (the board's budget bar)
-        // -- managers only, like the other money figures.
-        if ($request->user()->isManager()) {
-            $projects->withSum('invoiceItems as invoiced_amount', 'amount');
-        }
-
-        // Unread message threads on each, for this person (UnreadMessages).
-        $unread = UnreadMessages::countsByProject($request->user());
-
         return Inertia::render('Projects/Index', [
-            'projects' => $projects->orderBy('name')->get()
-                ->each(fn (Project $project) => $project->setAttribute('unread_messages', $unread[$project->id] ?? 0)),
+            'projects' => static::boardProjects($request),
             'companies' => $request->user()->isManager()
                 ? Company::with('contacts')->orderBy('name')->get(['id', 'name'])
                 : [],
@@ -133,6 +121,32 @@ class ProjectPageController extends Controller
             // stay manager-only, so this is just name and billable.
             'timeServices' => Service::orderBy('name')->get(['id', 'name', 'billable']),
         ]);
+    }
+
+    // The projects for a list or board (the Projects page; the profile's
+    // starred board with `$starredOnly`): every one that isn't archived and
+    // this person can see, with its client and tasks, whether they've
+    // starred it, its unread message threads for them and -- for managers
+    // -- what it has billed so far, before tax (the board's budget bar).
+    public static function boardProjects(Request $request, bool $starredOnly = false): Collection
+    {
+        $user = $request->user();
+        $controller = new static;
+
+        $projects = Project::where('status', '!=', 'archived')->with(['company', 'tasks']);
+        $controller->scopeToRole($request, $projects);
+        $controller->withFavorite($request, $projects);
+        if ($starredOnly) {
+            $projects->whereHas('favoritedBy', fn ($q) => $q->where('users.id', $user->id));
+        }
+        if ($user->isManager()) {
+            $projects->withSum('invoiceItems as invoiced_amount', 'amount');
+        }
+
+        $unread = UnreadMessages::countsByProject($user);
+
+        return $projects->orderBy('name')->get()
+            ->each(fn (Project $project) => $project->setAttribute('unread_messages', $unread[$project->id] ?? 0));
     }
 
     // `is_favorite`: whether the viewer has starred each project.

@@ -41,6 +41,7 @@ class InvoiceController extends Controller
     {
         $data = $this->validateInvoice($request, [
             'project_id' => ['nullable', Rule::exists('projects', 'id')->where('company_id', $company->id)],
+            'category_id' => ['nullable', 'exists:invoice_categories,id'],
             'contact_id' => ['nullable', Rule::exists('contacts', 'id')->where('company_id', $company->id)],
             'items' => ['required', 'array', 'min:1'],
             'items.*.description' => ['required', 'string'],
@@ -57,6 +58,7 @@ class InvoiceController extends Controller
         $invoice = DB::transaction(function () use ($data, $company, $issuedOn, $dueOn, $terms) {
             $invoice = $company->invoices()->create([
                 'project_id' => $data['project_id'] ?? null,
+                'category_id' => $data['category_id'] ?? null,
                 'contact_id' => $data['contact_id'] ?? null,
                 'status' => 'draft',
                 // Paying online by card is always offered.
@@ -94,7 +96,7 @@ class InvoiceController extends Controller
             return $invoice;
         });
 
-        return $invoice->load('items');
+        return $invoice->load('items', 'category:id,name');
     }
 
     public function update(Request $request, Invoice $invoice)
@@ -105,6 +107,7 @@ class InvoiceController extends Controller
 
         $data = $this->validateInvoice($request, [
             'contact_id' => ['nullable', Rule::exists('contacts', 'id')->where('company_id', $invoice->company_id)],
+            'category_id' => ['nullable', 'exists:invoice_categories,id'],
             'items' => ['required', 'array', 'min:1'],
             // An existing line keeps its id; a new line has none.
             'items.*.id' => ['nullable', 'integer', Rule::exists('invoice_items', 'id')->where('invoice_id', $invoice->id)],
@@ -120,6 +123,8 @@ class InvoiceController extends Controller
         DB::transaction(function () use ($data, $invoice, $issuedOn, $dueOn, $terms) {
             $invoice->update([
                 'contact_id' => $data['contact_id'] ?? null,
+                // Left out, an edit keeps the category it had.
+                ...(array_key_exists('category_id', $data) ? ['category_id' => $data['category_id']] : []),
                 'surcharge' => true,
                 ...$this->taxFields($data, $invoice),
                 'issued_on' => $issuedOn,
@@ -223,7 +228,10 @@ class InvoiceController extends Controller
             'reminders_enabled' => ['nullable', 'boolean'],
             'mark_as_sent' => ['boolean'],
             'update_issue_date' => ['boolean'],
+            // Send it again every month or year (hosting): by email only.
+            'repeat' => ['nullable', Rule::in(Invoice::REPEATS)],
         ]);
+        abort_if(! empty($data['repeat']) && $data['method'] !== 'email', 422, 'A repeating invoice is sent by email.');
 
         $invoice->loadMissing('contact', 'company.contacts', 'items', 'payments');
 
@@ -248,9 +256,48 @@ class InvoiceController extends Controller
             $invoice->update(['reminders_enabled' => $data['reminders_enabled']]);
         }
 
-        return $method === 'link'
+        $response = $method === 'link'
             ? $this->sendViaLink($request, $invoice, $data)
             : $this->sendViaEmail($request, $invoice, $data, $scheduledFor);
+
+        if (array_key_exists('repeat', $data)) {
+            $this->setRepeat($request, $invoice->fresh(), $data);
+        }
+
+        return $method === 'email' ? $this->freshWithSendAppends($invoice) : $response;
+    }
+
+    // Starts (or changes, or ends) a repeating series from a send: how
+    // often, the next copy's date -- a month or year after this invoice's
+    // issue date -- and the email each copy goes out with.
+    private function setRepeat(Request $request, Invoice $invoice, array $data): void
+    {
+        if (empty($data['repeat'])) {
+            $invoice->update(['repeat' => null, 'next_repeat_on' => null]);
+
+            return;
+        }
+
+        $cc = collect($data['cc'] ?? [])->filter()->values()->all();
+        if ($data['send_copy_to_self'] ?? false) {
+            $cc[] = $request->user()->email;
+        }
+
+        $invoice->update([
+            'repeat' => $data['repeat'],
+            'next_repeat_on' => Invoice::nextRepeatDate($data['repeat'], $invoice->issued_on ?? today()),
+            'repeat_subject' => $data['subject'] ?? null,
+            'repeat_message' => $data['message'] ?? null,
+            'repeat_cc' => $cc,
+        ]);
+    }
+
+    // Ends a repeating series: no more copies (those made stay as they are).
+    public function stopRepeat(Invoice $invoice)
+    {
+        $invoice->update(['repeat' => null, 'next_repeat_on' => null]);
+
+        return $invoice->fresh()->loadForDetail();
     }
 
     private function sendViaLink(Request $request, Invoice $invoice, array $data)

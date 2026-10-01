@@ -19,6 +19,13 @@
         letter-spacing: var(--letter-spacing-display);
     }
 
+    // A person's photo beside their name as the title (My profile).
+    &__person {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--space-3);
+    }
+
     &__actions {
         display: flex;
         align-items: center;

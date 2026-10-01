@@ -1,5 +1,5 @@
 // Settings (Pages/Settings/Index.jsx): the sales tax name and rate share a
-// row, the rate narrow with its % after it.
+// row, the rate narrow with its % after it; the invoice categories list.
 
 .settings {
     &__tax {
@@ -16,6 +16,34 @@
 
     &__unit {
         font-size: var(--font-size-sm);
+        color: var(--color-text-muted);
+    }
+
+    // The invoice categories list: one row each, Project work first.
+    &__categories {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-1);
+    }
+
+    &__category {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: var(--space-2) var(--space-3);
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+        background-color: var(--color-surface-subtle);
+        border-radius: var(--radius-base);
+
+        &--fixed {
+            justify-content: flex-start;
+            gap: var(--space-2);
+        }
+    }
+
+    &__category-note {
+        font-size: var(--font-size-xs);
         color: var(--color-text-muted);
     }
 }

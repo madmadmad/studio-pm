@@ -7,11 +7,18 @@ use App\Enums\PaymentTerms;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 
 class Invoice extends Model
 {
-    protected $fillable = ['company_id', 'project_id', 'contact_id', 'status', 'surcharge', 'tax_name', 'tax_rate', 'issued_on', 'due_on', 'payment_terms', 'stripe_checkout_session_id', 'sent_at', 'reminders_enabled'];
+    protected $fillable = ['company_id', 'project_id', 'category_id', 'contact_id', 'status', 'surcharge', 'tax_name', 'tax_rate', 'issued_on', 'due_on', 'payment_terms', 'stripe_checkout_session_id', 'sent_at', 'reminders_enabled',
+        'repeat', 'next_repeat_on', 'repeat_subject', 'repeat_message', 'repeat_cc', 'repeated_from_id'];
+
+    public const REPEATS = ['monthly', 'yearly'];
+
+    // Every list and detail shows what an invoice is for.
+    protected $with = ['category:id,name'];
 
     protected $casts = [
         'surcharge' => 'boolean',
@@ -21,6 +28,8 @@ class Invoice extends Model
         'payment_terms' => PaymentTerms::class,
         'sent_at' => UtcDateTime::class,
         'reminders_enabled' => 'boolean',
+        'next_repeat_on' => 'date',
+        'repeat_cc' => 'array',
     ];
 
     protected static function booted(): void
@@ -39,6 +48,8 @@ class Invoice extends Model
         $this->load([
             'items.service', 'items.timeEntries', 'items.expense', 'company.contacts', 'contact', 'project', 'payments',
             'invoiceSends' => fn ($query) => $query->with('sentBy:id,name')->latest('id'),
+            // The series a copy belongs to (its drawer says so).
+            'repeatedFrom:id,invoice_number,repeat,next_repeat_on',
         ]);
 
         return $this->append(['send_blocking_issues', 'contact_email_missing', 'needs_issue_date_update', 'remaining_balance', 'effective_reminders_enabled', 'public_url']);
@@ -108,6 +119,77 @@ class Invoice extends Model
     public function invoiceSends(): HasMany
     {
         return $this->hasMany(InvoiceSend::class);
+    }
+
+    // What it's for beyond project work (Hosting); null is project work.
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(InvoiceCategory::class, 'category_id');
+    }
+
+    // The repeating invoice this one is a copy of (CreateRepeatInvoices).
+    public function repeatedFrom(): BelongsTo
+    {
+        return $this->belongsTo(Invoice::class, 'repeated_from_id');
+    }
+
+    // The date after `$from` a repeating invoice is due again: a month or a
+    // year on, never spilling into the month after (Jan 31 -> Feb 28).
+    public static function nextRepeatDate(string $repeat, Carbon $from): Carbon
+    {
+        return $repeat === 'yearly' ? $from->copy()->addYearNoOverflow() : $from->copy()->addMonthNoOverflow();
+    }
+
+    // Makes the next invoice in a repeating series: a copy of this one --
+    // client, contact, category, project, terms, tax, card payment and its
+    // lines -- issued on `$issuedOn`, due by its terms, as a draft. The
+    // series moves on to the date after.
+    public function makeRepeat(Carbon $issuedOn): Invoice
+    {
+        $this->loadMissing('items');
+        // Custom terms have no day count: keep this invoice's own gap.
+        $gap = $this->issued_on && $this->due_on ? (int) $this->issued_on->diffInDays($this->due_on) : 30;
+
+        $copy = $this->company->invoices()->create([
+            'project_id' => $this->project_id,
+            'category_id' => $this->category_id,
+            'contact_id' => $this->contact_id,
+            'status' => 'draft',
+            'surcharge' => $this->surcharge,
+            'tax_name' => $this->tax_name,
+            'tax_rate' => $this->tax_rate,
+            'issued_on' => $issuedOn,
+            'due_on' => $this->payment_terms?->dueDateFrom($issuedOn) ?? $issuedOn->copy()->addDays($gap),
+            'payment_terms' => $this->payment_terms,
+            'reminders_enabled' => $this->reminders_enabled,
+            'repeated_from_id' => $this->id,
+        ]);
+
+        foreach ($this->items as $item) {
+            $copy->items()->create($item->only(['description', 'details', 'amount', 'taxable', 'service_id', 'position']));
+        }
+
+        $this->update(['next_repeat_on' => static::nextRepeatDate($this->repeat, $issuedOn)]);
+
+        return $copy;
+    }
+
+    // This series' email, for a copy: the subject and message sent the
+    // first time, with that invoice's number, amount and due date swapped
+    // for the copy's.
+    public function repeatEmailFor(Invoice $copy): array
+    {
+        $swap = fn (?string $text) => $text === null ? null : strtr($text, array_filter([
+            '#'.$this->invoice_number => '#'.$copy->invoice_number,
+            '$'.number_format($this->total(), 2) => '$'.number_format($copy->total(), 2),
+            $this->due_on?->format('M j, Y') => $copy->due_on?->format('M j, Y'),
+        ], fn ($to, $from) => $from !== '', ARRAY_FILTER_USE_BOTH));
+
+        return [
+            'subject' => $swap($this->repeat_subject) ?? "Invoice #{$copy->invoice_number}",
+            'message' => $swap($this->repeat_message) ?? '',
+            'cc' => $this->repeat_cc ?? [],
+        ];
     }
 
     public function expenses(): HasMany

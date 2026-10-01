@@ -1,6 +1,7 @@
 import { CaretRight } from '@phosphor-icons/react';
 import { InvoiceStatusBadge } from '../StatusBadges';
 import Badge from '../Badge';
+import { RepeatIcon } from '../InvoiceCategory';
 import { displayInvoiceStatus, formatCurrency, formatDate, invoiceTotal } from '../../lib/format';
 import { visitRow } from '../../lib/rowLink';
 import RowLink from './RowLink';
@@ -38,9 +39,15 @@ export default function ClientInvoicesTable({ invoices, hrefFor, clientView = fa
                     {invoices.map((invoice) => (
                         <tr key={invoice.id} onClick={(e) => visitRow(e, hrefFor?.(invoice), { newTab, onOpen: onOpen && (() => onOpen(invoice)) })} className="table__row--link">
                             <td className="table__cell--numeric table__cell--strong">
-                                <RowLink newTab={newTab} href={hrefFor?.(invoice)} onOpen={onOpen && (() => onOpen(invoice))} className="link">{invoice.invoice_number}</RowLink>
+                                <span className="table__group">
+                                    <RowLink newTab={newTab} href={hrefFor?.(invoice)} onOpen={onOpen && (() => onOpen(invoice))} className="link">{invoice.invoice_number}</RowLink>
+                                    <RepeatIcon invoice={invoice} />
+                                </span>
                             </td>
-                            <td className="table__cell--muted">{invoice.project?.name ?? '—'}</td>
+                            {/* A hosting (or other category's) invoice has no project: its category, labelled. */}
+                            <td className="table__cell--muted">
+                                {invoice.project?.name ?? (invoice.category ? <Badge tone="neutral" label={invoice.category.name} /> : '—')}
+                            </td>
                             <td className="table__cell--muted">{formatDate(invoice.issued_on)}</td>
                             <td className="table__cell--muted">{formatDate(invoice.due_on)}</td>
                             <td className="table__cell--numeric">

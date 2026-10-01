@@ -4,6 +4,7 @@ use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\ExpenseCategoryController;
 use App\Http\Controllers\ExpenseController;
+use App\Http\Controllers\InvoiceCategoryController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\MessageAttachmentController;
 use App\Http\Controllers\MessageController;
@@ -102,6 +103,8 @@ Route::middleware('auth:sanctum')->name('api.')->group(function () {
         Route::post('expenses/{expense}/detach-from-invoice', [ExpenseController::class, 'detachFromInvoice']);
 
         Route::patch('studio-profile', [StudioProfileController::class, 'update']);
+        Route::post('invoices/{invoice}/repeat/stop', [InvoiceController::class, 'stopRepeat']);
+        Route::apiResource('invoice-categories', InvoiceCategoryController::class)->only(['index', 'store', 'update', 'destroy']);
 
         Route::apiResource('users', UserController::class)->only(['index', 'store', 'update', 'destroy']);
         Route::post('users/{user}/resend-invite', [UserController::class, 'resendInvite']);

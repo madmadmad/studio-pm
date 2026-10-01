@@ -4,6 +4,7 @@ import InvoiceLineItems from './InvoiceLineItems';
 import Drawer from './Drawer';
 import InvoiceDateFields from './InvoiceDateFields';
 import { TaxRow, TaxToggle, useSalesTax } from './InvoiceTax';
+import { InvoiceCategorySelect } from './InvoiceCategory';
 import { useSendAfterCreate } from './SendInvoiceModal';
 import { api } from '../lib/api';
 import { formatCurrency, invoiceSubtotal, invoiceTotal } from '../lib/format';
@@ -126,6 +127,8 @@ function seedFromProposal(project, proposal) {
 export default function NewInvoiceDrawer({ company, projects, initialProjectId = null, lockProject = false, onCreated, onClose }) {
     const defaultTerms = company.effective_payment_terms;
     const [projectId, setProjectId] = useState(initialProjectId ? String(initialProjectId) : '');
+    // What it's for: '' is project work; a category (Hosting) needs no project.
+    const [categoryId, setCategoryId] = useState('');
     const project = projects.find((p) => String(p.id) === projectId) || null;
     const proposalsWithItems = proposalsWithItemsFor(project);
 
@@ -207,6 +210,7 @@ export default function NewInvoiceDrawer({ company, projects, initialProjectId =
         try {
             const created = await api.post(`/api/companies/${company.id}/invoices`, {
                 project_id: project?.id ?? null,
+                category_id: categoryId || null,
                 tax: form.tax_rate != null,
                 issued_on: form.issued_on,
                 payment_terms: form.payment_terms,
@@ -231,13 +235,23 @@ export default function NewInvoiceDrawer({ company, projects, initialProjectId =
             <h2 className="drawer__title">New invoice</h2>
             <form onSubmit={createInvoice} className="invoice-form">
                 {!lockProject && (
-                    <div className="invoice-form__section">
-                        <select value={projectId} onChange={(e) => changeProject(e.target.value)} className="input">
-                            <option value="">No project</option>
-                            {projects.map((p) => (
-                                <option key={p.id} value={p.id}>{p.name}</option>
-                            ))}
-                        </select>
+                    <div className="invoice-form__section invoice-form__parties">
+                        <InvoiceCategorySelect
+                            value={categoryId}
+                            onChange={(value) => {
+                                setCategoryId(value);
+                                // Hosting and the like aren't billed against a project.
+                                if (value) changeProject('');
+                            }}
+                        />
+                        {!categoryId && (
+                            <select value={projectId} onChange={(e) => changeProject(e.target.value)} aria-label="Project" className="input">
+                                <option value="">No project</option>
+                                {projects.map((p) => (
+                                    <option key={p.id} value={p.id}>{p.name}</option>
+                                ))}
+                            </select>
+                        )}
                     </div>
                 )}
 

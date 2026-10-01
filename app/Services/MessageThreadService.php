@@ -10,10 +10,13 @@ use App\Models\Project;
 use App\Models\User;
 use App\Notifications\NewMessageReply;
 use App\Notifications\NewMessageThread;
+use Illuminate\Contracts\Validation\Validator as ValidatorContract;
+use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 
 // Shared between the staff (App\Http\Controllers\MessageController) and
 // client (App\Http\Controllers\Portal\MessageController) message
@@ -84,10 +87,11 @@ class MessageThreadService
     /**
      * @param  Collection<int, User|Contact>  $recipients
      * @param  UploadedFile[]  $attachments
+     * @param  string[]  $links
      */
-    public function createThread(Project $project, User|Contact $sender, string $subject, ?string $body, Collection $recipients, array $attachments = []): Message
+    public function createThread(Project $project, User|Contact $sender, string $subject, ?string $body, Collection $recipients, array $attachments = [], array $links = []): Message
     {
-        return DB::transaction(function () use ($project, $sender, $subject, $body, $recipients, $attachments) {
+        return DB::transaction(function () use ($project, $sender, $subject, $body, $recipients, $attachments, $links) {
             $thread = $project->messages()->create([
                 ...$this->senderColumns($sender),
                 'subject' => $subject,
@@ -96,6 +100,7 @@ class MessageThreadService
             ]);
 
             $this->storeAttachments($thread, $attachments);
+            $this->storeLinks($thread, $links);
 
             $this->addParticipant($thread, $sender);
             $this->markAuthorRead($thread, $sender);
@@ -116,10 +121,11 @@ class MessageThreadService
     // "join" both just mean "add a participant row."
     /**
      * @param  UploadedFile[]  $attachments
+     * @param  string[]  $links
      */
-    public function reply(Message $thread, User|Contact $author, ?string $body, array $attachments = []): Message
+    public function reply(Message $thread, User|Contact $author, ?string $body, array $attachments = [], array $links = []): Message
     {
-        return DB::transaction(function () use ($thread, $author, $body, $attachments) {
+        return DB::transaction(function () use ($thread, $author, $body, $attachments, $links) {
             $reply = $thread->replies()->create([
                 'project_id' => $thread->project_id,
                 ...$this->senderColumns($author),
@@ -128,6 +134,7 @@ class MessageThreadService
             ]);
 
             $this->storeAttachments($reply, $attachments);
+            $this->storeLinks($reply, $links);
 
             $this->addParticipant($thread, $author);
             $this->markAuthorRead($thread, $author);
@@ -168,11 +175,62 @@ class MessageThreadService
         return $message->reactions()->with('user:id,name', 'contact:id,name')->get();
     }
 
-    public function updateBody(Message $message, string $body): Message
+    // An author's edit: the new text, plus files and links taken off
+    // (their stored files deleted) and new ones added. Shared by the staff
+    // and portal message controllers, which validate it with
+    // editValidator() first.
+    /**
+     * @param  UploadedFile[]  $newFiles
+     * @param  string[]  $newLinks
+     */
+    public function updateMessage(Message $message, ?string $body, array $newFiles = [], array $newLinks = [], array $removeAttachmentIds = [], array $removeLinkIds = []): Message
     {
-        $message->update(['body' => $body]);
+        return DB::transaction(function () use ($message, $body, $newFiles, $newLinks, $removeAttachmentIds, $removeLinkIds) {
+            $message->update(['body' => $body]);
 
-        return $message;
+            foreach ($message->attachments()->whereIn('id', $removeAttachmentIds)->get() as $attachment) {
+                Storage::disk($attachment->disk)->delete(array_filter([$attachment->path, $attachment->thumbnail_path]));
+                $attachment->delete();
+            }
+            $message->links()->whereIn('id', $removeLinkIds)->delete();
+
+            $this->storeAttachments($message, $newFiles);
+            $this->storeLinks($message, array_diff($newLinks, $message->links()->pluck('url')->all()));
+
+            return $message;
+        });
+    }
+
+    // Validates an edit: what's added follows the usual file and link
+    // rules, what's taken off must be this message's own, and something --
+    // text, a file or a link -- has to be left.
+    public function editValidator(Request $request, Message $message): ValidatorContract
+    {
+        $rules = [
+            'body' => ['nullable', 'string'],
+            'remove_attachment_ids' => ['nullable', 'array'],
+            'remove_attachment_ids.*' => ['integer'],
+            'remove_link_ids' => ['nullable', 'array'],
+            'remove_link_ids.*' => ['integer'],
+            ...$this->attachmentValidationRules(),
+            ...$this->linkValidationRules(),
+        ];
+
+        $validator = Validator::make($request->all(), $rules);
+
+        $validator->after(function ($validator) use ($request, $message) {
+            $keptFiles = $message->attachments()->whereNotIn('id', $request->input('remove_attachment_ids', []))->count();
+            $keptLinks = $message->links()->whereNotIn('id', $request->input('remove_link_ids', []))->count();
+            $hasSomething = trim((string) $request->input('body')) !== ''
+                || $keptFiles > 0 || $keptLinks > 0
+                || ! empty($request->file('attachments', [])) || ! empty($request->input('links', []));
+
+            if (! $hasSomething) {
+                $validator->errors()->add('body', 'A message needs text, a file or a link.');
+            }
+        });
+
+        return $validator;
     }
 
     // Soft-deletes the message (so it renders as "Message deleted" without
@@ -217,6 +275,24 @@ class MessageThreadService
                 GenerateAttachmentThumbnail::dispatch($attachment);
             }
         }
+    }
+
+    // Links shared with the message (a Dropbox or Drive link), kept as
+    // given -- validated as http(s) URLs by linkValidationRules().
+    protected function storeLinks(Message $message, array $links): void
+    {
+        foreach (array_values(array_unique($links)) as $url) {
+            $message->links()->create(['url' => $url]);
+        }
+    }
+
+    // Shared by the staff and portal message controllers.
+    public function linkValidationRules(): array
+    {
+        return [
+            'links' => ['nullable', 'array', 'max:10'],
+            'links.*' => ['required', 'string', 'max:2048', 'url:http,https'],
+        ];
     }
 
     protected function addParticipant(Message $thread, User|Contact $actor): MessageParticipant

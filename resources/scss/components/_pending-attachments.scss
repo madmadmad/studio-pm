@@ -1,5 +1,6 @@
 // Files chosen in a composer but not yet sent: square thumbnails (or the
-// file name for non-images), each with a remove button on its corner.
+// file name for non-images), each with a remove button on its corner --
+// and links waiting to be shared, as the same tile.
 @use '../abstracts' as *;
 
 .pending-attachments {
@@ -24,9 +25,11 @@
         object-fit: cover;
     }
 
+    // A non-image file or a link: its glyph over its name.
     &__file {
-        @include truncate;
         display: flex;
+        flex-direction: column;
+        gap: var(--space-1);
         align-items: center;
         justify-content: center;
         padding-inline: var(--space-1);
@@ -35,6 +38,15 @@
         color: var(--color-text-muted);
         text-align: center;
         background-color: var(--color-surface);
+    }
+
+    &__icon {
+        flex-shrink: 0;
+    }
+
+    &__name {
+        @include truncate;
+        max-width: 100%;
     }
 
     &__remove {

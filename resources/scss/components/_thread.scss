@@ -17,9 +17,10 @@
         margin-bottom: var(--space-3);
     }
 
+    // No overflow clipping: it cut the focus ring off a field at the
+    // card's edge (editing a message).
     &__card {
         margin-bottom: var(--space-4);
-        overflow: hidden;
     }
 
     &__header {

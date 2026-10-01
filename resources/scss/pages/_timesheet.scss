@@ -1,0 +1,91 @@
+// The profile page's Timesheet (Components/Timesheet.jsx): the week's
+// navigation, then each day under a ruled heading with its entries as
+// .grid-row rows -- Project | Hours | Service · Task / Note | Status.
+@use '../abstracts' as *;
+
+.timesheet {
+    &__week {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--space-3);
+        margin-bottom: var(--space-4);
+
+        // The toolbar's own spacing isn't wanted here: it shares the row.
+        .toolbar {
+            margin-bottom: 0;
+        }
+    }
+
+    &__nav {
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
+    }
+
+    // Square, at the control height.
+    &__step {
+        width: var(--size-control);
+        padding: 0;
+    }
+
+    &__range {
+        min-width: 11rem; // one-off: room for "Dec 28 – Jan 3, 2027"
+        font-weight: var(--font-weight-semibold);
+        text-align: center;
+        font-variant-numeric: tabular-nums;
+    }
+
+    &__project {
+        display: flex;
+        grid-column: span 4;
+        flex-direction: column;
+        min-width: 0;
+    }
+
+    &__client {
+        font-size: var(--font-size-xs);
+        line-height: var(--line-height-xs);
+        color: var(--color-text-muted);
+    }
+
+    &__hours {
+        grid-column: span 1;
+        font-variant-numeric: tabular-nums;
+    }
+
+    &__note {
+        display: flex;
+        grid-column: span 5;
+        min-width: 0;
+        color: var(--color-text-muted);
+    }
+
+    &__status {
+        grid-column: span 2;
+        text-align: right;
+    }
+
+    // A day's heading: the date, and its hours (or "No time") at the right.
+    &__day-head {
+        display: flex;
+        justify-content: space-between;
+        padding: var(--space-2) var(--space-row-x);
+        font-size: var(--font-size-xs);
+        line-height: var(--line-height-xs);
+        font-weight: var(--font-weight-semibold);
+        color: var(--color-text-muted);
+        background-color: var(--color-surface-subtle);
+        border-bottom: var(--border-width) solid var(--color-border);
+    }
+
+    &__day:last-child &__day-head:only-child,
+    &__day:last-child > :last-child {
+        border-bottom: none;
+    }
+
+    &__day-hours {
+        font-variant-numeric: tabular-nums;
+    }
+}
