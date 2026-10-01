@@ -1,0 +1,18 @@
+// Across the top of the portal while a manager previews it
+// (Layouts/PortalLayout.jsx): what's being shown, and the way out.
+
+.preview-banner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    margin-bottom: var(--space-section);
+    padding: var(--space-panel);
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-sm);
+    // Filled red, so it can't be mistaken for part of the client's view.
+    color: var(--color-primary-on);
+    background-color: var(--color-primary);
+    border-radius: var(--radius-base);
+}

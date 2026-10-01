@@ -17,4 +17,10 @@
     background-color: var(--color-surface-muted);
     border-radius: var(--radius-pill);
     vertical-align: middle;
+
+    // Unread messages -- the one count that is news: filled red.
+    &--unread {
+        color: var(--color-primary-on);
+        background-color: var(--color-primary);
+    }
 }

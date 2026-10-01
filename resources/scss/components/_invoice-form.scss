@@ -1,6 +1,7 @@
 // Creating or editing an invoice: client/contact, dates, line items,
 // totals, card-fee toggle. Shared by Invoices/Index, Invoices/Show, and
 // the Projects/Show billing tab.
+@use '../abstracts' as *;
 
 .invoice-form {
     // Each group of the form, with room below it.
@@ -83,6 +84,86 @@
         &:hover {
             color: var(--color-danger-text);
         }
+    }
+
+    // Under a line: its Taxable switch, where it came from (an expense)
+    // and its Remove.
+    &__item-foot {
+        // With the notes' own space-1 below, a space-4 gap -- twice the
+        // one between the description and the notes.
+        margin-top: var(--space-3);
+        display: flex;
+        align-items: center;
+        gap: var(--space-3);
+    }
+
+    &__item-source {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--space-1);
+        font-size: var(--font-size-xs);
+        line-height: var(--line-height-xs);
+        color: var(--color-text-muted);
+    }
+
+    // "+ Add line item" and "+ Add expense", side by side.
+    &__adders {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: var(--space-4);
+    }
+
+    &__add-expense {
+        position: relative;
+    }
+
+    // The project's unbilled expenses to pick from.
+    &__expense-menu {
+        left: 0;
+        width: min(24rem, calc(100vw - 2 * var(--space-4)));
+        max-height: 18rem;
+        overflow-y: auto;
+        padding: var(--space-1);
+    }
+
+    &__expense-option {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: var(--space-3);
+        width: 100%;
+        padding: var(--space-2);
+        text-align: left;
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+        color: var(--color-text);
+        border-radius: var(--radius-base);
+
+        &:hover,
+        &:focus-visible {
+            background-color: var(--color-neutral-fill-hover);
+        }
+
+        &:focus-visible {
+            @include focus-ring;
+        }
+    }
+
+    &__expense-name {
+        min-width: 0;
+    }
+
+    &__expense-meta {
+        display: block;
+        font-size: var(--font-size-xs);
+        line-height: var(--line-height-xs);
+        color: var(--color-text-muted);
+    }
+
+    &__expense-amount {
+        flex-shrink: 0;
+        font-variant-numeric: tabular-nums;
     }
 
     // The last row: the card-fee toggle on the left, the form's buttons

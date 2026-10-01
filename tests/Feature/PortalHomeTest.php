@@ -95,7 +95,7 @@ class PortalHomeTest extends TestCase
         $projects = collect($this->props($contact)['projects']);
 
         $this->assertEqualsCanonicalizing([$active->id, $awaiting->id], $projects->pluck('id')->all());
-        $this->assertEqualsCanonicalizing(['id', 'name', 'status', 'tasks'], array_keys($projects->first()));
+        $this->assertEqualsCanonicalizing(['id', 'name', 'status', 'tasks', 'unread_messages'], array_keys($projects->first()));
     }
 
     public function test_only_sent_and_accepted_proposals_are_listed(): void

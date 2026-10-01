@@ -13,6 +13,21 @@ return [
     |
     */
 
+    /*
+    |--------------------------------------------------------------------------
+    | Default disclaimer
+    |--------------------------------------------------------------------------
+    |
+    | The scope note a new proposal starts with, shown between its scope of
+    | work and its services. Editable on each proposal.
+    |
+    */
+
+    'default_disclaimer' => env(
+        'PROPOSALS_DEFAULT_DISCLAIMER',
+        'This estimate outlines the scope of work for the proposed project, detailing the services, deliverables, and associated costs required to achieve the outlined objectives. Services outside of this scope will be estimated and billed separately upon request.'
+    ),
+
     'email_subject_template' => env('PROPOSALS_EMAIL_SUBJECT_TEMPLATE', ':firm_name sent you a proposal: :proposal_title'),
 
     'email_template' => env(

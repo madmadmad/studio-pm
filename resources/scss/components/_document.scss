@@ -119,6 +119,16 @@
         border-bottom: var(--border-width) solid var(--color-border);
     }
 
+    // A proposal's disclaimer: fine print under the scope of work, above
+    // the estimate. Keeps the line breaks typed into it.
+    &__disclaimer {
+        margin-bottom: var(--space-6);
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+        color: var(--color-text-muted);
+        white-space: pre-line;
+    }
+
     &__items {
         margin-bottom: var(--space-6);
     }

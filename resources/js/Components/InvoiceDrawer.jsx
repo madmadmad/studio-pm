@@ -13,7 +13,7 @@ import { api } from '../lib/api';
 // `onChange` refreshes the page's own data (after a delete).
 export default function InvoiceDrawer({ detail, onRefresh, onChange, onClose }) {
     async function deleteInvoice(invoice) {
-        const amount = formatCurrency(invoiceTotal(invoice.items, invoice.surcharge));
+        const amount = formatCurrency(invoiceTotal(invoice.items, invoice.surcharge, invoice.tax_rate));
         if (!confirm(`Delete this ${amount} invoice? This can't be undone.`)) return;
         try {
             await api.delete(`/api/invoices/${invoice.id}`);
@@ -31,6 +31,13 @@ export default function InvoiceDrawer({ detail, onRefresh, onChange, onClose }) 
             invoicingDefaults={detail.invoicingDefaults}
             onChange={onRefresh}
             bare
+            // A draft opens in its edit form; saving or cancelling closes
+            // the drawer, and the page's list catches up.
+            openInEdit
+            onDone={({ close = true } = {}) => {
+                if (close) onClose();
+                onChange();
+            }}
             renderFrame={({ invoice, actions, children }) => (
                 <Drawer
                     size="wide"

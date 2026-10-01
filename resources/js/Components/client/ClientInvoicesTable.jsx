@@ -1,8 +1,10 @@
 import { CaretRight } from '@phosphor-icons/react';
 import { InvoiceStatusBadge } from '../StatusBadges';
+import Badge from '../Badge';
 import { displayInvoiceStatus, formatCurrency, formatDate, invoiceTotal } from '../../lib/format';
 import { visitRow } from '../../lib/rowLink';
 import RowLink from './RowLink';
+import { useListMotion } from '../../lib/listMotion';
 
 
 // A client's invoices: # | Project | Issued | Due | Total | Status, whole
@@ -13,9 +15,11 @@ import RowLink from './RowLink';
 // `onOpen(invoice)` opens a row in place instead -- the staff drawer --
 // and `hrefFor` isn't needed; each row then ends in the open caret, as
 // every drawer list does.
-// `hideSent` drops the Sent badge (the Client Hub only ever lists sent
-// invoices, so it says nothing there); Paid and Overdue still show.
-export default function ClientInvoicesTable({ invoices, hrefFor, hideSent = false, newTab = false, onOpen }) {
+// `clientView` labels the status as the client sees it (the Client Hub):
+// Outstanding for one sent and unpaid -- every invoice there has been sent,
+// so "Sent" would say nothing -- then Overdue and Paid as usual.
+export default function ClientInvoicesTable({ invoices, hrefFor, clientView = false, newTab = false, onOpen }) {
+    const rowsRef = useListMotion();
     return (
         <div className="card card--flush">
             <table className="table">
@@ -30,7 +34,7 @@ export default function ClientInvoicesTable({ invoices, hrefFor, hideSent = fals
                         {onOpen && <th />}
                     </tr>
                 </thead>
-                <tbody>
+                <tbody ref={rowsRef}>
                     {invoices.map((invoice) => (
                         <tr key={invoice.id} onClick={(e) => visitRow(e, hrefFor?.(invoice), { newTab, onOpen: onOpen && (() => onOpen(invoice)) })} className="table__row--link">
                             <td className="table__cell--numeric table__cell--strong">
@@ -40,9 +44,13 @@ export default function ClientInvoicesTable({ invoices, hrefFor, hideSent = fals
                             <td className="table__cell--muted">{formatDate(invoice.issued_on)}</td>
                             <td className="table__cell--muted">{formatDate(invoice.due_on)}</td>
                             <td className="table__cell--numeric">
-                                {formatCurrency(invoice.total ?? invoiceTotal(invoice.items, invoice.surcharge))}
+                                {formatCurrency(invoice.total ?? invoiceTotal(invoice.items, invoice.surcharge, invoice.tax_rate))}
                             </td>
-                            <td>{!(hideSent && displayInvoiceStatus(invoice) === 'sent') && <InvoiceStatusBadge invoice={invoice} />}</td>
+                            <td>
+                                {clientView && displayInvoiceStatus(invoice) === 'sent'
+                                    ? <Badge tone="neutral" label="Outstanding" />
+                                    : <InvoiceStatusBadge invoice={invoice} />}
+                            </td>
                             {onOpen && (
                                 <td className="table__cell--end">
                                     <div className="table__actions">

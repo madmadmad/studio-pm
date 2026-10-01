@@ -17,6 +17,15 @@
         border-color: transparent;
     }
 
+    // Single-line fields share the control height with buttons, so a
+    // field and a button side by side line up. (:where keeps it at the
+    // base's specificity, so the size modifiers below still win; a
+    // textarea or a div styled as a field keeps its own height.)
+    &:where(input, select) {
+        height: var(--size-control);
+        padding-block: 0;
+    }
+
     // :read-only is scoped to input/textarea on purpose: a <select> has no
     // readonly state and matches :read-only unconditionally.
     &:disabled,
@@ -36,13 +45,15 @@
         padding-right: var(--space-8);
     }
 
-    // Matches .btn's height, for a field sitting inline next to a button.
+    // Kept for existing markup: fields are all the control height now.
     &--sm {
-        padding-block: var(--space-1-5);
+        padding-block: 0;
     }
 
-    // Embedded directly in a table row, where --sm still reads too tall.
+    // Embedded directly in a table row, where the control height reads
+    // too tall.
     &--xs {
+        height: auto;
         padding: var(--space-1) var(--space-2);
     }
 

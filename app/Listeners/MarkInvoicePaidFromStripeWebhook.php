@@ -40,15 +40,15 @@ class MarkInvoicePaidFromStripeWebhook
 
         $metadata = $session['metadata'] ?? [];
         $method = $metadata['method'] ?? 'card';
-        $baseAmount = (float) ($metadata['base_amount'] ?? $invoice->subtotal());
+        $baseAmount = (float) ($metadata['base_amount'] ?? $invoice->total());
         $surchargeAmount = (float) ($metadata['surcharge_amount'] ?? 0);
 
         // The invoice could have been edited (or its items rebilled) between
         // checkout and webhook -- still record what Stripe actually
         // collected rather than silently dropping the payment, but flag the
         // mismatch since it means the client didn't pay the current total.
-        if (abs($baseAmount - $invoice->subtotal()) > 0.01) {
-            Log::warning("Stripe checkout base_amount ({$baseAmount}) doesn't match invoice #{$invoice->invoice_number} subtotal ({$invoice->subtotal()}) -- recording the payment as received anyway.");
+        if (abs($baseAmount - $invoice->total()) > 0.01) {
+            Log::warning("Stripe checkout base_amount ({$baseAmount}) doesn't match invoice #{$invoice->invoice_number} total ({$invoice->total()}) -- recording the payment as received anyway.");
         }
 
         $invoice->recordPayment($method, $baseAmount, $surchargeAmount, $session['payment_intent'] ?? null);

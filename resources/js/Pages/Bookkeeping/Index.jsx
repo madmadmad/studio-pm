@@ -7,9 +7,10 @@ import EmptyState from '../../Components/EmptyState';
 import { formatCurrency, formatDate } from '../../lib/format';
 import { api } from '../../lib/api';
 import PageHeader from '../../Components/PageHeader';
+import { todayLocal } from '../../lib/paymentTerms';
 
 function emptyForm() {
-    return { amount: '', category: '', occurred_on: new Date().toISOString().slice(0, 10), description: '' };
+    return { amount: '', tax_amount: '', category: '', occurred_on: todayLocal(), description: '' };
 }
 
 export default function BookkeepingIndex({ transactions, summary }) {
@@ -21,7 +22,7 @@ export default function BookkeepingIndex({ transactions, summary }) {
         e.preventDefault();
         setSaving(true);
         try {
-            await api.post('/api/transactions', form);
+            await api.post('/api/transactions', { ...form, tax_amount: form.tax_amount || 0 });
             setForm(emptyForm());
             setShowForm(false);
             router.reload({ only: ['transactions', 'summary'] });
@@ -40,10 +41,16 @@ export default function BookkeepingIndex({ transactions, summary }) {
             <Head title="Bookkeeping" />
             <PageHeader
                 title="Bookkeeping"
-                actions={<Button onClick={() => setShowForm(true)}>Add income</Button>}
+                actions={(
+                    <>
+                        <Link href="/bookkeeping/sales-tax" className="btn btn--secondary">Sales tax report</Link>
+                        <Button onClick={() => setShowForm(true)}>Add income</Button>
+                    </>
+                )}
                 subtitle={
                     <>
-                        Income, month by month &mdash; not double-entry accounting. Expenses are tracked on the{' '}
+                        Income, month by month &mdash; not double-entry accounting. Sales tax collected is the state&rsquo;s,
+                        so it&rsquo;s left out of income and net. Expenses are tracked on the{' '}
                         <Link href="/expenses" className="link link--inline">Expenses</Link> page.
                     </>
                 }
@@ -54,10 +61,16 @@ export default function BookkeepingIndex({ transactions, summary }) {
                 <MetricCard label="Expenses" value={formatCurrency(summary.expenses)} />
                 <MetricCard label="Net" value={formatCurrency(summary.net)} />
             </div>
+            {/* What's owed to the state: this month, and the year so far (to file from). */}
+            <div className="metric-grid">
+                <MetricCard label={`Sales tax collected (${summary.month})`} value={formatCurrency(summary.sales_tax)} />
+                <MetricCard label={`Sales tax collected (${summary.month.slice(0, 4)} to date)`} value={formatCurrency(summary.sales_tax_year)} />
+            </div>
 
             {showForm && (
                 <form onSubmit={submit} className="card card--padded form-grid page-section">
                     <input required type="number" min="0.01" step="0.01" placeholder="Amount" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} className="input u-tabular-nums" />
+                    <input type="number" min="0" step="0.01" placeholder="Sales tax included (optional)" value={form.tax_amount} onChange={(e) => setForm({ ...form, tax_amount: e.target.value })} className="input u-tabular-nums" />
                     <input placeholder="Category" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} className="input" />
                     <input required type="date" value={form.occurred_on} onChange={(e) => setForm({ ...form, occurred_on: e.target.value })} className="input" />
                     <input placeholder="Description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="input" />
@@ -87,8 +100,13 @@ export default function BookkeepingIndex({ transactions, summary }) {
                                 <tr key={t.id}>
                                     <td>{formatDate(t.occurred_on)}</td>
                                     <td className="table__cell--muted">{t.category ?? '—'}</td>
-                                    <td className="table__cell--muted">{t.description}</td>
-                                    <td className="table__cell--end table__cell--numeric table__cell--positive">+{formatCurrency(t.amount)}</td>
+                                    <td className="table__cell--muted">{t.description || (t.invoice && `Invoice #${t.invoice.invoice_number}`)}</td>
+                                    <td className="table__cell--end table__cell--numeric table__cell--positive">
+                                        +{formatCurrency(t.amount)}
+                                        {parseFloat(t.tax_amount) > 0 && (
+                                            <div className="table__meta">incl. {formatCurrency(t.tax_amount)} sales tax</div>
+                                        )}
+                                    </td>
                                     <td className="table__cell--end">
                                         <button onClick={() => remove(t)} className="text-action text-action--danger text-action--xs">Remove</button>
                                     </td>

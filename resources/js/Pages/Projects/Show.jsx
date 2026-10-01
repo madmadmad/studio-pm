@@ -1,5 +1,5 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Check, DotsSixVertical, Eye, GearSix, DownloadSimple, Paperclip, PencilSimple, Plus, Trash, Users, X } from '@phosphor-icons/react';
 import AppLayout from '../../Layouts/AppLayout';
 import Button from '../../Components/Button';
@@ -18,6 +18,8 @@ import { todayLocal } from '../../lib/paymentTerms';
 import { api } from '../../lib/api';
 import { isBlankRichText, toRichText } from '../../lib/richText';
 import PageHeader from '../../Components/PageHeader';
+import StarButton, { useFavorites } from '../../Components/StarButton';
+import { useUnreadThreads } from '../../lib/unreadThreads';
 import Drawer, { DrawerByline, DrawerDate } from '../../Components/Drawer';
 import ProposalDrawer from '../../Components/ProposalDrawer';
 import { useInvoiceDrawer } from '../../Components/InvoiceDrawer';
@@ -222,7 +224,7 @@ function ProjectSummary({ project, proposedHours }) {
     );
 }
 
-function TaskRow({ task, teamNames, onChange, onOpen }) {
+function TaskRow({ task, onChange, onOpen }) {
     async function cycleStatus(e) {
         e.stopPropagation();
         const order = ['todo', 'in_progress', 'done'];
@@ -231,13 +233,8 @@ function TaskRow({ task, teamNames, onChange, onOpen }) {
         onChange();
     }
 
-    async function updateField(field, value) {
-        await api.patch(`/api/tasks/${task.id}`, { [field]: value || null });
-        onChange();
-    }
-
-    // The inline pickers stop their clicks here, so using them doesn't
-    // also open the drawer.
+    // Assignee and due date read as plain row text -- they're edited in the
+    // task's drawer. Only the status badge acts in the row (it cycles).
     return (
         <div onClick={() => onOpen(task.id)} className="grid-row grid-row--action grid-row--link">
             <div className="task-list__title">
@@ -246,24 +243,10 @@ function TaskRow({ task, teamNames, onChange, onOpen }) {
                     <Eye className="task-list__client" aria-label="Shown to the client" title="Shown to the client" />
                 )}
             </div>
-            <div className="task-list__assignee" onClick={(e) => e.stopPropagation()}>
-                <select
-                    value={task.assignee ?? ''}
-                    onChange={(e) => updateField('assignee', e.target.value)}
-                    className="task-list__control"
-                >
-                    <option value="">Unassigned</option>
-                    {teamNames.map((name) => <option key={name} value={name}>{name}</option>)}
-                </select>
-            </div>
-            <div className="task-list__due" onClick={(e) => e.stopPropagation()}>
-                <input
-                    type="date"
-                    value={task.due_date ? task.due_date.slice(0, 10) : ''}
-                    onChange={(e) => updateField('due_date', e.target.value)}
-                    className="task-list__control task-list__control--date"
-                />
-            </div>
+            <div className={`task-list__assignee${task.assignee ? '' : ' task-list__empty'}`}>{task.assignee || 'Unassigned'}</div>
+            <div className={`task-list__due${task.due_date ? '' : ' task-list__empty'}`}>{task.due_date ? formatDate(task.due_date) : '—'}</div>
+            {/* How many subtasks it has (they're listed in the drawer). */}
+            <div className={`task-list__subtasks${task.subtasks?.length ? '' : ' task-list__empty'}`}>{task.subtasks?.length || '—'}</div>
             <div className="task-list__status">
                 <button onClick={cycleStatus}>
                     <TaskStatusBadge task={task} />
@@ -383,8 +366,8 @@ function SubtasksSection({ task, onChange }) {
     }
 
     return (
-        <div className="drawer__section">
-            <div className="drawer__section-header">
+        <div className="form-panel">
+            <div className="form-panel__header">
                 <div className="section-label section-label--flush">Subtasks</div>
                 <button onClick={() => setAdding(true)} title="Add subtask" className="icon-btn icon-btn--secondary">
                     <Plus />
@@ -458,8 +441,8 @@ function FilesSection({ task, onChange }) {
     }
 
     return (
-        <div className="drawer__section">
-            <div className="drawer__section-header">
+        <div className="form-panel">
+            <div className="form-panel__header">
                 <div className="section-label section-label--flush">Files</div>
                 <button
                     onClick={() => inputRef.current.click()}
@@ -565,53 +548,57 @@ function TaskDrawer({ task, teamNames, isNew, onClose, onChange }) {
                 className="inline-edit inline-edit--title"
             />
 
-            <div className="form-grid drawer__section drawer__section--divided">
-                <div>
-                    <div className="section-label section-label--tight">Status</div>
-                    <select
-                        value={task.status}
-                        onChange={(e) => updateField('status', e.target.value)}
-                        className="input input--xs"
-                    >
-                        {TASK_STATUS_OPTIONS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
-                    </select>
-                </div>
-                <div>
-                    <div className="section-label section-label--tight">Assignee</div>
-                    <select
-                        value={task.assignee ?? ''}
-                        onChange={(e) => updateField('assignee', e.target.value)}
-                        className="input input--xs"
-                    >
-                        <option value="">Unassigned</option>
-                        {teamNames.map((name) => <option key={name} value={name}>{name}</option>)}
-                    </select>
-                </div>
-                <div className="form-grid__full">
-                    <div className="section-label section-label--tight">Due date</div>
-                    <input
-                        type="date"
-                        value={task.due_date ? task.due_date.slice(0, 10) : ''}
-                        onChange={(e) => updateField('due_date', e.target.value)}
-                        className="input input--xs"
-                    />
-                </div>
-                <div className="form-grid__full">
-                    <Toggle
-                        checked={task.visible_to_client}
-                        onChange={(value) => updateVisibility(value)}
-                        label="Show client"
-                    />
-                    <div className="form-hint form-hint--attached">
-                        {task.visible_to_client
-                            ? 'This task appears in the client portal.'
-                            : 'Internal only. The client can\'t see this task.'}
+            {/* Grouped on panels like the proposal and invoice forms. */}
+            <div className="form-panel">
+                <div className="section-label section-label--ruled">Details</div>
+                <div className="form-grid">
+                    <div>
+                        <label className="label">Status</label>
+                        <select
+                            value={task.status}
+                            onChange={(e) => updateField('status', e.target.value)}
+                            className="input input--xs"
+                        >
+                            {TASK_STATUS_OPTIONS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
+                        </select>
+                    </div>
+                    <div>
+                        <label className="label">Assignee</label>
+                        <select
+                            value={task.assignee ?? ''}
+                            onChange={(e) => updateField('assignee', e.target.value)}
+                            className="input input--xs"
+                        >
+                            <option value="">Unassigned</option>
+                            {teamNames.map((name) => <option key={name} value={name}>{name}</option>)}
+                        </select>
+                    </div>
+                    <div className="form-grid__full">
+                        <label className="label">Due date</label>
+                        <input
+                            type="date"
+                            value={task.due_date ? task.due_date.slice(0, 10) : ''}
+                            onChange={(e) => updateField('due_date', e.target.value)}
+                            className="input input--xs"
+                        />
+                    </div>
+                    <div className="form-grid__full">
+                        <Toggle
+                            checked={task.visible_to_client}
+                            onChange={(value) => updateVisibility(value)}
+                            label="Show client"
+                        />
+                        <div className="form-hint form-hint--attached">
+                            {task.visible_to_client
+                                ? 'This task appears in the client portal.'
+                                : 'Internal only. The client can\'t see this task.'}
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div className="drawer__section">
-                <div className="drawer__section-header">
+            <div className="form-panel">
+                <div className="form-panel__header">
                     <div className="section-label section-label--flush">Description</div>
                     {!editingDescription && (
                         <button
@@ -694,6 +681,7 @@ function TasksTab({ project }) {
                             <div className="task-list__title">Task</div>
                             <div className="task-list__assignee">Assignee</div>
                             <div className="task-list__due">Due date</div>
+                            <div className="task-list__subtasks">Subtasks</div>
                             <div className="task-list__status">Status</div>
                             <div />
                         </div>
@@ -701,7 +689,6 @@ function TasksTab({ project }) {
                             <TaskRow
                                 key={task.id}
                                 task={task}
-                                teamNames={teamNames}
                                 onChange={reload}
                                 onOpen={setSelectedTaskId}
                             />
@@ -1119,15 +1106,16 @@ function NotesTab({ project }) {
     );
 }
 
-function MessageThreadRow({ thread, currentUserId, onOpen }) {
+function MessageThreadRow({ thread, currentUserId, unread, onOpen }) {
     const participants = threadParticipantActors(thread);
     const amParticipant = participants.some((p) => isSameActor(p, 'user', currentUserId));
     const lastActivity = thread.replies?.length ? thread.replies[thread.replies.length - 1].sent_at : thread.sent_at;
 
     return (
-        <div onClick={() => onOpen(thread.id)} className="grid-row grid-row--action grid-row--link">
+        <div onClick={() => onOpen(thread)} className="grid-row grid-row--action grid-row--link">
             <div className="project-messages__subject">
-                <span className="u-truncate">{thread.subject}</span>
+                {unread && <span className="unread-dot" title="Unread" />}
+                <span className={`u-truncate${unread ? ' unread-subject' : ''}`}>{thread.subject}</span>
                 {!amParticipant && <Badge tone="accent" label="Not joined" />}
             </div>
             <div className="project-messages__participants">{participants.map((p) => p.name).join(', ') || '—'}</div>
@@ -1140,7 +1128,7 @@ function MessageThreadRow({ thread, currentUserId, onOpen }) {
 // Threads list, with a thread (and a new message) opening in a drawer.
 // Built from MessagesPanel's pieces; the client portal still uses the
 // all-in-one MessagesPanel.
-function MessagesTab({ project }) {
+function MessagesTab({ project, unread }) {
     const { props } = usePage();
     const currentUser = props.auth?.user;
     const [composing, setComposing] = useState(false);
@@ -1187,7 +1175,11 @@ function MessagesTab({ project }) {
                                 key={thread.id}
                                 thread={thread}
                                 currentUserId={currentUser?.id}
-                                onOpen={setOpenThreadId}
+                                unread={unread.isUnread(thread)}
+                                onOpen={(t) => {
+                                    unread.markRead(t);
+                                    setOpenThreadId(t.id);
+                                }}
                             />
                         ))}
                     </>
@@ -1403,12 +1395,12 @@ function InvoiceRow({ invoice, onOpen, loading }) {
         >
             <div className="project-billing__number">{invoice.invoice_number}</div>
             <div className="project-billing__issued">{formatDate(invoice.issued_on)}</div>
-            <div className="project-billing__total">{formatCurrency(invoiceTotal(invoice.items, invoice.surcharge))}</div>
+            <div className="project-billing__total">{formatCurrency(invoiceTotal(invoice.items, invoice.surcharge, invoice.tax_rate))}</div>
             <div className="project-billing__status"><InvoiceStatusBadge invoice={invoice} /></div>
             <RowActions
                 openLabel="Open invoice"
                 deleteLabel="Delete invoice"
-                confirmMessage={`Delete invoice #${invoice.invoice_number} (${formatCurrency(invoiceTotal(invoice.items, invoice.surcharge))})? Its time and expenses go back to unbilled. This can't be undone.`}
+                confirmMessage={`Delete invoice #${invoice.invoice_number} (${formatCurrency(invoiceTotal(invoice.items, invoice.surcharge, invoice.tax_rate))})? Its time and expenses go back to unbilled. This can't be undone.`}
                 // Paid invoices can't be deleted.
                 onDelete={invoice.status !== 'paid' ? async () => {
                     await api.delete(`/api/invoices/${invoice.id}`);
@@ -1933,6 +1925,9 @@ export default function ProjectsShow({ project, canManageTeam, canEdit, assignab
     const [tab, setTab] = useRememberedTab('project-page-tab', tabs);
     const [settingsOpen, setSettingsOpen] = useState(false);
     const [teamOpen, setTeamOpen] = useState(false);
+    const favorites = useFavorites(useMemo(() => [project], [project]));
+    // Unread threads: a red count on the Messages tab, a dot on each.
+    const unread = useUnreadThreads(project.messages || [], (id) => `/api/messages/${id}/read`);
 
     return (
         <AppLayout>
@@ -1942,6 +1937,7 @@ export default function ProjectsShow({ project, canManageTeam, canEdit, assignab
                 title={project.name}
                 actions={(
                     <>
+                        <StarButton starred={favorites.isStarred(project)} onToggle={() => favorites.toggle(project)} className="icon-btn--lg" />
                         <button onClick={() => setTeamOpen(true)} title="Team" aria-label="Team" className="icon-btn icon-btn--secondary icon-btn--lg">
                             <Users />
                         </button>
@@ -1955,12 +1951,12 @@ export default function ProjectsShow({ project, canManageTeam, canEdit, assignab
             />
             <ProjectSummary project={project} proposedHours={proposedHours} />
 
-            <TabBar tab={tab} setTab={setTab} tabs={tabs} size="lg" />
+            <TabBar tab={tab} setTab={setTab} tabs={tabs} unread={{ Messages: unread.count }} size="lg" />
 
             {tab === 'Tasks' && <TasksTab project={project} />}
             {tab === 'Schedule' && <ScheduleTab project={project} />}
             {tab === 'Notes' && <NotesTab project={project} />}
-            {tab === 'Messages' && <MessagesTab project={project} />}
+            {tab === 'Messages' && <MessagesTab project={project} unread={unread} />}
             {tab === 'Time' && <TimeTab project={project} timeServices={timeServices} />}
             {tab === 'Proposals' && <ProposalsTab project={project} services={services} />}
             {tab === 'Billing' && <BillingTab project={project} />}

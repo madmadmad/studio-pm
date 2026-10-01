@@ -98,6 +98,7 @@ class MessageThreadService
             $this->storeAttachments($thread, $attachments);
 
             $this->addParticipant($thread, $sender);
+            $this->markAuthorRead($thread, $sender);
             foreach ($recipients as $recipient) {
                 $this->addParticipant($thread, $recipient);
             }
@@ -129,6 +130,7 @@ class MessageThreadService
             $this->storeAttachments($reply, $attachments);
 
             $this->addParticipant($thread, $author);
+            $this->markAuthorRead($thread, $author);
 
             $thread->load('participants.user', 'participants.contact');
             $recipients = $thread->participants
@@ -222,6 +224,13 @@ class MessageThreadService
         $key = $actor instanceof User ? ['user_id' => $actor->id, 'contact_id' => null] : ['user_id' => null, 'contact_id' => $actor->id];
 
         return $thread->participants()->firstOrCreate($key, ['joined_at' => now()]);
+    }
+
+    // Writing to a thread is reading it: the author has seen everything
+    // up to their own message (UnreadMessages).
+    protected function markAuthorRead(Message $thread, User|Contact $author): void
+    {
+        UnreadMessages::markRead($thread, $author);
     }
 
     /**

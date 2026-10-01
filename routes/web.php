@@ -3,6 +3,7 @@
 use App\Http\Controllers\AvatarController;
 use App\Http\Controllers\Web\AcceptInvitationController;
 use App\Http\Controllers\Web\BookkeepingPageController;
+use App\Http\Controllers\Web\PortalPreviewController;
 use App\Http\Controllers\Web\ClientPageController;
 use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\ExpensePageController;
@@ -72,6 +73,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/proposals/{proposal}/edit', [ProposalPageController::class, 'edit'])->name('proposals.edit');
 
         Route::get('/bookkeeping', [BookkeepingPageController::class, 'index'])->name('bookkeeping.index');
+        Route::get('/clients/{company}/portal-preview', [PortalPreviewController::class, 'start'])->name('clients.portal-preview');
+        Route::get('/bookkeeping/sales-tax', [BookkeepingPageController::class, 'salesTax'])->name('bookkeeping.sales-tax');
+        Route::get('/bookkeeping/sales-tax.csv', [BookkeepingPageController::class, 'salesTaxCsv'])->name('bookkeeping.sales-tax.csv');
 
         Route::get('/expenses', [ExpensePageController::class, 'index'])->name('expenses.index');
 
@@ -98,8 +102,9 @@ Route::prefix('portal')->name('portal.')->group(function () {
     // older session/tab is still open, and the signature is the real gate.
     Route::get('/login/verify/{contactId}/{token}', [PortalAuthController::class, 'verify'])->name('verify');
 
-    Route::middleware('auth:client')->group(function () {
+    Route::middleware(['auth:client', 'portal.preview'])->group(function () {
         Route::post('/logout', [PortalAuthController::class, 'logout'])->name('logout');
+        Route::post('/preview/exit', [PortalPreviewController::class, 'exit'])->name('preview.exit');
         Route::get('/', [PortalPageController::class, 'index'])->name('dashboard');
         Route::get('/proposals', [PortalPageController::class, 'proposals'])->name('proposals.index');
         Route::get('/invoices', [PortalPageController::class, 'invoices'])->name('invoices.index');

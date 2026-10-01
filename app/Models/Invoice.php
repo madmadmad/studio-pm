@@ -11,10 +11,11 @@ use Illuminate\Support\Str;
 
 class Invoice extends Model
 {
-    protected $fillable = ['company_id', 'project_id', 'contact_id', 'status', 'surcharge', 'issued_on', 'due_on', 'payment_terms', 'stripe_checkout_session_id', 'sent_at', 'reminders_enabled'];
+    protected $fillable = ['company_id', 'project_id', 'contact_id', 'status', 'surcharge', 'tax_name', 'tax_rate', 'issued_on', 'due_on', 'payment_terms', 'stripe_checkout_session_id', 'sent_at', 'reminders_enabled'];
 
     protected $casts = [
         'surcharge' => 'boolean',
+        'tax_rate' => 'decimal:3',
         'issued_on' => 'date',
         'due_on' => 'date',
         'payment_terms' => PaymentTerms::class,
@@ -36,7 +37,7 @@ class Invoice extends Model
     public function loadForDetail(): static
     {
         $this->load([
-            'items.service', 'items.timeEntries', 'company.contacts', 'contact', 'project', 'payments',
+            'items.service', 'items.timeEntries', 'items.expense', 'company.contacts', 'contact', 'project', 'payments',
             'invoiceSends' => fn ($query) => $query->with('sentBy:id,name')->latest('id'),
         ]);
 
@@ -119,21 +120,42 @@ class Invoice extends Model
         return (float) $this->items->sum('amount');
     }
 
+    public function hasTax(): bool
+    {
+        return $this->tax_rate !== null;
+    }
+
+    // The lines tax is charged on, when the invoice charges it.
+    public function taxableSubtotal(): float
+    {
+        return $this->hasTax() ? (float) $this->items->where('taxable', true)->sum('amount') : 0.0;
+    }
+
+    // Sales tax on the taxable lines, to the cent (lib/format's invoiceTax).
+    public function taxAmount(): float
+    {
+        return $this->hasTax() ? round($this->taxableSubtotal() * (float) $this->tax_rate / 100, 2) : 0.0;
+    }
+
+    // "Ohio sales tax (7.25%)"
+    public function taxLabel(): ?string
+    {
+        return $this->hasTax() ? sprintf('%s (%s%%)', $this->tax_name, rtrim(rtrim(number_format((float) $this->tax_rate, 3), '0'), '.')) : null;
+    }
+
     // A hypothetical 3% card-processing fee -- used only to build the Stripe
     // Checkout line item for a card payment. It is never added to total():
     // the fee is between the client and Stripe, shown only on Stripe's own
     // page, and never affects what this invoice is worth in the app.
     public function cardSurchargeAmount(): float
     {
-        return round($this->subtotal() * 0.03, 2);
+        return round($this->total() * 0.03, 2);
     }
 
-    // What the client owes, full stop. Equal to subtotal() -- kept as a
-    // separate method since callers throughout the app already read
-    // total() rather than subtotal(), not because the two can ever differ.
+    // What the client owes: the lines plus any sales tax.
     public function total(): float
     {
-        return $this->subtotal();
+        return round($this->subtotal() + $this->taxAmount(), 2);
     }
 
     // Invoice-level override wins over the company's, which wins over the
@@ -285,9 +307,13 @@ class Invoice extends Model
             'paid_at' => now(),
         ]);
 
+        // The amount received includes any sales tax; the tax is noted
+        // apart, since it's owed to the state rather than earned.
         Transaction::create([
             'type' => 'income',
             'amount' => $baseAmount,
+            'tax_amount' => min($this->taxAmount(), $baseAmount),
+            'taxable_amount' => $this->taxableSubtotal(),
             'category' => 'client invoice',
             'occurred_on' => now(),
             'invoice_id' => $this->id,

@@ -14,6 +14,15 @@
         opacity: 0.5;
     }
 
+    // Shown but not available yet (a portal preview with no one invited):
+    // faded, with its reason in the tooltip.
+    &--unavailable,
+    &--unavailable:hover {
+        color: var(--color-text-muted);
+        opacity: 0.35;
+        cursor: default;
+    }
+
     // A tab's primary add action (the toolbar plus) -- a level above the
     // section-level icons inside a drawer, so a size up.
     &--lg svg {
@@ -58,6 +67,16 @@
 
     // Undo a removal (Reactivate): neutral until hovered, then primary.
     &--restore:hover {
+        color: var(--color-primary-icon);
+    }
+
+    // A favorites star: grey until hovered, filled red once starred.
+    &--star:hover {
+        color: var(--color-text);
+    }
+
+    &--starred,
+    &--starred:hover {
         color: var(--color-primary-icon);
     }
 

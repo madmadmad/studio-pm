@@ -3,6 +3,7 @@ import { ProposalStatusBadge } from '../StatusBadges';
 import { formatCurrency } from '../../lib/format';
 import { visitRow } from '../../lib/rowLink';
 import RowLink from './RowLink';
+import { useListMotion } from '../../lib/listMotion';
 
 // A client's proposals: Title | Project | Estimate | Status, whole rows
 // clickable. `hrefFor(proposal)` is where a row goes (the staff editor, or
@@ -13,6 +14,7 @@ import RowLink from './RowLink';
 // row in place instead -- the staff drawer -- and `hrefFor` isn't needed;
 // each row then ends in the open caret, as every drawer list does.
 export default function ClientProposalsTable({ proposals, hrefFor, hideSent = false, newTab = false, onOpen }) {
+    const rowsRef = useListMotion();
     return (
         <div className="card card--flush">
             <table className="table">
@@ -25,7 +27,7 @@ export default function ClientProposalsTable({ proposals, hrefFor, hideSent = fa
                         {onOpen && <th />}
                     </tr>
                 </thead>
-                <tbody>
+                <tbody ref={rowsRef}>
                     {proposals.map((proposal) => (
                         <tr key={proposal.id} onClick={(e) => visitRow(e, hrefFor?.(proposal), { newTab, onOpen: onOpen && (() => onOpen(proposal)) })} className="table__row--link">
                             <td className="table__cell--strong">

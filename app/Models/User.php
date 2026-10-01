@@ -94,6 +94,12 @@ class User extends Authenticatable
         return $this->projects()->wherePivotNull('unassigned_at');
     }
 
+    // The projects this person has starred (ProjectFavoriteController).
+    public function favoriteProjects(): BelongsToMany
+    {
+        return $this->belongsToMany(Project::class, 'project_favorites')->withTimestamps();
+    }
+
     public function timeEntries(): HasMany
     {
         return $this->hasMany(TimeEntry::class);

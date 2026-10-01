@@ -1,7 +1,7 @@
-// A grouped step of a longer form, set apart on a card under a ruled
-// heading (.section-label--ruled): the invoice forms' "Bill from
-// proposal", "Dates & terms" and "Line items", the proposal editor's
-// "Client & project", "Proposal" and "Services".
+// A grouped section of a longer form or drawer, set apart on a card under
+// a ruled heading (.section-label--ruled, or __header when the heading has
+// a button): the invoice and proposal forms' sections, and the task
+// drawer's Details, Description, Subtasks and Files.
 
 .form-panel {
     margin-bottom: var(--space-4);
@@ -14,6 +14,17 @@
     // fill alone sets a panel apart.
     .drawer & {
         box-shadow: none;
+    }
+
+    // A heading with an action beside it (edit, add, attach): the ruled
+    // heading's line, with the button on the right.
+    &__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: var(--space-2); // as .section-label--ruled
+        padding-bottom: var(--space-1);
+        border-bottom: var(--border-width) solid var(--color-border);
     }
 
     // The panel's padding is the space below its last field.

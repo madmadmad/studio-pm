@@ -7,7 +7,11 @@ export function formatCurrency(n) {
 
 export function formatDate(value) {
     if (!value) return '—';
-    return new Date(value).toLocaleDateString('en-US', {
+    // A plain 'YYYY-MM-DD' is a calendar date, not a moment: read it as
+    // local, since the browser would take it as midnight UTC -- the day
+    // before, anywhere west of Greenwich.
+    const date = /^\d{4}-\d{2}-\d{2}$/.test(value) ? new Date(`${value}T00:00:00`) : new Date(value);
+    return date.toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'short',
         day: 'numeric',
@@ -80,21 +84,35 @@ export function invoiceSubtotal(items) {
     return items.reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0);
 }
 
+// Sales tax on an invoice's taxable lines, to the cent; none when the
+// invoice doesn't charge tax (`taxRate` null). Matches Invoice::taxAmount().
+export function invoiceTax(items, taxRate) {
+    const rate = parseFloat(taxRate);
+    if (!(rate > 0)) return 0;
+    const taxable = invoiceSubtotal(items.filter((item) => item.taxable));
+    return Math.round(taxable * rate + 1e-7) / 100;
+}
+
+// "Ohio sales tax (7.25%)"
+export function taxLabel(name, taxRate) {
+    return `${name} (${parseFloat(taxRate)}%)`;
+}
+
 // A hypothetical 3% card-processing fee -- shown only as a preview while
 // composing an invoice (does the studio want to offer a card option at
 // all?) and on Stripe's own checkout page if the client picks card. Never
 // added into invoiceTotal(): the fee is between the client and Stripe and
 // never affects what the invoice itself is worth in this app.
-export function cardSurchargeAmount(items, surcharge) {
-    return surcharge ? invoiceSubtotal(items) * 0.03 : 0;
+export function cardSurchargeAmount(items, surcharge, taxRate = null) {
+    return surcharge ? invoiceTotal(items, surcharge, taxRate) * 0.03 : 0;
 }
 
-// What the client owes. The `surcharge` param is accepted (rather than
-// changing every call site's arity) but no longer affects the result --
-// kept only because it used to change the total, and it's easy to forget a
-// call site if this silently changes shape.
-export function invoiceTotal(items, _surcharge) {
-    return invoiceSubtotal(items);
+// What the client owes: the lines plus any sales tax. The `surcharge`
+// param no longer affects the result (the card fee is Stripe's), kept so
+// call sites keep their shape. Leave `taxRate` out for the pre-tax amount
+// -- what counts against a project's budget, since tax isn't billed work.
+export function invoiceTotal(items, _surcharge, taxRate = null) {
+    return invoiceSubtotal(items) + invoiceTax(items, taxRate);
 }
 
 // "Today" here means today in the firm's own timezone, not the viewer's --
@@ -104,6 +122,11 @@ export function invoiceTotal(items, _surcharge) {
 // compares correctly as a plain string against due_on.
 export function todayInAppTimezone() {
     return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(new Date());
+}
+
+// The 'YYYY-MM' a timestamp falls in, in the firm's timezone.
+export function monthInAppTimezone(value) {
+    return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(new Date(value)).slice(0, 7);
 }
 
 export function isOverdue(invoice) {

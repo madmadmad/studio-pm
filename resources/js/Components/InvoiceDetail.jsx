@@ -2,9 +2,9 @@ import { useEffect, useState } from 'react';
 import { Check, Copy, DownloadSimple, Eye, PaperPlaneTilt, PencilSimple } from '@phosphor-icons/react';
 import Button from './Button';
 import InvoiceLineItems from './InvoiceLineItems';
-import Toggle from './Toggle';
 import InvoiceDateFields from './InvoiceDateFields';
 import SendInvoiceModal from './SendInvoiceModal';
+import { TaxRow, TaxToggle, useSalesTax } from './InvoiceTax';
 import { formatCurrency, formatDate, invoiceSubtotal, invoiceTotal } from '../lib/format';
 import { formatDateTimeEastern, utcToEasternParts, easternWallTimeToUtcIso } from '../lib/datetime';
 import { reminderRows } from '../lib/reminders';
@@ -18,17 +18,25 @@ import { hasQueuedEmail, waitForQueuedSend } from '../lib/invoiceSends';
 // through `renderFrame({ invoice, actions, children })` -- a page header
 // or a drawer -- and `onChange` to refresh after a save or payment.
 // `bare` lays the sections out plainly (no cards), for inside a drawer.
+// `openInEdit` starts a draft in its edit form (the drawer does), where
+// Cancel, Save and Send call `onDone()` -- there's no read view to go
+// back to -- and `onDone({ close: false })` once a queued send goes out.
 
 function editFormFrom(invoice) {
     return {
         contact_id: invoice.contact_id ? String(invoice.contact_id) : '',
-        surcharge: invoice.surcharge,
+        tax_rate: invoice.tax_rate,
+        tax_name: invoice.tax_name,
         issued_on: invoice.issued_on ? invoice.issued_on.slice(0, 10) : '',
         payment_terms: invoice.payment_terms,
         due_on: invoice.due_on ? invoice.due_on.slice(0, 10) : '',
         // Each line keeps its id, so the save updates it in place and the
         // time and expenses billed to it stay billed.
-        items: invoice.items.map((item) => ({ id: item.id, description: item.description, details: item.details ?? '', amount: item.amount })),
+        items: invoice.items.map((item) => ({
+            id: item.id, description: item.description, details: item.details ?? '', amount: item.amount, taxable: item.taxable,
+            // Marks a line that bills an expense; removing it unbills it.
+            from_expense: Boolean(item.expense),
+        })),
     };
 }
 
@@ -44,11 +52,13 @@ export function InvoiceDueLine({ invoice }) {
     );
 }
 
-export default function InvoiceDetail({ invoice: initialInvoice, studio, invoicingDefaults, onChange, renderFrame, bare = false }) {
+export default function InvoiceDetail({ invoice: initialInvoice, studio, invoicingDefaults, onChange, renderFrame, bare = false, openInEdit = false, onDone }) {
     const [invoice, setInvoice] = useState(initialInvoice);
     useEffect(() => setInvoice(initialInvoice), [initialInvoice]);
 
-    const [editing, setEditing] = useState(false);
+    // A draft opened with `openInEdit` goes straight to its edit form.
+    const editsInPlace = openInEdit && initialInvoice.status === 'draft';
+    const [editing, setEditing] = useState(editsInPlace);
     const [form, setForm] = useState(() => editFormFrom(invoice));
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
@@ -61,14 +71,19 @@ export default function InvoiceDetail({ invoice: initialInvoice, studio, invoici
     const [rescheduleDate, setRescheduleDate] = useState('');
     const [rescheduleTime, setRescheduleTime] = useState('');
 
-    // A card on the page; a plain section in a drawer (the drawer is the frame).
-    const section = bare ? 'drawer__section' : 'card card--padded page-section';
+    // A card on the page; in a drawer, a subtle panel per section (the
+    // drawer is already the raised layer), under a ruled label.
+    const section = bare ? 'form-panel' : 'card card--padded page-section';
+    const heading = (text) => (bare
+        ? <div className="section-label section-label--ruled">{text}</div>
+        : <h2 className="section-heading">{text}</h2>);
 
     const subtotal = invoiceSubtotal(invoice.items);
-    const total = invoiceTotal(invoice.items, invoice.surcharge);
+    const total = invoiceTotal(invoice.items, invoice.surcharge, invoice.tax_rate);
 
     const formSubtotal = invoiceSubtotal(form.items);
-    const formTotal = invoiceTotal(form.items, form.surcharge);
+    const formTotal = invoiceTotal(form.items, form.surcharge, form.tax_rate);
+    const salesTax = useSalesTax(invoice);
 
     function handleSent(updatedInvoice, message) {
         setInvoice(updatedInvoice);
@@ -146,7 +161,13 @@ export default function InvoiceDetail({ invoice: initialInvoice, studio, invoici
     }
 
 
-    async function save() {
+    function cancelEditing() {
+        if (editsInPlace) onDone();
+        else setEditing(false);
+    }
+
+    // `send` saves, then opens the Send Invoice dialog on the saved invoice.
+    async function save({ send = false } = {}) {
         const validItems = form.items.filter((i) => i.description.trim() && parseFloat(i.amount) > 0);
         if (validItems.length === 0) {
             setError('Add at least one line item with a description and amount.');
@@ -157,12 +178,23 @@ export default function InvoiceDetail({ invoice: initialInvoice, studio, invoici
         try {
             await api.patch(`/api/invoices/${invoice.id}`, {
                 contact_id: form.contact_id || null,
-                surcharge: form.surcharge,
+                tax: form.tax_rate != null,
                 issued_on: form.issued_on,
                 payment_terms: form.payment_terms,
                 due_on: form.due_on,
                 items: validItems,
             });
+            if (send) {
+                const latest = await api.get(`/api/invoices/${invoice.id}`);
+                setInvoice(latest.invoice);
+                setEditing(false);
+                setSendModalOpen(true);
+                return;
+            }
+            if (editsInPlace) {
+                onDone();
+                return;
+            }
             setEditing(false);
             // The client's email and PDF are the version they were sent; only
             // the online link updates by itself.
@@ -193,9 +225,10 @@ export default function InvoiceDetail({ invoice: initialInvoice, studio, invoici
             )}
             {invoice.status !== 'paid' && (
                 <button
-                    onClick={() => setSendModalOpen(true)}
-                    disabled={editing}
-                    title={editing ? 'Save or cancel your edits first' : invoice.sent_at ? 'Resend' : 'Send invoice'}
+                    // While editing, it saves the edits first.
+                    onClick={() => (editing ? save({ send: true }) : setSendModalOpen(true))}
+                    disabled={saving}
+                    title={editing ? 'Save and send' : invoice.sent_at ? 'Resend' : 'Send invoice'}
                     className="icon-btn icon-btn--accent"
                 >
                     <PaperPlaneTilt />
@@ -228,7 +261,7 @@ export default function InvoiceDetail({ invoice: initialInvoice, studio, invoici
                 )}
 
                 {editing ? (
-                    <div className={`${section} invoice-form`}>
+                    <div className={`${bare ? 'drawer__section' : section} invoice-form`}>
                         <div className="invoice-form__section">
                             <select
                                 value={form.contact_id}
@@ -249,13 +282,14 @@ export default function InvoiceDetail({ invoice: initialInvoice, studio, invoici
                             <InvoiceDateFields values={form} onChange={(patch) => setForm((current) => ({ ...current, ...patch }))} />
                         </div>
 
-                        <InvoiceLineItems items={form.items} onChange={(items) => setForm((current) => ({ ...current, items }))} />
+                        <InvoiceLineItems items={form.items} projectId={invoice.project_id} taxed={form.tax_rate != null} onChange={(items) => setForm((current) => ({ ...current, items }))} />
 
                         <div className="invoice-form__section totals">
                             <div className="totals__row totals__row--muted">
                                 <span>Subtotal</span>
                                 <span className="totals__value">{formatCurrency(formSubtotal)}</span>
                             </div>
+                            <TaxRow items={form.items} taxName={form.tax_name} taxRate={form.tax_rate} />
                             <div className="totals__row totals__row--strong">
                                 <span>Total</span>
                                 <span className="totals__value">{formatCurrency(formTotal)}</span>
@@ -263,16 +297,19 @@ export default function InvoiceDetail({ invoice: initialInvoice, studio, invoici
                         </div>
 
                         {error && <div className="form-message form-message--error form-message--spaced">{error}</div>}
-                        {/* The card-fee toggle on the left, the form's buttons on the right. */}
+                        {/* The tax toggle on the left, the form's buttons on the right. */}
                         <div className="invoice-form__footer">
-                            <Toggle
-                                checked={form.surcharge}
-                                onChange={(value) => setForm({ ...form, surcharge: value })}
-                                label="Offer to pay by card (adds a 3% fee, shown only at checkout)"
-                            />
+                            <TaxToggle form={form} salesTax={salesTax} onChange={(patch) => setForm((current) => ({ ...current, ...patch }))} />
                             <div className="form-actions">
-                                <Button variant="secondary" onClick={() => setEditing(false)}>Cancel</Button>
-                                <Button variant="confirm" disabled={saving} onClick={save}>Save</Button>
+                                <Button variant="secondary" onClick={cancelEditing}>Cancel</Button>
+                                {invoice.status === 'draft' ? (
+                                    <>
+                                        <Button variant="secondary" disabled={saving} onClick={() => save()}>Save as draft</Button>
+                                        <Button variant="confirm" disabled={saving} onClick={() => save({ send: true })}>Send invoice</Button>
+                                    </>
+                                ) : (
+                                    <Button variant="confirm" disabled={saving} onClick={() => save()}>Save</Button>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -293,6 +330,7 @@ export default function InvoiceDetail({ invoice: initialInvoice, studio, invoici
                                             {item.details && item.details !== item.description && (
                                                 <div className="table__meta table__meta--multiline">{item.details}</div>
                                             )}
+                                            {invoice.tax_rate != null && item.taxable && <div className="table__meta">Taxable</div>}
                                         </td>
                                         <td className="table__cell--end table__cell--numeric table__cell--top">{formatCurrency(item.amount)}</td>
                                     </tr>
@@ -305,6 +343,7 @@ export default function InvoiceDetail({ invoice: initialInvoice, studio, invoici
                                 <span>Subtotal</span>
                                 <span className="totals__value">{formatCurrency(subtotal)}</span>
                             </div>
+                            <TaxRow items={invoice.items} taxName={invoice.tax_name} taxRate={invoice.tax_rate} />
                             <div className="totals__row totals__row--strong">
                                 <span>Total</span>
                                 <span className="totals__value">{formatCurrency(total)}</span>
@@ -315,7 +354,7 @@ export default function InvoiceDetail({ invoice: initialInvoice, studio, invoici
 
                 {invoice.payments.length > 0 && (
                     <div className={section}>
-                        <h2 className="section-heading">Payments</h2>
+                        {heading('Payments')}
                         <ul className="detail-list">
                             {invoice.payments.map((payment) => (
                                 <li key={payment.id} className="detail-list__item detail-list__item--split">
@@ -352,7 +391,7 @@ export default function InvoiceDetail({ invoice: initialInvoice, studio, invoici
 
                 {invoice.status !== 'draft' && invoice.status !== 'paid' && (
                     <div className={section}>
-                        <h2 className="section-heading">Reminders</h2>
+                        {heading('Reminders')}
                         <ul className="detail-list">
                             {reminderRows(invoice).map((row) => (
                                 <li key={row.rule} className="detail-list__item detail-list__item--split">
@@ -373,7 +412,7 @@ export default function InvoiceDetail({ invoice: initialInvoice, studio, invoici
 
                 {invoice.invoice_sends?.length > 0 && (
                     <div className={section}>
-                        <h2 className="section-heading">History</h2>
+                        {heading('History')}
                         <ul className="detail-list">
                             {invoice.invoice_sends.map((send) => (
                                 <li key={send.id} className="detail-list__item">
@@ -394,18 +433,21 @@ export default function InvoiceDetail({ invoice: initialInvoice, studio, invoici
                 {!editing && error && <div className="form-message form-message--error form-message--spaced">{error}</div>}
 
                 {!editing && invoice.status === 'sent' && (
-                    <div className="invoice-detail__payment">
-                        <select
-                            value={paymentMethod}
-                            onChange={(e) => setPaymentMethod(e.target.value)}
-                            className="input input--sm input--inline"
-                        >
-                            <option value="check">Check</option>
-                            <option value="other">Other</option>
-                        </select>
-                        <Button variant="confirm" onClick={recordPayment} disabled={recordingPayment}>
-                            Record payment
-                        </Button>
+                    <div className={bare ? 'form-panel' : undefined}>
+                        {bare && heading('Record payment')}
+                        <div className="invoice-detail__payment">
+                            <select
+                                value={paymentMethod}
+                                onChange={(e) => setPaymentMethod(e.target.value)}
+                                className="input input--sm input--inline"
+                            >
+                                <option value="check">Check</option>
+                                <option value="other">Other</option>
+                            </select>
+                            <Button variant="confirm" onClick={recordPayment} disabled={recordingPayment}>
+                                Record payment
+                            </Button>
+                        </div>
                     </div>
                 )}
 
@@ -414,8 +456,24 @@ export default function InvoiceDetail({ invoice: initialInvoice, studio, invoici
                         invoice={invoice}
                         studio={studio}
                         invoicingDefaults={invoicingDefaults}
-                        onClose={() => setSendModalOpen(false)}
-                        onSent={handleSent}
+                        onClose={() => {
+                            setSendModalOpen(false);
+                            // Not sent: a draft opened for editing goes back to it.
+                            if (editsInPlace) startEditing();
+                        }}
+                        onSent={(updated, message) => {
+                            if (!editsInPlace) {
+                                handleSent(updated, message);
+                                return;
+                            }
+                            // The drawer closes; once a queued email has
+                            // gone out, the page's list catches up again.
+                            setSendModalOpen(false);
+                            onDone();
+                            if (hasQueuedEmail(updated)) {
+                                waitForQueuedSend(updated.id).then((latest) => latest && onDone({ close: false }));
+                            }
+                        }}
                     />
                 )}
             </>

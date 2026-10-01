@@ -1,0 +1,17 @@
+// Unread messages (App\\Services\\UnreadMessages): a red dot before an
+// unread thread's subject, which goes bold. Counts of them use
+// .count--unread.
+
+.unread-dot {
+    display: inline-block;
+    flex-shrink: 0;
+    width: var(--space-2);
+    height: var(--space-2);
+    background-color: var(--color-primary);
+    border-radius: var(--radius-pill);
+}
+
+.unread-subject {
+    font-weight: var(--font-weight-bold);
+    color: var(--color-text);
+}

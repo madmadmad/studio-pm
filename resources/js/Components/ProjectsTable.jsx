@@ -1,8 +1,11 @@
 import { Link } from '@inertiajs/react';
 import { useState } from 'react';
 import { ProjectStatusBadge } from './StatusBadges';
+import StarButton from './StarButton';
+import UnreadCount from './UnreadCount';
 import { api } from '../lib/api';
 import { visitRow } from '../lib/rowLink';
+import { useListMotion } from '../lib/listMotion';
 
 // The project list, shared by the Projects page and a client's page so the
 // two look and behave the same (the Client Hub home too). `showClient` adds
@@ -10,6 +13,8 @@ import { visitRow } from '../lib/rowLink';
 // page). `hrefFor(project)` is where a row goes (staff project page by
 // default). `canChangeStatus` shows the status dropdown (staff only);
 // `onChange` runs after a status change so the caller can reload its data.
+// `favorites` (useFavorites) adds a star before each name. A project's
+// `unread_messages` shows as a red count after its name.
 
 export const PROJECT_STATUS_OPTIONS = [
     { value: 'leads', label: 'Leads' },
@@ -27,8 +32,9 @@ function taskProgress(project) {
     return `${done}/${total} done`;
 }
 
-export default function ProjectsTable({ projects, showClient = true, hrefFor = (p) => `/projects/${p.id}`, canChangeStatus = true, onChange }) {
+export default function ProjectsTable({ projects, showClient = true, hrefFor = (p) => `/projects/${p.id}`, canChangeStatus = true, onChange, favorites = null }) {
     const [pendingStatus, setPendingStatus] = useState({});
+    const rowsRef = useListMotion();
 
     async function changeStatus(project, status) {
         setPendingStatus((current) => ({ ...current, [project.id]: true }));
@@ -50,13 +56,15 @@ export default function ProjectsTable({ projects, showClient = true, hrefFor = (
                     <th>Status</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody ref={rowsRef}>
                 {projects.map((project) => (
                     <tr key={project.id} onClick={(e) => visitRow(e, hrefFor(project))} className="table__row--link">
                         <td className="table__cell--strong">
-                            <Link href={hrefFor(project)} className="link">
-                                {project.name}
-                            </Link>
+                            <div className="table__group">
+                                {favorites && <StarButton starred={favorites.isStarred(project)} onToggle={() => favorites.toggle(project)} />}
+                                <Link href={hrefFor(project)} className="link">{project.name}</Link>
+                                <UnreadCount count={project.unread_messages} />
+                            </div>
                         </td>
                         {showClient && (
                             <td>

@@ -26,6 +26,18 @@
         color: var(--color-text-muted);
     }
 
+    // Smaller, beside small text (an invoice line's Taxable switch).
+    &--sm {
+        --toggle-track-width: 1.75rem;
+        --toggle-track-height: var(--space-4);
+        --toggle-knob-size: var(--space-3);
+
+        gap: var(--space-1-5);
+        font-size: var(--font-size-xs);
+        line-height: var(--line-height-xs);
+        color: var(--color-text-muted);
+    }
+
     &__switch {
         position: relative;
         display: inline-flex;

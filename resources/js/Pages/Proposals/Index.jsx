@@ -4,7 +4,9 @@ import { CaretRight, Check, Copy, Eye, PaperPlaneTilt, Trash } from '@phosphor-i
 import AppLayout from '../../Layouts/AppLayout';
 import EmptyState from '../../Components/EmptyState';
 import { ProposalStatusBadge } from '../../Components/StatusBadges';
-import { formatCurrency, formatDate } from '../../lib/format';
+import { formatCurrency, formatDate, monthInAppTimezone, todayInAppTimezone } from '../../lib/format';
+import MetricCard from '../../Components/MetricCard';
+import { useListMotion } from '../../lib/listMotion';
 import { api } from '../../lib/api';
 import { copyToClipboard } from '../../lib/clipboard';
 import PageHeader from '../../Components/PageHeader';
@@ -17,6 +19,29 @@ function reload() {
     router.reload({ only: ['proposals'] });
 }
 
+const STATUS_FILTERS = [
+    { value: 'all', label: 'All' },
+    { value: 'draft', label: 'Draft' },
+    { value: 'sent', label: 'Sent' },
+    { value: 'accepted', label: 'Accepted' },
+];
+
+// The figures across the top, as on the Invoices page: drafts and what's
+// awaiting the client, then this month's sends and acceptances -- each a
+// count and the estimates' total. Months are the firm's (Eastern).
+function proposalMetrics(proposals) {
+    const thisMonth = todayInAppTimezone().slice(0, 7);
+    const inThisMonth = (value) => value && monthInAppTimezone(value) === thisMonth;
+    const figure = (list) => ({ count: list.length, amount: list.reduce((s, p) => s + (parseFloat(p.estimate_amount) || 0), 0) });
+
+    return {
+        drafts: figure(proposals.filter((p) => p.status === 'draft')),
+        awaiting: figure(proposals.filter((p) => p.status === 'sent')),
+        sent: figure(proposals.filter((p) => inThisMonth(p.sent_at))),
+        accepted: figure(proposals.filter((p) => p.status === 'accepted' && inThisMonth(p.accepted_at))),
+    };
+}
+
 export default function ProposalsIndex({ proposals: proposalsProp, companies, services }) {
     const [proposals, setProposals] = useState(proposalsProp);
     // Proposals open -- and new ones start -- in the wide drawer, as on a
@@ -26,6 +51,21 @@ export default function ProposalsIndex({ proposals: proposalsProp, companies, se
     const openProposal = proposals.find((p) => p.id === openId) || null;
     const [copiedId, setCopiedId] = useState(null);
     const [deletingId, setDeletingId] = useState(null);
+    const [search, setSearch] = useState('');
+    const [filter, setFilter] = useState('all');
+    const rowsRef = useListMotion();
+
+    // Search matches the title, client or project; the pills filter by
+    // status. Same bar as the Projects, Clients and Invoices lists.
+    const query = search.trim().toLowerCase();
+    const visibleProposals = proposals.filter((p) => {
+        if (filter !== 'all' && p.status !== filter) return false;
+        if (!query) return true;
+        return p.title?.toLowerCase().includes(query)
+            || p.company?.name.toLowerCase().includes(query)
+            || p.project?.name.toLowerCase().includes(query);
+    });
+    const metrics = proposalMetrics(proposals);
 
     // Keeps local state in sync whenever a router.reload() elsewhere in this
     // component brings in a fresh copy of the prop.
@@ -79,16 +119,45 @@ export default function ProposalsIndex({ proposals: proposalsProp, companies, se
             <PageHeader
                 title="Proposals"
                 actions={<Button onClick={() => setCreating(true)}>New proposal</Button>}
-                subtitle={
-                    <>
-                        {proposals.length} proposal{proposals.length !== 1 ? 's' : ''} on file.
-                    </>
-                }
             />
+
+            <div className="metric-grid">
+                <MetricCard label={`Drafts (${metrics.drafts.count})`} value={formatCurrency(metrics.drafts.amount)} />
+                <MetricCard label={`Awaiting response (${metrics.awaiting.count})`} value={formatCurrency(metrics.awaiting.amount)} />
+                <MetricCard label={`Sent this month (${metrics.sent.count})`} value={formatCurrency(metrics.sent.amount)} />
+                {/* The headline figure: the month's wins. */}
+                <MetricCard label={`Accepted this month (${metrics.accepted.count})`} value={formatCurrency(metrics.accepted.amount)} tone="primary" />
+            </div>
+
+            {proposals.length > 0 && (
+                <div className="filter-bar">
+                    <input
+                        type="search"
+                        placeholder="Search proposals, clients or projects…"
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        aria-label="Search proposals"
+                        className="input filter-bar__search"
+                    />
+                    <div className="filter-bar__pills">
+                        {STATUS_FILTERS.map((f) => (
+                            <button
+                                key={f.value}
+                                onClick={() => setFilter(f.value)}
+                                className={`filter-bar__pill${filter === f.value ? ' filter-bar__pill--active' : ''}`}
+                            >
+                                {f.label}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            )}
 
             <div className="card card--flush">
                 {proposals.length === 0 ? (
                     <EmptyState text="No proposals yet." />
+                ) : visibleProposals.length === 0 ? (
+                    <EmptyState text={query ? `No proposals match "${search.trim()}".` : 'No proposals match this filter.'} />
                 ) : (
                     <table className="table">
                         <thead>
@@ -101,8 +170,8 @@ export default function ProposalsIndex({ proposals: proposalsProp, companies, se
                                 <th></th>
                             </tr>
                         </thead>
-                        <tbody>
-                            {proposals.map((proposal) => (
+                        <tbody ref={rowsRef}>
+                            {visibleProposals.map((proposal) => (
                                 <tr key={proposal.id} onClick={(e) => visitRow(e, null, { onOpen: () => setOpenId(proposal.id) })} className="table__row--link">
                                     <td className="table__cell--strong">
                                         <div>{proposal.company.name}</div>

@@ -122,25 +122,27 @@
 
     // Surfaces, darkest first -- in a dark UI, higher means lighter -- and
     // the lines between things. A slight cool tint keeps them off pure black.
-    --color-bg: #23272F; // the page itself: the content panel, auth and public pages
-    --color-surface: #31343A; // cards, list cards
-    --color-surface-subtle: #31343A; // filled cards, hover rows, toolbars
-    --color-surface-raised: #23272F; // floats above the page: drawers, modals, popovers, menus
-    --color-surface-muted: #383C42; // neutral badge/chip fill, a step lighter
-    --color-surface-highlight: #41464E; // a card picked out quietly (a project's Remaining), a step lighter again
-    --color-field: rgb(255 255 255 / 0.06); // inputs and selects: a faint lift over whatever they sit on, so a borderless field reads on every layer
-    --color-border: #41464E; // dividers -- decorative, deliberately low contrast
-    --color-border-strong: #41464E; // the toggle's off track, an inline edit's edge on hover or focus
+    --color-bg: #1B1E23; // the page itself: the content panel, auth and public pages
+    // Cards are a light tint of the page/drawer color, so they share its
+    // cool cast rather than reading as a separate, warmer grey.
+    --color-surface: color-mix(in srgb, var(--color-bg) 97%, #EBEFF9); // cards, list cards
+    --color-surface-subtle: color-mix(in srgb, var(--color-bg) 97%, #EBEFF9); // filled cards, hover rows, toolbars
+    --color-surface-raised: color-mix(in srgb, var(--color-bg) 96%, #EBEFF9); // floats above the page: drawers, modals, popovers, menus
+    --color-surface-muted: color-mix(in srgb, var(--color-bg) 90%, #EBEFF9);; // neutral badge/chip fill, a step lighter
+    --color-surface-highlight: color-mix(in srgb, var(--color-bg) 85%, #EBEFF9); // a card picked out quietly (a project's Remaining), a step lighter again
+    --color-field: color-mix(in srgb, var(--color-bg) 92%, #EBEFF9); // inputs and selects: a faint lift over whatever they sit on, so a borderless field reads on every layer
+    --color-border: color-mix(in srgb, var(--color-bg) 88%, #EBEFF9); // dividers -- decorative, deliberately low contrast
+    --color-border-strong: color-mix(in srgb, var(--color-bg) 85%, #EBEFF9);; // the toggle's off track, an inline edit's edge on hover or focus
 
     // The frame around the app (the sidebar sits on it) and text on it.
     // The darkest layer; the content panel sits a step lighter.
-    --color-canvas: #171B21;
-    --color-on-canvas: #E6E8EB;
+    --color-canvas: #16191D;
+    --color-on-canvas: #E3E7ED;
     --color-on-canvas-strong: #fff; // the current nav item
     --color-on-canvas-muted: color-mix(in srgb, var(--color-on-canvas) 80%, transparent);
     --color-on-canvas-subtle: color-mix(in srgb, var(--color-on-canvas) 60%, transparent);
     --color-on-canvas-border: color-mix(in srgb, var(--color-on-canvas) 10%, transparent);
-    --color-on-canvas-fill: color-mix(in srgb, var(--color-on-canvas) 4%, transparent); // a nav item at rest -- barely there
+    --color-on-canvas-fill: color-mix(in srgb, var(--color-on-canvas) 0%, transparent); // a nav item at rest -- barely there
     --color-on-canvas-fill-hover: color-mix(in srgb, var(--color-on-canvas) 8%, transparent); // a nav item under the pointer, a touch lighter
 
     // App shell layers, back to front: canvas -> panel -> drawer.
@@ -355,8 +357,12 @@
     // small buttons, inline pickers, action icons and the "open" caret --
     // so a row's controls all line up.
     --size-row-action: 1.75rem; // 28px
+    // The one height for every standalone control -- text fields, selects,
+    // buttons, filter pills, the view switch -- so any of them side by
+    // side line up. (Row-sized controls use --size-row-action.)
+    --size-control: 2.25rem; // 36px
     --size-metric-card-min: 13.75rem; // 220px: narrowest a metric card gets before the grid wraps
-    --size-board-card: 7.5rem; // 120px: a Projects board card -- two-line name, client, tasks
+    --size-board-card: 9rem; // 144px: a Projects board card -- two-line name, client, tasks, budget bar
     --size-board-column-min: 14rem; // 224px: narrowest a Projects board column gets before scrolling
     --size-schedule-label: 12rem; // the gantt chart's item-name column
     --size-field-min: 11rem; // 176px: narrowest a .field-grid column gets before wrapping

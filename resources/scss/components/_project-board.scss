@@ -12,8 +12,14 @@
     grid-auto-columns: minmax(var(--size-board-column-min), 1fr);
     grid-auto-flow: column;
     gap: var(--board-gap);
+    // Scrolls sideways on narrow screens -- which clips the bottom too
+    // (overflow can't be auto one way and visible the other), so the board
+    // pads out room for the cards' shadow (16px offset + 16px blur, and
+    // its spread at the sides), then pulls its margins back by the same so
+    // the layout doesn't move.
     overflow-x: auto;
-    padding-bottom: var(--space-2); // room for the scrollbar
+    margin: 0 calc(var(--space-4) * -1) calc(var(--space-8) * -1);
+    padding: 0 var(--space-4) var(--space-8);
 
     &__column {
         display: flex;
@@ -72,6 +78,33 @@
         }
     }
 
+    // Never squeezed by the card's fixed height (the bottom rows give way).
+    &__title,
+    &__client {
+        flex-shrink: 0;
+    }
+
+    // The name, with the favorites star in the card's top corner.
+    &__title {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: var(--space-2);
+    }
+
+    &__star {
+        flex-shrink: 0;
+        margin-top: var(--space-0-5);
+    }
+
+    // An unread-messages count sits right after the name; the star keeps
+    // the far corner.
+    &__title .count {
+        flex-shrink: 0;
+        margin-top: var(--space-0-5);
+        margin-right: auto;
+    }
+
     &__name {
         display: -webkit-box;
         text-decoration: none;
@@ -98,6 +131,37 @@
         font-size: var(--font-size-xs);
         line-height: var(--line-height-xs);
         color: var(--color-text-muted);
+    }
+
+    // Budget billed so far: a thin bar with the percentage beside it.
+    &__budget {
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
+        margin-top: var(--space-2);
+    }
+
+    &__budget-track {
+        flex: 1;
+        height: var(--space-1);
+        overflow: hidden;
+        background-color: var(--color-neutral-fill);
+        border-radius: var(--radius-pill);
+    }
+
+    &__budget-fill {
+        display: block;
+        height: 100%;
+        background-color: var(--color-primary);
+        border-radius: inherit;
+    }
+
+    &__budget-label {
+        flex-shrink: 0;
+        font-size: var(--font-size-xs);
+        line-height: var(--line-height-xs);
+        color: var(--color-text-muted);
+        font-variant-numeric: tabular-nums;
     }
 
     &__empty {

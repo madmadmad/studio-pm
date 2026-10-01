@@ -97,6 +97,8 @@ export default function ProposalShow({ proposal, token, studio }) {
                     dangerouslySetInnerHTML={{ __html: proposal.body }}
                 />
 
+                {proposal.disclaimer && <p className="document__disclaimer">{proposal.disclaimer}</p>}
+
                 {proposal.items.length > 0 && <FeeSummary proposal={proposal} />}
 
                 {status === 'accepted' ? (

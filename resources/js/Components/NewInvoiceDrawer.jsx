@@ -3,7 +3,7 @@ import Button from './Button';
 import InvoiceLineItems from './InvoiceLineItems';
 import Drawer from './Drawer';
 import InvoiceDateFields from './InvoiceDateFields';
-import Toggle from './Toggle';
+import { TaxRow, TaxToggle, useSalesTax } from './InvoiceTax';
 import { useSendAfterCreate } from './SendInvoiceModal';
 import { api } from '../lib/api';
 import { formatCurrency, invoiceSubtotal, invoiceTotal } from '../lib/format';
@@ -54,7 +54,7 @@ function emptyInvoiceForm(defaultTerms) {
     const issuedOn = todayLocal();
     const terms = defaultTerms || 'net_30';
     return {
-        proposal_id: '', items: [{ description: '', amount: '' }], surcharge: true,
+        proposal_id: '', items: [{ description: '', amount: '' }], tax_rate: null, tax_name: null,
         issued_on: issuedOn, payment_terms: terms, due_on: calculateDueDate(issuedOn, terms),
     };
 }
@@ -143,20 +143,28 @@ export default function NewInvoiceDrawer({ company, projects, initialProjectId =
     const plan = selectedProposal ? billingPlan(project, selectedProposal) : null;
     const thisCents = plan ? centsForPercent(plan, form.percent) : 0;
     const formSubtotal = invoiceSubtotal(form.items);
-    const formTotal = invoiceTotal(form.items, form.surcharge);
+    const formTotal = invoiceTotal(form.items, form.surcharge, form.tax_rate);
+    const salesTax = useSalesTax();
+
+    // Rebuilding the lines from a proposal keeps any expenses already added.
+    const withExpenseLines = (items) => {
+        const expenseLines = form.items.filter((item) => item.expense_id);
+        return expenseLines.length > 0 && items.length === 1 && !items[0].description ? expenseLines : [...items, ...expenseLines];
+    };
 
     function copyFromProposal(proposalId) {
         if (!proposalId) {
-            setForm({ ...form, proposal_id: '', percent: '', items: [{ description: '', amount: '' }] });
+            setForm({ ...form, proposal_id: '', percent: '', items: withExpenseLines([{ description: '', amount: '' }]) });
             return;
         }
         const proposal = proposalsWithItems.find((p) => String(p.id) === proposalId);
-        setForm({ ...form, ...seedFromProposal(project, proposal) });
+        const seed = seedFromProposal(project, proposal);
+        setForm({ ...form, ...seed, items: withExpenseLines(seed.items) });
     }
 
     // A new percentage rebuilds the line items to bill that share.
     function setPercent(percent) {
-        setForm({ ...form, percent, items: proposalToInvoiceItems(selectedProposal, centsForPercent(plan, percent)) });
+        setForm({ ...form, percent, items: withExpenseLines(proposalToInvoiceItems(selectedProposal, centsForPercent(plan, percent))) });
     }
 
     const pct = (cents) => (plan.baseCents > 0 ? `${round2((cents / plan.baseCents) * 100)}%` : '0%');
@@ -199,7 +207,7 @@ export default function NewInvoiceDrawer({ company, projects, initialProjectId =
         try {
             const created = await api.post(`/api/companies/${company.id}/invoices`, {
                 project_id: project?.id ?? null,
-                surcharge: form.surcharge,
+                tax: form.tax_rate != null,
                 issued_on: form.issued_on,
                 payment_terms: form.payment_terms,
                 due_on: form.due_on,
@@ -323,13 +331,14 @@ export default function NewInvoiceDrawer({ company, projects, initialProjectId =
                     <InvoiceDateFields values={form} onChange={(patch) => setForm((current) => ({ ...current, ...patch }))} />
                 </div>
 
-                <InvoiceLineItems items={form.items} onChange={(items) => setForm((current) => ({ ...current, items }))} />
+                <InvoiceLineItems items={form.items} projectId={project?.id ?? null} taxed={form.tax_rate != null} onChange={(items) => setForm((current) => ({ ...current, items }))} />
 
                 <div className="invoice-form__section totals">
                     <div className="totals__row totals__row--muted">
                         <span>Subtotal</span>
                         <span className="totals__value">{formatCurrency(formSubtotal)}</span>
                     </div>
+                    <TaxRow items={form.items} taxName={form.tax_name} taxRate={form.tax_rate} />
                     <div className="totals__row totals__row--strong">
                         <span>Total</span>
                         <span className="totals__value">{formatCurrency(formTotal)}</span>
@@ -337,13 +346,9 @@ export default function NewInvoiceDrawer({ company, projects, initialProjectId =
                 </div>
 
                 {error && <div className="form-message form-message--error form-message--spaced">{error}</div>}
-                {/* The card-fee toggle on the left, the form's buttons on the right. */}
+                {/* The tax toggle on the left, the form's buttons on the right. */}
                 <div className="invoice-form__footer">
-                    <Toggle
-                        checked={form.surcharge}
-                        onChange={(value) => setForm({ ...form, surcharge: value })}
-                        label="Offer to pay by card (adds a 3% fee, shown only at checkout)"
-                    />
+                    <TaxToggle form={form} salesTax={salesTax} onChange={(patch) => setForm((current) => ({ ...current, ...patch }))} />
                     <div className="form-actions">
                         <Button type="submit" variant="secondary" disabled={saving}>Save as draft</Button>
                         <Button type="button" variant="confirm" disabled={saving} onClick={() => createInvoice(null, { send: true })}>Send invoice</Button>

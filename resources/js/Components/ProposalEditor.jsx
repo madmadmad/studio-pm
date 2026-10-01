@@ -1,4 +1,7 @@
 import { useState } from 'react';
+import { usePage } from '@inertiajs/react';
+import AutoResizeTextarea from './AutoResizeTextarea';
+import CurrencyInput from './CurrencyInput';
 import { Check, Copy, DotsSixVertical, Eye } from '@phosphor-icons/react';
 import Button from './Button';
 import RichTextEditor from './RichTextEditor';
@@ -18,7 +21,7 @@ const NEW_PROJECT = '__new__';
 // A new proposal whose client is already set (started from a project or
 // a client) addresses that client's primary contact, as picking the client
 // from the list does.
-function emptyForm(proposal, presetCompanyId, presetProjectId, companies = []) {
+function emptyForm(proposal, presetCompanyId, presetProjectId, companies = [], defaultDisclaimer = '') {
     if (!proposal) {
         const presetCompany = presetCompanyId ? companies.find((c) => String(c.id) === String(presetCompanyId)) : null;
         const primaryContact = presetCompany?.contacts?.find((c) => c.is_primary);
@@ -29,6 +32,7 @@ function emptyForm(proposal, presetCompanyId, presetProjectId, companies = []) {
             new_project_name: '',
             title: '',
             body: '',
+            disclaimer: defaultDisclaimer,
             items: [],
         };
     }
@@ -39,6 +43,7 @@ function emptyForm(proposal, presetCompanyId, presetProjectId, companies = []) {
         new_project_name: '',
         title: proposal.title,
         body: proposal.body,
+        disclaimer: proposal.disclaimer ?? '',
         items: proposal.items.map((item) => ({
             service_id: item.service_id ? String(item.service_id) : '',
             description: item.description,
@@ -65,7 +70,10 @@ function lineAmount(item) {
 // `onChange` after an unaccept, which leaves the editor open.
 export default function ProposalEditor({ proposal, companies, services, presetCompanyId, presetProjectId, onSaved, onCancel, onChange = onSaved }) {
     const isEditing = !!proposal;
-    const [form, setForm] = useState(() => emptyForm(proposal, presetCompanyId, presetProjectId, companies));
+    // New proposals start with the studio's default disclaimer (shared by
+    // the server from config/proposals.php).
+    const defaultDisclaimer = usePage().props.proposalDefaults?.disclaimer ?? '';
+    const [form, setForm] = useState(() => emptyForm(proposal, presetCompanyId, presetProjectId, companies, defaultDisclaimer));
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
     const [copied, setCopied] = useState(false);
@@ -182,6 +190,8 @@ export default function ProposalEditor({ proposal, companies, services, presetCo
             const payload = {
                 title: form.title,
                 body: form.body,
+                // Blank means none.
+                disclaimer: form.disclaimer.trim() || null,
                 contact_id: form.contact_id || null,
                 // The estimate is the services' total, worked out on save.
                 // Left out when locked, so the server keeps them as they are.
@@ -327,6 +337,19 @@ export default function ProposalEditor({ proposal, companies, services, presetCo
                 <RichTextEditor value={form.body} onChange={(body) => setForm({ ...form, body })} />
             </div>
 
+            {/* Shown to the client between the scope of work and the services. */}
+            <div className="form-panel">
+                <div className="section-label section-label--ruled">Disclaimer</div>
+                <AutoResizeTextarea
+                    value={form.disclaimer}
+                    onChange={(e) => setForm({ ...form, disclaimer: e.target.value })}
+                    placeholder="No disclaimer on this proposal"
+                    rows={3}
+                    className="input"
+                />
+                <p className="form-hint form-hint--attached">Shown to the client below the scope of work, above the services. Leave it blank for none.</p>
+            </div>
+
             <div className="form-panel">
                 <div className="section-label section-label--ruled">Services</div>
                 {servicesLocked ? (
@@ -401,13 +424,10 @@ export default function ProposalEditor({ proposal, companies, services, presetCo
                                         onChange={(e) => updateItem(idx, 'quantity', e.target.value)}
                                         className="input input--xs proposal-form__qty"
                                     />
-                                    <input
-                                        type="number"
-                                        min="0"
-                                        step="0.01"
+                                    <CurrencyInput
                                         placeholder="Rate"
                                         value={item.rate}
-                                        onChange={(e) => updateItem(idx, 'rate', e.target.value)}
+                                        onChange={(value) => updateItem(idx, 'rate', value)}
                                         className="input input--xs proposal-form__rate"
                                     />
                                     <div className="proposal-form__line-total">

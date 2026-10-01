@@ -1,6 +1,16 @@
 import { Link, router } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import { api } from '../lib/api';
+import { formatCurrency } from '../lib/format';
+import StarButton from './StarButton';
+import UnreadCount from './UnreadCount';
+import { useListMotion } from '../lib/listMotion';
+
+// A column's stack of cards, animated as cards arrive, leave or re-sort.
+function ColumnCards({ children }) {
+    const ref = useListMotion();
+    return <div ref={ref} className="project-board__cards">{children}</div>;
+}
 
 // The Projects page's board view: a column per status, each project a card
 // (name, client, task progress). A card opens its project; dragging it to
@@ -21,7 +31,26 @@ function taskProgress(project) {
     return `${done}/${total} tasks done`;
 }
 
-export default function ProjectBoard({ projects, onChange }) {
+// How much of the budget has been billed (before tax), as a thin bar and
+// a percentage -- only where the project has a budget and the page has
+// its invoiced amount (managers). Over 100% fills the bar and says so.
+function BudgetBar({ project }) {
+    const budget = parseFloat(project.budget) || 0;
+    if (budget <= 0 || project.invoiced_amount === undefined) return null;
+    const billed = parseFloat(project.invoiced_amount) || 0;
+    const percent = Math.round((billed / budget) * 100);
+    return (
+        <div className="project-board__budget" title={`${formatCurrency(billed)} of ${formatCurrency(budget)} billed`}>
+            <div className="project-board__budget-track" aria-hidden="true">
+                <span className="project-board__budget-fill" style={{ width: `${Math.min(percent, 100)}%` }} />
+            </div>
+            <span className="project-board__budget-label">{percent}% billed</span>
+        </div>
+    );
+}
+
+// `favorites` (useFavorites) puts a star in each card's corner.
+export default function ProjectBoard({ projects, onChange, favorites = null }) {
     // A local copy so a dropped card moves immediately; re-synced on reload.
     const [items, setItems] = useState(projects);
     useEffect(() => setItems(projects), [projects]);
@@ -63,7 +92,7 @@ export default function ProjectBoard({ projects, onChange }) {
                             {column.label}
                             <span className="count">{cards.length}</span>
                         </h2>
-                        <div className="project-board__cards">
+                        <ColumnCards>
                             {cards.map((project) => (
                                 <div
                                     key={project.id}
@@ -78,15 +107,22 @@ export default function ProjectBoard({ projects, onChange }) {
                                     }}
                                     className={`card card--padded project-board__card${dragId === project.id ? ' project-board__card--dragging' : ''}`}
                                 >
-                                    <Link href={`/projects/${project.id}`} className="project-board__name" title={project.name}>{project.name}</Link>
+                                    <div className="project-board__title">
+                                        <Link href={`/projects/${project.id}`} className="project-board__name" title={project.name}>{project.name}</Link>
+                                        <UnreadCount count={project.unread_messages} />
+                                        {favorites && (
+                                            <StarButton starred={favorites.isStarred(project)} onToggle={() => favorites.toggle(project)} className="project-board__star" />
+                                        )}
+                                    </div>
                                     <Link href={`/clients/${project.company.id}`} className="link link--muted project-board__client" title={project.company.name}>
                                         {project.company.name}
                                     </Link>
                                     <div className="project-board__meta">{taskProgress(project)}</div>
+                                    <BudgetBar project={project} />
                                 </div>
                             ))}
                             {cards.length === 0 && <div className="project-board__empty">No projects</div>}
-                        </div>
+                        </ColumnCards>
                     </section>
                 );
             })}

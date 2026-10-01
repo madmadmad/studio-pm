@@ -20,6 +20,7 @@ import { isBlankRichText, toRichText } from '../../../lib/richText';
 import PageHeader from '../../../Components/PageHeader';
 import TabBar from '../../../Components/TabBar';
 import { useRememberedTab } from '../../../lib/useRememberedTab';
+import { useUnreadThreads } from '../../../lib/unreadThreads';
 
 const TABS = ['Schedule', 'Tasks', 'Messages', 'Proposals', 'Invoices', 'Team'];
 
@@ -49,6 +50,7 @@ function TaskRow({ task, onOpen }) {
             </div>
             <div className="task-list__assignee portal-project__muted">{task.assignee || 'Unassigned'}</div>
             <div className="task-list__due portal-project__muted">{task.due_date ? formatDate(task.due_date) : '—'}</div>
+            <div className="task-list__subtasks portal-project__muted">{task.subtasks?.length || '—'}</div>
             <div className="task-list__status">
                 <button onClick={cycleStatus} title="Change status">
                     <TaskStatusBadge task={task} />
@@ -226,6 +228,7 @@ function TasksTab({ project }) {
                             <div className="task-list__title">Task</div>
                             <div className="task-list__assignee">Assignee</div>
                             <div className="task-list__due">Due date</div>
+                            <div className="task-list__subtasks">Subtasks</div>
                             <div className="task-list__status">Status</div>
                             <div />
                         </div>
@@ -292,14 +295,15 @@ function ComposeDrawer({ project, onClose }) {
 
 // Every thread listed here includes the client (the server only sends
 // those), so there's no "Not joined" state as on the staff page.
-function MessageThreadRow({ thread, onOpen }) {
+function MessageThreadRow({ thread, unread, onOpen }) {
     const participants = threadParticipantActors(thread);
     const lastActivity = thread.replies?.length ? thread.replies[thread.replies.length - 1].sent_at : thread.sent_at;
 
     return (
-        <div onClick={() => onOpen(thread.id)} className="grid-row grid-row--action grid-row--link">
+        <div onClick={() => onOpen(thread)} className="grid-row grid-row--action grid-row--link">
             <div className="project-messages__subject">
-                <span className="u-truncate">{thread.subject}</span>
+                {unread && <span className="unread-dot" title="Unread" />}
+                <span className={`u-truncate${unread ? ' unread-subject' : ''}`}>{thread.subject}</span>
             </div>
             <div className="project-messages__participants">{participants.map((p) => p.name).join(', ') || '—'}</div>
             <div className="project-messages__date" title={formatDateTime(lastActivity)}>{formatDate(lastActivity)}</div>
@@ -310,7 +314,7 @@ function MessageThreadRow({ thread, onOpen }) {
 
 // Threads list, with a thread and a new message each opening in a drawer
 // -- the staff project page's Messages tab, as the client.
-function MessagesTab({ project }) {
+function MessagesTab({ project, unread }) {
     const currentContact = usePage().props.auth?.user;
     const [composing, setComposing] = useState(false);
     const [openThreadId, setOpenThreadId] = useState(null);
@@ -332,7 +336,15 @@ function MessagesTab({ project }) {
                             <div />
                         </div>
                         {threads.map((thread) => (
-                            <MessageThreadRow key={thread.id} thread={thread} onOpen={setOpenThreadId} />
+                            <MessageThreadRow
+                                key={thread.id}
+                                thread={thread}
+                                unread={unread.isUnread(thread)}
+                                onOpen={(t) => {
+                                    unread.markRead(t);
+                                    setOpenThreadId(t.id);
+                                }}
+                            />
                         ))}
                     </>
                 )}
@@ -480,7 +492,7 @@ function InvoicesTab({ project }) {
                             <div className="list-row__meta">Issued {formatDate(invoice.issued_on)} &middot; Due {formatDate(invoice.due_on)}</div>
                         </div>
                         <div className="list-row__aside">
-                            <span className="list-row__amount">{formatCurrency(invoiceTotal(invoice.items, invoice.surcharge))}</span>
+                            <span className="list-row__amount">{formatCurrency(invoiceTotal(invoice.items, invoice.surcharge, invoice.tax_rate))}</span>
                             {/* Every invoice here is sent, so only Paid / Overdue need saying. */}
                             {displayInvoiceStatus(invoice) !== 'sent' && <InvoiceStatusBadge invoice={invoice} />}
                             <a
@@ -500,7 +512,8 @@ function InvoicesTab({ project }) {
 }
 
 // The studio staff on this project, as cards like the client's own
-// contacts (Contacts page): photo, name and role.
+// contacts (Contacts page): photo, name and role. (Staff emails stay
+// private -- clients reach the team through Messages.)
 function TeamTab({ project }) {
     const people = (project.active_users || []).map((user) => ({
         id: user.id,
@@ -522,6 +535,8 @@ export default function PortalProjectShow({ project, canViewInvoices }) {
     // Invoices are for billing and primary contacts only.
     const tabs = canViewInvoices ? TABS : TABS.filter((t) => t !== 'Invoices');
     const [tab, setTab] = useRememberedTab('portal-project-page-tab', tabs);
+    // Unread threads: a red count on the Messages tab, a dot on each.
+    const unread = useUnreadThreads(project.messages || [], (id) => `/api/portal/messages/${id}/read`);
 
     return (
         <PortalLayout>
@@ -534,11 +549,11 @@ export default function PortalProjectShow({ project, canViewInvoices }) {
             />
             {project.description && <p className="project-overview__description page-section page-section--loose">{project.description}</p>}
 
-            <TabBar tabs={tabs} tab={tab} setTab={setTab} />
+            <TabBar tabs={tabs} tab={tab} setTab={setTab} unread={{ Messages: unread.count }} />
 
             {tab === 'Schedule' && <ScheduleTab project={project} />}
             {tab === 'Tasks' && <TasksTab project={project} />}
-            {tab === 'Messages' && <MessagesTab project={project} />}
+            {tab === 'Messages' && <MessagesTab project={project} unread={unread} />}
             {tab === 'Proposals' && <ProposalsTab project={project} />}
             {tab === 'Invoices' && <InvoicesTab project={project} />}
             {tab === 'Team' && <TeamTab project={project} />}

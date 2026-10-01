@@ -6,6 +6,7 @@ use App\Models\Message;
 use App\Models\MessageReaction;
 use App\Models\Project;
 use App\Services\MessageThreadService;
+use App\Services\UnreadMessages;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
@@ -24,10 +25,22 @@ class MessageController extends Controller
     {
         $this->authorize('view', $project);
 
-        return $project->messages()
-            ->withTrashed()
-            ->with(Message::threadRelations())
-            ->get();
+        return UnreadMessages::mark(
+            $project->messages()->withTrashed()->with(Message::threadRelations())->get(),
+            request()->user(),
+        );
+    }
+
+    // Opening a thread marks it read (UnreadMessages).
+    public function read(Request $request, Message $message)
+    {
+        abort_if($message->parent_id, 404);
+
+        $this->authorize('view', $message->project);
+
+        UnreadMessages::markRead($message, $request->user());
+
+        return response()->noContent();
     }
 
     public function store(Request $request, Project $project)

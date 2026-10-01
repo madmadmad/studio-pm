@@ -23,7 +23,7 @@ class StripeCheckoutService
      */
     public function createCardSessionFor(Invoice $invoice): Session
     {
-        $baseAmount = $invoice->subtotal();
+        $baseAmount = $invoice->total();
         $surchargeAmount = $invoice->cardSurchargeAmount();
 
         return Session::create([
@@ -59,7 +59,7 @@ class StripeCheckoutService
      */
     public function createAchSessionFor(Invoice $invoice): Session
     {
-        $baseAmount = $invoice->subtotal();
+        $baseAmount = $invoice->total();
 
         return Session::create([
             'mode' => 'payment',
@@ -76,9 +76,10 @@ class StripeCheckoutService
         ]);
     }
 
+    // The invoice's lines, then its sales tax as a line of its own.
     protected function itemLineItems(Invoice $invoice): array
     {
-        return $invoice->items->map(fn ($item) => [
+        $lines = $invoice->items->map(fn ($item) => [
             'price_data' => [
                 'currency' => 'usd',
                 'product_data' => ['name' => $item->description],
@@ -86,6 +87,19 @@ class StripeCheckoutService
             ],
             'quantity' => 1,
         ])->all();
+
+        if ($invoice->taxAmount() > 0) {
+            $lines[] = [
+                'price_data' => [
+                    'currency' => 'usd',
+                    'product_data' => ['name' => $invoice->taxLabel()],
+                    'unit_amount' => $this->toCents($invoice->taxAmount()),
+                ],
+                'quantity' => 1,
+            ];
+        }
+
+        return $lines;
     }
 
     protected function toCents(float $amount): int

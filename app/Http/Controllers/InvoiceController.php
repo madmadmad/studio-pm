@@ -8,6 +8,7 @@ use App\Mail\InvoiceEmail;
 use App\Models\Company;
 use App\Models\Expense;
 use App\Models\Invoice;
+use App\Models\InvoiceItem;
 use App\Models\InvoiceSend;
 use App\Models\TimeEntry;
 use App\Services\StripeCheckoutService;
@@ -16,6 +17,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class InvoiceController extends Controller
 {
@@ -46,6 +48,7 @@ class InvoiceController extends Controller
             'items.*.service_id' => ['nullable', 'exists:services,id'],
             'items.*.time_entry_ids' => ['nullable', 'array'],
             'items.*.time_entry_ids.*' => ['integer', 'exists:time_entries,id'],
+            'items.*.expense_id' => ['nullable', 'integer', 'exists:expenses,id'],
         ]);
 
         [$issuedOn, $dueOn, $terms] = $this->resolveDates($data, today(), $company->effectivePaymentTerms());
@@ -55,7 +58,9 @@ class InvoiceController extends Controller
                 'project_id' => $data['project_id'] ?? null,
                 'contact_id' => $data['contact_id'] ?? null,
                 'status' => 'draft',
-                'surcharge' => $data['surcharge'] ?? false,
+                // Paying online by card is always offered.
+                'surcharge' => true,
+                ...$this->taxFields($data),
                 'issued_on' => $issuedOn,
                 'due_on' => $dueOn,
                 'payment_terms' => $terms,
@@ -66,9 +71,14 @@ class InvoiceController extends Controller
                     'description' => $item['description'],
                     'details' => $item['details'] ?? null,
                     'amount' => $item['amount'],
+                    'taxable' => $item['taxable'] ?? false,
                     'service_id' => $item['service_id'] ?? null,
                     'position' => $position,
                 ]);
+
+                if (! empty($item['expense_id'])) {
+                    $this->billExpense($invoice, $invoiceItem, $item['expense_id']);
+                }
 
                 if (! empty($item['time_entry_ids'])) {
                     TimeEntry::whereIn('id', $item['time_entry_ids'])
@@ -101,6 +111,7 @@ class InvoiceController extends Controller
             'items.*.details' => ['nullable', 'string'],
             'items.*.amount' => ['required', 'numeric', 'min:0.01'],
             'items.*.service_id' => ['nullable', 'exists:services,id'],
+            'items.*.expense_id' => ['nullable', 'integer', 'exists:expenses,id'],
         ]);
 
         [$issuedOn, $dueOn, $terms] = $this->resolveDates($data, $invoice->issued_on, $invoice->payment_terms, $invoice->due_on);
@@ -108,7 +119,8 @@ class InvoiceController extends Controller
         DB::transaction(function () use ($data, $invoice, $issuedOn, $dueOn, $terms) {
             $invoice->update([
                 'contact_id' => $data['contact_id'] ?? null,
-                'surcharge' => $data['surcharge'] ?? false,
+                'surcharge' => true,
+                ...$this->taxFields($data, $invoice),
                 'issued_on' => $issuedOn,
                 'due_on' => $dueOn,
                 'payment_terms' => $terms,
@@ -129,18 +141,63 @@ class InvoiceController extends Controller
 
             // The order they arrive in is the order they're shown in.
             foreach (array_values($data['items']) as $position => $item) {
-                $fields = collect($item)->only(['description', 'details', 'amount', 'service_id'])->all();
+                $fields = collect($item)->only(['description', 'details', 'amount', 'taxable', 'service_id'])->all();
                 $fields['position'] = $position;
 
                 if (! empty($item['id'])) {
                     $invoice->items()->whereKey($item['id'])->update($fields);
                 } else {
-                    $invoice->items()->create($fields);
+                    $invoiceItem = $invoice->items()->create($fields);
+
+                    if (! empty($item['expense_id'])) {
+                        $this->billExpense($invoice, $invoiceItem, $item['expense_id']);
+                    }
                 }
             }
         });
 
         return $invoice->fresh()->load('items');
+    }
+
+    // The invoice's sales tax from the form's `tax` switch: on keeps the
+    // rate it already has (so an edit never re-rates a sent invoice), or
+    // takes the current one from config; off clears it. Left out, an edit
+    // leaves the tax as it is.
+    private function taxFields(array $data, ?Invoice $invoice = null): array
+    {
+        if (! array_key_exists('tax', $data)) {
+            return [];
+        }
+        if (! $data['tax']) {
+            return ['tax_name' => null, 'tax_rate' => null];
+        }
+        if ($invoice?->hasTax()) {
+            return [];
+        }
+
+        return ['tax_name' => config('invoicing.sales_tax.name'), 'tax_rate' => config('invoicing.sales_tax.rate')];
+    }
+
+    // Bills one of the project's expenses on a new line of its invoice. Any
+    // unbilled expense on the project can be added, so one that wasn't
+    // marked billable becomes billable here -- it's now on an invoice.
+    private function billExpense(Invoice $invoice, InvoiceItem $item, int $expenseId): void
+    {
+        $expense = Expense::lockForUpdate()->findOrFail($expenseId);
+
+        if (! $invoice->project_id || (int) $expense->project_id !== (int) $invoice->project_id) {
+            throw ValidationException::withMessages(['items' => "\"{$expense->name}\" isn't an expense on this invoice's project."]);
+        }
+        if ($expense->billing_status !== 'unbilled') {
+            throw ValidationException::withMessages(['items' => "\"{$expense->name}\" is already on an invoice."]);
+        }
+
+        $expense->update([
+            'is_billable' => true,
+            'invoice_id' => $invoice->id,
+            'invoice_item_id' => $item->id,
+            'billing_status' => 'billed',
+        ]);
     }
 
     // Backs the Send Invoice modal's footer button for both tabs: Send
@@ -334,7 +391,7 @@ class InvoiceController extends Controller
             'method' => ['required', 'in:check,other'],
         ]);
 
-        $invoice->recordPayment($data['method'], $invoice->subtotal());
+        $invoice->recordPayment($data['method'], $invoice->total());
 
         return $invoice->load('items', 'payments');
     }
@@ -392,7 +449,8 @@ class InvoiceController extends Controller
     private function validateInvoice(Request $request, array $extraRules): array
     {
         $rules = array_merge([
-            'surcharge' => ['boolean'],
+            'tax' => ['boolean'],
+            'items.*.taxable' => ['boolean'],
             'issued_on' => ['nullable', 'date'],
             'payment_terms' => ['nullable', Rule::enum(PaymentTerms::class)],
             'due_on' => ['nullable', 'date'],

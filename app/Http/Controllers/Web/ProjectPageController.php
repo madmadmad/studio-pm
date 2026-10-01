@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Company;
 use App\Models\Message;
 use App\Models\Project;
+use App\Models\Proposal;
+use App\Services\UnreadMessages;
 use App\Models\Service;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -18,13 +20,49 @@ class ProjectPageController extends Controller
     {
         $projects = Project::where('status', '!=', 'archived')->with(['company', 'tasks']);
         $this->scopeToRole($request, $projects);
+        $this->withFavorite($request, $projects);
+        // What each has billed so far, before tax (the board's budget bar)
+        // -- managers only, like the other money figures.
+        if ($request->user()->isManager()) {
+            $projects->withSum('invoiceItems as invoiced_amount', 'amount');
+        }
+
+        // Unread message threads on each, for this person (UnreadMessages).
+        $unread = UnreadMessages::countsByProject($request->user());
 
         return Inertia::render('Projects/Index', [
-            'projects' => $projects->orderBy('name')->get(),
+            'projects' => $projects->orderBy('name')->get()
+                ->each(fn (Project $project) => $project->setAttribute('unread_messages', $unread[$project->id] ?? 0)),
             'companies' => $request->user()->isManager()
                 ? Company::with('contacts')->orderBy('name')->get(['id', 'name'])
                 : [],
+            // The money figures across the top -- managers only, like the
+            // rest of the billing.
+            'metrics' => $request->user()->isManager() ? $this->metrics() : null,
         ]);
+    }
+
+    // Each a count and an amount: active projects and their budgets, the
+    // open proposals on estimated ones, and what active budgets have left
+    // to invoice (before tax, which isn't billed work).
+    private function metrics(): array
+    {
+        $active = Project::where('status', 'active')->with('invoices.items')->get();
+        $leftToInvoice = $active
+            ->map(fn (Project $project) => max((float) $project->budget - (float) $project->invoices->flatMap->items->sum('amount'), 0))
+            ->filter(fn ($left) => $left > 0);
+
+        $openProposals = Proposal::whereIn('status', ['draft', 'sent'])
+            ->whereHas('project', fn ($q) => $q->where('status', 'estimated'));
+
+        return [
+            'active' => ['count' => $active->count(), 'amount' => round((float) $active->sum('budget'), 2)],
+            'estimated' => [
+                'count' => Project::where('status', 'estimated')->count(),
+                'amount' => round((float) (clone $openProposals)->sum('estimate_amount'), 2),
+            ],
+            'left_to_invoice' => ['count' => $leftToInvoice->count(), 'amount' => round($leftToInvoice->sum(), 2)],
+        ];
     }
 
     // A separate section, not just another filter tab on the main list --
@@ -45,6 +83,7 @@ class ProjectPageController extends Controller
     {
         $this->authorize('view', $project);
 
+        $project->is_favorite = $request->user()->favoriteProjects()->whereKey($project->id)->exists();
         $project->load([
             'company.contacts',
             'contact',
@@ -59,6 +98,8 @@ class ProjectPageController extends Controller
             'timeEntries.service:id,name,billable',
             'activeUsers:id,name,email,role,avatar_path',
         ]);
+
+        UnreadMessages::mark($project->messages, $request->user());
 
         // Firm financials on a project stay Manager-only, even for a Team
         // Member who's otherwise allowed to see this project's page.
@@ -92,6 +133,12 @@ class ProjectPageController extends Controller
             // stay manager-only, so this is just name and billable.
             'timeServices' => Service::orderBy('name')->get(['id', 'name', 'billable']),
         ]);
+    }
+
+    // `is_favorite`: whether the viewer has starred each project.
+    protected function withFavorite(Request $request, $query): void
+    {
+        $query->withExists(['favoritedBy as is_favorite' => fn ($q) => $q->where('users.id', $request->user()->id)]);
     }
 
     protected function scopeToRole(Request $request, $query): void

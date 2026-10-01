@@ -38,7 +38,7 @@ function outstandingBalance(invoices) {
         .filter((inv) => inv.status === 'sent')
         .reduce((sum, inv) => {
             const paid = inv.payments.reduce((p, payment) => p + (parseFloat(payment.amount) || 0), 0);
-            return sum + invoiceTotal(inv.items, inv.surcharge) - paid;
+            return sum + invoiceTotal(inv.items, inv.surcharge, inv.tax_rate) - paid;
         }, 0);
 }
 
@@ -48,7 +48,7 @@ function ClientMetrics({ company }) {
     const year = String(new Date().getFullYear());
     const invoicedThisYear = company.invoices
         .filter((inv) => inv.status !== 'draft' && String(inv.issued_on).startsWith(year))
-        .reduce((sum, inv) => sum + invoiceTotal(inv.items, inv.surcharge), 0);
+        .reduce((sum, inv) => sum + invoiceTotal(inv.items, inv.surcharge, inv.tax_rate), 0);
     const outstanding = outstandingBalance(company.invoices);
 
     return (

@@ -83,6 +83,11 @@ class PortalAuthController extends Controller
 
     public function logout(Request $request)
     {
+        // A staff preview ends without touching the staff session.
+        if ($request->session()->has('portal_preview')) {
+            return app(PortalPreviewController::class)->exit($request);
+        }
+
         Auth::guard('client')->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();

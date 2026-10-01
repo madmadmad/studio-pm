@@ -47,6 +47,7 @@ class ProposalController extends Controller
         $data = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'body' => ['required', 'string'], // rich text HTML from the editor
+            'disclaimer' => ['nullable', 'string'],
             'contact_id' => ['nullable', Rule::exists('contacts', 'id')->where('company_id', $company->id)],
             'project_id' => ['required_without:new_project_name', 'nullable', Rule::exists('projects', 'id')->where('company_id', $company->id)],
             'new_project_name' => ['required_without:project_id', 'nullable', 'string', 'max:255'],
@@ -68,6 +69,8 @@ class ProposalController extends Controller
                 'contact_id' => $data['contact_id'] ?? null,
                 'title' => $data['title'],
                 'body' => $data['body'],
+                // A new proposal starts from the default unless one's sent.
+                'disclaimer' => array_key_exists('disclaimer', $data) ? $data['disclaimer'] : config('proposals.default_disclaimer'),
                 'status' => 'draft',
             ]);
 
@@ -89,6 +92,7 @@ class ProposalController extends Controller
         $data = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'body' => ['required', 'string'],
+            'disclaimer' => ['nullable', 'string'],
             'contact_id' => ['nullable', Rule::exists('contacts', 'id')->where('company_id', $proposal->company_id)],
             ...$this->itemRules(),
         ]);
@@ -105,6 +109,7 @@ class ProposalController extends Controller
                 'contact_id' => $data['contact_id'] ?? null,
                 'title' => $data['title'],
                 'body' => $data['body'],
+                ...(array_key_exists('disclaimer', $data) ? ['disclaimer' => $data['disclaimer']] : []),
             ]);
 
             if ($servicesLocked) {

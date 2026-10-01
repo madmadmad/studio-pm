@@ -9,7 +9,7 @@ use Illuminate\Support\Str;
 
 class Proposal extends Model
 {
-    protected $fillable = ['company_id', 'project_id', 'contact_id', 'title', 'body', 'estimate_amount', 'status', 'sent_at', 'accepted_at'];
+    protected $fillable = ['company_id', 'project_id', 'contact_id', 'title', 'body', 'disclaimer', 'estimate_amount', 'status', 'sent_at', 'accepted_at'];
 
     protected $casts = [
         'sent_at' => 'datetime',

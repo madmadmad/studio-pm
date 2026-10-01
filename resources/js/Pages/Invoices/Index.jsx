@@ -5,10 +5,11 @@ import AppLayout from '../../Layouts/AppLayout';
 import Button from '../../Components/Button';
 import InvoiceLineItems from '../../Components/InvoiceLineItems';
 import EmptyState from '../../Components/EmptyState';
-import Toggle from '../../Components/Toggle';
+import { TaxRow, TaxToggle, useSalesTax } from '../../Components/InvoiceTax';
 import InvoiceDateFields, { useInvoiceDateFields } from '../../Components/InvoiceDateFields';
 import { InvoiceStatusBadge } from '../../Components/StatusBadges';
-import { formatCurrency, formatDate, invoiceSubtotal, invoiceTotal } from '../../lib/format';
+import { displayInvoiceStatus, formatCurrency, formatDate, invoiceSubtotal, invoiceTotal, monthInAppTimezone, todayInAppTimezone } from '../../lib/format';
+import MetricCard from '../../Components/MetricCard';
 import { calculateDueDate, todayLocal } from '../../lib/paymentTerms';
 import { api } from '../../lib/api';
 import { getTray, clearTray } from '../../lib/tray';
@@ -17,11 +18,44 @@ import { visitRow } from '../../lib/rowLink';
 import PageHeader from '../../Components/PageHeader';
 import { useSendAfterCreate } from '../../Components/SendInvoiceModal';
 import { useInvoiceDrawer } from '../../Components/InvoiceDrawer';
+import { useListMotion } from '../../lib/listMotion';
+
+// The list's filter pills, by the status each row's badge shows: drafts
+// include ones with a send scheduled; outstanding is sent and unpaid,
+// overdue or not.
+const STATUS_FILTERS = [
+    { value: 'all', label: 'All', statuses: null },
+    { value: 'draft', label: 'Draft', statuses: ['draft', 'scheduled'] },
+    { value: 'outstanding', label: 'Outstanding', statuses: ['sent', 'overdue'] },
+    { value: 'overdue', label: 'Overdue', statuses: ['overdue'] },
+    { value: 'paid', label: 'Paid', statuses: ['paid'] },
+];
+
+// The figures across the top: what's owed (sent and unpaid, overdue
+// included), what's overdue, and this month's payments and sends -- each
+// a count and an amount. Months are the firm's (Eastern).
+function invoiceMetrics(invoices) {
+    const thisMonth = todayInAppTimezone().slice(0, 7);
+    const owed = (invoice) => invoiceTotal(invoice.items, invoice.surcharge, invoice.tax_rate);
+    const figure = (list, amount = owed) => ({ count: list.length, amount: list.reduce((s, item) => s + amount(item), 0) });
+
+    const unpaid = invoices.filter((i) => i.status === 'sent');
+    const payments = invoices
+        .flatMap((i) => i.payments || [])
+        .filter((payment) => payment.paid_at && monthInAppTimezone(payment.paid_at) === thisMonth);
+
+    return {
+        outstanding: figure(unpaid),
+        overdue: figure(unpaid.filter((i) => displayInvoiceStatus(i) === 'overdue')),
+        paid: figure(payments, (payment) => parseFloat(payment.amount) || 0),
+        sent: figure(invoices.filter((i) => i.sent_at && monthInAppTimezone(i.sent_at) === thisMonth)),
+    };
+}
 
 function emptyDraft() {
     const issuedOn = todayLocal();
     return {
-        company_id: '', contact_id: '', items: [{ description: '', amount: '' }], surcharge: true,
+        company_id: '', contact_id: '', items: [{ description: '', amount: '' }], tax_rate: null, tax_name: null,
         issued_on: issuedOn, payment_terms: 'net_30', due_on: calculateDueDate(issuedOn, 'net_30'),
     };
 }
@@ -35,6 +69,9 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
     const [copiedId, setCopiedId] = useState(null);
     const [deletingId, setDeletingId] = useState(null);
     const [dueSort, setDueSort] = useState(null); // null | 'asc' | 'desc'
+    const [search, setSearch] = useState('');
+    const rowsRef = useListMotion();
+    const [filter, setFilter] = useState('all');
     // Invoices open in the wide drawer, as on a project or client.
     const { openInvoice, drawer: invoiceDrawer } = useInvoiceDrawer(() => router.reload({ only: ['invoices'] }));
 
@@ -90,7 +127,8 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
                         amount: String(t.amount.toFixed(2)),
                         time_entry_ids: [t.time_entry_id],
                     })),
-                    surcharge: true,
+                    tax_rate: null,
+                    tax_name: null,
                     issued_on: issuedOn,
                     payment_terms: terms,
                     due_on: calculateDueDate(issuedOn, terms),
@@ -103,14 +141,25 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
     }, []);
 
     const subtotal = invoiceSubtotal(draft.items);
-    const total = invoiceTotal(draft.items, draft.surcharge);
-    const outstandingTotal = invoices
-        .filter((i) => i.status === 'sent')
-        .reduce((s, i) => s + invoiceTotal(i.items, i.surcharge), 0);
+    const total = invoiceTotal(draft.items, draft.surcharge, draft.tax_rate);
+    const salesTax = useSalesTax();
+    const metrics = invoiceMetrics(invoices);
+
+    // Search matches the invoice number, client or project; the pills
+    // filter by status. Same bar as the Projects and Clients lists.
+    const query = search.trim().toLowerCase();
+    const statuses = STATUS_FILTERS.find((f) => f.value === filter).statuses;
+    const filteredInvoices = invoices.filter((invoice) => {
+        if (statuses && !statuses.includes(displayInvoiceStatus(invoice))) return false;
+        if (!query) return true;
+        return String(invoice.invoice_number).includes(query)
+            || invoice.company?.name.toLowerCase().includes(query)
+            || invoice.project?.name.toLowerCase().includes(query);
+    });
 
     const visibleInvoices = dueSort
-        ? [...invoices].sort((a, b) => (dueSort === 'asc' ? 1 : -1) * (new Date(a.due_on) - new Date(b.due_on)))
-        : invoices;
+        ? [...filteredInvoices].sort((a, b) => (dueSort === 'asc' ? 1 : -1) * (new Date(a.due_on) - new Date(b.due_on)))
+        : filteredInvoices;
 
     function toggleDueSort() {
         setDueSort((current) => (current === 'asc' ? 'desc' : current === 'desc' ? null : 'asc'));
@@ -146,7 +195,7 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
         try {
             const invoice = await api.post(`/api/companies/${draft.company_id}/invoices`, {
                 contact_id: draft.contact_id || null,
-                surcharge: draft.surcharge,
+                tax: draft.tax_rate != null,
                 issued_on: draft.issued_on,
                 payment_terms: draft.payment_terms,
                 due_on: draft.due_on,
@@ -186,7 +235,7 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
 
     async function deleteInvoice(invoice) {
         if (deletingId === invoice.id) return; // already in flight -- ignore a repeat click
-        const amount = formatCurrency(invoiceTotal(invoice.items, invoice.surcharge));
+        const amount = formatCurrency(invoiceTotal(invoice.items, invoice.surcharge, invoice.tax_rate));
         const warning = `Delete this ${amount} invoice to ${invoice.company?.name}? This can't be undone.`;
         if (!confirm(warning)) return;
         setDeletingId(invoice.id);
@@ -208,12 +257,19 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
             <PageHeader
                 title="Invoices"
                 actions={<Button onClick={openNewInvoice}>New invoice</Button>}
-                subtitle={
-                    <>
-                        {formatCurrency(outstandingTotal)} outstanding across {invoices.filter((i) => i.status === 'sent').length} sent invoices.
-                    </>
-                }
             />
+
+            <div className="metric-grid">
+                <MetricCard label={`Outstanding (${metrics.outstanding.count})`} value={formatCurrency(metrics.outstanding.amount)} />
+                <MetricCard label={`Paid this month (${metrics.paid.count})`} value={formatCurrency(metrics.paid.amount)} />
+                <MetricCard label={`Sent this month (${metrics.sent.count})`} value={formatCurrency(metrics.sent.amount)} />
+                {/* Red only when something's overdue. */}
+                <MetricCard
+                    label={`Overdue (${metrics.overdue.count})`}
+                    value={formatCurrency(metrics.overdue.amount)}
+                    tone={metrics.overdue.count > 0 ? 'primary' : null}
+                />
+            </div>
 
             {showForm && (
                 <div className="card card--padded page-section invoice-form">
@@ -249,13 +305,14 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
                         <InvoiceDateFields values={draft} onChange={(patch) => setDraft((current) => ({ ...current, ...patch }))} />
                     </div>
 
-                    <InvoiceLineItems items={draft.items} onChange={(items) => setDraft((current) => ({ ...current, items }))} />
+                    <InvoiceLineItems items={draft.items} taxed={draft.tax_rate != null} onChange={(items) => setDraft((current) => ({ ...current, items }))} />
 
                     <div className="invoice-form__section totals">
                         <div className="totals__row totals__row--muted">
                             <span>Subtotal</span>
                             <span className="totals__value">{formatCurrency(subtotal)}</span>
                         </div>
+                        <TaxRow items={draft.items} taxName={draft.tax_name} taxRate={draft.tax_rate} />
                         <div className="totals__row totals__row--strong">
                             <span>Total</span>
                             <span className="totals__value">{formatCurrency(total)}</span>
@@ -263,13 +320,9 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
                     </div>
 
                     {error && <div className="form-message form-message--error form-message--spaced">{error}</div>}
-                    {/* The card-fee toggle on the left, the form's buttons on the right. */}
+                    {/* The tax toggle on the left, the form's buttons on the right. */}
                     <div className="invoice-form__footer">
-                        <Toggle
-                            checked={draft.surcharge}
-                            onChange={(value) => setDraft({ ...draft, surcharge: value })}
-                            label="Offer to pay by card (adds a 3% fee, shown only at checkout)"
-                        />
+                        <TaxToggle form={draft} salesTax={salesTax} onChange={(patch) => setDraft((current) => ({ ...current, ...patch }))} />
                         <div className="form-actions">
                             <Button type="button" variant="secondary" onClick={() => setShowForm(false)}>Cancel</Button>
                             <Button type="button" variant="secondary" disabled={saving} onClick={() => saveInvoice('draft')}>Save as draft</Button>
@@ -279,9 +332,35 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
                 </div>
             )}
 
+            {invoices.length > 0 && (
+                <div className="filter-bar">
+                    <input
+                        type="search"
+                        placeholder="Search invoices, clients or projects…"
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        aria-label="Search invoices"
+                        className="input filter-bar__search"
+                    />
+                    <div className="filter-bar__pills">
+                        {STATUS_FILTERS.map((f) => (
+                            <button
+                                key={f.value}
+                                onClick={() => setFilter(f.value)}
+                                className={`filter-bar__pill${filter === f.value ? ' filter-bar__pill--active' : ''}`}
+                            >
+                                {f.label}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            )}
+
             <div className="card card--flush">
                 {invoices.length === 0 ? (
                     <EmptyState text="No invoices yet." />
+                ) : visibleInvoices.length === 0 ? (
+                    <EmptyState text={query ? `No invoices match "${search.trim()}".` : 'No invoices match this filter.'} />
                 ) : (
                     <table className="table">
                         <thead>
@@ -300,14 +379,14 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
                                 <th></th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody ref={rowsRef}>
                             {visibleInvoices.map((invoice) => (
                                 <tr key={invoice.id} onClick={(e) => visitRow(e, null, { onOpen: () => openInvoice(invoice.id) })} className="table__row--link">
                                     <td className="table__cell--numeric table__cell--muted">{invoice.invoice_number}</td>
                                     <td className="table__cell--strong">{invoice.company?.name}</td>
                                     <td className="table__cell--muted">{formatDate(invoice.issued_on)}</td>
                                     <td className="table__cell--muted">{formatDate(invoice.due_on)}</td>
-                                    <td className="table__cell--numeric">{formatCurrency(invoiceTotal(invoice.items, invoice.surcharge))}</td>
+                                    <td className="table__cell--numeric">{formatCurrency(invoiceTotal(invoice.items, invoice.surcharge, invoice.tax_rate))}</td>
                                     <td><InvoiceStatusBadge invoice={invoice} /></td>
                                     <td className="table__cell--end">
                                         <div className="table__actions">

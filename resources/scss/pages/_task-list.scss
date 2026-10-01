@@ -1,5 +1,5 @@
-// Projects/Show Tasks tab: the task rows (a .grid-row list) with inline
-// assignee/due-date pickers.
+// Projects/Show Tasks tab: the task rows (a .grid-row list). Assignee and
+// due date are plain text; they're edited in the task drawer.
 
 .task-list {
     &__title {
@@ -18,11 +18,17 @@
     }
 
     &__assignee {
-        grid-column: span 3;
+        grid-column: span 2;
     }
 
     &__due {
         grid-column: span 2;
+    }
+
+    // The task's subtask count.
+    &__subtasks {
+        grid-column: span 1;
+        font-variant-numeric: tabular-nums;
     }
 
     &__status {
@@ -30,32 +36,8 @@
         text-align: right;
     }
 
-    // Picker that reads as plain text until hovered.
-    &__control {
-        width: 100%;
-        height: var(--size-row-action);
-        padding-inline: var(--space-2);
-        font-size: var(--font-size-sm);
-        line-height: var(--line-height-sm);
+    // An empty assignee or due date ("Unassigned", "—").
+    &__empty {
         color: var(--color-text-muted);
-        background-color: transparent;
-        border: var(--border-width) solid transparent;
-        border-radius: var(--radius-base);
-
-        &:hover {
-            border-color: var(--color-border);
-        }
-
-        // A dropdown always shows its border, so it reads as a control;
-        // keep room for the custom arrow.
-        &:is(select) {
-            padding-right: var(--space-8);
-            border-color: var(--color-border);
-        }
-
-        &--date {
-            font-size: var(--font-size-xs);
-            line-height: var(--line-height-xs);
-        }
     }
 }

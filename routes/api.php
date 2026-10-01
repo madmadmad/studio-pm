@@ -16,6 +16,7 @@ use App\Http\Controllers\Portal\TaskController as PortalTaskController;
 use App\Http\Controllers\PortalInviteController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProjectAssignmentController;
+use App\Http\Controllers\ProjectFavoriteController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProposalController;
 use App\Http\Controllers\ScheduleItemController;
@@ -45,6 +46,7 @@ Route::middleware('auth:sanctum')->name('api.')->group(function () {
     Route::delete('messages/{message}', [MessageController::class, 'destroy']);
     Route::post('messages/{message}/replies', [MessageController::class, 'reply']);
     Route::post('messages/{message}/join', [MessageController::class, 'join']);
+    Route::post('messages/{message}/read', [MessageController::class, 'read']);
     Route::post('messages/{message}/reactions', [MessageController::class, 'react']);
     Route::get('attachments/{attachment}', [MessageAttachmentController::class, 'show']);
     Route::get('attachments/{attachment}/thumbnail', [MessageAttachmentController::class, 'thumbnail']);
@@ -60,6 +62,9 @@ Route::middleware('auth:sanctum')->name('api.')->group(function () {
     Route::patch('time-entries/{timeEntry}', [TimeEntryController::class, 'update']);
     Route::delete('time-entries/{timeEntry}', [TimeEntryController::class, 'destroy']);
     Route::get('timesheets/weekly', [TimeEntryController::class, 'weekly']);
+
+    Route::post('projects/{project}/favorite', [ProjectFavoriteController::class, 'store']);
+    Route::delete('projects/{project}/favorite', [ProjectFavoriteController::class, 'destroy']);
 
     Route::post('projects/{project}/assignments', [ProjectAssignmentController::class, 'store']);
     Route::delete('projects/{project}/assignments/{user}', [ProjectAssignmentController::class, 'destroy']);
@@ -107,7 +112,7 @@ Route::middleware('auth:sanctum')->name('api.')->group(function () {
 
 // Client Hub mutations -- separate guard, separate controllers, since Gate
 // policies are keyed to the staff User model (see Policies\Portal\*).
-Route::middleware('auth:client')->prefix('portal')->name('api.portal.')->group(function () {
+Route::middleware(['auth:client', 'portal.preview'])->prefix('portal')->name('api.portal.')->group(function () {
     Route::post('projects/{project}/tasks', [PortalTaskController::class, 'store']);
     Route::patch('tasks/{task}', [PortalTaskController::class, 'update']);
 
@@ -117,6 +122,7 @@ Route::middleware('auth:client')->prefix('portal')->name('api.portal.')->group(f
     Route::delete('messages/{message}', [PortalMessageController::class, 'destroy']);
     Route::post('messages/{message}/replies', [PortalMessageController::class, 'reply']);
     Route::post('messages/{message}/reactions', [PortalMessageController::class, 'react']);
+    Route::post('messages/{message}/read', [PortalMessageController::class, 'read']);
     Route::get('attachments/{attachment}', [PortalMessageAttachmentController::class, 'show']);
     Route::get('attachments/{attachment}/thumbnail', [PortalMessageAttachmentController::class, 'thumbnail']);
 

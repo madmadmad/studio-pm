@@ -12,6 +12,7 @@
         h1 { margin-bottom: 16px; }
         table.parties { margin-bottom: 24px; }
         .estimate { color: #595F64; margin-bottom: 19px; }
+        .disclaimer { color: #595F64; font-size: 9.5px; line-height: 1.5; margin-bottom: 19px; white-space: pre-line; }
         .body { line-height: 1.6; margin-bottom: 19px; padding-bottom: 19px; border-bottom: 1px solid #e7e7e9; }
         .body p { margin: 0 0 0.75em; }
         .body ul, .body ol { margin: 0.5em 0 0.75em 1.25em; padding: 0; }
@@ -49,6 +50,10 @@
 
     {{-- Editor HTML, sanitized down to the toolbar's own tags. --}}
     <div class="body">{!! RichText::toSafeHtml($proposal->body) !!}</div>
+
+    @if (filled($proposal->disclaimer))
+        <div class="disclaimer">{{ $proposal->disclaimer }}</div>
+    @endif
 
     @if ($proposal->items->isNotEmpty())
         <div class="section-title">Estimate</div>

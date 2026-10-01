@@ -1,22 +1,27 @@
 // A segmented switch between views of a page (Components/ViewToggle.jsx):
-// outlined options, the current one filled primary.
+// options on a grey track with no outline, the current one filled red --
+// like the filter pills and send options.
 @use '../abstracts' as *;
 
 .view-toggle {
     display: inline-flex;
     padding: var(--space-0-5);
-    border: var(--border-width) solid var(--color-border);
+    background-color: var(--color-neutral-fill);
+    // Kept, transparent, so the switch keeps its size.
+    border: var(--border-width) solid transparent;
     border-radius: var(--radius-base);
 
     &__option {
         display: inline-flex;
         align-items: center;
         gap: var(--space-1-5);
-        height: var(--size-row-action);
+        // Fills the track, so the whole switch is the control height.
+        height: calc(var(--size-control) - var(--space-0-5) * 2 - var(--border-width) * 2);
         padding-inline: var(--space-2-5);
         font-size: var(--font-size-sm);
         line-height: var(--line-height-sm);
-        color: var(--color-text-muted);
+        // Full text color: muted grey is under AA on the grey track.
+        color: var(--color-text);
         border-radius: var(--radius-base);
 
         svg {
@@ -25,7 +30,7 @@
         }
 
         &:hover {
-            color: var(--color-text);
+            background-color: var(--color-neutral-fill-hover);
         }
 
         &:focus-visible {

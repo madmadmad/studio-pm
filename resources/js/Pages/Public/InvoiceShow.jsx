@@ -2,16 +2,17 @@ import { Head } from '@inertiajs/react';
 import { useState } from 'react';
 import { DownloadSimple } from '@phosphor-icons/react';
 import DocumentFrom from '../../Components/DocumentFrom';
-import { formatCurrency, formatDate, invoiceSubtotal, invoiceTotal } from '../../lib/format';
+import { formatCurrency, formatDate, invoiceSubtotal, invoiceTax, invoiceTotal, taxLabel } from '../../lib/format';
 import { paymentTermsLabel } from '../../lib/paymentTerms';
 import { api } from '../../lib/api';
 
 // No card-fee row here on purpose -- that fee only exists between the
 // client and Stripe if they choose to pay by card, broken out on Stripe's
-// own checkout page. This invoice's total is always just the sum of items.
+// own checkout page. The total is the items plus any sales tax.
 function InvoiceItems({ invoice }) {
     const subtotal = invoiceSubtotal(invoice.items);
-    const total = invoiceTotal(invoice.items, invoice.surcharge);
+    const total = invoiceTotal(invoice.items, invoice.surcharge, invoice.tax_rate);
+    const taxed = invoice.tax_rate != null;
 
     return (
         <div className="document__items">
@@ -37,6 +38,12 @@ function InvoiceItems({ invoice }) {
                     <div>Subtotal</div>
                     <div className="document__amount">{formatCurrency(subtotal)}</div>
                 </div>
+                {taxed && (
+                    <div className="document__total-row document__total-row--muted">
+                        <div>{taxLabel(invoice.tax_name, invoice.tax_rate)} on {formatCurrency(invoiceSubtotal(invoice.items.filter((item) => item.taxable)))}</div>
+                        <div className="document__amount">{formatCurrency(invoiceTax(invoice.items, invoice.tax_rate))}</div>
+                    </div>
+                )}
                 <div className="document__total-row document__total-row--grand">
                     <div className="document__total-label">Total</div>
                     <div className="document__total-value">{formatCurrency(total)}</div>

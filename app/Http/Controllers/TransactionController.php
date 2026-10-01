@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Expense;
 use App\Models\Transaction;
 use Illuminate\Http\Request;
 
@@ -23,6 +22,8 @@ class TransactionController extends Controller
     {
         $data = $request->validate([
             'amount' => ['required', 'numeric', 'min:0.01'],
+            // The sales tax included in the amount, if any.
+            'tax_amount' => ['nullable', 'numeric', 'min:0', 'lte:amount'],
             'category' => ['nullable', 'string'],
             'occurred_on' => ['required', 'date'],
             'description' => ['nullable', 'string'],
@@ -30,6 +31,11 @@ class TransactionController extends Controller
         ]);
 
         $data['type'] = 'income';
+        $data['tax_amount'] ??= 0;
+        // Manual income gives only the tax it includes; the taxable sales
+        // behind it are worked back from the studio's rate.
+        $rate = (float) config('invoicing.sales_tax.rate');
+        $data['taxable_amount'] = $data['tax_amount'] > 0 && $rate > 0 ? round($data['tax_amount'] / ($rate / 100), 2) : 0;
 
         return Transaction::create($data);
     }
@@ -41,28 +47,9 @@ class TransactionController extends Controller
         return response()->noContent();
     }
 
-    // The "Bookkeeping" screen -- a simple income vs. expense summary,
-    // not double-entry accounting. Good enough for a P&L-style glance,
-    // not for anything an accountant needs to file from.
+    // The "Bookkeeping" screen's summary -- see Transaction::monthlySummary.
     public function summary(Request $request)
     {
-        $month = $request->query('month', now()->format('Y-m'));
-        [$year, $monthNumber] = explode('-', $month);
-
-        $income = Transaction::where('type', 'income')
-            ->whereYear('occurred_on', $year)
-            ->whereMonth('occurred_on', $monthNumber)
-            ->sum('amount');
-
-        $expenses = Expense::whereYear('date', $year)
-            ->whereMonth('date', $monthNumber)
-            ->sum('amount');
-
-        return [
-            'month' => $month,
-            'income' => (float) $income,
-            'expenses' => (float) $expenses,
-            'net' => (float) $income - (float) $expenses,
-        ];
+        return Transaction::monthlySummary($request->query('month', now()->format('Y-m')));
     }
 }

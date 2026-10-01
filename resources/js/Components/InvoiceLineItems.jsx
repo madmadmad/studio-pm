@@ -1,7 +1,88 @@
-import { useState } from 'react';
-import { DotsSixVertical } from '@phosphor-icons/react';
+import { useEffect, useRef, useState } from 'react';
+import { DotsSixVertical, Receipt } from '@phosphor-icons/react';
 import Button from './Button';
 import AutoResizeTextarea from './AutoResizeTextarea';
+import Toggle from './Toggle';
+import CurrencyInput from './CurrencyInput';
+import { api } from '../lib/api';
+import { formatCurrency, formatDate } from '../lib/format';
+
+// What an expense bills: its cost plus markup (Expense::billableAmount).
+function billableAmount(expense) {
+    const amount = parseFloat(expense.amount) * (1 + (parseFloat(expense.markup_percent) || 0) / 100);
+    return (Math.round(amount * 100) / 100).toFixed(2);
+}
+
+const isBlank = (item) => !item.id && !item.description.trim() && !(parseFloat(item.amount) > 0);
+
+// "+ Add expense": the project's unbilled expenses, any of which can be
+// added as a line. Picking one adds it (in place of a blank first line);
+// the server bills the expense to the line when the invoice is saved.
+function AddExpense({ projectId, items, onAdd }) {
+    const [expenses, setExpenses] = useState(null);
+    const [open, setOpen] = useState(false);
+    const ref = useRef(null);
+
+    useEffect(() => {
+        let cancelled = false;
+        api.get(`/api/expenses?project_id=${projectId}&billing_status=unbilled`)
+            .then((list) => !cancelled && setExpenses(list))
+            .catch(() => !cancelled && setExpenses([]));
+        return () => { cancelled = true; };
+    }, [projectId]);
+
+    useEffect(() => {
+        if (!open) return;
+        const onPointerDown = (e) => !ref.current?.contains(e.target) && setOpen(false);
+        const onKeyDown = (e) => {
+            if (e.key === 'Escape') {
+                e.stopPropagation();
+                setOpen(false);
+            }
+        };
+        document.addEventListener('pointerdown', onPointerDown);
+        document.addEventListener('keydown', onKeyDown, true);
+        return () => {
+            document.removeEventListener('pointerdown', onPointerDown);
+            document.removeEventListener('keydown', onKeyDown, true);
+        };
+    }, [open]);
+
+    // Ones already added to this form aren't offered again.
+    const added = new Set(items.map((item) => item.expense_id).filter(Boolean));
+    const available = (expenses || []).filter((expense) => !added.has(expense.id));
+    if (available.length === 0) return null;
+
+    function pick(expense) {
+        onAdd({ description: expense.name, details: '', amount: billableAmount(expense), expense_id: expense.id });
+        setOpen(false);
+    }
+
+    return (
+        <div ref={ref} className="invoice-form__add-expense">
+            <Button type="button" variant="link-accent" onClick={() => setOpen((o) => !o)} aria-expanded={open}>
+                + Add expense
+            </Button>
+            {open && (
+                <div role="menu" className="popover invoice-form__expense-menu">
+                    {available.map((expense) => (
+                        <button key={expense.id} type="button" role="menuitem" onClick={() => pick(expense)} className="invoice-form__expense-option">
+                            <span className="invoice-form__expense-name">
+                                {expense.name}
+                                <span className="invoice-form__expense-meta">
+                                    {formatDate(expense.date)}
+                                    {parseFloat(expense.markup_percent) > 0 && ` · ${formatCurrency(expense.amount)} + ${parseFloat(expense.markup_percent)}% markup`}
+                                    {!expense.is_billable && ' · Not marked billable'}
+                                </span>
+                            </span>
+                            <span className="invoice-form__expense-amount">{formatCurrency(billableAmount(expense))}</span>
+                        </button>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+}
 
 // An invoice's editable line items, shared by every invoice form (the
 // invoice drawer and page, the new-invoice drawer, the Invoices page).
@@ -9,8 +90,11 @@ import AutoResizeTextarea from './AutoResizeTextarea';
 // handle, the description and its notes on the left, the amount on the
 // right. `items` is the form's array; `onChange(items)` gets the next one
 // after any edit, add, remove or reorder. Items keep whatever else they
-// carry (an existing line's `id`), so a save updates them in place.
-export default function InvoiceLineItems({ items, onChange }) {
+// carry (an existing line's `id`, a new one's `expense_id`), so a save
+// updates them in place. With a `projectId`, the project's unbilled
+// expenses can be added as lines too. With `taxed` (the invoice charges
+// sales tax), each line gets a Taxable switch.
+export default function InvoiceLineItems({ items, onChange, projectId = null, taxed = false }) {
     const [dragIndex, setDragIndex] = useState(null);
     // A line is only draggable while its handle is held, so text in its
     // fields can still be selected with the mouse (as on proposals).
@@ -22,6 +106,11 @@ export default function InvoiceLineItems({ items, onChange }) {
 
     function add() {
         onChange([...items, { description: '', details: '', amount: '' }]);
+    }
+
+    function addLine(line) {
+        // A lone blank line is replaced rather than left above it.
+        onChange(items.length === 1 && isBlank(items[0]) ? [line] : [...items, line]);
     }
 
     function remove(idx) {
@@ -73,13 +162,10 @@ export default function InvoiceLineItems({ items, onChange }) {
                                     onChange={(e) => update(idx, 'description', e.target.value)}
                                     className="input invoice-form__description"
                                 />
-                                <input
-                                    type="number"
-                                    min="0"
-                                    step="0.01"
+                                <CurrencyInput
                                     placeholder="Amount"
                                     value={item.amount}
-                                    onChange={(e) => update(idx, 'amount', e.target.value)}
+                                    onChange={(value) => update(idx, 'amount', value)}
                                     className="input invoice-form__amount"
                                 />
                             </div>
@@ -93,13 +179,33 @@ export default function InvoiceLineItems({ items, onChange }) {
                                     className="input invoice-form__details"
                                 />
                             </div>
-                            {items.length > 1 && (
-                                <button type="button" onClick={() => remove(idx)} className="invoice-form__remove">Remove</button>
+                            {(taxed || item.expense_id || item.from_expense || items.length > 1) && (
+                                <div className="invoice-form__item-foot">
+                                    {taxed && (
+                                        <Toggle
+                                            checked={Boolean(item.taxable)}
+                                            onChange={(value) => update(idx, 'taxable', value)}
+                                            label="Taxable"
+                                            className="toggle--sm"
+                                        />
+                                    )}
+                                    {(item.expense_id || item.from_expense) && (
+                                        <span className="invoice-form__item-source">
+                                            <Receipt size={14} /> Expense
+                                        </span>
+                                    )}
+                                    {items.length > 1 && (
+                                        <button type="button" onClick={() => remove(idx)} className="invoice-form__remove">Remove</button>
+                                    )}
+                                </div>
                             )}
                         </div>
                     </div>
                 ))}
-                <Button type="button" variant="link-accent" onClick={add}>+ Add line item</Button>
+                <div className="invoice-form__adders">
+                    <Button type="button" variant="link-accent" onClick={add}>+ Add line item</Button>
+                    {projectId && <AddExpense projectId={projectId} items={items} onAdd={addLine} />}
+                </div>
             </div>
         </div>
     );

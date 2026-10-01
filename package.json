@@ -16,6 +16,7 @@
         "@laravel/multiplex": "^0.4.1"
     },
     "dependencies": {
+        "@formkit/auto-animate": "^0.10.0",
         "@inertiajs/react": "^3.7.1",
         "@phosphor-icons/react": "^2.1.10",
         "@tiptap/pm": "^3.31.3",

@@ -1,33 +1,70 @@
-// Row of filter pills above a list, with an optional trailing link.
+// Above a list: a search field, filter pills and an optional trailing
+// link, on one row that wraps when narrow -- set on the same flat, subtle
+// card as the invoice and proposal form sections (.form-panel), no shadow.
 
 .filter-bar {
+    // One gap throughout: between the search, the star and each pill.
+    --filter-gap: var(--space-1-5);
+
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
-    justify-content: space-between;
+    gap: var(--filter-gap);
     margin-bottom: var(--space-section);
+    padding: var(--space-panel);
+    background-color: var(--color-surface);
+    border-radius: var(--radius-base);
+
+    &__search {
+        width: 18rem; // one-off: room for a project or client name
+    }
 
     &__pills {
         display: flex;
-        gap: var(--space-1);
+        gap: var(--filter-gap);
     }
 
+    // Grey like any unchosen button, the chosen one red (as the send
+    // options are). The border stays, transparent, so nothing shifts.
     &__pill {
-        padding: var(--space-1-5) var(--space-3);
+        display: inline-flex;
+        align-items: center;
+        height: var(--size-control);
+        padding: 0 var(--space-3);
         font-size: var(--font-size-sm);
         line-height: var(--line-height-sm);
-        color: var(--color-text-muted);
-        border: var(--border-width) solid var(--color-border);
+        color: var(--color-text);
+        background-color: var(--color-neutral-fill);
+        border: var(--border-width) solid transparent;
         border-radius: var(--radius-base);
+        transition: background-color var(--duration-fast) var(--ease-standard);
 
-        // No border when active, matching the original pill exactly.
-        &--active {
-            color: var(--color-secondary-on);
-            background-color: var(--color-secondary);
-            border-width: 0;
+        &:hover {
+            background-color: var(--color-neutral-fill-hover);
+        }
+
+        &--active,
+        &--active:hover {
+            color: var(--color-primary-on);
+            background-color: var(--color-primary);
+        }
+
+        // Just an icon (the Starred filter): square, the icon centered.
+        &--icon {
+            justify-content: center;
+            width: var(--size-control);
+            padding-inline: 0;
+
+            svg {
+                width: var(--size-icon-sm);
+                height: var(--size-icon-sm);
+            }
         }
     }
 
+    // Pushed to the far end of the row.
     &__link {
+        margin-left: auto;
         font-size: var(--font-size-sm);
         line-height: var(--line-height-sm);
     }

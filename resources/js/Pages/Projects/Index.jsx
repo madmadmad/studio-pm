@@ -7,9 +7,12 @@ import ProjectsTable from '../../Components/ProjectsTable';
 import ProjectBoard from '../../Components/ProjectBoard';
 import ViewToggle from '../../Components/ViewToggle';
 import { useRememberedTab } from '../../lib/useRememberedTab';
-import { Kanban, ListBullets } from '@phosphor-icons/react';
+import { Kanban, ListBullets, Star } from '@phosphor-icons/react';
+import { useFavorites } from '../../Components/StarButton';
 import { api } from '../../lib/api';
 import PageHeader from '../../Components/PageHeader';
+import MetricCard from '../../Components/MetricCard';
+import { formatCurrency, todayInAppTimezone } from '../../lib/format';
 
 const STATUS_FILTERS = [
     { value: 'all', label: 'All' },
@@ -29,18 +32,62 @@ const VIEWS = [
     { value: 'board', label: 'Board', icon: <Kanban /> },
 ];
 
-export default function ProjectsIndex({ projects, companies, archivedView = false }) {
+// Tasks past their due date and not done, across the listed projects.
+function overdueTaskCount(projects) {
+    const today = todayInAppTimezone();
+    return projects
+        .flatMap((p) => p.tasks || [])
+        .filter((t) => t.status !== 'done' && t.due_date && t.due_date.slice(0, 10) < today)
+        .length;
+}
+
+// The figures across the top, as on the Invoices page (managers only --
+// `metrics` comes from the server for them): each a count and an amount,
+// with overdue tasks last and red only when there are any.
+function ProjectMetrics({ metrics, projects }) {
+    const overdue = overdueTaskCount(projects);
+    return (
+        <div className="metric-grid">
+            <MetricCard label={`Active (${metrics.active.count})`} value={formatCurrency(metrics.active.amount)} />
+            <MetricCard label={`Estimated (${metrics.estimated.count})`} value={formatCurrency(metrics.estimated.amount)} />
+            <MetricCard label={`Left to invoice (${metrics.left_to_invoice.count})`} value={formatCurrency(metrics.left_to_invoice.amount)} />
+            <MetricCard label="Overdue tasks" value={overdue} tone={overdue > 0 ? 'primary' : null} />
+        </div>
+    );
+}
+
+export default function ProjectsIndex({ projects, companies, metrics = null, archivedView = false }) {
     const [filter, setFilter] = useState('all');
+    const [search, setSearch] = useState('');
     // List or Board, remembered in the browser. Archived projects are all
     // one status, so they're always a list.
     const [savedView, setView] = useRememberedTab('projects-view', VIEWS.map((v) => v.value));
     const view = archivedView ? 'list' : savedView;
+    // Starred projects: each person's own, sorted first in both views, and
+    // the Starred pill (remembered) narrows both to just them. The archive
+    // has no stars.
+    const favorites = useFavorites(projects);
+    const canStar = !archivedView;
+    const [savedStarFilter, setStarFilter] = useRememberedTab('projects-starred', ['all', 'starred']);
+    const starredOnly = canStar && savedStarFilter === 'starred';
     const [showForm, setShowForm] = useState(false);
     const [form, setForm] = useState(emptyForm());
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
 
-    const visibleProjects = filter === 'all' ? projects : projects.filter((p) => p.status === filter);
+    // Search matches a project's name or its client's; it narrows the list,
+    // the board and the archive alike. The status filter is the list's.
+    const query = search.trim().toLowerCase();
+    const matched = projects.filter((p) => (!query || p.name.toLowerCase().includes(query) || p.company?.name?.toLowerCase().includes(query))
+        && (!starredOnly || favorites.isStarred(p)));
+    // Starred first, otherwise in name order (as they arrive).
+    const searchedProjects = canStar
+        ? [...matched].sort((a, b) => Number(favorites.isStarred(b)) - Number(favorites.isStarred(a)))
+        : matched;
+    const visibleProjects = filter === 'all' ? searchedProjects : searchedProjects.filter((p) => p.status === filter);
+    const emptyText = query
+        ? `No projects match "${search.trim()}".`
+        : starredOnly ? 'No starred projects here yet. Star a project to add it to this view.' : 'No projects match this filter.';
     const contactsForCompany = companies.find((c) => String(c.id) === String(form.company_id))?.contacts || [];
 
     function handleCompanyChange(value) {
@@ -88,20 +135,38 @@ export default function ProjectsIndex({ projects, companies, archivedView = fals
                         <Button onClick={() => setShowForm(true)}>New project</Button>
                     </>
                 )}
-                subtitle={
-                    <>
-                        {archivedView
-                            ? `${projects.length} archived project${projects.length !== 1 ? 's' : ''}.`
-                            : `${projects.length} project${projects.length !== 1 ? 's' : ''} across all clients.`}
-                    </>
-                }
             />
 
-            {archivedView ? null : (
-                <div className="filter-bar">
-                    {/* The board's columns are the statuses, so it has no filter. */}
+            {/* The list's summary; the board gives the space to its columns. */}
+            {metrics && view === 'list' && <ProjectMetrics metrics={metrics} projects={projects} />}
+
+            <div className="filter-bar">
+                <input
+                    type="search"
+                    placeholder="Search projects or clients…"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    aria-label="Search projects"
+                    className="input filter-bar__search"
+                />
+                {/* Starred works in both views; the board's columns are the
+                    statuses, so the status pills are the list's. */}
+                {canStar && (
                     <div className="filter-bar__pills">
-                        {view === 'list' && STATUS_FILTERS.map((s) => (
+                        <button
+                            onClick={() => setStarFilter(starredOnly ? 'all' : 'starred')}
+                            aria-pressed={starredOnly}
+                            title={starredOnly ? 'Show all projects' : 'Show starred projects only'}
+                            aria-label="Starred projects only"
+                            className={`filter-bar__pill filter-bar__pill--icon${starredOnly ? ' filter-bar__pill--active' : ''}`}
+                        >
+                            <Star weight={starredOnly ? 'fill' : 'regular'} />
+                        </button>
+                    </div>
+                )}
+                {!archivedView && view === 'list' && (
+                    <div className="filter-bar__pills">
+                        {STATUS_FILTERS.map((s) => (
                             <button
                                 key={s.value}
                                 onClick={() => setFilter(s.value)}
@@ -111,11 +176,13 @@ export default function ProjectsIndex({ projects, companies, archivedView = fals
                             </button>
                         ))}
                     </div>
+                )}
+                {!archivedView && (
                     <Link href="/projects/archived" className="link link--muted filter-bar__link">
                         Archived
                     </Link>
-                </div>
-            )}
+                )}
+            </div>
 
             {showForm && (
                 <form onSubmit={submit} className="card card--padded form-grid page-section">
@@ -165,13 +232,13 @@ export default function ProjectsIndex({ projects, companies, archivedView = fals
             )}
 
             {view === 'board' ? (
-                <ProjectBoard projects={projects} onChange={() => router.reload({ only: ['projects'] })} />
+                <ProjectBoard projects={searchedProjects} favorites={favorites} onChange={() => router.reload({ only: ['projects'] })} />
             ) : (
                 <div className="card card--flush">
                     {visibleProjects.length === 0 ? (
-                        <EmptyState text="No projects match this filter." />
+                        <EmptyState text={emptyText} />
                     ) : (
-                        <ProjectsTable projects={visibleProjects} onChange={() => router.reload({ only: ['projects'] })} />
+                        <ProjectsTable projects={visibleProjects} favorites={canStar ? favorites : null} onChange={() => router.reload({ only: ['projects'] })} />
                     )}
                 </div>
             )}

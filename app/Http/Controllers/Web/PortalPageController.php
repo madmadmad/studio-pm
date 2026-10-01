@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Message;
 use App\Models\Project;
 use App\Policies\Portal\ProjectPolicy;
+use App\Services\UnreadMessages;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -31,16 +32,22 @@ class PortalPageController extends Controller
                 ->orWhereHas('proposals', fn ($q) => $q->where('status', 'sent')))
             ->with(['tasks' => fn ($q) => $q->visibleToClient()->select('id', 'project_id', 'status')])
             ->orderBy('name')
-            ->get()
+            ->get();
+        // Unread message threads on each, for this contact (UnreadMessages).
+        $unread = UnreadMessages::countsByProject($request->user());
+        $projects = $projects
             ->map(fn ($project) => [
                 'id' => $project->id,
                 'name' => $project->name,
                 'status' => $project->status,
+                'unread_messages' => $unread[$project->id] ?? 0,
                 'tasks' => $project->tasks->map->only('status')->values(),
             ]);
 
         return Inertia::render('Portal/Projects/Index', [
             'projects' => $projects,
+            // Proposals waiting on this client (a card at the top).
+            'awaitingProposals' => $request->user()->company->proposals()->where('status', 'sent')->count(),
         ]);
     }
 
@@ -56,6 +63,7 @@ class PortalPageController extends Controller
                 'title' => $proposal->title,
                 'status' => $proposal->status,
                 'estimate_amount' => $proposal->estimate_amount,
+                'accepted_at' => $proposal->accepted_at,
                 'accept_token' => $proposal->accept_token,
                 'project' => $proposal->project?->only('name'),
             ]);
@@ -84,6 +92,8 @@ class PortalPageController extends Controller
                 'due_on' => $invoice->due_on,
                 'total' => $invoice->total(),
                 'balance' => $invoice->remainingBalance(),
+                // When it was paid in full (the "Paid this year" card).
+                'paid_at' => $invoice->status === 'paid' ? $invoice->payments->max('paid_at') : null,
                 'public_token' => $invoice->public_token,
                 'project' => $invoice->project?->only('name'),
             ]);
@@ -137,6 +147,8 @@ class PortalPageController extends Controller
                 // Same rule as the home page: billing and primary contacts only.
                 : $q->whereRaw('1 = 0'),
         ]);
+
+        UnreadMessages::mark($project->messages, $request->user());
 
         return Inertia::render('Portal/Projects/Show', [
             'project' => $project,

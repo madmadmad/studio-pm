@@ -8,6 +8,7 @@ use App\Models\MessageReaction;
 use App\Models\Project;
 use App\Policies\Portal\MessagePolicy;
 use App\Services\MessageThreadService;
+use App\Services\UnreadMessages;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
@@ -20,11 +21,23 @@ class MessageController extends Controller
     {
         abort_unless($this->policy->view($request->user(), $project), 403);
 
-        return $project->messages()
-            ->includingContact($request->user())
-            ->withTrashed()
-            ->with(Message::threadRelations())
-            ->get();
+        return UnreadMessages::mark(
+            $project->messages()->includingContact($request->user())->withTrashed()->with(Message::threadRelations())->get(),
+            $request->user(),
+        );
+    }
+
+    // Opening a thread marks it read (UnreadMessages) -- only threads this
+    // contact is on. (A staff preview of the portal can't: it's read-only,
+    // so a manager looking around doesn't mark the client's messages read.)
+    public function read(Request $request, Message $message)
+    {
+        abort_if($message->parent_id, 404);
+        abort_unless($message->isParticipant($request->user()), 404);
+
+        UnreadMessages::markRead($message, $request->user());
+
+        return response()->noContent();
     }
 
     public function store(Request $request, Project $project)

@@ -1,0 +1,29 @@
+// Bookkeeping > Sales tax (Pages/Bookkeeping/SalesTax.jsx): a table of
+// months, a month's taxed payments opening beneath it, and the year's
+// total along the bottom.
+
+.sales-tax {
+    // A payment under an opened month: smaller, on the subtle fill, its
+    // figures in the month's own columns.
+    &__payment td {
+        padding-block: var(--space-2);
+        font-size: var(--font-size-xs);
+        line-height: var(--line-height-xs);
+        background-color: var(--color-surface-subtle);
+    }
+
+    &__payment td:first-child {
+        padding-left: calc(var(--space-row-x) + var(--space-4));
+    }
+
+    &__client {
+        color: var(--color-text-muted);
+    }
+
+    &__total td {
+        padding-block: var(--space-row-y);
+        font-weight: var(--font-weight-semibold);
+        font-variant-numeric: tabular-nums;
+        border-top: var(--border-width) solid var(--color-border-strong);
+    }
+}

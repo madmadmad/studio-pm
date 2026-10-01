@@ -14,7 +14,7 @@ class InvoicePageController extends Controller
 {
     public function index(): Response
     {
-        $invoices = Invoice::with(['items', 'company'])
+        $invoices = Invoice::with(['items', 'company', 'project:id,name', 'payments:id,invoice_id,amount,paid_at'])
             ->withExists(['invoiceSends as has_pending_scheduled_send' => fn ($query) => $query->where('type', 'email')->where('status', 'scheduled')])
             ->latest()->get();
 
