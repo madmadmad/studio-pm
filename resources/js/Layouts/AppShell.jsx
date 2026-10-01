@@ -26,7 +26,9 @@ export default function AppShell({ navItems, extraNav, profileHref, logoutHref, 
         <div className="app-shell">
             <aside className="app-shell__sidebar">
                 <div className="app-shell__brand">
-                    <img src="/images/studio-lockup-rev.svg" alt="Madhouse Studio" className="app-shell__logo" />
+                    {/* The reversed lockup on the dark canvas, the dark one on the light (CSS picks). */}
+                    <img src="/images/studio-lockup-rev.svg" alt="Madhouse Studio" className="app-shell__logo app-shell__logo--on-dark" />
+                    <img src="/images/studio-lockup.svg" alt="" aria-hidden="true" className="app-shell__logo app-shell__logo--on-light" />
                 </div>
                 {navItems.map((item) => (
                     <Link

@@ -44,3 +44,9 @@
         }
     }
 }
+
+// The Appearance setting's three options (Components/AppearanceSetting):
+// the same switch, sitting on its own line.
+.appearance-setting {
+    margin-top: var(--space-1);
+}

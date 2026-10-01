@@ -44,6 +44,12 @@
         background-size: var(--size-panel-shadow) auto, var(--radius-panel) 100%;
         background-repeat: repeat-y, no-repeat;
         pointer-events: none;
+
+        // The image is dithered against the dark canvas; on the light one
+        // the panel casts an ordinary shadow instead (below).
+        @include light-mode {
+            display: none;
+        }
     }
 
     // No background of its own -- the canvas shows through.
@@ -61,10 +67,25 @@
         margin-bottom: var(--space-8);
     }
 
-    // The reversed (light-on-dark) studio lockup.
+    // The studio lockup: reversed (light-on-dark) on the dark canvas, the
+    // dark one in light mode.
     &__logo {
         width: 10rem; // one-off: lockup display width in the sidebar
         height: auto;
+
+        &--on-light {
+            display: none;
+        }
+
+        @include light-mode {
+            &--on-dark {
+                display: none;
+            }
+
+            &--on-light {
+                display: block;
+            }
+        }
     }
 
     // Filled rows: a barely-there fill at rest, a touch lighter under the
@@ -168,6 +189,10 @@
         // No border: the dithered shadow (.app-shell::after) separates the
         // panel from the canvas.
         animation: shell-panel-enter var(--duration-panel) var(--ease-enter);
+
+        @include light-mode {
+            box-shadow: var(--shadow-drawer);
+        }
 
         @media (prefers-reduced-motion: reduce) {
             animation-name: overlay-fade-in;

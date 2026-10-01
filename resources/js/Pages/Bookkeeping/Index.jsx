@@ -39,24 +39,7 @@ export default function BookkeepingIndex({ transactions, summary }) {
     return (
         <AppLayout>
             <Head title="Bookkeeping" />
-            <PageHeader
-                title="Bookkeeping"
-                actions={(
-                    <>
-                        <Link href="/bookkeeping/hosting" className="btn btn--secondary">Hosting profitability</Link>
-                        <Link href="/bookkeeping/invoice-categories" className="btn btn--secondary">Invoices by category</Link>
-                        <Link href="/bookkeeping/sales-tax" className="btn btn--secondary">Sales tax report</Link>
-                        <Button onClick={() => setShowForm(true)}>Add income</Button>
-                    </>
-                )}
-                subtitle={
-                    <>
-                        Income, month by month &mdash; not double-entry accounting. Sales tax collected is the state&rsquo;s,
-                        so it&rsquo;s left out of income and net. Expenses are tracked on the{' '}
-                        <Link href="/expenses" className="link link--inline">Expenses</Link> page.
-                    </>
-                }
-            />
+            <PageHeader title="Bookkeeping" />
 
             <div className="metric-grid">
                 <MetricCard label={`Income (${summary.month})`} value={formatCurrency(summary.income)} />
@@ -67,6 +50,18 @@ export default function BookkeepingIndex({ transactions, summary }) {
             <div className="metric-grid">
                 <MetricCard label={`Sales tax collected (${summary.month})`} value={formatCurrency(summary.sales_tax)} />
                 <MetricCard label={`Sales tax collected (${summary.month.slice(0, 4)} to date)`} value={formatCurrency(summary.sales_tax_year)} />
+            </div>
+
+            {/* The reports, on the same flat card as the other pages' filter rows. */}
+            <div className="filter-bar">
+                <Link href="/bookkeeping/hosting" className="btn btn--secondary">Hosting profitability</Link>
+                <Link href="/bookkeeping/invoice-categories" className="btn btn--secondary">Invoices by category</Link>
+                <Link href="/bookkeeping/sales-tax" className="btn btn--secondary">Sales tax report</Link>
+                {/* Add income -- off for now: all income comes from paid invoices,
+                    which record it themselves. Turn back on to log income
+                    that has no invoice (the form below still works).
+                <Button onClick={() => setShowForm(true)} className="filter-bar__end">Add income</Button>
+                */}
             </div>
 
             {showForm && (

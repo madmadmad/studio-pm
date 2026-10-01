@@ -1,10 +1,11 @@
-import { Head, router } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
 import { useRef, useState } from 'react';
 import PortalLayout from '../../../Layouts/PortalLayout';
 import Avatar from '../../../Components/Avatar';
 import Button from '../../../Components/Button';
 import { api } from '../../../lib/api';
 import PageHeader from '../../../Components/PageHeader';
+import AppearanceSetting from '../../../Components/AppearanceSetting';
 
 export default function PortalProfileIndex({ profileContact }) {
     const [contact, setContact] = useState(profileContact);
@@ -71,6 +72,10 @@ export default function PortalProfileIndex({ profileContact }) {
                     )}
                 </div>
                 <input ref={inputRef} type="file" accept="image/*" hidden onChange={uploadAvatar} />
+            </div>
+
+            <div className="profile-page page-section">
+                <AppearanceSetting current={usePage().props.auth?.user?.theme} endpoint="/api/portal/profile/appearance" />
             </div>
         </PortalLayout>
     );

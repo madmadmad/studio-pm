@@ -2,6 +2,7 @@
 // input...), applied without a class on every instance. Anything tied to
 // a specific UI piece belongs in components/ instead. Loaded into the
 // `base` cascade layer by app.scss, so any component class overrides it.
+@use '../abstracts' as *;
 
 body {
     background-color: var(--color-bg);
@@ -80,4 +81,9 @@ select {
     background-position: right var(--space-2-5) center;
     background-size: var(--space-3); // arrow glyph size, 12px
     padding-right: var(--space-8); // room for the arrow
+
+    // The same arrow in light mode's muted grey (#595f64).
+    @include light-mode {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23595F64' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E");
+    }
 }

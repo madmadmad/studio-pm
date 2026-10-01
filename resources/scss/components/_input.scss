@@ -7,14 +7,14 @@
     padding: var(--space-2) var(--space-3);
     font-size: var(--font-size-sm);
     background-color: var(--color-field);
-    // No visible border: the recessed fill marks the field. Kept as a
-    // transparent border so the field's size doesn't change.
-    border: var(--border-width) solid transparent;
+    // No visible border on dark: the recessed fill marks the field. Kept
+    // (transparent) so its size doesn't change; light mode draws it.
+    border: var(--border-width) solid var(--color-field-border);
     border-radius: var(--radius-base);
 
     &:focus {
         @include focus-ring;
-        border-color: transparent;
+        border-color: var(--color-field-border);
     }
 
     // Single-line fields share the control height with buttons, so a

@@ -78,6 +78,7 @@ class HandleInertiaRequests extends Middleware
                 'avatar_url' => $user->avatar_url,
                 // Whether the sidebar shows Invoices.
                 'can_view_invoices' => $user->canViewInvoices(),
+                'theme' => $user->theme,
             ];
         }
 

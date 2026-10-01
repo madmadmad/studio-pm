@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AppearanceController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\ExpenseCategoryController;
@@ -53,6 +54,7 @@ Route::middleware('auth:sanctum')->name('api.')->group(function () {
     Route::get('attachments/{attachment}/thumbnail', [MessageAttachmentController::class, 'thumbnail']);
 
     Route::post('profile/avatar', [ProfileController::class, 'updateAvatar']);
+    Route::patch('profile/appearance', [AppearanceController::class, 'update']);
     Route::delete('profile/avatar', [ProfileController::class, 'destroyAvatar']);
 
     Route::get('notifications', [NotificationController::class, 'index']);
@@ -130,6 +132,7 @@ Route::middleware(['auth:client', 'portal.preview'])->prefix('portal')->name('ap
     Route::get('attachments/{attachment}/thumbnail', [PortalMessageAttachmentController::class, 'thumbnail']);
 
     Route::post('profile/avatar', [PortalProfileController::class, 'updateAvatar']);
+    Route::patch('profile/appearance', [AppearanceController::class, 'update']);
     Route::delete('profile/avatar', [PortalProfileController::class, 'destroyAvatar']);
 });
 

@@ -10,6 +10,7 @@ import Timesheet from '../../Components/Timesheet';
 import ProjectBoard from '../../Components/ProjectBoard';
 import EmptyState from '../../Components/EmptyState';
 import { useFavorites } from '../../Components/StarButton';
+import AppearanceSetting from '../../Components/AppearanceSetting';
 import { useRememberedTab } from '../../lib/useRememberedTab';
 
 const TABS = ['Timesheet', 'Projects', 'Account'];
@@ -242,6 +243,7 @@ export default function ProfileIndex({ profileUser, passwordHint, timesheet, tim
                         }}
                     />
                     <PasswordPanel hint={passwordHint} />
+                    <AppearanceSetting current={user.theme} endpoint="/api/profile/appearance" />
                 </div>
             )}
         </AppLayout>

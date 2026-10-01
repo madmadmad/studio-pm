@@ -72,3 +72,19 @@ $glyphs: (
     white-space: nowrap;
     border-width: 0;
 }
+
+// Rules for light mode only (base/_tokens.scss's light-theme): when the
+// person chose Light, or chose System and the computer is light. Most
+// components need nothing -- the tokens change under them; this is for the
+// few that can't follow a token (an image, an inline SVG).
+@mixin light-mode {
+    :root[data-theme='light'] & {
+        @content;
+    }
+
+    @media (prefers-color-scheme: light) {
+        :root[data-theme='system'] & {
+            @content;
+        }
+    }
+}
