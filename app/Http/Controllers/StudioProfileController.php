@@ -18,6 +18,10 @@ class StudioProfileController extends Controller
             'payment_instructions' => ['nullable', 'string'],
             // New proposals start with it; blank for none.
             'proposal_disclaimer' => ['nullable', 'string'],
+            // The Send Proposal dialog starts with it; blank for the default.
+            'proposal_email_message' => ['nullable', 'string'],
+            // The Send Invoice dialog starts with it; blank for the default.
+            'invoice_email_message' => ['nullable', 'string'],
             // Charged on invoices with "Charge Tax" on; no rate, no tax.
             'sales_tax_name' => ['nullable', 'string', 'max:255'],
             'sales_tax_rate' => ['nullable', 'numeric', 'min:0', 'max:100'],

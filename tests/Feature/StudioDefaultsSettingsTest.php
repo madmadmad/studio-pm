@@ -42,6 +42,36 @@ class StudioDefaultsSettingsTest extends TestCase
             ->assertJsonPath('disclaimer', null);
     }
 
+    public function test_the_proposal_email_message_comes_from_settings(): void
+    {
+        $manager = User::factory()->create();
+        $company = Company::create(['name' => 'Alder & Finch Design']);
+        $proposal = $company->proposals()->create(['title' => 'Brand refresh', 'body' => '<p>Scope</p>']);
+        $this->saveSettings($manager, ['proposal_email_message' => 'Hi :contact_first_name, here is :proposal_title from :firm_name.']);
+
+        $this->actingAs($manager)->getJson("/api/proposals/{$proposal->id}/send-context")
+            ->assertOk()
+            ->assertJsonPath('message', 'Hi there, here is Brand refresh from Madhouse Studio.');
+
+        // Blank falls back to the standard message.
+        $this->saveSettings($manager, ['proposal_email_message' => null]);
+        $this->assertStringStartsWith(
+            'Thank you for considering Madhouse Studio',
+            $this->actingAs($manager)->getJson("/api/proposals/{$proposal->id}/send-context")->json('message'),
+        );
+    }
+
+    public function test_the_invoice_email_message_comes_from_settings(): void
+    {
+        $manager = User::factory()->create();
+        $this->saveSettings($manager, ['invoice_email_message' => 'Invoice :invoice_number from :firm_name.']);
+        $this->assertSame('Invoice :invoice_number from :firm_name.', Invoice::detailContext()['invoicingDefaults']['emailTemplate']);
+
+        // Blank falls back to the standard message.
+        $this->saveSettings($manager, ['invoice_email_message' => null]);
+        $this->assertSame(config('invoicing.email_template'), Invoice::detailContext()['invoicingDefaults']['emailTemplate']);
+    }
+
     public function test_invoices_take_the_sales_tax_from_settings(): void
     {
         $manager = User::factory()->create();

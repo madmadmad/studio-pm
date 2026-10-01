@@ -94,13 +94,14 @@ return [
     |
     | Prefilled into the Send Invoice modal's message field. Supports
     | :contact_first_name, :invoice_number, :amount_due, :due_date, and
-    | :firm_name placeholders, filled in when the modal opens.
+    | :firm_name placeholders, filled in when the modal opens. The starting
+    | default only -- it's edited in Settings (studio_profiles).
     |
     */
 
     'email_template' => env(
         'INVOICING_EMAIL_TEMPLATE',
-        'Please find attached the invoice for the services provided by :firm_name. If you have any questions or would like to discuss, feel free to reach out. We appreciate your business.'
+        "Please find attached the invoice for the services provided by :firm_name. If you have any questions or would like to discuss, feel free to reach out.\n\nWe appreciate your business."
     ),
 
     'email_subject_template' => env('INVOICING_EMAIL_SUBJECT_TEMPLATE', ':firm_name sent you invoice #:invoice_number.'),

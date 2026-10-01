@@ -58,10 +58,13 @@ class Invoice extends Model
     // The props the detail view takes alongside the invoice itself.
     public static function detailContext(): array
     {
+        $studio = StudioProfile::current();
+
         return [
-            'studio' => StudioProfile::current(),
+            'studio' => $studio,
             'invoicingDefaults' => [
-                'emailTemplate' => config('invoicing.email_template'),
+                // The message from Settings, else the config default.
+                'emailTemplate' => $studio->invoice_email_message ?: config('invoicing.email_template'),
                 'emailSubjectTemplate' => config('invoicing.email_subject_template'),
             ],
         ];

@@ -370,6 +370,26 @@ class InvoiceController extends Controller
         return ['html' => $mail->render()];
     }
 
+    // The email in a browser tab, with the dialog's default subject and
+    // message filled in as it fills them -- for styling the template (local
+    // only; see routes/web.php). The latest invoice when none is named.
+    public function emailBrowserPreview(?Invoice $invoice = null)
+    {
+        $invoice ??= Invoice::latest('id')->firstOrFail();
+        $invoice->loadMissing('company.contacts', 'contact', 'items', 'payments');
+        $defaults = Invoice::detailContext()['invoicingDefaults'];
+        $contactName = $invoice->billingContact()?->name;
+        $fill = fn (string $template) => strtr($template, [
+            ':firm_name' => StudioProfile::current()->name,
+            ':invoice_number' => $invoice->invoice_number,
+            ':amount_due' => '$'.number_format($invoice->remainingBalance(), 2),
+            ':due_date' => $invoice->formattedDueOn(),
+            ':contact_first_name' => $contactName ? explode(' ', trim($contactName))[0] : 'there',
+        ]);
+
+        return (new InvoiceEmail($invoice, $fill($defaults['emailSubjectTemplate']), $fill($defaults['emailTemplate'])))->render();
+    }
+
     public function regenerateToken(Invoice $invoice)
     {
         $invoice->regenerateToken();

@@ -44,8 +44,8 @@ export default function BookkeepingIndex({ transactions, summary, year, reportYe
             <PageHeader title="Bookkeeping" />
 
             <div className="metric-grid">
-                <MetricCard label={`Income (${formatMonth(summary.month)})`} value={formatCurrency(summary.income)} />
-                <MetricCard label="Expenses" value={formatCurrency(summary.expenses)} />
+                <MetricCard tone="primary" label={`Income (${formatMonth(summary.month)})`} value={formatCurrency(summary.income)} />
+                <MetricCard tone="muted" label="Expenses" value={formatCurrency(summary.expenses)} />
                 <MetricCard label="Net" value={formatCurrency(summary.net)} />
             </div>
             {/* What's owed to the state: this month, and the year so far (to file from). */}

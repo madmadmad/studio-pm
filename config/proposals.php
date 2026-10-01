@@ -31,9 +31,11 @@ return [
 
     'email_subject_template' => env('PROPOSALS_EMAIL_SUBJECT_TEMPLATE', ':firm_name sent you a proposal: :proposal_title'),
 
+    // The starting default only -- the message is edited in Settings
+    // (studio_profiles), and before each send.
     'email_template' => env(
         'PROPOSALS_EMAIL_TEMPLATE',
-        "Hi :contact_first_name,\n\nHere's our proposal for :proposal_title. You can review the full scope and accept it online using the link below, and it's attached as a PDF too. Let us know if you have any questions."
+        "Thank you for considering :firm_name for your project.\n\nIf you have any questions or would like to discuss the proposal further, please don’t hesitate to reach out. We’d be happy to schedule a meeting or provide any additional details.\n\nWe’re excited about the opportunity to collaborate and look forward to speaking with you."
     ),
 
 ];

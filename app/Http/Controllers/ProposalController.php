@@ -130,7 +130,8 @@ class ProposalController extends Controller
     }
 
     // What the Send Proposal dialog opens with: who it goes to, and the
-    // subject and message filled in from the templates (config/proposals).
+    // subject and message filled in from the templates (the message from
+    // Settings, else config/proposals).
     public function sendContext(Proposal $proposal)
     {
         $proposal->loadMissing('company.contacts', 'contact');
@@ -140,7 +141,7 @@ class ProposalController extends Controller
             'to' => $recipient?->email,
             'to_name' => $recipient?->name,
             'subject' => $this->fillTemplate(config('proposals.email_subject_template'), $proposal, $recipient),
-            'message' => $this->fillTemplate(config('proposals.email_template'), $proposal, $recipient),
+            'message' => $this->fillTemplate(StudioProfile::current()->proposal_email_message ?: config('proposals.email_template'), $proposal, $recipient),
             'public_url' => url('/p/'.$proposal->accept_token),
         ];
     }
@@ -157,6 +158,17 @@ class ProposalController extends Controller
         $proposal->loadMissing('company', 'project');
 
         return ['html' => (new ProposalEmail($proposal, $data['subject'], $data['message']))->render()];
+    }
+
+    // The email in a browser tab, with the dialog's default subject and
+    // message -- for styling the template (local only; see routes/web.php).
+    // The latest proposal when none is named.
+    public function emailBrowserPreview(?Proposal $proposal = null)
+    {
+        $proposal ??= Proposal::latest('id')->firstOrFail();
+        $context = $this->sendContext($proposal);
+
+        return (new ProposalEmail($proposal, $context['subject'], $context['message']))->render();
     }
 
     // Backs the Send Proposal dialog: email it to the client now, or share

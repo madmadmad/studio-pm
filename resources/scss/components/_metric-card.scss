@@ -46,6 +46,18 @@
         }
     }
 
+    // The figure a chart's grey series stands for, beside the --primary
+    // one (Bookkeeping's expenses next to income): filled in the chart's
+    // grey (a shade lighter) so the cards read as its key.
+    &--muted {
+        background-color: color-mix(in srgb, var(--color-chart-muted), #fff 20%);
+        color: var(--color-chart-muted-on);
+
+        .metric-card__label {
+            color: var(--color-chart-muted-on);
+        }
+    }
+
     // Gone the wrong way ("Hours remaining" over budget, "Overdue"). It
     // often sits beside a --primary card, so it can't be red too: a grey
     // card edged in red, the figure in red, a warning glyph on the label.

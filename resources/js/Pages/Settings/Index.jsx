@@ -69,6 +69,8 @@ export default function SettingsIndex({ studioProfile }) {
         website: studioProfile.website ?? '',
         payment_instructions: studioProfile.payment_instructions ?? '',
         proposal_disclaimer: studioProfile.proposal_disclaimer ?? '',
+        proposal_email_message: studioProfile.proposal_email_message ?? '',
+        invoice_email_message: studioProfile.invoice_email_message ?? '',
         sales_tax_name: studioProfile.sales_tax_name ?? '',
         sales_tax_rate: studioProfile.sales_tax_rate != null ? String(parseFloat(studioProfile.sales_tax_rate)) : '',
     });
@@ -149,6 +151,30 @@ export default function SettingsIndex({ studioProfile }) {
                     placeholder="No default disclaimer"
                     value={form.proposal_disclaimer}
                     onChange={(e) => setForm({ ...form, proposal_disclaimer: e.target.value })}
+                    rows={3}
+                    className="input"
+                />
+
+                <div className="section-label form-stack__break">Proposal email</div>
+                <p className="form-hint">
+                    The message the Send Proposal dialog starts with; it can be edited before each send. <code>:firm_name</code>, <code>:contact_first_name</code> and <code>:proposal_title</code> are filled in for you. Leave it blank for the standard message.
+                </p>
+                <AutoResizeTextarea
+                    placeholder="The standard message"
+                    value={form.proposal_email_message}
+                    onChange={(e) => setForm({ ...form, proposal_email_message: e.target.value })}
+                    rows={4}
+                    className="input"
+                />
+
+                <div className="section-label form-stack__break">Invoice email</div>
+                <p className="form-hint">
+                    The message the Send Invoice dialog starts with; it can be edited before each send. <code>:firm_name</code>, <code>:contact_first_name</code>, <code>:invoice_number</code>, <code>:amount_due</code> and <code>:due_date</code> are filled in for you. Leave it blank for the standard message.
+                </p>
+                <AutoResizeTextarea
+                    placeholder="The standard message"
+                    value={form.invoice_email_message}
+                    onChange={(e) => setForm({ ...form, invoice_email_message: e.target.value })}
                     rows={3}
                     className="input"
                 />

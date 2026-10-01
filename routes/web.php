@@ -71,6 +71,12 @@ Route::middleware('auth')->group(function () {
         Route::get('/proposals', [ProposalPageController::class, 'index'])->name('proposals.index');
         Route::get('/proposals/create', [ProposalPageController::class, 'create'])->name('proposals.create');
         Route::get('/proposals/{proposal}/edit', [ProposalPageController::class, 'edit'])->name('proposals.edit');
+        // The proposal and invoice emails as the client sees them, for
+        // styling the templates.
+        if (app()->isLocal()) {
+            Route::get('/dev/mail/proposal/{proposal?}', [\App\Http\Controllers\ProposalController::class, 'emailBrowserPreview'])->name('dev.mail.proposal');
+            Route::get('/dev/mail/invoice/{invoice?}', [\App\Http\Controllers\InvoiceController::class, 'emailBrowserPreview'])->name('dev.mail.invoice');
+        }
 
         Route::get('/bookkeeping', [BookkeepingPageController::class, 'index'])->name('bookkeeping.index');
         Route::get('/clients/{company}/portal-preview', [PortalPreviewController::class, 'start'])->name('clients.portal-preview');

@@ -97,7 +97,7 @@ class ProposalSendTest extends TestCase
 
         $response->assertJsonPath('to', 'rosa@alderfinch.co');
         $this->assertStringContainsString('Brand refresh', $response->json('subject'));
-        $this->assertStringContainsString('Hi Rosa,', $response->json('message'));
+        $this->assertStringContainsString('Thank you for considering', $response->json('message'));
         $this->assertStringEndsWith('/p/'.$proposal->accept_token, $response->json('public_url'));
     }
 
