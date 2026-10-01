@@ -1,0 +1,163 @@
+// The year at a glance (Components/YearChart.jsx): two bars per month with
+// a line over them (Bookkeeping, Expenses), on a flat card. Every color is a theme
+// token, so it follows dark and light mode.
+
+.year-chart {
+    margin-bottom: var(--space-section);
+    padding: var(--space-panel);
+    background-color: var(--color-surface);
+    border-radius: var(--radius-base);
+
+    &__head {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: var(--space-3);
+        margin-bottom: var(--space-3);
+    }
+
+    &__title {
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+        font-weight: var(--font-weight-semibold);
+    }
+
+    &__legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-4);
+    }
+
+    // A legend or tooltip entry, led by its series' swatch.
+    &__key {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--space-1-5);
+        font-size: var(--font-size-xs);
+        line-height: var(--line-height-xs);
+        color: var(--color-text-muted);
+
+        strong {
+            font-size: var(--font-size-sm);
+            color: var(--color-text);
+            font-variant-numeric: tabular-nums;
+        }
+
+        &::before {
+            content: '';
+            width: var(--space-2-5);
+            height: var(--space-2-5);
+            border-radius: 2px;
+        }
+
+        &--primary::before {
+            background-color: var(--color-primary);
+        }
+
+        &--muted::before {
+            background-color: var(--color-chart-muted);
+        }
+
+        // The line: a short stroke rather than a block.
+        &--line::before {
+            height: 2px;
+            background-color: var(--color-text);
+        }
+    }
+
+    &__plot {
+        position: relative;
+    }
+
+    svg {
+        display: block;
+        overflow: visible;
+    }
+
+    &__grid {
+        stroke: var(--color-border);
+        stroke-dasharray: 2 4;
+    }
+
+    &__zero {
+        stroke: var(--color-border-strong);
+    }
+
+    &__label {
+        font-size: 11px;
+        fill: var(--color-text-muted);
+        font-variant-numeric: tabular-nums;
+
+        &--future {
+            fill: var(--color-text-subtle);
+            opacity: 0.6;
+        }
+    }
+
+    &__hover {
+        fill: var(--color-surface-hover);
+    }
+
+    &__bar--primary {
+        fill: var(--color-primary);
+    }
+
+    &__bar--muted {
+        fill: var(--color-chart-muted);
+    }
+
+    &__line {
+        fill: none;
+        stroke: var(--color-text);
+        stroke-width: 2;
+        stroke-linejoin: round;
+        stroke-linecap: round;
+    }
+
+    &__dot {
+        fill: var(--color-surface);
+        stroke: var(--color-text);
+        stroke-width: 2;
+    }
+
+    // The hovered month's figures, beside its column (flipped to the left
+    // near the right edge).
+    &__tip {
+        position: absolute;
+        top: var(--space-2);
+        min-width: 10rem;
+        padding: var(--space-2) var(--space-3);
+        background-color: var(--color-surface-raised);
+        border-radius: var(--radius-base);
+        box-shadow: var(--shadow-popover);
+        pointer-events: none;
+
+        &--left {
+            transform: translateX(-100%);
+        }
+    }
+
+    &__tip-month {
+        margin-bottom: var(--space-1);
+        font-size: var(--font-size-xs);
+        line-height: var(--line-height-xs);
+        font-weight: var(--font-weight-semibold);
+    }
+
+    &__tip-row {
+        display: flex;
+        justify-content: space-between;
+        gap: var(--space-4);
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+        font-variant-numeric: tabular-nums;
+
+        &--line {
+            margin-top: var(--space-1);
+            padding-top: var(--space-1);
+            font-weight: var(--font-weight-semibold);
+            border-top: var(--border-width) solid var(--color-border);
+        }
+    }
+}

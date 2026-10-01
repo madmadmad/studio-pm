@@ -9,7 +9,7 @@ import { TaxRow, TaxToggle, useSalesTax } from '../../Components/InvoiceTax';
 import { InvoiceCategoryBadge, InvoiceCategorySelect, PROJECT_WORK, RepeatIcon, categoryName, useInvoiceCategories } from '../../Components/InvoiceCategory';
 import InvoiceDateFields, { useInvoiceDateFields } from '../../Components/InvoiceDateFields';
 import { InvoiceStatusBadge } from '../../Components/StatusBadges';
-import { displayInvoiceStatus, formatCurrency, formatDate, invoiceSubtotal, invoiceTotal, monthInAppTimezone, todayInAppTimezone } from '../../lib/format';
+import { displayInvoiceStatus, formatCurrency, formatDate, formatMonth, invoiceSubtotal, invoiceTotal, monthInAppTimezone, todayInAppTimezone } from '../../lib/format';
 import MetricCard from '../../Components/MetricCard';
 import { calculateDueDate, todayLocal } from '../../lib/paymentTerms';
 import { api } from '../../lib/api';
@@ -20,6 +20,7 @@ import PageHeader from '../../Components/PageHeader';
 import { useSendAfterCreate } from '../../Components/SendInvoiceModal';
 import { useInvoiceDrawer } from '../../Components/InvoiceDrawer';
 import { useListMotion } from '../../lib/listMotion';
+import TabToolbar from '../../Components/TabToolbar';
 
 // The list's filter pills, by the status each row's badge shows: drafts
 // include ones with a send scheduled; outstanding is sent and unpaid,
@@ -80,9 +81,7 @@ function totalsByMonth(invoices) {
 
 // "October 2026"
 function monthLabel(key) {
-    if (!key) return 'No issue date';
-    const [y, m] = key.split('-').map(Number);
-    return new Date(y, m - 1, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    return key ? formatMonth(key) : 'No issue date';
 }
 
 // The divider above a month's invoices, with what was invoiced in it.
@@ -315,7 +314,6 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
             <Head title="Invoices" />
             <PageHeader
                 title="Invoices"
-                actions={<Button onClick={openNewInvoice}>New invoice</Button>}
             />
 
             <div className="metric-grid">
@@ -423,6 +421,8 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
                 </div>
             )}
 
+            {/* The add action, directly above the list it adds to. */}
+            <TabToolbar addLabel="New invoice" onAdd={openNewInvoice} />
             <div className="card card--flush">
                 {invoices.length === 0 ? (
                     <EmptyState text="No invoices yet." />

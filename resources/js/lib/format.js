@@ -127,6 +127,14 @@ export function todayInAppTimezone() {
     return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(new Date());
 }
 
+// A 'YYYY-MM' month as words: "October 2026". Every month label in the
+// app goes through this, so none shows the raw key.
+export function formatMonth(key) {
+    if (!key) return '';
+    const [y, m] = String(key).split('-').map(Number);
+    return new Date(y, m - 1, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+}
+
 // The 'YYYY-MM' a timestamp falls in, in the firm's timezone.
 export function monthInAppTimezone(value) {
     return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(new Date(value)).slice(0, 7);

@@ -9,6 +9,7 @@ import { api } from '../../lib/api';
 import PageHeader from '../../Components/PageHeader';
 import { visitRow } from '../../lib/rowLink';
 import { useListMotion } from '../../lib/listMotion';
+import TabToolbar from '../../Components/TabToolbar';
 
 const STATUS_FILTERS = [
     { value: 'all', label: 'All' },
@@ -57,7 +58,6 @@ export default function ClientsIndex({ companies }) {
             <Head title="Clients" />
             <PageHeader
                 title="Clients"
-                actions={<Button onClick={() => setShowForm(true)}>Add client</Button>}
             />
 
             {showForm && (
@@ -111,6 +111,8 @@ export default function ClientsIndex({ companies }) {
                 </div>
             )}
 
+            {/* The add action, directly above the list it adds to. */}
+            <TabToolbar addLabel="Add client" onAdd={() => setShowForm(true)} />
             <div className="card card--flush">
                 {companies.length === 0 ? (
                     <EmptyState text="No clients yet." />

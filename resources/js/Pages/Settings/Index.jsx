@@ -91,10 +91,7 @@ export default function SettingsIndex({ studioProfile }) {
     return (
         <AppLayout>
             <Head title="Settings" />
-            <PageHeader
-                title="Settings"
-                subtitle="How your studio appears to clients, and the defaults for proposals and invoices."
-            />
+            <PageHeader title="Settings" />
 
             <form onSubmit={submit} className="card card--padded card--narrow form-stack">
                 <div className="section-label">Studio information</div>

@@ -15,6 +15,8 @@ import PageHeader from '../../Components/PageHeader';
 import Drawer, { DrawerByline, DrawerDate } from '../../Components/Drawer';
 import Toggle from '../../Components/Toggle';
 import CurrencyInput from '../../Components/CurrencyInput';
+import TabToolbar from '../../Components/TabToolbar';
+import YearChart from '../../Components/YearChart';
 
 function emptyForm() {
     return {
@@ -298,6 +300,43 @@ function expenseMetrics(expenses) {
     };
 }
 
+// The year's spending by month for the chart, split by who carries it:
+// billed to clients (a billable expense, or the clients' shares of a split
+// one) and the studio's own cost (the rest). Months still to come are null.
+const SPEND_SERIES = {
+    bars: [
+        { key: 'billable', label: 'Billed to clients', tone: 'primary' },
+        { key: 'studio', label: 'Studio costs', tone: 'muted' },
+    ],
+    line: { key: 'total', label: 'Total' },
+    ariaLabel: 'Expenses by month',
+};
+
+function yearSpend(expenses, today) {
+    const year = today.slice(0, 4);
+    const currentMonth = Number(today.slice(5, 7));
+    const months = Array.from({ length: 12 }, (_, i) => (
+        i + 1 > currentMonth
+            ? { month: i + 1, billable: null, studio: null, total: null }
+            : { month: i + 1, billable: 0, studio: 0, total: 0 }
+    ));
+
+    expenses.filter((e) => e.date?.slice(0, 4) === year).forEach((e) => {
+        const m = months[Number(e.date.slice(5, 7)) - 1];
+        if (m.total === null) return;
+        const amount = parseFloat(e.amount) || 0;
+        const billable = e.is_billable
+            ? amount
+            : Math.min(amount, (e.splits ?? []).reduce((sum, s) => sum + (parseFloat(s.amount) || 0), 0));
+        m.billable += billable;
+        m.studio += amount - billable;
+        m.total += amount;
+    });
+
+    const round = (n) => (n === null ? null : Math.round(n * 100) / 100);
+    return { year, months: months.map((m) => ({ month: m.month, billable: round(m.billable), studio: round(m.studio), total: round(m.total) })) };
+}
+
 export default function ExpensesIndex({ expenses: expensesProp, categories: categoriesProp, taxes: taxesProp, projects, draftInvoices, companies = [], lastSplit = null }) {
     const [expenses, setExpenses] = useState(expensesProp);
     const [categories, setCategories] = useState(categoriesProp);
@@ -335,6 +374,7 @@ export default function ExpensesIndex({ expenses: expensesProp, categories: cate
         });
     }, [expenses, search, categoryFilter, statusFilter]);
     const metrics = expenseMetrics(expenses);
+    const spend = yearSpend(expenses, todayInAppTimezone());
 
     // The open expense's split across clients (null: not split).
     const [split, setSplit] = useState(null);
@@ -462,15 +502,16 @@ export default function ExpensesIndex({ expenses: expensesProp, categories: cate
             <Head title="Expenses" />
             <PageHeader
                 title="Expenses"
-                actions={<Button onClick={startCreate}>New expense</Button>}
             />
 
             <div className="metric-grid">
-                <MetricCard label={`Spent this month (${metrics.month.count})`} value={formatCurrency(metrics.month.amount)} />
+                <MetricCard tone="primary" label={`Spent this month (${metrics.month.count})`} value={formatCurrency(metrics.month.amount)} />
                 <MetricCard label={`Spent this year (${metrics.year.count})`} value={formatCurrency(metrics.year.amount)} />
                 <MetricCard label={`Ready to bill (${metrics.ready.count})`} value={formatCurrency(metrics.ready.amount)} />
                 <MetricCard label={`Billed, awaiting payment (${metrics.billed.count})`} value={formatCurrency(metrics.billed.amount)} />
             </div>
+
+            <YearChart months={spend.months} year={spend.year} series={SPEND_SERIES} />
 
             <div className="filter-bar">
                 <input
@@ -616,6 +657,8 @@ export default function ExpensesIndex({ expenses: expensesProp, categories: cate
                 </Drawer>
             )}
 
+            {/* The add action, directly above the list it adds to. */}
+            <TabToolbar addLabel="New expense" onAdd={startCreate} />
             <div className="card card--flush">
                 {filtered.length === 0 ? (
                     <EmptyState text={expenses.length === 0 ? 'No expenses yet.' : 'No expenses match these filters.'} />

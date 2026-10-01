@@ -10,10 +10,10 @@ import { useListMotion } from '../../lib/listMotion';
 import { api } from '../../lib/api';
 import { copyToClipboard } from '../../lib/clipboard';
 import PageHeader from '../../Components/PageHeader';
-import Button from '../../Components/Button';
 import ProposalDrawer from '../../Components/ProposalDrawer';
 import SendProposalModal from '../../Components/SendProposalModal';
 import { visitRow } from '../../lib/rowLink';
+import TabToolbar from '../../Components/TabToolbar';
 
 function reload() {
     router.reload({ only: ['proposals'] });
@@ -118,7 +118,6 @@ export default function ProposalsIndex({ proposals: proposalsProp, companies, se
             <Head title="Proposals" />
             <PageHeader
                 title="Proposals"
-                actions={<Button onClick={() => setCreating(true)}>New proposal</Button>}
             />
 
             <div className="metric-grid">
@@ -153,6 +152,8 @@ export default function ProposalsIndex({ proposals: proposalsProp, companies, se
                 </div>
             )}
 
+            {/* The add action, directly above the list it adds to. */}
+            <TabToolbar addLabel="New proposal" onAdd={() => setCreating(true)} />
             <div className="card card--flush">
                 {proposals.length === 0 ? (
                     <EmptyState text="No proposals yet." />

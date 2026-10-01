@@ -1,0 +1,47 @@
+// Bookkeeping > Profit & loss statement (Pages/Bookkeeping/ProfitLoss.jsx):
+// income and expense lines under ruled headings, each with its total, then
+// the net, in a narrow statement column.
+
+.profit-loss {
+    max-width: var(--size-content);
+
+    &__section {
+        margin-bottom: var(--space-6);
+    }
+
+    &__line {
+        display: flex;
+        justify-content: space-between;
+        gap: var(--space-4);
+        padding: var(--space-1-5) 0;
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+
+        &--empty {
+            color: var(--color-text-muted);
+        }
+
+        &--total {
+            margin-top: var(--space-1);
+            padding-top: var(--space-2);
+            font-weight: var(--font-weight-semibold);
+            border-top: var(--border-width) solid var(--color-border);
+        }
+
+        &--net {
+            padding-top: var(--space-3);
+            font-size: var(--font-size-base);
+            line-height: var(--line-height-base);
+            font-weight: var(--font-weight-semibold);
+            border-top: var(--border-width-thick) solid var(--color-border-strong);
+        }
+    }
+
+    &__amount {
+        font-variant-numeric: tabular-nums;
+    }
+
+    &__note {
+        margin-top: var(--space-3);
+    }
+}

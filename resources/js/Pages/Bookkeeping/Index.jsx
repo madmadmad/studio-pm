@@ -1,19 +1,21 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
 import AppLayout from '../../Layouts/AppLayout';
 import Button from '../../Components/Button';
 import MetricCard from '../../Components/MetricCard';
 import EmptyState from '../../Components/EmptyState';
-import { formatCurrency, formatDate } from '../../lib/format';
+import { formatCurrency, formatDate, formatMonth } from '../../lib/format';
 import { api } from '../../lib/api';
 import PageHeader from '../../Components/PageHeader';
+import YearChart from '../../Components/YearChart';
+import FinancialReports from '../../Components/FinancialReports';
 import { todayLocal } from '../../lib/paymentTerms';
 
 function emptyForm() {
     return { amount: '', tax_amount: '', category: '', occurred_on: todayLocal(), description: '' };
 }
 
-export default function BookkeepingIndex({ transactions, summary }) {
+export default function BookkeepingIndex({ transactions, summary, year, reportYears = [] }) {
     const [showForm, setShowForm] = useState(false);
     const [form, setForm] = useState(emptyForm());
     const [saving, setSaving] = useState(false);
@@ -42,27 +44,25 @@ export default function BookkeepingIndex({ transactions, summary }) {
             <PageHeader title="Bookkeeping" />
 
             <div className="metric-grid">
-                <MetricCard label={`Income (${summary.month})`} value={formatCurrency(summary.income)} />
+                <MetricCard label={`Income (${formatMonth(summary.month)})`} value={formatCurrency(summary.income)} />
                 <MetricCard label="Expenses" value={formatCurrency(summary.expenses)} />
                 <MetricCard label="Net" value={formatCurrency(summary.net)} />
             </div>
             {/* What's owed to the state: this month, and the year so far (to file from). */}
             <div className="metric-grid">
-                <MetricCard label={`Sales tax collected (${summary.month})`} value={formatCurrency(summary.sales_tax)} />
+                <MetricCard label={`Sales tax collected (${formatMonth(summary.month)})`} value={formatCurrency(summary.sales_tax)} />
                 <MetricCard label={`Sales tax collected (${summary.month.slice(0, 4)} to date)`} value={formatCurrency(summary.sales_tax_year)} />
             </div>
 
-            {/* The reports, on the same flat card as the other pages' filter rows. */}
-            <div className="filter-bar">
-                <Link href="/bookkeeping/hosting" className="btn btn--secondary">Hosting profitability</Link>
-                <Link href="/bookkeeping/invoice-categories" className="btn btn--secondary">Invoices by category</Link>
-                <Link href="/bookkeeping/sales-tax" className="btn btn--secondary">Sales tax report</Link>
-                {/* Add income -- off for now: all income comes from paid invoices,
-                    which record it themselves. Turn back on to log income
-                    that has no invoice (the form below still works).
-                <Button onClick={() => setShowForm(true)} className="filter-bar__end">Add income</Button>
-                */}
-            </div>
+            {year && <YearChart months={year.months} year={year.year} />}
+
+            <FinancialReports years={reportYears} />
+
+            {/* Add income -- off for now: all income comes from paid invoices,
+                which record it themselves. Turn back on to log income that
+                has no invoice (the form below still works).
+            <Button onClick={() => setShowForm(true)}>Add income</Button>
+            */}
 
             {showForm && (
                 <form onSubmit={submit} className="card card--padded form-grid page-section">

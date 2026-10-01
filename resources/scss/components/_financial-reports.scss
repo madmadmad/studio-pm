@@ -1,0 +1,58 @@
+// Bookkeeping's Financial reports card (Components/FinancialReports.jsx):
+// a year picker, then the report pages and the CSV downloads side by side,
+// each a document icon and its name. On the same flat card as the filter
+// rows.
+
+.financial-reports {
+    margin-bottom: var(--space-section);
+    padding: var(--space-panel);
+    background-color: var(--color-surface);
+    border-radius: var(--radius-base);
+
+    &__head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--space-3);
+        margin-bottom: var(--space-3);
+    }
+
+    &__title {
+        font-size: var(--font-size-base);
+        line-height: var(--line-height-base);
+        font-weight: var(--font-weight-semibold);
+    }
+
+    &__columns {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); // one-off: two columns, stacking when narrow
+        gap: var(--space-6);
+    }
+
+    &__list {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-1);
+        margin-top: var(--space-1);
+    }
+
+    &__link {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--space-2);
+        padding: var(--space-1) 0;
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+        font-weight: var(--font-weight-medium);
+        color: var(--color-text);
+
+        svg {
+            flex-shrink: 0;
+            color: var(--color-primary-icon);
+        }
+
+        &:hover {
+            color: var(--color-primary-icon);
+        }
+    }
+}

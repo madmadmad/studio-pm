@@ -20,6 +20,33 @@ class Transaction extends Model
     // expense summary, not double-entry accounting. Sales tax received is
     // the state's, not income, so it's taken out of income and net and
     // reported on its own (for filing), with the year to date beside it.
+    // The year month by month, for Bookkeeping's chart: income (less the
+    // sales tax in it, as in monthlySummary), expenses, and net, Jan..Dec.
+    // Months still to come are null, so the chart leaves them empty.
+    public static function yearSeries(int $year): array
+    {
+        $income = static::where('type', 'income')->whereYear('occurred_on', $year)
+            ->get(['amount', 'tax_amount', 'occurred_on'])
+            ->groupBy(fn (Transaction $t) => $t->occurred_on->month)
+            ->map(fn ($month) => (float) $month->sum('amount') - (float) $month->sum('tax_amount'));
+
+        $expenses = Expense::whereYear('date', $year)->get(['amount', 'date'])
+            ->groupBy(fn (Expense $e) => $e->date->month)
+            ->map(fn ($month) => (float) $month->sum('amount'));
+
+        $lastMonth = $year < now()->year ? 12 : ($year === now()->year ? now()->month : 0);
+
+        return collect(range(1, 12))->map(function ($m) use ($income, $expenses, $lastMonth) {
+            if ($m > $lastMonth) {
+                return ['month' => $m, 'income' => null, 'expenses' => null, 'net' => null];
+            }
+            $in = round($income->get($m, 0), 2);
+            $out = round($expenses->get($m, 0), 2);
+
+            return ['month' => $m, 'income' => $in, 'expenses' => $out, 'net' => round($in - $out, 2)];
+        })->all();
+    }
+
     public static function monthlySummary(string $month): array
     {
         [$year, $monthNumber] = explode('-', $month);

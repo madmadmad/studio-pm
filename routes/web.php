@@ -80,6 +80,10 @@ Route::middleware('auth')->group(function () {
         Route::get('/bookkeeping/invoice-categories.csv', [BookkeepingPageController::class, 'invoiceCategoriesCsv'])->name('bookkeeping.invoice-categories.csv');
         Route::get('/bookkeeping/hosting', [BookkeepingPageController::class, 'hosting'])->name('bookkeeping.hosting');
         Route::get('/bookkeeping/hosting.csv', [BookkeepingPageController::class, 'hostingCsv'])->name('bookkeeping.hosting.csv');
+        Route::get('/bookkeeping/profit-loss', [BookkeepingPageController::class, 'profitLoss'])->name('bookkeeping.profit-loss');
+        Route::get('/bookkeeping/profit-loss.csv', [BookkeepingPageController::class, 'profitLossCsv'])->name('bookkeeping.profit-loss.csv');
+        Route::get('/bookkeeping/invoices.csv', [BookkeepingPageController::class, 'invoicesCsv'])->name('bookkeeping.invoices.csv');
+        Route::get('/bookkeeping/expenses.csv', [BookkeepingPageController::class, 'expensesCsv'])->name('bookkeeping.expenses.csv');
 
         Route::get('/expenses', [ExpensePageController::class, 'index'])->name('expenses.index');
 

@@ -12,6 +12,7 @@ import PageHeader from '../../Components/PageHeader';
 import RowActions from '../../Components/RowActions';
 import { formatCurrency } from '../../lib/format';
 import { api } from '../../lib/api';
+import TabToolbar from '../../Components/TabToolbar';
 
 function formFor(service) {
     return service
@@ -153,10 +154,10 @@ export default function ServicesIndex({ services: servicesProp }) {
             <Head title="Services" />
             <PageHeader
                 title="Services"
-                actions={<Button onClick={() => setEditing('new')}>Add service</Button>}
-                subtitle="Your rate catalog &mdash; used as defaults when building invoice line items, and to mark logged time billable or not."
             />
 
+            {/* The add action, directly above the list it adds to. */}
+            <TabToolbar addLabel="Add service" onAdd={() => setEditing('new')} />
             <div className="card card--flush">
                 {services.length === 0 ? (
                     <EmptyState text="No services yet." />

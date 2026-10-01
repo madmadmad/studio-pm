@@ -135,6 +135,7 @@
     --color-field: color-mix(in srgb, var(--color-bg) 92%, #EBEFF9); // inputs and selects: a faint lift over whatever they sit on, so a borderless field reads on every layer
     --color-field-border: transparent; // borderless on dark; light mode outlines them
     --color-toggle-knob: var(--color-text); // a switch's knob
+    --color-chart-muted: var(--color-text-subtle); // a chart's second series (expenses) beside the red
     --color-border: color-mix(in srgb, var(--color-bg) 88%, #EBEFF9); // dividers -- decorative, deliberately low contrast
     --color-border-strong: color-mix(in srgb, var(--color-bg) 85%, #EBEFF9);; // the toggle's off track, an inline edit's edge on hover or focus
 
@@ -418,8 +419,8 @@
     // Surfaces: the page is white; cards sit a step grey on it, and things
     // that float (drawers, modals, menus) are white again, lifted by shadow.
     --color-bg: #FFFFFF;
-    --color-surface: #F5F6F8;
-    --color-surface-subtle: #F5F6F8;
+    --color-surface: #F7F8F8;
+    --color-surface-subtle: #F7F8F8;
     --color-surface-raised: #FFFFFF;
     --color-surface-hover: #EDEFF2;
     --color-surface-muted: #E8EAEE;
@@ -429,12 +430,13 @@
     --color-field: #FFFFFF;
     --color-field-border: #D6DAE0;
     --color-toggle-knob: #FFFFFF;
+    --color-chart-muted: #B4BAC3;
     --color-border: #E3E6EA;
     --color-border-strong: #C5CAD1;
 
     // The frame around the app: a soft grey for the sidebar, the white
     // panel sitting on it.
-    --color-canvas: #EDEFF2;
+    --color-canvas: #EEF0F1;
     --color-on-canvas: #23262E;
     --color-on-canvas-strong: #fff; // the current nav item, on its red fill
     --color-on-canvas-muted: color-mix(in srgb, var(--color-on-canvas) 72%, transparent);

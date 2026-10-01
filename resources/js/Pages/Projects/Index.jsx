@@ -13,6 +13,7 @@ import { api } from '../../lib/api';
 import PageHeader from '../../Components/PageHeader';
 import MetricCard from '../../Components/MetricCard';
 import { formatCurrency, todayInAppTimezone } from '../../lib/format';
+import TabToolbar from '../../Components/TabToolbar';
 
 const STATUS_FILTERS = [
     { value: 'all', label: 'All' },
@@ -130,10 +131,7 @@ export default function ProjectsIndex({ projects, companies, metrics = null, arc
                         All Projects
                     </Link>
                 ) : (
-                    <>
-                        <ViewToggle views={VIEWS} value={view} onChange={setView} label="Projects view" />
-                        <Button onClick={() => setShowForm(true)}>New project</Button>
-                    </>
+                    <ViewToggle views={VIEWS} value={view} onChange={setView} label="Projects view" />
                 )}
             />
 
@@ -231,6 +229,8 @@ export default function ProjectsIndex({ projects, companies, metrics = null, arc
                 </form>
             )}
 
+            {/* The add action, directly above the list or board it adds to. */}
+            {!archivedView && <TabToolbar addLabel="New project" onAdd={() => setShowForm(true)} />}
             {view === 'board' ? (
                 <ProjectBoard projects={searchedProjects} favorites={favorites} onChange={() => router.reload({ only: ['projects'] })} />
             ) : (

@@ -7,6 +7,7 @@ import Button from '../../Components/Button';
 import EmptyState from '../../Components/EmptyState';
 import { api } from '../../lib/api';
 import PageHeader from '../../Components/PageHeader';
+import TabToolbar from '../../Components/TabToolbar';
 
 function emptyForm() {
     return { name: '', email: '', role: 'team_member' };
@@ -116,11 +117,7 @@ export default function UsersIndex({ users: usersProp }) {
     return (
         <AppLayout>
             <Head title="Team" />
-            <PageHeader
-                title="Team"
-                actions={<Button onClick={() => setShowForm(true)}>Invite staff</Button>}
-                subtitle="Managers see and edit everything. Team Members only see projects they're assigned to."
-            />
+            <PageHeader title="Team" />
 
             {showForm && (
                 <form onSubmit={submit} className="card card--padded form-grid page-section">
@@ -138,6 +135,8 @@ export default function UsersIndex({ users: usersProp }) {
                 </form>
             )}
 
+            {/* The add action, directly above the list it adds to. */}
+            <TabToolbar addLabel="Invite staff" onAdd={() => setShowForm(true)} />
             <div className="card card--flush">
                 {users.length === 0 ? (
                     <EmptyState text="No staff yet." />
