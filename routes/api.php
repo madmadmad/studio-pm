@@ -103,6 +103,11 @@ Route::middleware('auth:sanctum')->name('api.')->group(function () {
         Route::apiResource('expenses', ExpenseController::class)->only(['index', 'store', 'update', 'destroy']);
         Route::post('expenses/{expense}/attach-to-invoice', [ExpenseController::class, 'attachToInvoice']);
         Route::post('expenses/{expense}/detach-from-invoice', [ExpenseController::class, 'detachFromInvoice']);
+        // Bank feeds (Plaid): connect, sync, disconnect.
+        Route::post('plaid/link-token', [\App\Http\Controllers\PlaidController::class, 'linkToken']);
+        Route::post('plaid/items', [\App\Http\Controllers\PlaidController::class, 'store']);
+        Route::post('plaid/sync', [\App\Http\Controllers\PlaidController::class, 'sync']);
+        Route::delete('plaid/items/{plaidItem}', [\App\Http\Controllers\PlaidController::class, 'destroy']);
 
         Route::patch('studio-profile', [StudioProfileController::class, 'update']);
         Route::post('invoices/{invoice}/repeat/stop', [InvoiceController::class, 'stopRepeat']);

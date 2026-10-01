@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Expense;
 use App\Models\Invoice;
+use App\Models\PlaidDismissal;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -91,6 +92,11 @@ class ExpenseController extends Controller
 
         if ($expense->receipt_path) {
             Storage::disk('public')->delete($expense->receipt_path);
+        }
+
+        // A bank charge deleted here stays deleted: the feed skips it.
+        if ($expense->plaid_transaction_id) {
+            PlaidDismissal::firstOrCreate(['transaction_id' => $expense->plaid_transaction_id]);
         }
 
         $expense->delete();

@@ -35,6 +35,14 @@ return [
         ],
     ],
 
+    // Bank feeds for expenses (App\Services\PlaidClient). `env` is
+    // sandbox (free, test banks), development or production.
+    'plaid' => [
+        'client_id' => env('PLAID_CLIENT_ID'),
+        'secret' => env('PLAID_SECRET'),
+        'env' => env('PLAID_ENV', 'sandbox'),
+    ],
+
     'stripe' => [
         'key' => env('STRIPE_KEY'),
         'secret' => env('STRIPE_SECRET'),

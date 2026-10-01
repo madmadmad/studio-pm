@@ -1,7 +1,26 @@
-// Settings (Pages/Settings/Index.jsx): the sales tax name and rate share a
-// row, the rate narrow with its % after it; the invoice categories list.
+// Settings (Pages/Settings/Index.jsx): its cards in two columns (one on
+// narrower screens), each column stacking its own; the sales tax name and
+// rate share a row, the rate narrow with its % after it; the invoice
+// categories list.
+@use '../abstracts' as *;
 
 .settings {
+    &__columns {
+        display: grid;
+        gap: var(--space-4);
+        align-items: start;
+
+        @include respond-to('lg') {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    &__column {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-4);
+    }
+
     &__tax {
         display: grid;
         grid-template-columns: minmax(0, 1fr) 8rem; // one-off: room for "7.750"
