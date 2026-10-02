@@ -11,7 +11,7 @@ export default function ForgotPassword({ status }) {
     }
 
     return (
-        <AuthLayout title="Studio PM" subtitle="Reset your password">
+        <AuthLayout logo>
             <form onSubmit={submit} className="card auth-shell__card">
                 <p className="auth-shell__text">
                     Enter your email and we&rsquo;ll send you a link to reset your password.

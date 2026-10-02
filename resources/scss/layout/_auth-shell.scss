@@ -1,6 +1,7 @@
 // Centered single-card screen for sign-in, password reset, invitations,
 // and portal magic links. Used by Layouts/AuthLayout.jsx; each page's
 // form carries `card auth-shell__card`.
+@use '../abstracts' as *;
 
 .auth-shell {
     display: flex;
@@ -17,12 +18,45 @@
     &__header {
         margin-bottom: var(--space-8);
         text-align: center;
+
+        // Headed by the logo: it and any subtitle line up with the card's
+        // contents (inset by the card's own padding).
+        &--brand {
+            padding-inline: var(--space-panel-lg);
+            text-align: left;
+        }
     }
 
     &__title {
         font-size: var(--font-size-xl);
         line-height: var(--line-height-xl);
         font-weight: var(--font-weight-semibold);
+    }
+
+    // The studio lockup in place of a title, swapped for the theme like the
+    // sidebar's.
+    &__brand {
+        display: flex;
+        margin-bottom: var(--space-3);
+    }
+
+    &__logo {
+        width: 220px; // one-off: lockup display width on the sign-in screens
+        height: auto;
+
+        &--on-light {
+            display: none;
+        }
+
+        @include light-mode {
+            &--on-dark {
+                display: none;
+            }
+
+            &--on-light {
+                display: block;
+            }
+        }
     }
 
     &__subtitle {

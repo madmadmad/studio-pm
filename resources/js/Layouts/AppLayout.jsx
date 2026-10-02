@@ -26,12 +26,7 @@ export default function AppLayout({ children }) {
     return (
         <AppShell
             navItems={NAV_ITEMS.filter((item) => !item.managerOnly || isManager)}
-            extraNav={isManager && (
-                <AlertsMenu
-                    triggerClassName="app-shell__nav-link"
-                    activeTriggerClassName="app-shell__nav-link--active"
-                />
-            )}
+            footerExtra={isManager && <AlertsMenu />}
             profileHref="/profile"
             logoutHref="/logout"
         >

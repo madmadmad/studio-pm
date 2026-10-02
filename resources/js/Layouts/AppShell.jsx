@@ -3,11 +3,12 @@ import Avatar from '../Components/Avatar';
 
 // The sidebar frame shared by the staff app (AppLayout) and the Client Hub
 // (PortalLayout): brand, nav links, anything extra after them, then the
-// signed-in person and sign-out at the bottom. `navItems` are
+// signed-in person and sign-out at the bottom (`footerExtra` -- the alerts
+// bell -- just above their rule). `navItems` are
 // { href, label, exact?, also? }; a link is current when the URL starts
 // with its href (or matches exactly, for `exact`), or starts with any of
 // the `also` paths (a section's detail pages living elsewhere).
-export default function AppShell({ navItems, extraNav, profileHref, logoutHref, logoutLabel = 'Log out', children }) {
+export default function AppShell({ navItems, extraNav, footerExtra, profileHref, logoutHref, logoutLabel = 'Log out', children }) {
     const { url, props } = usePage();
     const user = props.auth?.user;
 
@@ -40,6 +41,7 @@ export default function AppShell({ navItems, extraNav, profileHref, logoutHref, 
                     </Link>
                 ))}
                 {extraNav}
+                {footerExtra && <div className="app-shell__footer-extra">{footerExtra}</div>}
                 <div className="app-shell__footer">
                     {user && (
                         <Link href={profileHref} className="app-shell__user">

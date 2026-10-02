@@ -1922,7 +1922,7 @@ function TeamDrawer({ project, canManageTeam, canEdit, assignableStaff, onClose 
 
 export default function ProjectsShow({ project, canManageTeam, canEdit, assignableStaff, services, timeServices = [], proposedHours = 0 }) {
     const tabs = canManageTeam ? ALL_TABS : ALL_TABS.filter((t) => !MANAGER_ONLY_TABS.includes(t));
-    const [tab, setTab] = useRememberedTab('project-page-tab', tabs);
+    const [tab, setTab] = useRememberedTab('project-page-tab', tabs, { param: 'tab' });
     const [settingsOpen, setSettingsOpen] = useState(false);
     const [teamOpen, setTeamOpen] = useState(false);
     const favorites = useFavorites(useMemo(() => [project], [project]));

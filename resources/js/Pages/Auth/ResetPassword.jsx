@@ -16,7 +16,7 @@ export default function ResetPassword({ email, token }) {
     }
 
     return (
-        <AuthLayout title="Studio PM" subtitle="Set a new password">
+        <AuthLayout logo>
             <form onSubmit={submit} className="card auth-shell__card">
                 <div>
                     <label className="label">Email</label>

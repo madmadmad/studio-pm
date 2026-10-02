@@ -5,8 +5,19 @@ import { useState } from 'react';
 // on the last tab used. Falls back to the first tab when the saved one
 // isn't offered (e.g. a manager-only tab for a team member). Storage can
 // be unavailable (private windows), so remembering is best-effort.
-export function useRememberedTab(storageKey, tabs) {
+// With `param`, a tab named in the URL (?tab=Messages) wins -- for links
+// straight to one -- and is remembered like a click.
+export function useRememberedTab(storageKey, tabs, { param } = {}) {
     const [tab, setTabState] = useState(() => {
+        const linked = param && typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get(param) : null;
+        if (linked && tabs.includes(linked)) {
+            try {
+                window.localStorage.setItem(storageKey, linked);
+            } catch {
+                // Opens on it all the same.
+            }
+            return linked;
+        }
         try {
             const saved = window.localStorage.getItem(storageKey);
             return tabs.includes(saved) ? saved : tabs[0];

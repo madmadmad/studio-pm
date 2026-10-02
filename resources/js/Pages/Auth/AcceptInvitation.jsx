@@ -16,7 +16,7 @@ export default function AcceptInvitation({ token, email, valid }) {
 
     if (!valid) {
         return (
-            <AuthLayout title="Studio PM">
+            <AuthLayout logo>
                 <div className="card auth-shell__card auth-shell__card--message">
                     <p className="auth-shell__text">
                         This invite link is invalid or has expired. Ask a manager to resend your invite.
@@ -27,7 +27,7 @@ export default function AcceptInvitation({ token, email, valid }) {
     }
 
     return (
-        <AuthLayout title="Studio PM" subtitle="Welcome &mdash; set your password to get started">
+        <AuthLayout logo>
             <form onSubmit={submit} className="card auth-shell__card">
                 <div>
                     <label className="label">Email</label>

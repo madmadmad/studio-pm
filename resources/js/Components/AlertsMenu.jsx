@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Bell, BellRinging } from '@phosphor-icons/react';
 import { api } from '../lib/api';
 import { formatRelativeTime } from '../lib/format';
 
@@ -8,10 +9,9 @@ import { formatRelativeTime } from '../lib/format';
 // this app's existing choice to skip live updates elsewhere): it refreshes
 // on mount and whenever the menu is opened.
 //
-// The trigger's look comes from the caller (`triggerClassName`, plus
-// `activeTriggerClassName` while open), so it can match whatever
-// navigation it sits in.
-export default function AlertsMenu({ triggerClassName = '', activeTriggerClassName = '' }) {
+// A bell in the sidebar's footer, above the signed-in person, ringing with
+// a count while any are unread.
+export default function AlertsMenu() {
     const [open, setOpen] = useState(false);
     const [notifications, setNotifications] = useState([]);
     const [unreadCount, setUnreadCount] = useState(0);
@@ -43,8 +43,6 @@ export default function AlertsMenu({ triggerClassName = '', activeTriggerClassNa
         setUnreadCount((count) => Math.max(0, count - 1));
     }
 
-    const triggerClasses = ['alerts-menu__trigger', triggerClassName, open && activeTriggerClassName].filter(Boolean).join(' ');
-
     return (
         <div className="alerts-menu">
             <button
@@ -52,9 +50,10 @@ export default function AlertsMenu({ triggerClassName = '', activeTriggerClassNa
                 onClick={toggle}
                 aria-expanded={open}
                 aria-label={unreadCount > 0 ? `Alerts, ${unreadCount} unread` : 'Alerts'}
-                className={triggerClasses}
+                title="Alerts"
+                className={`alerts-menu__trigger${open ? ' alerts-menu__trigger--open' : ''}`}
             >
-                Alerts
+                {unreadCount > 0 ? <BellRinging /> : <Bell />}
                 {unreadCount > 0 && (
                     <span className="alerts-menu__count">
                         {unreadCount}

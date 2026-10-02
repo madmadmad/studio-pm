@@ -124,6 +124,16 @@
         }
     }
 
+    // Above the footer's rule, pushed down with it (the alerts bell).
+    &__footer-extra {
+        margin-top: auto;
+        padding-bottom: var(--space-3);
+
+        + .app-shell__footer {
+            margin-top: 0;
+        }
+    }
+
     &__footer {
         margin-top: auto;
         padding-top: var(--space-4);

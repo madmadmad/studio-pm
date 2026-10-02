@@ -13,6 +13,18 @@ function compact(value) {
     return `${sign}$${Math.round(v)}`;
 }
 
+// "12h", "1.5h" -- hours, for the axis and the figures alike.
+function hours(value) {
+    return `${Math.round(value * 100) / 100}h`;
+}
+
+// How each kind of series writes its figures: the full form (legend,
+// tooltip) and the axis's short one.
+const FORMATS = {
+    currency: { full: formatCurrency, axis: compact },
+    hours: { full: hours, axis: hours },
+};
+
 // Gridline steps that land on round numbers (1, 2, 2.5, 5 x 10^n).
 function niceStep(range, count = 4) {
     const raw = range / count || 1;
@@ -31,13 +43,16 @@ const BOOKKEEPING = {
     ariaLabel: 'Income, expenses and net by month',
 };
 
+// `series.format`: 'currency' (the default) or 'hours'. `series.floor`: the
+// least the scale reaches up to, so an empty year still has a sensible axis.
+
 // The year at a glance: a pair of bars per month with a line over them,
 // months still to come left empty. Hover a month for its figures. Which
 // figures is `series` -- Bookkeeping's by default (income, expenses, net);
 // Expenses passes its own. Colors come from the theme tokens (the first
 // bar the red, the second grey, the line the text color), so it reads in
 // dark and light alike. Drawn to the width it's given.
-export default function YearChart({ months, year, series = BOOKKEEPING }) {
+export default function YearChart({ months, year, series = BOOKKEEPING, title }) {
     const ref = useRef(null);
     const [width, setWidth] = useState(0);
     const [hover, setHover] = useState(null);
@@ -51,12 +66,13 @@ export default function YearChart({ months, year, series = BOOKKEEPING }) {
     }, []);
 
     const { bars, line } = series;
+    const format = FORMATS[series.format ?? 'currency'];
     const [first, second] = bars;
     // A month is past (or current) once it has figures; future ones are null.
     const isKnown = (m) => m[line.key] !== null;
     const known = months.filter(isKnown);
     const values = known.flatMap((m) => [m[first.key], m[second.key], m[line.key]]);
-    const top = Math.max(0, ...values);
+    const top = Math.max(series.floor ?? 0, ...values);
     const bottom = Math.min(0, ...values);
     const step = niceStep(top - bottom || 1);
     const max = Math.ceil(top / step) * step || step;
@@ -81,12 +97,12 @@ export default function YearChart({ months, year, series = BOOKKEEPING }) {
     return (
         <div className="year-chart">
             <div className="year-chart__head">
-                <div className="year-chart__title">{year} so far</div>
+                <div className="year-chart__title">{title ?? `${year} so far`}</div>
                 <div className="year-chart__legend">
                     {bars.map((b) => (
-                        <span key={b.key} className={`year-chart__key year-chart__key--${b.tone}`}>{b.label} <strong>{formatCurrency(total(b.key))}</strong></span>
+                        <span key={b.key} className={`year-chart__key year-chart__key--${b.tone}`}>{b.label} <strong>{format.full(total(b.key))}</strong></span>
                     ))}
-                    <span className="year-chart__key year-chart__key--line">{line.label} <strong>{formatCurrency(total(line.key))}</strong></span>
+                    <span className="year-chart__key year-chart__key--line">{line.label} <strong>{format.full(total(line.key))}</strong></span>
                 </div>
             </div>
 
@@ -96,7 +112,7 @@ export default function YearChart({ months, year, series = BOOKKEEPING }) {
                         {ticks.map((t) => (
                             <g key={t}>
                                 <line x1={PAD.left} x2={width - PAD.right} y1={y(t)} y2={y(t)} className={t === 0 ? 'year-chart__zero' : 'year-chart__grid'} />
-                                <text x={PAD.left - 8} y={y(t)} dy="0.32em" textAnchor="end" className="year-chart__label">{compact(t)}</text>
+                                <text x={PAD.left - 8} y={y(t)} dy="0.32em" textAnchor="end" className="year-chart__label">{format.axis(t)}</text>
                             </g>
                         ))}
 
@@ -128,9 +144,9 @@ export default function YearChart({ months, year, series = BOOKKEEPING }) {
                     >
                         <div className="year-chart__tip-month">{MONTHS[hover]} {year}</div>
                         {bars.map((b) => (
-                            <div key={b.key} className="year-chart__tip-row"><span className={`year-chart__key year-chart__key--${b.tone}`}>{b.label}</span>{formatCurrency(hovered[b.key])}</div>
+                            <div key={b.key} className="year-chart__tip-row"><span className={`year-chart__key year-chart__key--${b.tone}`}>{b.label}</span>{format.full(hovered[b.key])}</div>
                         ))}
-                        <div className="year-chart__tip-row year-chart__tip-row--line"><span className="year-chart__key year-chart__key--line">{line.label}</span>{formatCurrency(hovered[line.key])}</div>
+                        <div className="year-chart__tip-row year-chart__tip-row--line"><span className="year-chart__key year-chart__key--line">{line.label}</span>{format.full(hovered[line.key])}</div>
                     </div>
                 )}
             </div>

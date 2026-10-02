@@ -1,21 +1,33 @@
-// "Alerts" entry in the sidebar with an unread count; opens a list of
-// failed/skipped invoice sends. Used by Components/AlertsMenu.jsx. The
-// trigger's nav-link look is supplied by the layout; the list mixes in
-// .popover.
+// The alerts bell at the foot of the sidebar, with an unread count on its
+// corner; opens a list of failed/skipped invoice sends. Used by
+// Components/AlertsMenu.jsx. The list mixes in .popover.
 
 .alerts-menu {
-    position: relative;
+    position: relative; // full width, so the list opens past the sidebar's edge
 
-    // Full-width row, label left and count right.
     &__trigger {
-        display: flex;
+        position: relative;
+        display: inline-flex;
         align-items: center;
-        justify-content: space-between;
-        width: 100%;
-        text-align: left;
+        justify-content: center;
+        width: var(--space-8);
+        height: var(--space-8);
+        margin-left: calc(var(--space-1) * -1); // the glyph, not its hit area, lines up with the avatar
+        font-size: var(--size-icon-lg);
+        color: var(--color-on-canvas-muted);
+        border-radius: var(--radius-base);
+
+        &:hover,
+        &--open {
+            color: var(--color-on-canvas);
+            background-color: var(--color-on-canvas-fill-hover);
+        }
     }
 
     &__count {
+        position: absolute;
+        top: calc(var(--space-0-5) * -1);
+        right: calc(var(--space-1) * -1);
         min-width: var(--space-4);
         height: var(--space-4);
         padding-inline: var(--space-1);

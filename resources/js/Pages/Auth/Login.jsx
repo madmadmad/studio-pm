@@ -16,7 +16,7 @@ export default function Login() {
     }
 
     return (
-        <AuthLayout title="Studio PM" subtitle="Sign in to your workspace">
+        <AuthLayout logo>
             <form onSubmit={submit} className="card auth-shell__card">
                 <div>
                     <label className="label">Email</label>

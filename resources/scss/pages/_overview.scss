@@ -1,0 +1,150 @@
+// The Overview (Pages/Dashboard/Index.jsx): the year charts (a pair side by
+// side for managers), then the latest activity beside the lists of
+// projects, messages and tasks due. One column on narrower screens.
+@use '../abstracts' as *;
+
+.overview {
+    &__charts {
+        display: grid;
+        gap: var(--space-4);
+        margin-bottom: var(--space-section);
+
+        .year-chart {
+            margin-bottom: 0;
+        }
+
+        &--pair {
+            @include respond-to('xl') {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+    }
+
+    &__grid {
+        display: grid;
+        gap: var(--space-section);
+        align-items: start;
+
+        @include respond-to('lg') {
+            grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+            gap: var(--space-6);
+        }
+    }
+
+    &__side {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-section);
+    }
+
+    // A list row's text column, cut short rather than pushing its aside.
+    &__clip {
+        min-width: 0;
+
+        .list-row__title,
+        .list-row__meta {
+            @include truncate;
+        }
+    }
+
+    &__dot {
+        display: inline-block;
+        width: var(--space-2);
+        height: var(--space-2);
+        margin-right: var(--space-1-5);
+        vertical-align: middle;
+        background-color: var(--color-primary);
+        border-radius: var(--radius-pill);
+    }
+
+    &__unread {
+        min-width: var(--space-5);
+        padding-inline: var(--space-1-5);
+        font-size: var(--font-size-2xs);
+        line-height: var(--space-5);
+        color: var(--color-primary-on);
+        text-align: center;
+        background-color: var(--color-primary);
+        border-radius: var(--radius-pill);
+    }
+
+    &__overdue {
+        color: var(--color-danger-text);
+    }
+}
+
+// The activity feed: days, each a label over its events (icon, line, the
+// project and when).
+.overview-activity {
+    &__day + &__day {
+        margin-top: var(--space-4);
+    }
+
+    &__day-label {
+        margin-bottom: var(--space-1);
+        font-size: var(--font-size-xs);
+        line-height: var(--line-height-xs);
+        font-weight: var(--font-weight-semibold);
+        color: var(--color-text-muted);
+    }
+
+    &__item {
+        display: flex;
+        gap: var(--space-3);
+        padding: var(--space-2);
+        margin-inline: calc(var(--space-2) * -1);
+        border-radius: var(--radius-base);
+
+        &:hover {
+            background-color: var(--color-surface-hover);
+        }
+    }
+
+    &__icon {
+        display: inline-flex;
+        flex-shrink: 0;
+        align-items: center;
+        justify-content: center;
+        width: var(--space-8);
+        height: var(--space-8);
+        font-size: var(--size-icon-sm);
+        color: var(--color-text-muted);
+        background-color: var(--color-surface-subtle);
+        border-radius: var(--radius-pill);
+
+        &--primary {
+            color: var(--color-primary-on);
+            background-color: var(--color-primary);
+        }
+    }
+
+    &__body {
+        min-width: 0;
+        padding-top: var(--space-0-5);
+    }
+
+    &__text {
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+
+        strong {
+            font-weight: var(--font-weight-semibold);
+        }
+    }
+
+    &__subject {
+        font-weight: var(--font-weight-medium);
+    }
+
+    &__amount {
+        font-variant-numeric: tabular-nums;
+        color: var(--color-text-muted);
+    }
+
+    &__meta {
+        @include truncate;
+        font-size: var(--font-size-xs);
+        line-height: var(--line-height-xs);
+        color: var(--color-text-muted);
+    }
+}
