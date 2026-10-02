@@ -21,6 +21,10 @@ use Illuminate\Support\Collection;
 // Logged time is rolled up by person, project and day. A team member sees
 // only their assigned projects, and nothing financial.
 //
+// Every source works on plain collections (->toBase()): mapping an empty
+// Eloquent collection keeps it Eloquent, whose merge() then chokes on the
+// other source's arrays.
+//
 // Each event: type, at, actor, text, subject (the quoted thing), project
 // { id, name } or null, href.
 class ActivityFeed
@@ -70,11 +74,11 @@ class ActivityFeed
 
     private static function tasks($scope, int $limit): Collection
     {
-        $added = $scope(Task::with('project:id,name'))->latest()->limit($limit)->get()
+        $added = $scope(Task::with('project:id,name'))->latest()->limit($limit)->get()->toBase()
             ->map(fn (Task $t) => static::event('task_added', $t->created_at, null, 'New task', $t->title, $t->project, static::projectHref($t->project_id, 'Tasks')));
 
         // Completed: a done task's last change is when it was ticked off.
-        $done = $scope(Task::with('project:id,name'))->where('status', 'done')->latest('updated_at')->limit($limit)->get()
+        $done = $scope(Task::with('project:id,name'))->where('status', 'done')->latest('updated_at')->limit($limit)->get()->toBase()
             ->map(fn (Task $t) => static::event('task_done', $t->updated_at, $t->assignee, 'Completed', $t->title, $t->project, static::projectHref($t->project_id, 'Tasks')));
 
         return $added->merge($done);
@@ -84,7 +88,7 @@ class ActivityFeed
     {
         return $scope(Message::with(['project:id,name', 'senderUser:id,name', 'senderContact:id,name', 'parent:id,subject']))
             ->whereNotNull('sent_at')
-            ->latest('sent_at')->limit($limit)->get()
+            ->latest('sent_at')->limit($limit)->get()->toBase()
             ->map(fn (Message $m) => static::event(
                 $m->parent_id ? 'reply' : 'message',
                 $m->sent_at,
@@ -98,7 +102,7 @@ class ActivityFeed
 
     private static function notes($scope, int $limit): Collection
     {
-        return $scope(Note::with(['project:id,name', 'user:id,name']))->latest()->limit($limit)->get()
+        return $scope(Note::with(['project:id,name', 'user:id,name']))->latest()->limit($limit)->get()->toBase()
             ->map(fn (Note $n) => static::event('note', $n->created_at, $n->user?->name, 'added a note', $n->title ?: 'Untitled', $n->project, static::projectHref($n->project_id, 'Notes')));
     }
 
@@ -109,7 +113,7 @@ class ActivityFeed
             $query->whereHas('task', fn ($q) => $q->whereIn('project_id', $projectIds));
         }
 
-        return $query->latest()->limit($limit)->get()
+        return $query->latest()->limit($limit)->get()->toBase()
             ->filter(fn (TaskFile $f) => $f->task)
             ->map(fn (TaskFile $f) => static::event('file', $f->created_at, null, 'File added to '.$f->task->title, $f->filename, $f->task->project, static::projectHref($f->task->project_id, 'Tasks')));
     }
@@ -119,7 +123,7 @@ class ActivityFeed
     private static function time($scope, int $limit): Collection
     {
         return $scope(TimeEntry::with(['project:id,name', 'user:id,name', 'service:id,name']))->whereNotNull('project_id')
-            ->latest('date')->latest()->limit($limit * 6)->get()
+            ->latest('date')->latest()->limit($limit * 6)->get()->toBase()
             ->groupBy(fn (TimeEntry $t) => "{$t->user_id}-{$t->project_id}-{$t->date->toDateString()}")
             ->map(function (Collection $day) {
                 $first = $day->first();
@@ -145,9 +149,9 @@ class ActivityFeed
     private static function proposals(int $limit): Collection
     {
         $base = fn () => Proposal::with(['project:id,name', 'company:id,name']);
-        $sent = $base()->whereNotNull('sent_at')->latest('sent_at')->limit($limit)->get()
+        $sent = $base()->whereNotNull('sent_at')->latest('sent_at')->limit($limit)->get()->toBase()
             ->map(fn (Proposal $p) => static::event('proposal_sent', $p->sent_at, null, 'Proposal sent to '.$p->company?->name, $p->title, $p->project, "/proposals/{$p->id}/edit", (float) $p->estimate_amount));
-        $accepted = $base()->whereNotNull('accepted_at')->latest('accepted_at')->limit($limit)->get()
+        $accepted = $base()->whereNotNull('accepted_at')->latest('accepted_at')->limit($limit)->get()->toBase()
             ->map(fn (Proposal $p) => static::event('proposal_accepted', $p->accepted_at, $p->company?->name, 'accepted', $p->title, $p->project, "/proposals/{$p->id}/edit", (float) $p->estimate_amount));
 
         return $sent->merge($accepted);
@@ -155,14 +159,14 @@ class ActivityFeed
 
     private static function invoices(int $limit): Collection
     {
-        return Invoice::with(['project:id,name', 'company:id,name', 'items'])->whereNotNull('sent_at')->latest('sent_at')->limit($limit)->get()
+        return Invoice::with(['project:id,name', 'company:id,name', 'items'])->whereNotNull('sent_at')->latest('sent_at')->limit($limit)->get()->toBase()
             ->map(fn (Invoice $i) => static::event('invoice_sent', $i->sent_at, null, 'Invoice sent to '.$i->company?->name, "#{$i->invoice_number}", $i->project, "/invoices/{$i->id}", $i->total()));
     }
 
     private static function payments(int $limit): Collection
     {
         return Payment::with(['invoice:id,invoice_number,company_id,project_id', 'invoice.company:id,name', 'invoice.project:id,name'])
-            ->whereNotNull('paid_at')->latest('paid_at')->limit($limit)->get()
+            ->whereNotNull('paid_at')->latest('paid_at')->limit($limit)->get()->toBase()
             ->filter(fn (Payment $p) => $p->invoice)
             ->map(fn (Payment $p) => static::event('payment', $p->paid_at, $p->invoice->company?->name, 'paid', "#{$p->invoice->invoice_number}", $p->invoice->project, "/invoices/{$p->invoice->id}", (float) $p->amount));
     }

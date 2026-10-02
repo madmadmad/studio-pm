@@ -46,6 +46,17 @@ class OverviewTest extends TestCase
                     && collect($events)->pluck('subject')->contains('Sitemap')));
     }
 
+    // Staging: a proposal accepted through its shared link, never emailed --
+    // no "sent" events to merge the "accepted" ones into.
+    public function test_an_accepted_proposal_that_was_never_sent_shows(): void
+    {
+        $this->mine->company->proposals()->create(['title' => 'Logo', 'body' => '<p>Scope</p>', 'status' => 'accepted', 'accepted_at' => now(), 'project_id' => $this->mine->id]);
+
+        $this->actingAs(User::factory()->create(['role' => 'manager']))->get('/')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page->where('activity', fn ($events) => collect($events)->pluck('type')->contains('proposal_accepted')));
+    }
+
     public function test_team_members_see_only_their_projects_and_nothing_financial(): void
     {
         $member = User::factory()->create(['role' => 'team_member']);
