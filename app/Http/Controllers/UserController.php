@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class UserController extends Controller
 {
@@ -26,7 +27,8 @@ class UserController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'unique:users,email'],
-            'role' => ['required', 'in:manager,team_member'],
+            'role' => ['required', 'in:super_admin,team_member'],
+            ...$this->permissionRules(),
         ]);
 
         $user = $this->createInvitedUser($data, $request->user());
@@ -38,16 +40,21 @@ class UserController extends Controller
     {
         $data = $request->validate([
             'name' => ['sometimes', 'string', 'max:255'],
-            'role' => ['sometimes', 'in:manager,team_member'],
+            'role' => ['sometimes', 'in:super_admin,team_member'],
+            ...$this->permissionRules(),
         ]);
 
-        if (isset($data['role']) && $data['role'] !== $user->role) {
-            abort_if($user->id === $request->user()->id, 422, "You can't change your own role.");
+        // Nobody changes their own access -- which also means the super
+        // admin doing this always remains one, so there's always at least one.
+        $changesAccess = (isset($data['role']) && $data['role'] !== $user->role) || array_key_exists('permissions', $data);
+        abort_if($changesAccess && $user->id === $request->user()->id, 422, "You can't change your own role or permissions.");
+
+        $user->update(collect($data)->except('permissions')->all());
+        if (array_key_exists('permissions', $data) || isset($data['role'])) {
+            $this->setPermissions($user, $data['permissions'] ?? $user->permissions);
         }
 
-        $user->update($data);
-
-        return $user;
+        return $user->fresh();
     }
 
     // Deactivate, not delete -- their time entries/invoices keep the FK.
@@ -103,6 +110,7 @@ class UserController extends Controller
             'email' => $data['email'],
             'role' => $data['role'],
         ]);
+        $this->setPermissions($user, $data['permissions'] ?? []);
         $user->password = Hash::make(Str::random(40)); // unusable until they set their own via the invite link
         $user->invited_by = $invitedBy->id;
         $user->invited_at = now();
@@ -112,6 +120,26 @@ class UserController extends Controller
         $user->notify(new StaffInvitation($rawToken));
 
         return $user;
+    }
+
+    // Permissions are only granted to team members (a super admin has all
+    // of them) and only from the grantable list -- never settings or team.
+    protected function permissionRules(): array
+    {
+        return [
+            'permissions' => ['sometimes', 'nullable', 'array'],
+            'permissions.*' => ['string', Rule::in(array_keys(config('permissions.grantable')))],
+        ];
+    }
+
+    protected function setPermissions(User $user, ?array $permissions): void
+    {
+        $user->forceFill([
+            'permissions' => $user->isSuperAdmin() ? null : (array_values(array_unique($permissions ?? [])) ?: null),
+        ]);
+        if ($user->exists) {
+            $user->save();
+        }
     }
 
     protected function issueInviteToken(User $user): string

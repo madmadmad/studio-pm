@@ -36,10 +36,10 @@ class OverviewTest extends TestCase
 
     public function test_managers_see_every_project_and_the_money(): void
     {
-        $this->actingAs(User::factory()->create(['role' => 'manager']))->get('/')
+        $this->actingAs(User::factory()->create(['role' => 'super_admin']))->get('/')
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Dashboard/Index')
-                ->where('isManager', true)
+                ->where('can.invoices', true)
                 ->where('metrics.outstanding.amount', 500)
                 ->whereNot('income', null)
                 ->where('activity', fn ($events) => collect($events)->pluck('type')->contains('invoice_sent')
@@ -52,7 +52,7 @@ class OverviewTest extends TestCase
     {
         $this->mine->company->proposals()->create(['title' => 'Logo', 'body' => '<p>Scope</p>', 'status' => 'accepted', 'accepted_at' => now(), 'project_id' => $this->mine->id]);
 
-        $this->actingAs(User::factory()->create(['role' => 'manager']))->get('/')
+        $this->actingAs(User::factory()->create(['role' => 'super_admin']))->get('/')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page->where('activity', fn ($events) => collect($events)->pluck('type')->contains('proposal_accepted')));
     }
@@ -65,7 +65,7 @@ class OverviewTest extends TestCase
         $this->actingAs($member)->get('/')
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Dashboard/Index')
-                ->where('isManager', false)
+                ->where('can.invoices', false)
                 ->where('income', null)
                 ->missing('metrics.outstanding')
                 ->where('activity', function ($events) {

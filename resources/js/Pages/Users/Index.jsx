@@ -5,6 +5,8 @@ import AppLayout from '../../Layouts/AppLayout';
 import Badge from '../../Components/Badge';
 import Button from '../../Components/Button';
 import EmptyState from '../../Components/EmptyState';
+import Drawer from '../../Components/Drawer';
+import Toggle from '../../Components/Toggle';
 import { api } from '../../lib/api';
 import PageHeader from '../../Components/PageHeader';
 import TabToolbar from '../../Components/TabToolbar';
@@ -23,7 +25,54 @@ function StatusBadge({ user }) {
     return <Badge tone="success" label="Active" />;
 }
 
-export default function UsersIndex({ users: usersProp }) {
+// A team member's access in a word or two: their assigned projects, plus
+// how many permissions they've been given.
+function accessSummary(user, options) {
+    const granted = (user.permissions || []).filter((p) => options[p]);
+    if (granted.length === 0) return 'Assigned projects';
+    if (granted.length === 1) return options[granted[0]].label;
+    return `${granted.length} permissions`;
+}
+
+// What a team member can do beyond their assigned projects -- a switch
+// per permission (config/permissions.php), saved as it's flipped. Settings
+// and the team stay with super admins.
+function AccessDrawer({ user, options, onSaved, onClose }) {
+    const [granted, setGranted] = useState(user.permissions || []);
+    const [error, setError] = useState('');
+
+    async function toggle(permission, on) {
+        const next = on ? [...granted, permission] : granted.filter((p) => p !== permission);
+        setGranted(next);
+        setError('');
+        try {
+            onSaved(await api.patch(`/api/users/${user.id}`, { permissions: next }));
+        } catch (err) {
+            setGranted(granted);
+            setError(err.message || 'Could not change their access.');
+        }
+    }
+
+    return (
+        <Drawer onClose={onClose}>
+            <h2 className="drawer__title">{user.name}&rsquo;s access</h2>
+            <p className="form-hint drawer__section">
+                Every team member works on the projects they&rsquo;re assigned to &mdash; tasks, files, notes, schedule, messages, their own time &mdash; and sees those projects&rsquo; approved proposals. Switch on anything more they need. Settings and the team stay with super admins.
+            </p>
+            <div className="users__permissions">
+                {Object.entries(options).map(([key, option]) => (
+                    <div key={key}>
+                        <Toggle checked={granted.includes(key)} onChange={(on) => toggle(key, on)} label={option.label} />
+                        <div className="form-hint form-hint--attached">{option.description}</div>
+                    </div>
+                ))}
+            </div>
+            {error && <div className="form-message form-message--error form-message--spaced">{error}</div>}
+        </Drawer>
+    );
+}
+
+export default function UsersIndex({ users: usersProp, permissionOptions = {} }) {
     const { props } = usePage();
     const currentUserId = props.auth?.user?.id;
     const [users, setUsers] = useState(usersProp);
@@ -31,6 +80,8 @@ export default function UsersIndex({ users: usersProp }) {
     const [form, setForm] = useState(emptyForm());
     const [saving, setSaving] = useState(false);
     const [busyId, setBusyId] = useState(null);
+    // The team member whose access is open in the drawer.
+    const [accessUser, setAccessUser] = useState(null);
 
     useEffect(() => {
         setUsers(usersProp);
@@ -124,10 +175,10 @@ export default function UsersIndex({ users: usersProp }) {
                     <input required placeholder="Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="input" />
                     <input required type="email" placeholder="Email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="input" />
                     <select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })} className="input form-grid__full">
-                        <option value="team_member">Team Member</option>
-                        <option value="manager">Manager</option>
+                        <option value="team_member">Team member</option>
+                        <option value="super_admin">Super admin</option>
                     </select>
-                    <p className="form-hint form-grid__full">They'll get an email with a link to set their own password.</p>
+                    <p className="form-hint form-grid__full">They'll get an email with a link to set their own password. A team member starts with just their assigned projects; give them more from Access once they're added.</p>
                     <div className="form-actions form-grid__full">
                         <Button type="button" variant="secondary" onClick={() => setShowForm(false)}>Cancel</Button>
                         <Button type="submit" variant="confirm" disabled={saving}>Send invite</Button>
@@ -147,6 +198,7 @@ export default function UsersIndex({ users: usersProp }) {
                                 <th>Name</th>
                                 <th>Email</th>
                                 <th>Role</th>
+                                <th>Access</th>
                                 <th>Status</th>
                                 <th></th>
                             </tr>
@@ -159,13 +211,28 @@ export default function UsersIndex({ users: usersProp }) {
                                     <td>
                                         <select
                                             value={user.role}
-                                            disabled={busyId === user.id || !!user.deactivated_at}
+                                            // Nobody changes their own role.
+                                            disabled={busyId === user.id || !!user.deactivated_at || user.id === currentUserId}
                                             onChange={(e) => changeRole(user, e.target.value)}
                                             className="input input--xs input--inline"
                                         >
-                                            <option value="team_member">Team Member</option>
-                                            <option value="manager">Manager</option>
+                                            <option value="team_member">Team member</option>
+                                            <option value="super_admin">Super admin</option>
                                         </select>
+                                    </td>
+                                    <td>
+                                        {user.role === 'super_admin' ? (
+                                            <span className="table__cell--muted">Everything</span>
+                                        ) : (
+                                            <button
+                                                type="button"
+                                                onClick={() => setAccessUser(user)}
+                                                disabled={!!user.deactivated_at}
+                                                className="text-action text-action--xs"
+                                            >
+                                                {accessSummary(user, permissionOptions)}
+                                            </button>
+                                        )}
                                     </td>
                                     <td>
                                         <StatusBadge user={user} />
@@ -199,6 +266,15 @@ export default function UsersIndex({ users: usersProp }) {
                     </table>
                 )}
             </div>
+
+            {accessUser && (
+                <AccessDrawer
+                    user={accessUser}
+                    options={permissionOptions}
+                    onSaved={(updated) => setUsers((current) => current.map((u) => (u.id === updated.id ? updated : u)))}
+                    onClose={() => setAccessUser(null)}
+                />
+            )}
         </AppLayout>
     );
 }

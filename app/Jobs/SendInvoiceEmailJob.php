@@ -89,7 +89,7 @@ class SendInvoiceEmailJob implements ShouldQueue
 
             $invoiceSend->update(['status' => InvoiceSend::STATUS_FAILED, 'failure_reason' => $e->getMessage()]);
 
-            Notification::send(User::where('role', User::ROLE_MANAGER)->get(), new InvoiceSendAlert($invoice, 'failed', $e->getMessage()));
+            Notification::send(User::withPermission('invoices'), new InvoiceSendAlert($invoice, 'failed', $e->getMessage()));
         }
     }
 

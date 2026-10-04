@@ -3,6 +3,7 @@
 namespace App\Notifications;
 
 use App\Models\Proposal;
+use App\Services\EmailTemplates;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
@@ -22,10 +23,11 @@ class ProposalAccepted extends Notification
 
     public function toMail(object $notifiable): MailMessage
     {
-        return (new MailMessage)
-            ->subject("Proposal accepted: {$this->proposal->title}")
-            ->line("{$this->proposal->company->name} just accepted \"{$this->proposal->title}\".")
-            ->line('Estimate: $' . number_format($this->proposal->estimate_amount ?? 0, 2))
-            ->action('View proposal', url('/proposals/' . $this->proposal->id));
+        return EmailTemplates::mail('proposal_accepted', [
+            'first_name' => EmailTemplates::firstName($notifiable->name ?? null),
+            'client' => $this->proposal->company->name,
+            'proposal' => $this->proposal->title,
+            'estimate' => '$'.number_format($this->proposal->estimate_amount ?? 0, 2),
+        ], url('/proposals/'.$this->proposal->id.'/edit'));
     }
 }

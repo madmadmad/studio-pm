@@ -48,7 +48,7 @@ class TimePageController extends Controller
     // assigned to -- same rule the API's TimeEntryController enforces.
     protected function scopeToRole(Request $request, $query): void
     {
-        if ($request->user()->isTeamMember()) {
+        if (! $request->user()->hasPermission('all_projects')) {
             $query->whereHas('project.users', fn ($q) => $q->where('users.id', $request->user()->id));
         }
     }
@@ -57,7 +57,7 @@ class TimePageController extends Controller
     {
         $projects = Project::query();
 
-        if ($request->user()->isTeamMember()) {
+        if (! $request->user()->hasPermission('all_projects')) {
             $projects->whereHas('users', fn ($q) => $q
                 ->where('users.id', $request->user()->id)
                 ->whereNull('project_user.unassigned_at'));

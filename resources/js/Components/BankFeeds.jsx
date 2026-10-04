@@ -91,7 +91,7 @@ export default function BankFeeds({ items: initialItems, configured }) {
     }
 
     return (
-        <div className="card card--padded form-stack">
+        <div className="card card--padded form-stack settings__card">
             <div className="section-label">Bank feeds</div>
             <p className="form-hint">
                 Charges from connected banks sync every morning into <Link href="/expenses">Expenses</Link> as unbilled expenses, with the bank as their source. Deposits, refunds and card payments are left out. Deleting an imported expense dismisses it: it won&rsquo;t sync back.

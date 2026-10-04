@@ -1,0 +1,10 @@
+// The Team page (Pages/Users/Index.jsx): a team member's access drawer, a
+// switch per permission with what it unlocks under it.
+
+.users {
+    &__permissions {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-4);
+    }
+}

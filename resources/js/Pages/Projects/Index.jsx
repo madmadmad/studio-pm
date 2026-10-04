@@ -14,6 +14,7 @@ import PageHeader from '../../Components/PageHeader';
 import MetricCard from '../../Components/MetricCard';
 import { formatCurrency, todayInAppTimezone } from '../../lib/format';
 import TabToolbar from '../../Components/TabToolbar';
+import { useCan } from '../../lib/permissions';
 
 const STATUS_FILTERS = [
     { value: 'all', label: 'All' },
@@ -58,6 +59,7 @@ function ProjectMetrics({ metrics, projects }) {
 }
 
 export default function ProjectsIndex({ projects, companies, metrics = null, archivedView = false }) {
+    const can = useCan();
     const [filter, setFilter] = useState('all');
     const [search, setSearch] = useState('');
     // List or Board, remembered in the browser. Archived projects are all
@@ -175,7 +177,7 @@ export default function ProjectsIndex({ projects, companies, metrics = null, arc
                         ))}
                     </div>
                 )}
-                {!archivedView && (
+                {!archivedView && can('all_projects') && (
                     <Link href="/projects/archived" className="link link--muted filter-bar__link">
                         Archived
                     </Link>
@@ -230,7 +232,7 @@ export default function ProjectsIndex({ projects, companies, metrics = null, arc
             )}
 
             {/* The add action, directly above the list or board it adds to. */}
-            {!archivedView && <TabToolbar addLabel="New project" onAdd={() => setShowForm(true)} />}
+            {!archivedView && can('manage_projects') && <TabToolbar addLabel="New project" onAdd={() => setShowForm(true)} />}
             {view === 'board' ? (
                 <ProjectBoard projects={searchedProjects} favorites={favorites} onChange={() => router.reload({ only: ['projects'] })} />
             ) : (

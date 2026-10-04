@@ -18,7 +18,7 @@ class ProjectController extends Controller
     {
         $projects = $company->projects()->with('tasks');
 
-        if ($request->user()->isTeamMember()) {
+        if (! $request->user()->hasPermission('all_projects')) {
             $projects->whereHas('users', fn ($q) => $q
                 ->where('users.id', $request->user()->id)
                 ->whereNull('project_user.unassigned_at'));
@@ -45,6 +45,9 @@ class ProjectController extends Controller
 
     public function update(Request $request, Project $project)
     {
+        // Its details and status take Manage projects, not just being on it.
+        $this->authorize('manage', $project);
+
         $data = $request->validate([
             'name' => ['sometimes', 'string', 'max:255'],
             'po_number' => ['nullable', 'string', 'max:255'],

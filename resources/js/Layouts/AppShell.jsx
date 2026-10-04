@@ -11,6 +11,7 @@ import Avatar from '../Components/Avatar';
 export default function AppShell({ navItems, extraNav, footerExtra, profileHref, logoutHref, logoutLabel = 'Log out', children }) {
     const { url, props } = usePage();
     const user = props.auth?.user;
+    const branding = props.branding;
 
     function isActive(item) {
         const path = url.split('?')[0];
@@ -28,8 +29,8 @@ export default function AppShell({ navItems, extraNav, footerExtra, profileHref,
             <aside className="app-shell__sidebar">
                 <div className="app-shell__brand">
                     {/* The reversed lockup on the dark canvas, the dark one on the light (CSS picks). */}
-                    <img src="/images/studio-lockup-rev.svg" alt="Madhouse Studio" className="app-shell__logo app-shell__logo--on-dark" />
-                    <img src="/images/studio-lockup.svg" alt="" aria-hidden="true" className="app-shell__logo app-shell__logo--on-light" />
+                    <img src={branding.logo_dark} alt={branding.name} className="app-shell__logo app-shell__logo--on-dark" />
+                    <img src={branding.logo} alt="" aria-hidden="true" className="app-shell__logo app-shell__logo--on-light" />
                 </div>
                 {navItems.map((item) => (
                     <Link

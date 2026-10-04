@@ -72,13 +72,17 @@ Route::middleware('auth:sanctum')->name('api.')->group(function () {
     Route::post('projects/{project}/assignments', [ProjectAssignmentController::class, 'store']);
     Route::delete('projects/{project}/assignments/{user}', [ProjectAssignmentController::class, 'destroy']);
 
-    // Firm-wide financials and the client directory -- Managers only, full stop.
-    Route::middleware('role:manager')->group(function () {
+    // Each part of the studio behind its permission (config/permissions.php);
+    // a super admin has them all, and settings and team are theirs alone.
+    Route::middleware('permission:clients')->group(function () {
         Route::apiResource('companies', CompanyController::class);
         Route::apiResource('companies.contacts', ContactController::class)->shallow();
         Route::post('contacts/{contact}/portal-invite', [PortalInviteController::class, 'store']);
-        Route::apiResource('services', ServiceController::class);
+    });
 
+    Route::middleware('permission:services')->apiResource('services', ServiceController::class);
+
+    Route::middleware('permission:invoices')->group(function () {
         Route::apiResource('companies.invoices', InvoiceController::class)->shallow()->only(['index', 'store', 'show', 'update', 'destroy']);
         Route::post('invoices/{invoice}/send', [InvoiceController::class, 'send'])->middleware('throttle:invoice-send');
         Route::post('invoices/{invoice}/email-preview', [InvoiceController::class, 'emailPreview']);
@@ -88,31 +92,45 @@ Route::middleware('auth:sanctum')->name('api.')->group(function () {
         Route::post('invoices/{invoice}/sends/{invoiceSend}/reschedule', [InvoiceController::class, 'rescheduleSend']);
         Route::post('invoices/{invoice}/sends/{invoiceSend}/send-now', [InvoiceController::class, 'sendNow']);
         Route::post('invoices/{invoice}/mark-paid', [InvoiceController::class, 'markPaid']);
+        Route::post('invoices/{invoice}/repeat/stop', [InvoiceController::class, 'stopRepeat']);
+    });
+    // Invoices pick a category; Settings manages the list.
+    Route::middleware('permission:invoices,settings')->get('invoice-categories', [InvoiceCategoryController::class, 'index']);
 
+    Route::middleware('permission:proposals')->group(function () {
         Route::apiResource('companies.proposals', ProposalController::class)->shallow()->only(['index', 'store', 'update', 'destroy']);
         Route::get('proposals/{proposal}/send-context', [ProposalController::class, 'sendContext']);
         Route::post('proposals/{proposal}/email-preview', [ProposalController::class, 'emailPreview']);
         Route::post('proposals/{proposal}/send', [ProposalController::class, 'send']);
         Route::post('proposals/{proposal}/unaccept', [ProposalController::class, 'unaccept']);
+    });
 
+    Route::middleware('permission:bookkeeping')->group(function () {
         Route::apiResource('transactions', TransactionController::class)->only(['index', 'store', 'destroy']);
         Route::get('bookkeeping/summary', [TransactionController::class, 'summary']);
+    });
 
+    Route::middleware('permission:expenses')->group(function () {
         Route::apiResource('expense-categories', ExpenseCategoryController::class)->only(['index', 'store', 'update', 'destroy']);
         Route::apiResource('taxes', TaxController::class)->only(['index', 'store', 'update', 'destroy']);
         Route::apiResource('expenses', ExpenseController::class)->only(['index', 'store', 'update', 'destroy']);
         Route::post('expenses/{expense}/attach-to-invoice', [ExpenseController::class, 'attachToInvoice']);
         Route::post('expenses/{expense}/detach-from-invoice', [ExpenseController::class, 'detachFromInvoice']);
-        // Bank feeds (Plaid): connect, sync, disconnect.
+    });
+
+    Route::middleware('permission:settings')->group(function () {
+        Route::patch('studio-profile', [StudioProfileController::class, 'update']);
+        Route::post('studio-profile/logo/{variant}', [\App\Http\Controllers\StudioLogoController::class, 'store']);
+        Route::delete('studio-profile/logo/{variant}', [\App\Http\Controllers\StudioLogoController::class, 'destroy']);
+        Route::apiResource('invoice-categories', InvoiceCategoryController::class)->only(['store', 'update', 'destroy']);
+        // Bank feeds (Plaid), in Settings: connect, sync, disconnect.
         Route::post('plaid/link-token', [\App\Http\Controllers\PlaidController::class, 'linkToken']);
         Route::post('plaid/items', [\App\Http\Controllers\PlaidController::class, 'store']);
         Route::post('plaid/sync', [\App\Http\Controllers\PlaidController::class, 'sync']);
         Route::delete('plaid/items/{plaidItem}', [\App\Http\Controllers\PlaidController::class, 'destroy']);
+    });
 
-        Route::patch('studio-profile', [StudioProfileController::class, 'update']);
-        Route::post('invoices/{invoice}/repeat/stop', [InvoiceController::class, 'stopRepeat']);
-        Route::apiResource('invoice-categories', InvoiceCategoryController::class)->only(['index', 'store', 'update', 'destroy']);
-
+    Route::middleware('permission:team')->group(function () {
         Route::apiResource('users', UserController::class)->only(['index', 'store', 'update', 'destroy']);
         Route::post('users/{user}/resend-invite', [UserController::class, 'resendInvite']);
         Route::post('users/{user}/reactivate', [UserController::class, 'reactivate']);

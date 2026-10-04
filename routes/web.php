@@ -49,9 +49,10 @@ Route::get('/i/{token}/pdf', [PublicInvoiceController::class, 'pdf'])->name('inv
 Route::middleware('auth')->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
-    // Open to both roles -- each page controller scopes its own data by role.
+    // Open to all staff -- each page controller scopes its own data by
+    // permission (assigned projects only, without all_projects).
     Route::get('/projects', [ProjectPageController::class, 'index'])->name('projects.index');
-    Route::get('/projects/archived', [ProjectPageController::class, 'archived'])->name('projects.archived');
+    Route::get('/projects/archived', [ProjectPageController::class, 'archived'])->middleware('permission:all_projects')->name('projects.archived');
     Route::get('/projects/{project}', [ProjectPageController::class, 'show'])->name('projects.show');
 
     Route::get('/time-entries', [TimePageController::class, 'index'])->name('time.index');
@@ -59,27 +60,28 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/profile', [ProfilePageController::class, 'index'])->name('profile.index');
 
-    // Firm-wide financials and the client directory -- Managers only.
-    Route::middleware('role:manager')->group(function () {
+    // Each part of the studio behind its permission (config/permissions.php).
+    // A super admin has them all; settings and team are theirs alone.
+    Route::middleware('permission:clients')->group(function () {
         Route::get('/clients', [ClientPageController::class, 'index'])->name('clients.index');
         Route::get('/clients/{company}', [ClientPageController::class, 'show'])->name('clients.show');
+        Route::get('/clients/{company}/portal-preview', [PortalPreviewController::class, 'start'])->name('clients.portal-preview');
+    });
 
+    Route::middleware('permission:invoices')->group(function () {
         Route::get('/invoices', [InvoicePageController::class, 'index'])->name('invoices.index');
         Route::get('/invoices/{invoice}/pdf', [InvoicePageController::class, 'pdf'])->name('invoices.pdf');
         Route::get('/invoices/{invoice}', [InvoicePageController::class, 'show'])->name('invoices.show');
+    });
 
+    Route::middleware('permission:proposals')->group(function () {
         Route::get('/proposals', [ProposalPageController::class, 'index'])->name('proposals.index');
         Route::get('/proposals/create', [ProposalPageController::class, 'create'])->name('proposals.create');
         Route::get('/proposals/{proposal}/edit', [ProposalPageController::class, 'edit'])->name('proposals.edit');
-        // The proposal and invoice emails as the client sees them, for
-        // styling the templates.
-        if (app()->isLocal()) {
-            Route::get('/dev/mail/proposal/{proposal?}', [\App\Http\Controllers\ProposalController::class, 'emailBrowserPreview'])->name('dev.mail.proposal');
-            Route::get('/dev/mail/invoice/{invoice?}', [\App\Http\Controllers\InvoiceController::class, 'emailBrowserPreview'])->name('dev.mail.invoice');
-        }
+    });
 
+    Route::middleware('permission:bookkeeping')->group(function () {
         Route::get('/bookkeeping', [BookkeepingPageController::class, 'index'])->name('bookkeeping.index');
-        Route::get('/clients/{company}/portal-preview', [PortalPreviewController::class, 'start'])->name('clients.portal-preview');
         Route::get('/bookkeeping/sales-tax', [BookkeepingPageController::class, 'salesTax'])->name('bookkeeping.sales-tax');
         Route::get('/bookkeeping/sales-tax.csv', [BookkeepingPageController::class, 'salesTaxCsv'])->name('bookkeeping.sales-tax.csv');
         Route::get('/bookkeeping/invoice-categories', [BookkeepingPageController::class, 'invoiceCategories'])->name('bookkeeping.invoice-categories');
@@ -90,14 +92,24 @@ Route::middleware('auth')->group(function () {
         Route::get('/bookkeeping/profit-loss.csv', [BookkeepingPageController::class, 'profitLossCsv'])->name('bookkeeping.profit-loss.csv');
         Route::get('/bookkeeping/invoices.csv', [BookkeepingPageController::class, 'invoicesCsv'])->name('bookkeeping.invoices.csv');
         Route::get('/bookkeeping/expenses.csv', [BookkeepingPageController::class, 'expensesCsv'])->name('bookkeeping.expenses.csv');
+    });
 
-        Route::get('/expenses', [ExpensePageController::class, 'index'])->name('expenses.index');
+    Route::middleware('permission:expenses')->get('/expenses', [ExpensePageController::class, 'index'])->name('expenses.index');
 
-        Route::get('/services', [ServicePageController::class, 'index'])->name('services.index');
+    Route::middleware('permission:services')->get('/services', [ServicePageController::class, 'index'])->name('services.index');
 
+    Route::middleware('permission:team')->get('/users', [UserPageController::class, 'index'])->name('users.index');
+
+    Route::middleware('permission:settings')->group(function () {
         Route::get('/settings', [SettingsPageController::class, 'index'])->name('settings.index');
 
-        Route::get('/users', [UserPageController::class, 'index'])->name('users.index');
+        // The proposal, invoice and notification emails as they're sent,
+        // for styling the templates.
+        if (app()->isLocal()) {
+            Route::get('/dev/mail/proposal/{proposal?}', [\App\Http\Controllers\ProposalController::class, 'emailBrowserPreview'])->name('dev.mail.proposal');
+            Route::get('/dev/mail/invoice/{invoice?}', [\App\Http\Controllers\InvoiceController::class, 'emailBrowserPreview'])->name('dev.mail.invoice');
+            Route::get('/dev/mail/notification/{type?}', [\App\Http\Controllers\Dev\NotificationPreviewController::class, 'show'])->name('dev.mail.notification');
+        }
 
         // Live reference for the shared button/card/field/table classes in
         // resources/css/components.css -- see that file's banner comment.

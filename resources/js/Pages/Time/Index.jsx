@@ -9,6 +9,7 @@ import { getTray, addToTray, setTray } from '../../lib/tray';
 import PageHeader from '../../Components/PageHeader';
 import TimeEntryDrawer, { NewTimeEntryDrawer } from '../../Components/TimeEntryDrawer';
 import RowActions from '../../Components/RowActions';
+import { hasPermission } from '../../lib/permissions';
 
 export default function TimeIndex({ timeEntries, companies, projects }) {
     const currentUser = usePage().props.auth?.user;
@@ -121,7 +122,7 @@ export default function TimeIndex({ timeEntries, companies, projects }) {
                     tasks={openEntryTasks}
                     showContext
                     // Same rule as the API: a manager, or whoever logged it.
-                    canEdit={currentUser?.role === 'manager' || openEntry.user_id === currentUser?.id}
+                    canEdit={hasPermission(currentUser, 'manage_projects') || openEntry.user_id === currentUser?.id}
                     onClose={() => setOpenId(null)}
                     onChange={reload}
                 />

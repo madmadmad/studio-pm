@@ -18,34 +18,39 @@ use Inertia\Inertia;
 use Inertia\Response;
 
 // The Overview: the latest activity across projects, with lists of recent
-// projects, messages and tasks due, and the year's hours. Managers see the
-// whole studio plus its money (invoice figures, the income chart, invoice
-// and payment activity); a team member sees only their assigned projects,
-// their own hours, and nothing financial -- those props aren't sent.
+// projects, messages and tasks due, and the year's hours -- each part by
+// permission (config/permissions.php). Without All projects it's just
+// their assigned projects, own hours and own tasks; the invoice figures
+// take Invoices and the income chart Bookkeeping -- props not sent
+// otherwise.
 class DashboardController extends Controller
 {
     public function index(Request $request): Response
     {
         $user = $request->user();
-        $manager = ! $user->isTeamMember();
-        $projectIds = $manager ? null : $user->activeProjects()->pluck('projects.id')->all();
+        $allProjects = $user->hasPermission('all_projects');
+        $projectIds = $allProjects ? null : $user->activeProjects()->pluck('projects.id')->all();
         $scoped = fn ($query, string $column = 'project_id') => $projectIds === null ? $query : $query->whereIn($column, $projectIds);
         $year = (int) now()->year;
         $unread = UnreadMessages::countsByProject($user);
 
         return Inertia::render('Dashboard/Index', [
-            'isManager' => $manager,
-            'metrics' => $manager ? $this->managerMetrics() : $this->teamMetrics($user, $projectIds, $unread),
+            'can' => [
+                'all_projects' => $allProjects,
+                'invoices' => $user->hasPermission('invoices'),
+                'bookkeeping' => $user->hasPermission('bookkeeping'),
+            ],
+            'metrics' => $user->hasPermission('invoices') ? $this->moneyMetrics() : $this->teamMetrics($user, $projectIds, $unread),
             'activity' => ActivityFeed::for($user),
             'projects' => $this->recentProjects($scoped, $unread),
             'threads' => $this->recentThreads($scoped, $user),
-            'tasks' => $this->tasksDue($scoped, $manager ? null : $user),
-            'hours' => ['year' => $year, 'months' => $this->hoursByMonth($year, $manager ? null : $user)],
-            'income' => $manager ? ['year' => $year, 'months' => Transaction::yearSeries($year)] : null,
+            'tasks' => $this->tasksDue($scoped, $allProjects ? null : $user),
+            'hours' => ['year' => $year, 'months' => $this->hoursByMonth($year, $allProjects ? null : $user)],
+            'income' => $user->hasPermission('bookkeeping') ? ['year' => $year, 'months' => Transaction::yearSeries($year)] : null,
         ]);
     }
 
-    private function managerMetrics(): array
+    private function moneyMetrics(): array
     {
         $open = Invoice::with(['items', 'payments'])->where('status', 'sent')->get();
         $overdue = $open->filter(fn (Invoice $i) => $i->due_on && $i->due_on->lt(today()));
@@ -58,12 +63,14 @@ class DashboardController extends Controller
         ];
     }
 
-    private function teamMetrics(User $user, array $projectIds, array $unread): array
+    private function teamMetrics(User $user, ?array $projectIds, array $unread): array
     {
+        $openTasks = Task::where('assignee', $user->name)->where('status', '!=', 'done');
+
         return [
             'week_hours' => round((float) TimeEntry::where('user_id', $user->id)->whereBetween('date', [now()->startOfWeek(), now()->endOfWeek()])->sum('hours'), 2),
-            'projects' => count($projectIds),
-            'open_tasks' => Task::whereIn('project_id', $projectIds)->where('assignee', $user->name)->where('status', '!=', 'done')->count(),
+            'projects' => $projectIds === null ? Project::whereNotIn('status', ['completed', 'archived'])->count() : count($projectIds),
+            'open_tasks' => ($projectIds === null ? $openTasks : $openTasks->whereIn('project_id', $projectIds))->count(),
             'unread_messages' => array_sum($unread),
         ];
     }
@@ -117,7 +124,7 @@ class DashboardController extends Controller
     }
 
     // Hours logged each month this year, billable and not; months still to
-    // come null. Everyone's for a manager, a team member's own.
+    // come null. Everyone's with All projects, otherwise their own.
     private function hoursByMonth(int $year, ?User $user): array
     {
         $entries = TimeEntry::whereYear('date', $year)

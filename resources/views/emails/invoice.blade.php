@@ -20,7 +20,7 @@
                 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px; background-color:#ffffff; border-radius:8px; overflow:hidden; font-family: {!! $font !!};">
                     <tr>
                         <td style="padding: 32px 32px 0;">
-                            <img src="{{ url('/images/studio-lockup.png') }}" alt="{{ $studio->name }}" width="180" style="display:block; margin-bottom: 28px;">
+                            <img src="{{ $studio->logoPngUrl() }}" alt="{{ $studio->name }}" width="180" style="display:block; margin-bottom: 28px;">
 
                             @if ($reminderLabel)
                                 <div style="display:inline-block; background-color:#fdecea; color:#b3261e; font-size:12px; font-weight:600; padding:4px 10px; border-radius:999px; margin-bottom:16px;">

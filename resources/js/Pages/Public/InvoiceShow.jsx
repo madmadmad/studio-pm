@@ -1,4 +1,4 @@
-import { Head } from '@inertiajs/react';
+import { Head, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import { DownloadSimple } from '@phosphor-icons/react';
 import DocumentFrom from '../../Components/DocumentFrom';
@@ -72,6 +72,7 @@ function companyAddressLines(company) {
 }
 
 export default function InvoiceShow({ invoice, studio }) {
+    const { branding } = usePage().props;
     const paidAt = invoice.payments[0]?.paid_at;
     const [paying, setPaying] = useState(null); // null | 'card' | 'ach'
     const [error, setError] = useState('');
@@ -100,7 +101,7 @@ export default function InvoiceShow({ invoice, studio }) {
                 >
                     <DownloadSimple />
                 </a>
-                <img src="/images/studio-lockup.svg" alt="Studio" className="document__logo" />
+                <img src={branding.logo} alt={branding.name} className="document__logo" />
 
                 <h1 className="document__title document__title--spaced document__title--large">
                     <span className="document__title-prefix document__title-prefix--inline">Invoice </span>

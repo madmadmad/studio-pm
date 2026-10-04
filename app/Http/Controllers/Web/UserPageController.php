@@ -13,6 +13,8 @@ class UserPageController extends Controller
     {
         return Inertia::render('Users/Index', [
             'users' => User::orderBy('name')->get(),
+            // What a team member can be given beyond their assigned projects.
+            'permissionOptions' => config('permissions.grantable'),
         ]);
     }
 }

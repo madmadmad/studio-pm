@@ -19,23 +19,30 @@ class ProjectPolicy
      */
     public function view(User $user, Project $project): bool
     {
-        return $user->isManager() || $project->everHadUser($user);
+        return $user->hasPermission('all_projects') || $project->everHadUser($user);
     }
 
     public function create(User $user): bool
     {
-        // New projects come from a Manager (usually via a proposal); a team
-        // member can't be "assigned" to a project that doesn't exist yet.
-        return $user->isManager();
+        // New projects come from someone who manages projects (usually via a
+        // proposal); nobody can be "assigned" to one that doesn't exist yet.
+        return $user->hasPermission('manage_projects');
     }
 
     public function update(User $user, Project $project): bool
     {
-        return $user->isManager() || $project->currentlyHasUser($user);
+        return $user->hasPermission('all_projects') || $project->currentlyHasUser($user);
     }
 
     public function delete(User $user, Project $project): bool
     {
-        return $user->isManager();
+        return $user->hasPermission('manage_projects');
+    }
+
+    // The project itself -- name, status, contact, PO, who's on it -- as
+    // opposed to working in it (update()).
+    public function manage(User $user, Project $project): bool
+    {
+        return $user->hasPermission('manage_projects') && $this->view($user, $project);
     }
 }

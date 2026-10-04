@@ -21,9 +21,10 @@ class PortalInviteController extends Controller
             'portal_invited_by' => $request->user()->id,
         ])->save();
 
-        $url = $this->links->issueSignedUrl($contact);
+        // Good for a week, unlike a requested sign-in link's 20 minutes.
+        $url = $this->links->issueSignedUrl($contact, minutes: MagicLinkBroker::INVITE_TTL_MINUTES);
 
-        $contact->notify(new ClientMagicLink($url, firstInvite: true));
+        $contact->notify(new ClientMagicLink($url, firstInvite: true, expiresInMinutes: MagicLinkBroker::INVITE_TTL_MINUTES));
 
         return $contact->fresh();
     }

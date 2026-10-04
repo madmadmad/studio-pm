@@ -9,21 +9,32 @@ use Illuminate\Support\Str;
 
 class MagicLinkBroker
 {
+    // A sign-in link someone asked for.
     const TTL_MINUTES = 20;
+
+    // The link in a new-message or reply email: opened whenever it's read.
+    const MESSAGE_TTL_MINUTES = 3 * 24 * 60;
+
+    // The invitation the studio sends: it may sit in an inbox a while.
+    const INVITE_TTL_MINUTES = 7 * 24 * 60;
 
     /**
      * Issue a fresh magic link token for a contact, invalidating any
      * previous unused one first -- only one live link per contact at a time.
+     * Message emails pass `replace: false`, so a later message doesn't break
+     * the link in an earlier one still sitting in the inbox.
      */
-    public function issue(Contact $contact): string
+    public function issue(Contact $contact, int $minutes = self::TTL_MINUTES, bool $replace = true): string
     {
-        $contact->magicLinks()->whereNull('used_at')->delete();
+        if ($replace) {
+            $contact->magicLinks()->whereNull('used_at')->delete();
+        }
 
         $rawToken = Str::random(40);
 
         $contact->magicLinks()->create([
             'token_hash' => hash('sha256', $rawToken),
-            'expires_at' => now()->addMinutes(self::TTL_MINUTES),
+            'expires_at' => now()->addMinutes($minutes),
         ]);
 
         return $rawToken;
@@ -36,11 +47,11 @@ class MagicLinkBroker
      * message thread) goes through this rather than re-deriving the same
      * temporarySignedRoute call.
      */
-    public function issueSignedUrl(Contact $contact, ?string $redirect = null): string
+    public function issueSignedUrl(Contact $contact, ?string $redirect = null, int $minutes = self::TTL_MINUTES, bool $replace = true): string
     {
-        $rawToken = $this->issue($contact);
+        $rawToken = $this->issue($contact, $minutes, $replace);
 
-        return URL::temporarySignedRoute('portal.verify', now()->addMinutes(self::TTL_MINUTES), array_filter([
+        return URL::temporarySignedRoute('portal.verify', now()->addMinutes($minutes), array_filter([
             'contactId' => $contact->id,
             'token' => $rawToken,
             'redirect' => $redirect,

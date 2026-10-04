@@ -35,10 +35,14 @@ import { Field } from '../../Components/client/ClientFields';
 import ContactCards from '../../Components/client/ContactCards';
 import ActionMenu from '../../Components/ActionMenu';
 import { PROJECT_STATUS_OPTIONS } from '../../Components/ProjectsTable';
+import ProposalView from '../../Components/ProposalView';
+import { hasPermission } from '../../lib/permissions';
 
 // The team isn't a tab: it opens in a drawer from the header (TeamDrawer).
 const ALL_TABS = ['Schedule', 'Tasks', 'Notes', 'Messages', 'Time', 'Proposals', 'Billing', 'Expenses'];
-const MANAGER_ONLY_TABS = ['Proposals', 'Billing', 'Expenses'];
+// The money tabs, each by its permission (`can`, from the server). Proposals
+// is everyone's: those without the permission see the approved ones.
+const TAB_PERMISSIONS = { Billing: 'invoices', Expenses: 'expenses' };
 
 function reload() {
     router.reload({ only: ['project'] });
@@ -1247,9 +1251,10 @@ function TimeEntryRow({ entry, canDelete, onOpen }) {
 
 function TimeTab({ project, timeServices }) {
     const currentUser = usePage().props.auth?.user;
-    const isManager = currentUser?.role === 'manager';
-    // Whose time a manager can log: the project's team, plus themselves
-    // (a manager needn't be assigned to log their own time).
+    // Logging and editing anyone's time takes Manage projects.
+    const canLogForOthers = hasPermission(currentUser, 'manage_projects');
+    // Whose time they can log: the project's team, plus themselves (they
+    // needn't be assigned to log their own time).
     const team = project.active_users || [];
     const teamForLogging = team.some((u) => u.id === currentUser?.id) ? team : [{ id: currentUser?.id, name: currentUser?.name }, ...team];
     const [creating, setCreating] = useState(false);
@@ -1277,7 +1282,7 @@ function TimeTab({ project, timeServices }) {
                                 key={entry.id}
                                 entry={entry}
                                 // Same rule as the API: a manager, or the person who logged it.
-                                canDelete={currentUser?.role === 'manager' || entry.user_id === currentUser?.id}
+                                canDelete={hasPermission(currentUser, 'manage_projects') || entry.user_id === currentUser?.id}
                                 onOpen={setSelectedEntryId}
                             />
                         ))}
@@ -1290,9 +1295,9 @@ function TimeTab({ project, timeServices }) {
                     key={selectedEntry.id}
                     entry={selectedEntry}
                     tasks={project.tasks}
-                    teamMembers={isManager ? project.active_users : null}
+                    teamMembers={canLogForOthers ? project.active_users : null}
                     services={timeServices}
-                    canEdit={currentUser?.role === 'manager' || selectedEntry.user_id === currentUser?.id}
+                    canEdit={hasPermission(currentUser, 'manage_projects') || selectedEntry.user_id === currentUser?.id}
                     onClose={() => setSelectedEntryId(null)}
                     onChange={reload}
                 />
@@ -1303,7 +1308,7 @@ function TimeTab({ project, timeServices }) {
                     companies={[project.company]}
                     projects={[project]}
                     fixedProjectId={project.id}
-                    teamMembers={isManager ? teamForLogging : null}
+                    teamMembers={canLogForOthers ? teamForLogging : null}
                     services={timeServices}
                     currentUserId={currentUser?.id}
                     onCreated={reload}
@@ -1314,7 +1319,7 @@ function TimeTab({ project, timeServices }) {
     );
 }
 
-function ProposalRow({ proposal, onOpen }) {
+function ProposalRow({ proposal, onOpen, canEdit }) {
     return (
         <div onClick={() => onOpen(proposal.id)} className="grid-row grid-row--action grid-row--link">
             <div className="project-proposals__title">{proposal.title}</div>
@@ -1327,7 +1332,7 @@ function ProposalRow({ proposal, onOpen }) {
                 deleteLabel="Delete proposal"
                 confirmMessage={`Delete the proposal "${proposal.title}"? This can't be undone.`}
                 // Accepted proposals can't be deleted -- unaccept first.
-                onDelete={proposal.status !== 'accepted' ? async () => {
+                onDelete={canEdit && proposal.status !== 'accepted' ? async () => {
                     await api.delete(`/api/proposals/${proposal.id}`);
                     reload();
                 } : null}
@@ -1336,7 +1341,9 @@ function ProposalRow({ proposal, onOpen }) {
     );
 }
 
-function ProposalsTab({ project, services }) {
+// With the Proposals permission: every proposal, to write, send and edit.
+// Without: the approved ones (all the server sends), read-only.
+function ProposalsTab({ project, services, canEdit }) {
     const [creating, setCreating] = useState(false);
     const [selectedProposalId, setSelectedProposalId] = useState(null);
     const selectedProposal = project.proposals.find((p) => p.id === selectedProposalId) || null;
@@ -1352,10 +1359,10 @@ function ProposalsTab({ project, services }) {
 
     return (
         <div>
-            <TabToolbar addLabel="New proposal" onAdd={() => setCreating(true)} />
+            {canEdit && <TabToolbar addLabel="New proposal" onAdd={() => setCreating(true)} />}
             <div className="card card--flush">
                 {project.proposals.length === 0 ? (
-                    <EmptyState text="No proposals for this project yet." />
+                    <EmptyState text={canEdit ? 'No proposals for this project yet.' : 'No approved proposals for this project yet.'} />
                 ) : (
                     <>
                         <div className="grid-row grid-row--action grid-row--head">
@@ -1365,13 +1372,17 @@ function ProposalsTab({ project, services }) {
                             <div />
                         </div>
                         {project.proposals.map((proposal) => (
-                            <ProposalRow key={proposal.id} proposal={proposal} onOpen={setSelectedProposalId} />
+                            <ProposalRow key={proposal.id} proposal={proposal} onOpen={setSelectedProposalId} canEdit={canEdit} />
                         ))}
                     </>
                 )}
             </div>
 
-            {selectedProposal && (
+            {selectedProposal && !canEdit && (
+                <ProposalView proposal={selectedProposal} onClose={() => setSelectedProposalId(null)} />
+            )}
+
+            {selectedProposal && canEdit && (
                 <ProposalDrawer
                     {...drawerProps}
                     proposal={{ ...selectedProposal, project: { id: project.id, name: project.name } }}
@@ -1755,8 +1766,8 @@ function roleLabel(role) {
     return role ? role.replace('_', ' ').replace(/^./, (c) => c.toUpperCase()) : null;
 }
 
-// Add someone to the project: a staff account (managers only -- assigning
-// staff is a roster decision) or a name for someone without a login.
+// Add someone to the project: a staff account (with Manage projects --
+// assigning staff is a roster decision) or a name for someone without a login.
 function AddTeamMemberDrawer({ project, canManageTeam, assignableStaff, onClose }) {
     const assignedIds = (project.active_users || []).map((u) => u.id);
     const available = (assignableStaff || []).filter((staffer) => !assignedIds.includes(staffer.id));
@@ -1920,8 +1931,8 @@ function TeamDrawer({ project, canManageTeam, canEdit, assignableStaff, onClose 
     );
 }
 
-export default function ProjectsShow({ project, canManageTeam, canEdit, assignableStaff, services, timeServices = [], proposedHours = 0 }) {
-    const tabs = canManageTeam ? ALL_TABS : ALL_TABS.filter((t) => !MANAGER_ONLY_TABS.includes(t));
+export default function ProjectsShow({ project, canManageTeam, canEdit, can = {}, assignableStaff, services, timeServices = [], proposedHours = 0 }) {
+    const tabs = ALL_TABS.filter((t) => !TAB_PERMISSIONS[t] || can[TAB_PERMISSIONS[t]]);
     const [tab, setTab] = useRememberedTab('project-page-tab', tabs, { param: 'tab' });
     const [settingsOpen, setSettingsOpen] = useState(false);
     const [teamOpen, setTeamOpen] = useState(false);
@@ -1958,7 +1969,7 @@ export default function ProjectsShow({ project, canManageTeam, canEdit, assignab
             {tab === 'Notes' && <NotesTab project={project} />}
             {tab === 'Messages' && <MessagesTab project={project} unread={unread} />}
             {tab === 'Time' && <TimeTab project={project} timeServices={timeServices} />}
-            {tab === 'Proposals' && <ProposalsTab project={project} services={services} />}
+            {tab === 'Proposals' && <ProposalsTab project={project} services={services} canEdit={can.proposals} />}
             {tab === 'Billing' && <BillingTab project={project} />}
             {tab === 'Expenses' && <ExpensesTab project={project} />}
 

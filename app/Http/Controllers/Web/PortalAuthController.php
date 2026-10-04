@@ -29,7 +29,7 @@ class PortalAuthController extends Controller
 
         if ($contact) {
             $url = $this->links->issueSignedUrl($contact);
-            $contact->notify(new ClientMagicLink($url, firstInvite: $contact->last_login_at === null));
+            $contact->notify(new ClientMagicLink($url));
         }
 
         // Same response whether or not the email matched a portal contact --

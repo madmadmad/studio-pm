@@ -65,7 +65,7 @@ class TimeEntryController extends Controller
         $userId ??= $request->user()->id;
 
         if ($userId !== $request->user()->id) {
-            abort_unless($request->user()->isManager(), 403, 'Only a manager can log time for someone else.');
+            abort_unless($request->user()->hasPermission('manage_projects'), 403, 'Logging time for someone else takes the Manage projects permission.');
             abort_unless($project->currentlyHasUser(User::findOrFail($userId)), 422, 'That person isn\'t on this project\'s team.');
         }
 
@@ -142,7 +142,7 @@ class TimeEntryController extends Controller
     // assigned to -- read-only history included, same rule as everywhere else.
     protected function scopeToRole(Request $request, $query)
     {
-        if ($request->user()->isTeamMember()) {
+        if (! $request->user()->hasPermission('all_projects')) {
             $query->whereHas('project.users', fn ($q) => $q->where('users.id', $request->user()->id));
         }
 

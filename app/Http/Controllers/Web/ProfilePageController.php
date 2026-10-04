@@ -82,7 +82,7 @@ class ProfilePageController extends Controller
     {
         $projects = Project::where('status', '!=', 'archived')->with('tasks:id,project_id,title')->orderBy('name');
 
-        if ($request->user()->isTeamMember()) {
+        if (! $request->user()->hasPermission('all_projects')) {
             $projects->whereHas('users', fn ($q) => $q
                 ->where('users.id', $request->user()->id)
                 ->whereNull('project_user.unassigned_at'));

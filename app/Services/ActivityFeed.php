@@ -16,10 +16,10 @@ use Illuminate\Support\Collection;
 
 // The Overview's latest activity, newest first, gathered from what the
 // records already keep (no separate log): tasks added and completed,
-// messages and replies, notes, task files and logged time -- and, for
-// managers only, proposals sent and accepted, invoices sent and payments.
-// Logged time is rolled up by person, project and day. A team member sees
-// only their assigned projects, and nothing financial.
+// messages and replies, notes, task files, logged time and accepted
+// proposals -- and, by permission, proposals sent (Proposals) and invoices
+// sent and payments (Invoices). Logged time is rolled up by person, project
+// and day. Without All projects, only their assigned projects.
 //
 // Every source works on plain collections (->toBase()): mapping an empty
 // Eloquent collection keeps it Eloquent, whose merge() then chokes on the
@@ -31,7 +31,7 @@ class ActivityFeed
 {
     public static function for(User $user, int $limit = 15): array
     {
-        $projectIds = $user->isTeamMember() ? $user->activeProjects()->pluck('projects.id')->all() : null;
+        $projectIds = $user->hasPermission('all_projects') ? null : $user->activeProjects()->pluck('projects.id')->all();
         $scope = fn ($query, string $column = 'project_id') => $projectIds === null ? $query : $query->whereIn($column, $projectIds);
 
         $events = collect()
@@ -39,13 +39,17 @@ class ActivityFeed
             ->merge(static::messages($scope, $limit))
             ->merge(static::notes($scope, $limit))
             ->merge(static::files($projectIds, $limit))
-            ->merge(static::time($scope, $limit));
+            ->merge(static::time($scope, $limit))
+            // Everyone on a project sees its approved proposals.
+            ->merge(static::proposalsAccepted($scope, $limit));
 
-        if ($projectIds === null) {
+        if ($user->hasPermission('proposals')) {
+            $events = $events->merge(static::proposalsSent($scope, $limit));
+        }
+        if ($user->hasPermission('invoices')) {
             $events = $events
-                ->merge(static::proposals($limit))
-                ->merge(static::invoices($limit))
-                ->merge(static::payments($limit));
+                ->merge(static::invoices($scope, $limit))
+                ->merge(static::payments($projectIds, $limit));
         }
 
         return $events->sortByDesc('at')->take($limit)->values()
@@ -146,26 +150,30 @@ class ActivityFeed
             ->values();
     }
 
-    private static function proposals(int $limit): Collection
+    private static function proposalsSent($scope, int $limit): Collection
     {
-        $base = fn () => Proposal::with(['project:id,name', 'company:id,name']);
-        $sent = $base()->whereNotNull('sent_at')->latest('sent_at')->limit($limit)->get()->toBase()
+        return $scope(Proposal::with(['project:id,name', 'company:id,name']))->whereNotNull('sent_at')->latest('sent_at')->limit($limit)->get()->toBase()
             ->map(fn (Proposal $p) => static::event('proposal_sent', $p->sent_at, null, 'Proposal sent to '.$p->company?->name, $p->title, $p->project, "/proposals/{$p->id}/edit", (float) $p->estimate_amount));
-        $accepted = $base()->whereNotNull('accepted_at')->latest('accepted_at')->limit($limit)->get()->toBase()
-            ->map(fn (Proposal $p) => static::event('proposal_accepted', $p->accepted_at, $p->company?->name, 'accepted', $p->title, $p->project, "/proposals/{$p->id}/edit", (float) $p->estimate_amount));
-
-        return $sent->merge($accepted);
     }
 
-    private static function invoices(int $limit): Collection
+    // Opens on the project's Proposals tab, which everyone on it can see.
+    private static function proposalsAccepted($scope, int $limit): Collection
     {
-        return Invoice::with(['project:id,name', 'company:id,name', 'items'])->whereNotNull('sent_at')->latest('sent_at')->limit($limit)->get()->toBase()
+        return $scope(Proposal::with(['project:id,name', 'company:id,name']))->whereNotNull('accepted_at')->latest('accepted_at')->limit($limit)->get()->toBase()
+            ->map(fn (Proposal $p) => static::event('proposal_accepted', $p->accepted_at, $p->company?->name, 'accepted', $p->title, $p->project, $p->project_id ? static::projectHref($p->project_id, 'Proposals') : "/proposals/{$p->id}/edit", (float) $p->estimate_amount));
+    }
+
+    private static function invoices($scope, int $limit): Collection
+    {
+        return $scope(Invoice::with(['project:id,name', 'company:id,name', 'items']))->whereNotNull('sent_at')
+            ->latest('sent_at')->limit($limit)->get()->toBase()
             ->map(fn (Invoice $i) => static::event('invoice_sent', $i->sent_at, null, 'Invoice sent to '.$i->company?->name, "#{$i->invoice_number}", $i->project, "/invoices/{$i->id}", $i->total()));
     }
 
-    private static function payments(int $limit): Collection
+    private static function payments(?array $projectIds, int $limit): Collection
     {
         return Payment::with(['invoice:id,invoice_number,company_id,project_id', 'invoice.company:id,name', 'invoice.project:id,name'])
+            ->when($projectIds !== null, fn ($q) => $q->whereHas('invoice', fn ($i) => $i->whereIn('project_id', $projectIds)))
             ->whereNotNull('paid_at')->latest('paid_at')->limit($limit)->get()->toBase()
             ->filter(fn (Payment $p) => $p->invoice)
             ->map(fn (Payment $p) => static::event('payment', $p->paid_at, $p->invoice->company?->name, 'paid', "#{$p->invoice->invoice_number}", $p->invoice->project, "/invoices/{$p->invoice->id}", (float) $p->amount));

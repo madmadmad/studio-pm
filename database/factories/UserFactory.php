@@ -30,8 +30,8 @@ class UserFactory extends Factory
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
-            // Manager by default -- most factory-made users in tests/seeds
-            'role' => User::ROLE_MANAGER,
+            // Super admin by default -- most factory-made users in tests/seeds
+            'role' => User::ROLE_SUPER_ADMIN,
         ];
     }
 

@@ -61,6 +61,6 @@ class DispatchScheduledInvoiceSends extends Command
     {
         $invoiceSend->update(['status' => InvoiceSend::STATUS_CANCELLED, 'failure_reason' => $reason]);
 
-        Notification::send(User::where('role', User::ROLE_MANAGER)->get(), new InvoiceSendAlert($invoice, 'skipped', $reason));
+        Notification::send(User::withPermission('invoices'), new InvoiceSendAlert($invoice, 'skipped', $reason));
     }
 }

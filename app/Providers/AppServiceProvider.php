@@ -13,6 +13,8 @@ use App\Policies\ProjectPolicy;
 use App\Policies\TaskPolicy;
 use App\Policies\TimeEntryPolicy;
 use App\Policies\UserPolicy;
+use App\Services\EmailTemplates;
+use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -58,6 +60,13 @@ class AppServiceProvider extends ServiceProvider
         Password::defaults(fn () => $this->app->isProduction()
             ? Password::min(12)->mixedCase()->numbers()->symbols()->uncompromised()
             : Password::min(8));
+
+        // The password-reset email, worded like the other notifications
+        // (Settings > Notification emails) instead of Laravel's stock text.
+        ResetPassword::toMailUsing(fn ($user, string $token) => EmailTemplates::mail('password_reset', [
+            'first_name' => EmailTemplates::firstName($user->name),
+            'expiry' => EmailTemplates::duration((int) config('auth.passwords.'.config('auth.defaults.passwords').'.expire')),
+        ], url(route('password.reset', ['token' => $token, 'email' => $user->getEmailForPasswordReset()], false))));
 
         Gate::policy(Message::class, MessagePolicy::class);
         Gate::policy(Project::class, ProjectPolicy::class);

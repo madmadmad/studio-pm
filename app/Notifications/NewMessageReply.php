@@ -5,6 +5,7 @@ namespace App\Notifications;
 use App\Models\Contact;
 use App\Models\Message;
 use App\Services\MagicLinkBroker;
+use App\Services\EmailTemplates;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
@@ -27,18 +28,24 @@ class NewMessageReply extends Notification
         $sender = $this->reply->sender();
         $snippet = $this->reply->loadMissing('attachments')->snippet();
 
-        return (new MailMessage)
-            ->subject("New reply on {$project->name}: {$thread->subject}")
-            ->greeting("{$sender?->name} replied on {$project->name}")
-            ->line($thread->subject)
-            ->line($snippet)
-            ->action('View and reply', $this->urlFor($notifiable, $project->id));
+        return EmailTemplates::mail('message_reply', [
+            'first_name' => EmailTemplates::firstName($notifiable->name ?? null),
+            'sender' => $sender?->name,
+            'project' => $project->name,
+            'subject' => $thread->subject,
+            'snippet' => $snippet,
+        ], $this->urlFor($notifiable, $project->id));
     }
 
     protected function urlFor(object $notifiable, int $projectId): string
     {
         if ($notifiable instanceof Contact) {
-            return app(MagicLinkBroker::class)->issueSignedUrl($notifiable, redirect: "/portal/projects/{$projectId}");
+            return app(MagicLinkBroker::class)->issueSignedUrl(
+                $notifiable,
+                redirect: "/portal/projects/{$projectId}",
+                minutes: MagicLinkBroker::MESSAGE_TTL_MINUTES,
+                replace: false,
+            );
         }
 
         return url("/projects/{$projectId}");

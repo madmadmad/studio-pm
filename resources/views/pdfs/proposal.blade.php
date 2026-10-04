@@ -25,7 +25,7 @@
     </style>
 </head>
 <body>
-    <img class="logo" src="{{ public_path('images/studio-lockup.png') }}" alt="{{ $studio->name }}">
+    <img class="logo" src="{{ $studio->logoPngFile() }}" alt="{{ $studio->name }}">
 
     <h1><span class="title-prefix">Proposal</span>{{ $proposal->title }}</h1>
 

@@ -8,17 +8,17 @@ class UserPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->isManager();
+        return $user->hasPermission('team');
     }
 
     public function create(User $user): bool
     {
-        return $user->isManager();
+        return $user->hasPermission('team');
     }
 
     public function update(User $user, User $target): bool
     {
-        return $user->isManager();
+        return $user->hasPermission('team');
     }
 
     /**
@@ -28,6 +28,6 @@ class UserPolicy
      */
     public function delete(User $user, User $target): bool
     {
-        return $user->isManager() && $user->id !== $target->id;
+        return $user->hasPermission('team') && $user->id !== $target->id;
     }
 }

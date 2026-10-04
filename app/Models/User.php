@@ -20,8 +20,10 @@ class User extends Authenticatable
     /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, Notifiable;
 
-    const ROLE_MANAGER = 'manager';
+    // Everything, including Settings and the team (config/permissions.php).
+    const ROLE_SUPER_ADMIN = 'super_admin';
 
+    // Assigned projects, plus whatever permissions they've been given.
     const ROLE_TEAM_MEMBER = 'team_member';
 
     // The raw invite_token is hidden from JSON entirely -- this exposes just
@@ -42,6 +44,7 @@ class User extends Authenticatable
             'invite_expires_at' => 'datetime',
             'deactivated_at' => 'datetime',
             'password' => 'hashed',
+            'permissions' => 'array',
         ];
     }
 
@@ -58,9 +61,41 @@ class User extends Authenticatable
         return $this->avatar_path ? route('avatars.user', $this) : null;
     }
 
-    public function isManager(): bool
+    public function isSuperAdmin(): bool
     {
-        return $this->role === self::ROLE_MANAGER;
+        return $this->role === self::ROLE_SUPER_ADMIN;
+    }
+
+    // May this person do it (config/permissions.php)? A super admin may do
+    // anything; a team member only what they've been granted -- and never
+    // the super-admin-only ones.
+    public function hasPermission(string $permission): bool
+    {
+        if ($this->isSuperAdmin()) {
+            return true;
+        }
+
+        return ! in_array($permission, config('permissions.super_admin_only'), true)
+            && in_array($permission, $this->permissions ?? [], true);
+    }
+
+    // Active staff who have a permission: super admins, and team members
+    // it's been granted to (who to alert about a failed invoice send, ...).
+    public static function withPermission(string $permission)
+    {
+        return static::whereNull('deactivated_at')
+            ->where(fn ($q) => $q->where('role', self::ROLE_SUPER_ADMIN)
+                ->when(! in_array($permission, config('permissions.super_admin_only'), true), fn ($q) => $q
+                    ->orWhereJsonContains('permissions', $permission)))
+            ->get();
+    }
+
+    // Every permission this person has, for the front end (auth.user).
+    public function effectivePermissions(): array
+    {
+        return collect([...array_keys(config('permissions.grantable')), ...config('permissions.super_admin_only')])
+            ->filter(fn (string $p) => $this->hasPermission($p))
+            ->values()->all();
     }
 
     public function isTeamMember(): bool

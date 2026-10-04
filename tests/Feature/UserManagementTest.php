@@ -28,7 +28,7 @@ class UserManagementTest extends TestCase
         $this->assertNotNull($user);
         $this->assertNotNull($user->invite_token);
         $this->assertTrue($user->has_pending_invite);
-        $this->assertFalse($user->isManager());
+        $this->assertFalse($user->isSuperAdmin());
         Notification::assertSentTo($user, StaffInvitation::class);
     }
 
@@ -51,7 +51,7 @@ class UserManagementTest extends TestCase
             ->patchJson("/api/users/{$manager->id}", ['role' => 'team_member'])
             ->assertUnprocessable();
 
-        $this->assertTrue($manager->fresh()->isManager());
+        $this->assertTrue($manager->fresh()->isSuperAdmin());
     }
 
     public function test_a_manager_cannot_deactivate_themselves(): void

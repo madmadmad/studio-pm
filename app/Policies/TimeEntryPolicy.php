@@ -10,12 +10,12 @@ class TimeEntryPolicy
 {
     public function view(User $user, TimeEntry $timeEntry): bool
     {
-        return $user->isManager() || $timeEntry->project->everHadUser($user);
+        return $user->hasPermission('all_projects') || $timeEntry->project->everHadUser($user);
     }
 
     public function create(User $user, ?Project $project = null): bool
     {
-        return $user->isManager() || ($project && $project->currentlyHasUser($user));
+        return $user->hasPermission('all_projects') || ($project && $project->currentlyHasUser($user));
     }
 
     /**
@@ -25,7 +25,7 @@ class TimeEntryPolicy
      */
     public function update(User $user, TimeEntry $timeEntry): bool
     {
-        return $user->isManager()
+        return $user->hasPermission('manage_projects')
             || ($timeEntry->user_id === $user->id && $timeEntry->project->currentlyHasUser($user));
     }
 

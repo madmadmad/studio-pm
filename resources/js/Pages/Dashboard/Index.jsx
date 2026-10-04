@@ -179,16 +179,17 @@ function TasksDue({ tasks, mine }) {
     );
 }
 
-// The Overview. Managers get the studio's money up top (invoice figures,
-// the income chart) and every project's activity; a team member gets their
-// own hours and assigned projects -- the server leaves the rest out.
-export default function DashboardIndex({ isManager, metrics, activity, projects, threads, tasks, hours, income }) {
+// The Overview, by permission (`can`, from the server, which leaves out
+// what isn't allowed): invoice figures up top with Invoices, the income
+// chart with Bookkeeping, everyone's hours and projects with All projects;
+// otherwise their own hours, tasks and assigned projects.
+export default function DashboardIndex({ can = {}, metrics, activity, projects, threads, tasks, hours, income }) {
     return (
         <AppLayout>
             <Head title="Overview" />
             <PageHeader title="Overview" />
 
-            {isManager ? (
+            {can.invoices ? (
                 <div className="metric-grid">
                     <MetricCard tone="neutral" label={`Outstanding (${metrics.outstanding.count})`} value={formatCurrency(metrics.outstanding.amount)} />
                     <MetricCard label="Paid this month" value={formatCurrency(metrics.paid_this_month)} />
@@ -207,7 +208,7 @@ export default function DashboardIndex({ isManager, metrics, activity, projects,
             <div className={`overview__charts${income ? ' overview__charts--pair' : ''}`}>
                 {income && <YearChart title={`Income, ${income.year} so far`} months={income.months} year={income.year} />}
                 <YearChart
-                    title={`${isManager ? 'Hours' : 'Your hours'}, ${hours.year} so far`}
+                    title={`${can.all_projects ? 'Hours' : 'Your hours'}, ${hours.year} so far`}
                     months={hours.months}
                     year={hours.year}
                     series={HOURS_SERIES}
@@ -219,7 +220,7 @@ export default function DashboardIndex({ isManager, metrics, activity, projects,
                 <div className="overview__side">
                     <RecentProjects projects={projects} />
                     <RecentMessages threads={threads} />
-                    <TasksDue tasks={tasks} mine={!isManager} />
+                    <TasksDue tasks={tasks} mine={!can.all_projects} />
                 </div>
             </div>
         </AppLayout>

@@ -43,6 +43,13 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $this->sharedUser($request),
             ],
+            // The studio's logo (Settings), for light and dark backgrounds --
+            // every page, signed in or not (sign-in screens, public links).
+            'branding' => fn () => [
+                'name' => StudioProfile::brandName(),
+                'logo' => StudioProfile::current()->logoUrl(),
+                'logo_dark' => StudioProfile::current()->logoDarkUrl(),
+            ],
             // What a new proposal starts from (config/proposals.php). Staff
             // only -- the portal never creates proposals.
             'proposalDefaults' => fn () => $request->user() instanceof Contact ? null : [
@@ -82,6 +89,8 @@ class HandleInertiaRequests extends Middleware
             ];
         }
 
-        return $user;
+        // Staff: with what they're allowed to do (config/permissions.php),
+        // for the sidebar, tabs and buttons -- the server enforces it too.
+        return $user ? [...$user->toArray(), 'permissions' => $user->effectivePermissions()] : null;
     }
 }

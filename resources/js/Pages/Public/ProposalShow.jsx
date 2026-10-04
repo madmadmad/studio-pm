@@ -1,49 +1,13 @@
-import { Head } from '@inertiajs/react';
+import { Head, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import { DownloadSimple } from '@phosphor-icons/react';
 import DocumentFrom from '../../Components/DocumentFrom';
 import { formatCurrency, formatDate } from '../../lib/format';
 import { api } from '../../lib/api';
-import { isBlankRichText, toPlainText, toRichText } from '../../lib/richText';
-import RichTextView from '../../Components/RichTextView';
-
-function FeeSummary({ proposal }) {
-    const total = proposal.items.reduce((s, item) => s + parseFloat(item.quantity) * parseFloat(item.rate), 0);
-
-    return (
-        <div className="document__items">
-            <div className="document__section-title">Estimate</div>
-
-            <div className="document__items-head">
-                <div>Items</div>
-                <div className="document__item-amount">Total</div>
-            </div>
-
-            {proposal.items.map((item) => (
-                <div key={item.id} className="document__item">
-                    <div>
-                        <div className="document__item-name">{item.description}</div>
-                        {!isBlankRichText(item.details) && toPlainText(item.details) !== item.description && (
-                            <div className="document__item-details document__item-details--rich">
-                                <RichTextView value={toRichText(item.details)} />
-                            </div>
-                        )}
-                    </div>
-                    <div className="document__item-amount document__amount">
-                        {formatCurrency(parseFloat(item.quantity) * parseFloat(item.rate))}
-                    </div>
-                </div>
-            ))}
-
-            <div className="document__total-row document__total-row--ruled">
-                <div className="document__total-label">Total</div>
-                <div className="document__total-value">{formatCurrency(total)}</div>
-            </div>
-        </div>
-    );
-}
+import ProposalFeeSummary from '../../Components/ProposalFeeSummary';
 
 export default function ProposalShow({ proposal, token, studio }) {
+    const { branding } = usePage().props;
     const [status, setStatus] = useState(proposal.status);
     const [accepting, setAccepting] = useState(false);
 
@@ -69,7 +33,7 @@ export default function ProposalShow({ proposal, token, studio }) {
                 >
                     <DownloadSimple />
                 </a>
-                <img src="/images/studio-lockup.svg" alt="Studio" className="document__logo" />
+                <img src={branding.logo} alt={branding.name} className="document__logo" />
 
                 <h1 className="document__title document__title--spaced">
                     <span className="document__title-prefix">Proposal</span>
@@ -99,7 +63,7 @@ export default function ProposalShow({ proposal, token, studio }) {
 
                 {proposal.disclaimer && <p className="document__disclaimer">{proposal.disclaimer}</p>}
 
-                {proposal.items.length > 0 && <FeeSummary proposal={proposal} />}
+                {proposal.items.length > 0 && <ProposalFeeSummary proposal={proposal} />}
 
                 {status === 'accepted' ? (
                     <div className="document__notice">

@@ -21,12 +21,13 @@ class ProjectPageController extends Controller
     {
         return Inertia::render('Projects/Index', [
             'projects' => static::boardProjects($request),
-            'companies' => $request->user()->isManager()
+            // For New project.
+            'companies' => $request->user()->hasPermission('manage_projects')
                 ? Company::with('contacts')->orderBy('name')->get(['id', 'name'])
                 : [],
-            // The money figures across the top -- managers only, like the
-            // rest of the billing.
-            'metrics' => $request->user()->isManager() ? $this->metrics() : null,
+            // The money figures across the top -- with the Invoices
+            // permission, like the rest of the billing.
+            'metrics' => $request->user()->hasPermission('invoices') ? $this->metrics() : null,
         ]);
     }
 
@@ -58,11 +59,12 @@ class ProjectPageController extends Controller
     public function archived(Request $request): Response
     {
         $this->authorize('viewAny', Project::class);
-        abort_unless($request->user()->isManager(), 403);
+        abort_unless($request->user()->hasPermission('all_projects'), 403);
 
         return Inertia::render('Projects/Index', [
-            'projects' => Project::where('status', 'archived')->with(['company', 'tasks'])->orderBy('name')->get(),
-            'companies' => Company::with('contacts')->orderBy('name')->get(['id', 'name']),
+            'projects' => Project::where('status', 'archived')->with(['company', 'tasks'])->orderBy('name')->get()
+                ->each(fn (Project $project) => $request->user()->hasPermission('invoices') ? null : $project->makeHidden('budget')),
+            'companies' => [],
             'archivedView' => true,
         ]);
     }
@@ -89,34 +91,49 @@ class ProjectPageController extends Controller
 
         UnreadMessages::mark($project->messages, $request->user());
 
-        // Firm financials on a project stay Manager-only, even for a Team
-        // Member who's otherwise allowed to see this project's page.
-        if ($request->user()->isManager()) {
+        // The project's money, each part by its permission. Everyone on the
+        // project sees its approved (accepted) proposals in full; drafts and
+        // the rest take the Proposals permission.
+        $user = $request->user();
+        $project->load(['proposals' => fn ($query) => $query
+            ->when(! $user->hasPermission('proposals'), fn ($q) => $q->where('status', 'accepted'))
+            ->with('items')]);
+        if ($user->hasPermission('invoices')) {
             $project->load([
                 'invoices.items',
-                'proposals.items',
                 'transactions' => fn ($query) => $query->orderByDesc('occurred_on'),
-                'expenses' => fn ($query) => $query->with('category')->orderByDesc('date'),
             ]);
+        } else {
+            $project->makeHidden('budget');
+        }
+        if ($user->hasPermission('expenses')) {
+            $project->load(['expenses' => fn ($query) => $query->with('category')->orderByDesc('date')]);
         }
 
         return Inertia::render('Projects/Show', [
             'project' => $project,
-            'canManageTeam' => $request->user()->isManager(),
+            'canManageTeam' => $request->user()->can('manage', $project),
+            // Which money tabs and actions to show (the server sends their
+            // data only to those with the permission, too).
+            'can' => [
+                'proposals' => $user->hasPermission('proposals'),
+                'invoices' => $user->hasPermission('invoices'),
+                'expenses' => $user->hasPermission('expenses'),
+            ],
             // The header's settings gear (name, status, contact, PO...).
-            'canEdit' => $request->user()->can('update', $project),
+            'canEdit' => $request->user()->can('manage', $project),
             // For the Hours remaining card: hours sold in accepted proposals.
             // Sent to everyone (proposals themselves are manager-only).
             'proposedHours' => $project->proposedHours(),
             // Every active staff account is assignable, regardless of role --
             // a manager can be put on a project's roster too (for messaging,
             // visibility, etc.), not just team members.
-            'assignableStaff' => $request->user()->isManager()
+            'assignableStaff' => $request->user()->can('manage', $project)
                 ? User::whereNull('deactivated_at')->orderBy('name')->get(['id', 'name'])
                 : [],
-            // Line-item presets for the proposal drawer (Manager-only, like
-            // the proposals themselves).
-            'services' => $request->user()->isManager() ? Service::orderBy('name')->get() : [],
+            // Line-item presets for the proposal drawer (with the Proposals
+            // permission, like writing them).
+            'services' => $request->user()->hasPermission('proposals') ? Service::orderBy('name')->get() : [],
             // For logging time: everyone picks a service; the rates above
             // stay manager-only, so this is just name and billable.
             'timeServices' => Service::orderBy('name')->get(['id', 'name', 'billable']),
@@ -126,7 +143,7 @@ class ProjectPageController extends Controller
     // The projects for a list or board (the Projects page; the profile's
     // starred board with `$starredOnly`): every one that isn't archived and
     // this person can see, with its client and tasks, whether they've
-    // starred it, its unread message threads for them and -- for managers
+    // starred it, its unread message threads for them and -- with Invoices
     // -- what it has billed so far, before tax (the board's budget bar).
     public static function boardProjects(Request $request, bool $starredOnly = false): Collection
     {
@@ -139,14 +156,17 @@ class ProjectPageController extends Controller
         if ($starredOnly) {
             $projects->whereHas('favoritedBy', fn ($q) => $q->where('users.id', $user->id));
         }
-        if ($user->isManager()) {
+        $seesMoney = $user->hasPermission('invoices');
+        if ($seesMoney) {
             $projects->withSum('invoiceItems as invoiced_amount', 'amount');
         }
 
         $unread = UnreadMessages::countsByProject($user);
 
+        // Budgets stay with those who see the billing.
         return $projects->orderBy('name')->get()
-            ->each(fn (Project $project) => $project->setAttribute('unread_messages', $unread[$project->id] ?? 0));
+            ->each(fn (Project $project) => $project->setAttribute('unread_messages', $unread[$project->id] ?? 0))
+            ->each(fn (Project $project) => $seesMoney ? null : $project->makeHidden('budget'));
     }
 
     // `is_favorite`: whether the viewer has starred each project.
@@ -157,7 +177,7 @@ class ProjectPageController extends Controller
 
     protected function scopeToRole(Request $request, $query): void
     {
-        if ($request->user()->isTeamMember()) {
+        if (! $request->user()->hasPermission('all_projects')) {
             $query->whereHas('users', fn ($q) => $q
                 ->where('users.id', $request->user()->id)
                 ->whereNull('project_user.unassigned_at'));

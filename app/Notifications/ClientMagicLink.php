@@ -2,6 +2,8 @@
 
 namespace App\Notifications;
 
+use App\Services\EmailTemplates;
+use App\Services\MagicLinkBroker;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
@@ -10,7 +12,13 @@ class ClientMagicLink extends Notification
 {
     use Queueable;
 
-    public function __construct(protected string $url, protected bool $firstInvite = false) {}
+    // `expiresInMinutes`: how long the link lasts -- a week for the
+    // studio's invitation, 20 minutes for a link the client asked for.
+    public function __construct(
+        protected string $url,
+        protected bool $firstInvite = false,
+        protected int $expiresInMinutes = MagicLinkBroker::TTL_MINUTES,
+    ) {}
 
     public function via(object $notifiable): array
     {
@@ -19,18 +27,10 @@ class ClientMagicLink extends Notification
 
     public function toMail(object $notifiable): MailMessage
     {
-        $message = (new MailMessage)->subject(
-            $this->firstInvite ? 'Welcome to your Studio PM client hub' : 'Your Studio PM sign-in link'
-        )->greeting('Hi '.$notifiable->name.',');
-
-        if ($this->firstInvite) {
-            $message->line("You've been invited to the client hub, where you can follow your project's tasks, proposals, and invoices.");
-        } else {
-            $message->line("Here's the sign-in link you requested.");
-        }
-
-        return $message
-            ->action('Sign in', $this->url)
-            ->line('This link expires in 20 minutes and can only be used once. If you didn\'t request this, you can ignore this email.');
+        // The studio's invitation, or a sign-in link the client asked for.
+        return EmailTemplates::mail($this->firstInvite ? 'client_invite' : 'client_sign_in', [
+            'first_name' => EmailTemplates::firstName($notifiable->name ?? null),
+            'expiry' => EmailTemplates::duration($this->expiresInMinutes),
+        ], $this->url);
     }
 }

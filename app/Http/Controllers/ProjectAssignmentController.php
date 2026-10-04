@@ -9,16 +9,16 @@ use Illuminate\Validation\Rule;
 
 class ProjectAssignmentController extends Controller
 {
-    // Manager-only: assigning staff to projects is a roster decision, not a
-    // thing a Team Member does for themselves -- deliberately not just
-    // ProjectPolicy::update, which a currently-assigned Team Member also passes.
+    // Manage projects only: assigning staff is a roster decision, not a thing
+    // someone does for themselves -- deliberately not just
+    // ProjectPolicy::update, which anyone on the project also passes.
     public function store(Request $request, Project $project)
     {
-        abort_unless($request->user()->isManager(), 403);
+        $this->authorize('manage', $project);
 
         $data = $request->validate([
-            // Any active staff account is assignable -- managers included,
-            // not just team members.
+            // Any active staff account is assignable -- super admins
+            // included, not just team members.
             'user_id' => ['required', Rule::exists('users', 'id')->whereNull('deactivated_at')],
         ]);
 
@@ -31,7 +31,7 @@ class ProjectAssignmentController extends Controller
 
     public function destroy(Request $request, Project $project, User $user)
     {
-        abort_unless($request->user()->isManager(), 403);
+        $this->authorize('manage', $project);
 
         $project->users()->updateExistingPivot($user->id, ['unassigned_at' => now()]);
 

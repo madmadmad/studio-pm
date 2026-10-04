@@ -19,7 +19,7 @@ export default function AcceptInvitation({ token, email, valid }) {
             <AuthLayout logo>
                 <div className="card auth-shell__card auth-shell__card--message">
                     <p className="auth-shell__text">
-                        This invite link is invalid or has expired. Ask a manager to resend your invite.
+                        This invite link is invalid or has expired. Ask the studio to resend your invite.
                     </p>
                 </div>
             </AuthLayout>
