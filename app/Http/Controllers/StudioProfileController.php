@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\StudioProfile;
 use App\Services\EmailTemplates;
+use App\Support\RichText;
 use Illuminate\Http\Request;
 
 class StudioProfileController extends Controller
@@ -19,6 +20,9 @@ class StudioProfileController extends Controller
             'payment_instructions' => ['nullable', 'string'],
             // New proposals start with it; blank for none.
             'proposal_disclaimer' => ['nullable', 'string'],
+            // The About section closing proposals (heading: the studio's name when blank).
+            'proposal_about_heading' => ['nullable', 'string', 'max:255'],
+            'proposal_about' => ['nullable', 'string', 'max:20000'],
             // The Send Proposal dialog starts with it; blank for the default.
             'proposal_email_message' => ['nullable', 'string'],
             // The Send Invoice dialog starts with it; blank for the default.
@@ -32,6 +36,10 @@ class StudioProfileController extends Controller
             'sales_tax_name' => ['nullable', 'string', 'max:255'],
             'sales_tax_rate' => ['nullable', 'numeric', 'min:0', 'max:100'],
         ]);
+
+        if (array_key_exists('proposal_about', $data)) {
+            $data['proposal_about'] = RichText::isBlank($data['proposal_about']) ? null : RichText::toSafeHtml($data['proposal_about']);
+        }
 
         if (array_key_exists('email_templates', $data)) {
             $data['email_templates'] = $this->changedTemplates($data['email_templates'] ?? []);

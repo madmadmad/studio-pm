@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Message;
 use App\Models\Project;
 use App\Policies\Portal\ProjectPolicy;
+use App\Services\MessageVersion;
 use App\Services\UnreadMessages;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -154,6 +155,8 @@ class PortalPageController extends Controller
 
         return Inertia::render('Portal/Projects/Show', [
             'project' => $project,
+            // Where the Messages tab's "anything new?" check starts from.
+            'messagesVersion' => MessageVersion::of($project->messages()->includingContact($request->user())),
             'canViewInvoices' => $request->user()->canViewInvoices(),
         ]);
     }

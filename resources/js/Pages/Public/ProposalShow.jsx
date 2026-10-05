@@ -4,7 +4,10 @@ import { DownloadSimple } from '@phosphor-icons/react';
 import DocumentFrom from '../../Components/DocumentFrom';
 import { formatCurrency, formatDate } from '../../lib/format';
 import { api } from '../../lib/api';
+import ProposalTeam from '../../Components/ProposalTeam';
+import ProposalAbout from '../../Components/ProposalAbout';
 import ProposalFeeSummary from '../../Components/ProposalFeeSummary';
+import DetailField from '../../Components/DocumentDetailField';
 
 export default function ProposalShow({ proposal, token, studio }) {
     const { branding } = usePage().props;
@@ -40,7 +43,7 @@ export default function ProposalShow({ proposal, token, studio }) {
                     {proposal.title}
                 </h1>
 
-                {/* Same header as the public invoice, minus its dates row. */}
+                {/* Same header as the public invoice. */}
                 <div className="document__details">
                     <div className="document__details-row">
                         <DocumentFrom studio={studio} />
@@ -49,6 +52,18 @@ export default function ProposalShow({ proposal, token, studio }) {
                             <div className="document__party-name">{proposal.company.name}</div>
                             {proposal.project && <div className="document__muted">{proposal.project.name}</div>}
                         </div>
+                    </div>
+                    {/* When it's from, and how long it's good for (until it's accepted). */}
+                    <div className="document__details-row document__details-row--fields">
+                        <DetailField label="Date">{formatDate(proposal.dates.date)}</DetailField>
+                        {status === 'accepted' ? (
+                            <DetailField label="Accepted">{formatDate(proposal.dates.accepted_on ?? new Date().toISOString())}</DetailField>
+                        ) : (
+                            <DetailField label="Valid until">
+                                {formatDate(proposal.dates.valid_until)}
+                                <span className="document__muted"> ({proposal.dates.valid_days} days)</span>
+                            </DetailField>
+                        )}
                     </div>
                 </div>
 
@@ -78,6 +93,9 @@ export default function ProposalShow({ proposal, token, studio }) {
                         {accepting ? 'Accepting…' : 'Accept Proposal'}
                     </button>
                 )}
+
+                <ProposalTeam team={proposal.team} />
+                <ProposalAbout about={proposal.about} />
             </div>
         </div>
     );

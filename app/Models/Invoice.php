@@ -125,6 +125,14 @@ class Invoice extends Model
     }
 
     // What it's for beyond project work (Hosting); null is project work.
+    // The client-facing title under "Invoice 1014", as a proposal has its
+    // own: the project's name, else its category (Hosting...), else the
+    // client's name.
+    public function documentTitle(): string
+    {
+        return $this->project?->name ?: ($this->category?->name ?: $this->company->name);
+    }
+
     public function category(): BelongsTo
     {
         return $this->belongsTo(InvoiceCategory::class, 'category_id');

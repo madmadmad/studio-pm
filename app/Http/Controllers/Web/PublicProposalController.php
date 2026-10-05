@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers\Web;
 
+use App\Http\Controllers\Concerns\ServesPrivateFile;
 use App\Http\Controllers\Controller;
 use App\Models\Proposal;
 use App\Models\StudioProfile;
+use App\Models\User;
 use App\Services\ProposalPdfRenderer;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -13,6 +15,8 @@ use Symfony\Component\HttpFoundation\Response as HttpResponse;
 
 class PublicProposalController extends Controller
 {
+    use ServesPrivateFile;
+
     public function show(string $token): Response
     {
         $proposal = Proposal::with(['company', 'project', 'items.service'])
@@ -20,7 +24,7 @@ class PublicProposalController extends Controller
             ->firstOrFail();
 
         return Inertia::render('Public/ProposalShow', [
-            'proposal' => $proposal,
+            'proposal' => $proposal->setAttribute('team', $proposal->teamSection($token))->setAttribute('about', $proposal->aboutSection())->setAttribute('dates', $proposal->documentDates()),
             'token' => $token,
             'studio' => StudioProfile::current(),
         ]);
@@ -36,5 +40,15 @@ class PublicProposalController extends Controller
         $name = Str::slug($proposal->title) ?: 'proposal';
 
         return ProposalPdfRenderer::render($proposal)->download("proposal-{$name}.pdf");
+    }
+
+    // The bio photo of someone in this proposal's team section -- it's
+    // private, so the client reaches it only through the proposal's link.
+    public function teamPhoto(string $token, User $user)
+    {
+        $proposal = Proposal::where('accept_token', $token)->firstOrFail();
+        abort_unless(in_array($user->id, $proposal->team_user_ids ?? [], true) && $user->bio_photo_path, 404);
+
+        return $this->respondWithPrivateFile(config('filesystems.private_disk'), $user->bio_photo_path);
     }
 }

@@ -9,7 +9,7 @@ class StudioProfile extends Model
 {
     protected $fillable = [
         'name', 'address', 'email', 'phone', 'website', 'payment_instructions',
-        'proposal_disclaimer', 'proposal_email_message', 'invoice_email_message', 'email_templates', 'sales_tax_name', 'sales_tax_rate',
+        'proposal_disclaimer', 'proposal_about_heading', 'proposal_about', 'proposal_email_message', 'invoice_email_message', 'email_templates', 'sales_tax_name', 'sales_tax_rate',
     ];
 
     protected $casts = [
@@ -25,6 +25,7 @@ class StudioProfile extends Model
     {
         return static::query()->firstOrCreate([], [
             'proposal_disclaimer' => config('proposals.default_disclaimer'),
+            'proposal_about' => config('proposals.default_about'),
             'proposal_email_message' => config('proposals.email_template'),
             'invoice_email_message' => config('invoicing.email_template'),
             'sales_tax_name' => config('invoicing.sales_tax.name'),

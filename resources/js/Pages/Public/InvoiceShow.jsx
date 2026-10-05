@@ -5,6 +5,7 @@ import DocumentFrom from '../../Components/DocumentFrom';
 import { formatCurrency, formatDate, invoiceSubtotal, invoiceTax, invoiceTotal, taxLabel } from '../../lib/format';
 import { paymentTermsLabel } from '../../lib/paymentTerms';
 import { api } from '../../lib/api';
+import DetailField from '../../Components/DocumentDetailField';
 
 // No card-fee row here on purpose -- that fee only exists between the
 // client and Stripe if they choose to pay by card, broken out on Stripe's
@@ -54,15 +55,6 @@ function InvoiceItems({ invoice }) {
 }
 
 // One labeled value in the invoice's details column.
-function DetailField({ label, children }) {
-    return (
-        <div>
-            <div className="section-label section-label--ruled">{label}</div>
-            <div className="document__details-value">{children}</div>
-        </div>
-    );
-}
-
 // Street, then "City, ST 12345" -- whichever parts the company has.
 function companyAddressLines(company) {
     const cityStateZip = [company.city, [company.state, company.postal_code].filter(Boolean).join(' ')]
@@ -103,9 +95,12 @@ export default function InvoiceShow({ invoice, studio }) {
                 </a>
                 <img src={branding.logo} alt={branding.name} className="document__logo" />
 
-                <h1 className="document__title document__title--spaced document__title--large">
-                    <span className="document__title-prefix document__title-prefix--inline">Invoice </span>
-                    {invoice.invoice_number}
+                {/* Laid out like a proposal's: "Invoice" on its own line, then
+                    what it's for (its project, else category or client); the
+                    number's with the dates below. */}
+                <h1 className="document__title document__title--spaced">
+                    <span className="document__title-prefix">Invoice</span>
+                    {invoice.document_title}
                 </h1>
 
                 {/* From | Bill to, then the invoice's own details two
@@ -123,7 +118,8 @@ export default function InvoiceShow({ invoice, studio }) {
                             {invoice.contact?.email && <div className="document__muted">{invoice.contact.email}</div>}
                         </div>
                     </div>
-                    <div className="document__details-row document__details-row--fields">
+                    <div className="document__details-row document__details-row--fields document__details-row--three">
+                        <DetailField label="Invoice number">{invoice.invoice_number}</DetailField>
                         <DetailField label="Issued on">{formatDate(invoice.issued_on)}</DetailField>
                         <DetailField label="Due date">
                             {formatDate(invoice.due_on)}
@@ -131,7 +127,6 @@ export default function InvoiceShow({ invoice, studio }) {
                                 <span className="document__muted"> ({paymentTermsLabel(invoice.payment_terms)})</span>
                             )}
                         </DetailField>
-                        {invoice.project && <DetailField label="Project">{invoice.project.name}</DetailField>}
                         {invoice.project?.po_number && <DetailField label="PO number">{invoice.project.po_number}</DetailField>}
                     </div>
                 </div>

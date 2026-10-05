@@ -6,6 +6,7 @@ use App\Models\Message;
 use App\Models\MessageReaction;
 use App\Models\Project;
 use App\Services\MessageThreadService;
+use App\Services\MessageVersion;
 use App\Services\UnreadMessages;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -21,6 +22,15 @@ class MessageController extends Controller
     // member can browse in and join a thread they weren't originally
     // tagged on. withTrashed() keeps a soft-deleted message in place as a
     // "Message deleted" placeholder rather than removing it from the thread.
+    // Whether anything's changed since the page loaded -- polled by the
+    // Messages tab (lib/useMessagePolling.js).
+    public function version(Project $project)
+    {
+        $this->authorize('view', $project);
+
+        return ['version' => MessageVersion::of($project->messages())];
+    }
+
     public function index(Project $project)
     {
         $this->authorize('view', $project);

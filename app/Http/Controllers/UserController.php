@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Notifications\StaffInvitation;
+use App\Support\AvatarProcessor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -42,7 +43,13 @@ class UserController extends Controller
             'name' => ['sometimes', 'string', 'max:255'],
             'role' => ['sometimes', 'in:super_admin,team_member'],
             ...$this->permissionRules(),
+            // Their position and bio, for proposals' team sections.
+            'job_title' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'bio' => ['sometimes', 'nullable', 'string', 'max:20000'],
         ]);
+        if (array_key_exists('bio', $data)) {
+            $data['bio'] = User::cleanBio($data['bio']);
+        }
 
         // Nobody changes their own access -- which also means the super
         // admin doing this always remains one, so there's always at least one.
@@ -101,6 +108,44 @@ class UserController extends Controller
         $user->notify(new StaffInvitation($rawToken));
 
         return $user->fresh();
+    }
+
+    // Someone's photo (their avatar), set from the Team page.
+    public function updateAvatar(Request $request, User $user)
+    {
+        $this->authorize('update', $user);
+        $request->validate(['avatar' => ['required', 'image', 'max:5120']]);
+
+        $old = $user->avatar_path;
+        $user->update(['avatar_path' => AvatarProcessor::store($request->file('avatar'))]);
+        AvatarProcessor::delete($old);
+
+        return $user->fresh();
+    }
+
+    public function destroyAvatar(User $user)
+    {
+        $this->authorize('update', $user);
+        AvatarProcessor::delete($user->avatar_path);
+        $user->update(['avatar_path' => null]);
+
+        return $user->fresh();
+    }
+
+    // Someone's bio photo (for proposals), set from the Team page.
+    public function updateBioPhoto(Request $request, User $user)
+    {
+        $this->authorize('update', $user);
+        $request->validate(['photo' => ['required', 'image', 'max:8192']]);
+
+        return $user->replaceBioPhoto($request->file('photo'));
+    }
+
+    public function destroyBioPhoto(User $user)
+    {
+        $this->authorize('update', $user);
+
+        return $user->replaceBioPhoto(null);
     }
 
     protected function createInvitedUser(array $data, User $invitedBy): User

@@ -43,6 +43,7 @@ Route::middleware('auth:sanctum')->name('api.')->group(function () {
     Route::apiResource('projects.notes', NoteController::class)->shallow()->only(['index', 'store', 'update', 'destroy']);
     Route::put('projects/{project}/schedule-items/order', [ScheduleItemController::class, 'reorder']);
     Route::apiResource('projects.schedule-items', ScheduleItemController::class)->shallow()->only(['index', 'store', 'update', 'destroy']);
+    Route::get('projects/{project}/messages/version', [MessageController::class, 'version']);
     Route::apiResource('projects.messages', MessageController::class)->shallow()->only(['index', 'store']);
     Route::patch('messages/{message}', [MessageController::class, 'update']);
     Route::delete('messages/{message}', [MessageController::class, 'destroy']);
@@ -56,6 +57,9 @@ Route::middleware('auth:sanctum')->name('api.')->group(function () {
     Route::post('profile/avatar', [ProfileController::class, 'updateAvatar']);
     Route::patch('profile/appearance', [AppearanceController::class, 'update']);
     Route::delete('profile/avatar', [ProfileController::class, 'destroyAvatar']);
+    Route::patch('profile/bio', [ProfileController::class, 'updateBio']);
+    Route::post('profile/bio-photo', [ProfileController::class, 'updateBioPhoto']);
+    Route::delete('profile/bio-photo', [ProfileController::class, 'destroyBioPhoto']);
 
     Route::get('notifications', [NotificationController::class, 'index']);
     Route::post('notifications/{notification}/read', [NotificationController::class, 'markRead']);
@@ -103,6 +107,8 @@ Route::middleware('auth:sanctum')->name('api.')->group(function () {
         Route::post('proposals/{proposal}/email-preview', [ProposalController::class, 'emailPreview']);
         Route::post('proposals/{proposal}/send', [ProposalController::class, 'send']);
         Route::post('proposals/{proposal}/unaccept', [ProposalController::class, 'unaccept']);
+        // Who can be put in a proposal's team section.
+        Route::get('proposal-team', [ProposalController::class, 'teamOptions']);
     });
 
     Route::middleware('permission:bookkeeping')->group(function () {
@@ -135,6 +141,10 @@ Route::middleware('auth:sanctum')->name('api.')->group(function () {
         Route::post('users/{user}/resend-invite', [UserController::class, 'resendInvite']);
         Route::post('users/{user}/reactivate', [UserController::class, 'reactivate']);
         Route::delete('users/{user}/permanent', [UserController::class, 'forceDestroy']);
+        Route::post('users/{user}/avatar', [UserController::class, 'updateAvatar']);
+        Route::delete('users/{user}/avatar', [UserController::class, 'destroyAvatar']);
+        Route::post('users/{user}/bio-photo', [UserController::class, 'updateBioPhoto']);
+        Route::delete('users/{user}/bio-photo', [UserController::class, 'destroyBioPhoto']);
     });
 });
 
@@ -144,6 +154,7 @@ Route::middleware(['auth:client', 'portal.preview'])->prefix('portal')->name('ap
     Route::post('projects/{project}/tasks', [PortalTaskController::class, 'store']);
     Route::patch('tasks/{task}', [PortalTaskController::class, 'update']);
 
+    Route::get('projects/{project}/messages/version', [PortalMessageController::class, 'version']);
     Route::get('projects/{project}/messages', [PortalMessageController::class, 'index']);
     Route::post('projects/{project}/messages', [PortalMessageController::class, 'store']);
     Route::patch('messages/{message}', [PortalMessageController::class, 'update']);

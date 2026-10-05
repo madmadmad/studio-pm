@@ -30,6 +30,7 @@ use Inertia\Inertia;
 // groups below since either guard should work here.
 Route::get('/avatars/users/{user}', [AvatarController::class, 'user'])->name('avatars.user');
 Route::get('/avatars/contacts/{contact}', [AvatarController::class, 'contact'])->name('avatars.contact');
+Route::get('/bio-photos/users/{user}', [AvatarController::class, 'userBioPhoto'])->name('bio-photos.user');
 
 // Login, logout, and password reset are all registered by Fortify (see
 // FortifyServiceProvider) -- it owns /login, /logout, /forgot-password, and
@@ -43,6 +44,8 @@ Route::middleware('guest')->group(function () {
 
 Route::get('/p/{token}', [PublicProposalController::class, 'show'])->name('proposals.public');
 Route::get('/p/{token}/pdf', [PublicProposalController::class, 'pdf'])->name('proposals.public.pdf');
+// A team section photo, only for someone in that proposal's team.
+Route::get('/p/{token}/team/{user}/photo', [PublicProposalController::class, 'teamPhoto'])->name('proposals.public.team-photo');
 Route::get('/i/{token}', [PublicInvoiceController::class, 'show'])->name('invoices.public');
 Route::get('/i/{token}/pdf', [PublicInvoiceController::class, 'pdf'])->name('invoices.public.pdf');
 

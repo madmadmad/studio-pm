@@ -3,12 +3,18 @@ function readCookie(name) {
     return match ? decodeURIComponent(match[1]) : null;
 }
 
+// What to say when the server gives no message of its own.
+function failureMessage(status) {
+    if (status === 413) return 'That file is too large to upload.';
+    return `Request failed (${status})`;
+}
+
 async function parseResponse(response) {
     const isJson = response.headers.get('content-type')?.includes('application/json');
     const data = isJson ? await response.json() : null;
 
     if (!response.ok) {
-        const error = new Error(data?.message || `Request failed (${response.status})`);
+        const error = new Error(data?.message || failureMessage(response.status));
         error.status = response.status;
         error.errors = data?.errors || null;
         throw error;
@@ -91,7 +97,7 @@ function requestFormWithProgress(url, formData, onProgress) {
                 return;
             }
 
-            const error = new Error(data?.message || `Request failed (${xhr.status})`);
+            const error = new Error(data?.message || failureMessage(xhr.status));
             error.status = xhr.status;
             error.errors = data?.errors || null;
             reject(error);

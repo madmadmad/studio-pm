@@ -19,7 +19,7 @@ class PublicInvoiceController extends Controller
             ->firstOrFail();
 
         return Inertia::render('Public/InvoiceShow', [
-            'invoice' => $invoice,
+            'invoice' => $invoice->setAttribute('document_title', $invoice->documentTitle()),
             'studio' => StudioProfile::current(),
         ]);
     }

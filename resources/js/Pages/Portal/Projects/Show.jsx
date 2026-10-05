@@ -21,6 +21,7 @@ import PageHeader from '../../../Components/PageHeader';
 import TabBar from '../../../Components/TabBar';
 import { useRememberedTab } from '../../../lib/useRememberedTab';
 import { useUnreadThreads } from '../../../lib/unreadThreads';
+import { useMessagePolling } from '../../../lib/useMessagePolling';
 
 const TABS = ['Schedule', 'Tasks', 'Messages', 'Proposals', 'Invoices', 'Team'];
 
@@ -315,11 +316,17 @@ function MessageThreadRow({ thread, unread, onOpen }) {
 // Threads list, with a thread and a new message each opening in a drawer
 // -- the staff project page's Messages tab, as the client.
 function MessagesTab({ project, unread }) {
+    // New threads and replies come in while the tab's open.
+    useMessagePolling(`/api/portal/projects/${project.id}/messages/version`, usePage().props.messagesVersion);
     const currentContact = usePage().props.auth?.user;
     const [composing, setComposing] = useState(false);
     const [openThreadId, setOpenThreadId] = useState(null);
     const threads = project.messages || [];
     const openThread = threads.find((t) => t.id === openThreadId) || null;
+    // The thread open on screen stays read as new replies come in.
+    useEffect(() => {
+        if (openThread) unread.markRead(openThread);
+    }, [openThread]); // eslint-disable-line react-hooks/exhaustive-deps
 
     return (
         <div>

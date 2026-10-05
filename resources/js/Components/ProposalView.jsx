@@ -1,5 +1,7 @@
 import Drawer, { DrawerByline, DrawerDate } from './Drawer';
 import { ProposalStatusBadge } from './StatusBadges';
+import ProposalTeam from './ProposalTeam';
+import ProposalAbout from './ProposalAbout';
 import ProposalFeeSummary from './ProposalFeeSummary';
 import { formatCurrency } from '../lib/format';
 
@@ -22,6 +24,8 @@ export default function ProposalView({ proposal, onClose }) {
                 <div className="prose document__body" dangerouslySetInnerHTML={{ __html: proposal.body }} />
                 {proposal.disclaimer && <p className="document__disclaimer">{proposal.disclaimer}</p>}
                 {proposal.items.length > 0 && <ProposalFeeSummary proposal={proposal} />}
+                <ProposalTeam team={proposal.team} />
+                <ProposalAbout about={proposal.about} />
             </div>
         </Drawer>
     );

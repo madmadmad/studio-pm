@@ -22,7 +22,7 @@ body { font-family: 'Inter', sans-serif; font-size: 11px; color: #23262e; }
      in _document.scss), scaled by this sheet's 11px body vs the page's
      14px (~0.79). --}}
 h1 { font-family: 'Inter Display', sans-serif; font-weight: 800; letter-spacing: -0.02em; font-size: 23px; line-height: 25px; margin: 0 0 6px; }
-.title-prefix { display: block; font-family: 'Inter', sans-serif; font-weight: 400; letter-spacing: 0; font-size: 31px; line-height: 35px; color: #595F64; }
+.title-prefix { display: block; font-family: 'Inter', sans-serif; font-weight: 400; letter-spacing: 0; font-size: 31px; line-height: 35px; color: #595F64; margin-bottom: 15px; }
 table.items { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
 {{-- Subhead: every small grey caption (From, Bill to, Issued on...) and
      table column header (Description, Amount). Mirrors the `subhead` mixin

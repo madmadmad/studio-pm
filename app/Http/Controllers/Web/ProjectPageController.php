@@ -7,6 +7,7 @@ use App\Models\Company;
 use App\Models\Message;
 use App\Models\Project;
 use App\Models\Proposal;
+use App\Services\MessageVersion;
 use App\Services\UnreadMessages;
 use App\Models\Service;
 use App\Models\User;
@@ -98,6 +99,7 @@ class ProjectPageController extends Controller
         $project->load(['proposals' => fn ($query) => $query
             ->when(! $user->hasPermission('proposals'), fn ($q) => $q->where('status', 'accepted'))
             ->with('items')]);
+        $project->proposals->each(fn ($proposal) => $proposal->setAttribute('team', $proposal->teamSection())->setAttribute('about', $proposal->aboutSection()));
         if ($user->hasPermission('invoices')) {
             $project->load([
                 'invoices.items',
@@ -112,6 +114,8 @@ class ProjectPageController extends Controller
 
         return Inertia::render('Projects/Show', [
             'project' => $project,
+            // Where the Messages tab's "anything new?" check starts from.
+            'messagesVersion' => MessageVersion::of($project->messages()),
             'canManageTeam' => $request->user()->can('manage', $project),
             // Which money tabs and actions to show (the server sends their
             // data only to those with the permission, too).

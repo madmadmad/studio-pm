@@ -13,8 +13,8 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
-#[Fillable(['name', 'email', 'password', 'role', 'avatar_path'])]
-#[Hidden(['password', 'remember_token', 'invite_token', 'avatar_path'])]
+#[Fillable(['name', 'job_title', 'bio', 'bio_photo_path', 'email', 'password', 'role', 'avatar_path'])]
+#[Hidden(['password', 'remember_token', 'invite_token', 'avatar_path', 'bio_photo_path'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
@@ -29,7 +29,7 @@ class User extends Authenticatable
     // The raw invite_token is hidden from JSON entirely -- this exposes just
     // enough for the Team admin UI to show an "invite pending" state and
     // offer a resend, without ever leaking the token value itself.
-    protected $appends = ['has_pending_invite', 'avatar_url'];
+    protected $appends = ['has_pending_invite', 'avatar_url', 'bio_photo_url'];
 
     /**
      * Get the attributes that should be cast.
@@ -56,9 +56,35 @@ class User extends Authenticatable
     // Never a raw disk URL -- avatars live on the private disk like message
     // attachments do, so this always routes through an authenticated
     // controller action instead.
+    // The headshot for proposals' team sections -- separate from the
+    // avatar, private like it.
+    protected function getBioPhotoUrlAttribute(): ?string
+    {
+        return $this->bio_photo_path ? route('bio-photos.user', $this) : null;
+    }
+
     protected function getAvatarUrlAttribute(): ?string
     {
         return $this->avatar_path ? route('avatars.user', $this) : null;
+    }
+
+    // A new bio photo in place of the old one (null to remove it).
+    public function replaceBioPhoto(?\Illuminate\Http\UploadedFile $file): self
+    {
+        $old = $this->bio_photo_path;
+        $this->update(['bio_photo_path' => $file
+            ? \App\Support\AvatarProcessor::store($file, \App\Support\AvatarProcessor::BIO_PHOTO_WIDTH, 'bio-photos', \App\Support\AvatarProcessor::BIO_PHOTO_HEIGHT)
+            : null]);
+        \App\Support\AvatarProcessor::delete($old);
+
+        return $this->fresh();
+    }
+
+    // A bio as saved: the editor's HTML cut down to its own safe tags, or
+    // nothing when it's blank.
+    public static function cleanBio(?string $bio): ?string
+    {
+        return \App\Support\RichText::isBlank($bio) ? null : \App\Support\RichText::toSafeHtml($bio);
     }
 
     public function isSuperAdmin(): bool

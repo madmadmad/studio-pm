@@ -6,6 +6,7 @@ import Button from '../../../Components/Button';
 import { api } from '../../../lib/api';
 import PageHeader from '../../../Components/PageHeader';
 import AppearanceSetting from '../../../Components/AppearanceSetting';
+import { shrinkImage } from '../../../lib/shrinkImage';
 
 export default function PortalProfileIndex({ profileContact }) {
     const [contact, setContact] = useState(profileContact);
@@ -22,7 +23,7 @@ export default function PortalProfileIndex({ profileContact }) {
         setError('');
         try {
             const form = new FormData();
-            form.append('avatar', file);
+            form.append('avatar', await shrinkImage(file));
             const updated = await api.postForm('/api/portal/profile/avatar', form);
             setContact(updated);
             router.reload({ only: ['auth'] });

@@ -26,6 +26,16 @@ class AvatarController extends Controller
         return $this->respondWithPrivateFile(config('filesystems.private_disk'), $user->avatar_path);
     }
 
+    // A staff member's bio photo, for staff (the client reaches it only
+    // through a proposal's link -- PublicProposalController::teamPhoto).
+    public function userBioPhoto(Request $request, User $user)
+    {
+        abort_unless($request->user('web'), 403);
+        abort_unless($user->bio_photo_path, 404);
+
+        return $this->respondWithPrivateFile(config('filesystems.private_disk'), $user->bio_photo_path);
+    }
+
     public function contact(Request $request, Contact $contact)
     {
         abort_unless($request->user('web') || $request->user('client'), 403);

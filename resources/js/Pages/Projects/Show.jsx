@@ -37,6 +37,7 @@ import ActionMenu from '../../Components/ActionMenu';
 import { PROJECT_STATUS_OPTIONS } from '../../Components/ProjectsTable';
 import ProposalView from '../../Components/ProposalView';
 import { hasPermission } from '../../lib/permissions';
+import { useMessagePolling } from '../../lib/useMessagePolling';
 
 // The team isn't a tab: it opens in a drawer from the header (TeamDrawer).
 const ALL_TABS = ['Schedule', 'Tasks', 'Notes', 'Messages', 'Time', 'Proposals', 'Billing', 'Expenses'];
@@ -1134,11 +1135,17 @@ function MessageThreadRow({ thread, currentUserId, unread, onOpen }) {
 // all-in-one MessagesPanel.
 function MessagesTab({ project, unread }) {
     const { props } = usePage();
+    // New threads and replies come in while the tab's open.
+    useMessagePolling(`/api/projects/${project.id}/messages/version`, props.messagesVersion);
     const currentUser = props.auth?.user;
     const [composing, setComposing] = useState(false);
     const [openThreadId, setOpenThreadId] = useState(null);
     const threads = project.messages || [];
     const openThread = threads.find((t) => t.id === openThreadId) || null;
+    // The thread open on screen stays read as new replies come in.
+    useEffect(() => {
+        if (openThread) unread.markRead(openThread);
+    }, [openThread]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const recipientOptions = [
         ...(project.active_users || [])

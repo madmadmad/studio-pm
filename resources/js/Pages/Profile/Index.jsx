@@ -12,6 +12,8 @@ import EmptyState from '../../Components/EmptyState';
 import { useFavorites } from '../../Components/StarButton';
 import AppearanceSetting from '../../Components/AppearanceSetting';
 import { useRememberedTab } from '../../lib/useRememberedTab';
+import BioForm from '../../Components/BioForm';
+import { shrinkImage } from '../../lib/shrinkImage';
 
 const TABS = ['Timesheet', 'Projects', 'Account'];
 
@@ -161,7 +163,7 @@ export default function ProfileIndex({ profileUser, passwordHint, timesheet, tim
         setError('');
         try {
             const form = new FormData();
-            form.append('avatar', file);
+            form.append('avatar', await shrinkImage(file));
             const updated = await api.postForm('/api/profile/avatar', form);
             setUser(updated);
             router.reload({ only: ['auth'] }); // the sidebar's avatar is a separate shared prop
@@ -213,7 +215,7 @@ export default function ProfileIndex({ profileUser, passwordHint, timesheet, tim
                 <div className="profile-page">
                     <div className="form-panel profile-card">
                         <div className="section-label section-label--ruled">Photo</div>
-                        <p className="form-hint">Your photo shows up next to your messages and throughout the app.</p>
+                        <p className="form-hint">Your photo shows up next to your messages and throughout the app. (Proposals use the bio photo below.)</p>
                         <div className="profile-card__identity">
                             <Avatar name={user.name} avatarUrl={user.avatar_url} id={user.id} size={72} />
                             <div>
@@ -242,6 +244,7 @@ export default function ProfileIndex({ profileUser, passwordHint, timesheet, tim
                             router.reload({ only: ['auth'] }); // the sidebar shows the name and email too
                         }}
                     />
+                    <BioForm user={user} endpoint="/api/profile/bio" photoEndpoint="/api/profile/bio-photo" onSaved={(updated) => setUser((current) => ({ ...current, job_title: updated.job_title, bio: updated.bio, bio_photo_url: updated.bio_photo_url }))} />
                     <PasswordPanel hint={passwordHint} />
                     <AppearanceSetting current={user.theme} endpoint="/api/profile/appearance" />
                 </div>

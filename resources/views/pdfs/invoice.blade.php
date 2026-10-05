@@ -5,10 +5,10 @@
     <title>Invoice {{ $invoice->invoice_number }}</title>
     <style>
         @include('pdfs.partials.styles')
-        {{-- Invoices keep the title on one line, "Invoice 1004", both at
-             .document__title--large's size (2rem, scaled). --}}
-        h1 { margin-bottom: 16px; font-size: 25px; line-height: 27px; }
-        .title-prefix { display: inline; font-size: inherit; line-height: inherit; }
+        {{-- Laid out like the proposal: "Invoice" on its own line, then what it's for;
+             the number's with the dates, three across. --}}
+        table.fields td { width: 33.33%; }
+        h1 { margin-bottom: 16px; }
         table.fields { margin-bottom: 24px; }
         table.fields td { padding-bottom: 12px; }
     </style>
@@ -16,7 +16,7 @@
 <body>
     <img class="logo" src="{{ $studio->logoPngFile() }}" alt="{{ $studio->name }}">
 
-    <h1><span class="title-prefix">Invoice </span>{{ $invoice->invoice_number }}</h1>
+    <h1><span class="title-prefix">Invoice</span>{{ $invoice->documentTitle() }}</h1>
 
     @php
         $company = $invoice->company;
@@ -24,9 +24,9 @@
         $terms = $invoice->paymentTermsLabel();
         // Label => [value, muted suffix], laid out two per row below.
         $fields = collect([
+            'Invoice number' => [$invoice->invoice_number, null],
             'Issued on' => [$invoice->formattedIssuedOn(), null],
             'Due date' => [$invoice->formattedDueOn(), $terms ? "({$terms})" : null],
-            'Project' => [$invoice->project?->name, null],
             'PO number' => [$invoice->project?->po_number, null],
         ])->filter(fn ($field) => filled($field[0]));
     @endphp
@@ -51,10 +51,10 @@
     </table>
 
     <table class="details fields">
-        @foreach ($fields->chunk(2) as $row)
+        @foreach ($fields->chunk(3) as $row)
             <tr>
                 @foreach ($row as $label => [$value, $suffix])
-                    <td @class(['left' => $loop->first])>
+                    <td @class(['left' => ! $loop->last])>
                         <div class="label">{{ $label }}</div>
                         <div class="value">
                             {{ $value }}
@@ -62,7 +62,7 @@
                         </div>
                     </td>
                 @endforeach
-                @if ($row->count() === 1)<td></td>@endif
+                @for ($i = $row->count(); $i < 3; $i++)<td></td>@endfor
             </tr>
         @endforeach
     </table>

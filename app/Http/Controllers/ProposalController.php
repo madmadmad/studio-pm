@@ -8,7 +8,9 @@ use App\Models\Contact;
 use App\Models\Project;
 use App\Models\Proposal;
 use App\Models\StudioProfile;
+use App\Models\User;
 use App\Notifications\ProposalAccepted;
+use App\Support\RichText;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
@@ -52,6 +54,7 @@ class ProposalController extends Controller
             'project_id' => ['required_without:new_project_name', 'nullable', Rule::exists('projects', 'id')->where('company_id', $company->id)],
             'new_project_name' => ['required_without:project_id', 'nullable', 'string', 'max:255'],
             ...$this->itemRules(),
+            ...$this->teamRules(),
         ]);
 
         $proposal = DB::transaction(function () use ($data, $company) {
@@ -71,6 +74,7 @@ class ProposalController extends Controller
                 'body' => $data['body'],
                 // A new proposal starts from the default unless one's sent.
                 'disclaimer' => array_key_exists('disclaimer', $data) ? $data['disclaimer'] : StudioProfile::current()->proposal_disclaimer,
+                ...$this->teamFields($data),
                 'status' => 'draft',
             ]);
 
@@ -95,6 +99,7 @@ class ProposalController extends Controller
             'disclaimer' => ['nullable', 'string'],
             'contact_id' => ['nullable', Rule::exists('contacts', 'id')->where('company_id', $proposal->company_id)],
             ...$this->itemRules(),
+            ...$this->teamRules(),
         ]);
 
         // An accepted proposal's services -- and so its estimate -- are
@@ -110,6 +115,7 @@ class ProposalController extends Controller
                 'title' => $data['title'],
                 'body' => $data['body'],
                 ...(array_key_exists('disclaimer', $data) ? ['disclaimer' => $data['disclaimer']] : []),
+                ...$this->teamFields($data),
             ]);
 
             if ($servicesLocked) {
@@ -300,5 +306,42 @@ class ProposalController extends Controller
         }
 
         return $proposal;
+    }
+
+    // The team section: staff, in the order picked, under an optional heading.
+    private function teamRules(): array
+    {
+        return [
+            'team_user_ids' => ['sometimes', 'nullable', 'array'],
+            'team_user_ids.*' => ['integer', 'distinct', Rule::exists('users', 'id')],
+            'team_heading' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'show_about' => ['sometimes', 'boolean'],
+        ];
+    }
+
+    private function teamFields(array $data): array
+    {
+        return collect(['team_user_ids', 'team_heading', 'show_about'])
+            ->filter(fn ($key) => array_key_exists($key, $data))
+            ->mapWithKeys(fn ($key) => [$key => match ($key) {
+                'team_user_ids' => array_map('intval', array_values($data[$key] ?? [])) ?: null,
+                'show_about' => (bool) $data[$key],
+                default => $data[$key] ?: null,
+            }])
+            ->all();
+    }
+
+    // Who can go in a proposal's team section: active staff, with their
+    // position, bio photo, and whether they've a bio yet.
+    public function teamOptions()
+    {
+        return User::whereNull('deactivated_at')->orderBy('name')->get()
+            ->map(fn (User $user) => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'job_title' => $user->job_title,
+                'has_bio' => ! RichText::isBlank($user->bio),
+                'photo_url' => $user->bio_photo_url,
+            ]);
     }
 }

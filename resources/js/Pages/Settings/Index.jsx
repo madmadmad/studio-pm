@@ -7,6 +7,8 @@ import { api } from '../../lib/api';
 import PageHeader from '../../Components/PageHeader';
 import AutoResizeTextarea from '../../Components/AutoResizeTextarea';
 import BankFeeds from '../../Components/BankFeeds';
+import RichTextEditor from '../../Components/RichTextEditor';
+import { toRichText } from '../../lib/richText';
 import TabBar from '../../Components/TabBar';
 import { useRememberedTab } from '../../lib/useRememberedTab';
 
@@ -230,6 +232,8 @@ export default function SettingsIndex({ studioProfile, logos, emailTemplates = {
         website: studioProfile.website ?? '',
         payment_instructions: studioProfile.payment_instructions ?? '',
         proposal_disclaimer: studioProfile.proposal_disclaimer ?? '',
+        proposal_about_heading: studioProfile.proposal_about_heading ?? '',
+        proposal_about: toRichText(studioProfile.proposal_about ?? ''),
         proposal_email_message: studioProfile.proposal_email_message ?? '',
         invoice_email_message: studioProfile.invoice_email_message ?? '',
         email_templates: initialTemplates(emailTemplates, studioProfile.email_templates),
@@ -336,6 +340,19 @@ export default function SettingsIndex({ studioProfile, logos, emailTemplates = {
                             rows={3}
                             className="input"
                         />
+                        </SettingsCard>
+                        <SettingsCard id="about" title="About section" onSubmit={submit} saving={saving} saved={saved}>
+                            <p className="form-hint">
+                                Closes every proposal, after the team &mdash; unless a proposal switches it off. The heading is your studio&rsquo;s name unless you give it another.
+                            </p>
+                            <input
+                                placeholder={studioProfile.name || 'Heading'}
+                                value={form.proposal_about_heading}
+                                onChange={(e) => setForm({ ...form, proposal_about_heading: e.target.value })}
+                                aria-label="About heading"
+                                className="input"
+                            />
+                            <RichTextEditor value={form.proposal_about} onChange={(proposal_about) => setForm({ ...form, proposal_about })} />
                         </SettingsCard>
                     </div>
                 </div>

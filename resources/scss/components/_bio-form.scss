@@ -1,0 +1,46 @@
+// Someone's bio (Components/BioForm.jsx, on the profile and the Team page):
+// the bio photo beside its upload and remove buttons; and the bio photo's
+// portrait frame (Components/BioPhoto.jsx), on proposals and in the editor.
+
+.bio-form {
+    &__photo {
+        display: flex;
+        align-items: center;
+        gap: var(--space-3);
+    }
+}
+
+.bio-photo {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    aspect-ratio: 4 / 5;
+    overflow: hidden;
+    background-color: var(--color-surface-muted);
+    border-radius: var(--radius-base);
+
+    img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    &--lg {
+        width: 180px; // one-off: the team section's portrait
+    }
+
+    &--sm {
+        width: 4rem; // one-off: the editor's preview
+    }
+
+    &__initials {
+        font-family: var(--font-family-display);
+        font-weight: var(--font-weight-semibold);
+        color: var(--color-text-muted);
+
+        .bio-photo--lg & {
+            font-size: var(--font-size-2xl);
+        }
+    }
+}

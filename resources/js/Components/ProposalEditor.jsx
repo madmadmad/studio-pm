@@ -1,8 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { usePage } from '@inertiajs/react';
 import AutoResizeTextarea from './AutoResizeTextarea';
 import CurrencyInput from './CurrencyInput';
-import { Check, Copy, DotsSixVertical, Eye } from '@phosphor-icons/react';
+import { ArrowDown, ArrowUp, Check, Copy, DotsSixVertical, Eye, X } from '@phosphor-icons/react';
+import Avatar from './Avatar';
+import Toggle from './Toggle';
 import Button from './Button';
 import RichTextEditor from './RichTextEditor';
 import RichTextView from './RichTextView';
@@ -33,6 +35,9 @@ function emptyForm(proposal, presetCompanyId, presetProjectId, companies = [], d
             title: '',
             body: '',
             disclaimer: defaultDisclaimer,
+            team_user_ids: [],
+            team_heading: '',
+            show_about: true,
             items: [],
         };
     }
@@ -44,6 +49,9 @@ function emptyForm(proposal, presetCompanyId, presetProjectId, companies = [], d
         title: proposal.title,
         body: proposal.body,
         disclaimer: proposal.disclaimer ?? '',
+        team_user_ids: proposal.team_user_ids ?? [],
+        team_heading: proposal.team_heading ?? '',
+        show_about: proposal.show_about ?? true,
         items: proposal.items.map((item) => ({
             service_id: item.service_id ? String(item.service_id) : '',
             description: item.description,
@@ -68,6 +76,80 @@ function lineAmount(item) {
 // successful save; `onCancel` backs out.
 // `onSaved` runs after a save or a send (the caller closes and refreshes);
 // `onChange` after an unaccept, which leaves the editor open.
+// The proposal's team section: pick staff to show with their photo,
+// position and bio (kept on each person's record -- Team page, or their
+// profile), in the order they'll appear, under an optional heading.
+function TeamPanel({ ids, heading, onChange }) {
+    const [options, setOptions] = useState([]);
+
+    useEffect(() => {
+        api.get('/api/proposal-team').then(setOptions).catch(() => setOptions([]));
+    }, []);
+
+    const byId = Object.fromEntries(options.map((o) => [o.id, o]));
+    const chosen = ids.map((id) => byId[id]).filter(Boolean);
+    const available = options.filter((o) => !ids.includes(o.id));
+
+    function move(index, by) {
+        const next = [...ids];
+        [next[index], next[index + by]] = [next[index + by], next[index]];
+        onChange({ team_user_ids: next });
+    }
+
+    return (
+        <div className="form-panel">
+            <div className="section-label section-label--ruled">Team</div>
+            {chosen.length > 0 && (
+                <>
+                    <input
+                        placeholder="Your team"
+                        value={heading}
+                        onChange={(e) => onChange({ team_heading: e.target.value })}
+                        aria-label="Team section heading"
+                        className="input proposal-form__field"
+                    />
+                    <div className="proposal-team">
+                        {chosen.map((person, index) => (
+                            <div key={person.id} className="proposal-team__person">
+                                <Avatar name={person.name} avatarUrl={person.photo_url} id={person.id} size={32} />
+                                <div className="proposal-team__who">
+                                    <div className="proposal-team__name">{person.name}</div>
+                                    <div className="proposal-team__note">
+                                        {[person.job_title || 'No position yet', !person.photo_url && 'no bio photo yet', !person.has_bio && 'no bio yet'].filter(Boolean).join(' · ')}
+                                    </div>
+                                </div>
+                                <button type="button" onClick={() => move(index, -1)} disabled={index === 0} title="Move up" aria-label={`Move ${person.name} up`} className="icon-btn">
+                                    <ArrowUp />
+                                </button>
+                                <button type="button" onClick={() => move(index, 1)} disabled={index === chosen.length - 1} title="Move down" aria-label={`Move ${person.name} down`} className="icon-btn">
+                                    <ArrowDown />
+                                </button>
+                                <button type="button" onClick={() => onChange({ team_user_ids: ids.filter((id) => id !== person.id) })} title="Remove" aria-label={`Remove ${person.name}`} className="icon-btn icon-btn--danger">
+                                    <X />
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                </>
+            )}
+            {available.length > 0 && (
+                <select
+                    value=""
+                    onChange={(e) => e.target.value && onChange({ team_user_ids: [...ids, Number(e.target.value)] })}
+                    aria-label="Add someone to the team section"
+                    className="input"
+                >
+                    <option value="">{chosen.length ? 'Add someone else…' : 'Add team members…'}</option>
+                    {available.map((o) => <option key={o.id} value={o.id}>{o.name}{o.job_title ? ` — ${o.job_title}` : ''}</option>)}
+                </select>
+            )}
+            <p className="form-hint form-hint--attached">
+                Shown to the client after the disclaimer, before the estimate: each person&rsquo;s bio photo, position and bio from their Team record. Leave it empty for no team section.
+            </p>
+        </div>
+    );
+}
+
 export default function ProposalEditor({ proposal, companies, services, presetCompanyId, presetProjectId, onSaved, onCancel, onChange = onSaved }) {
     const isEditing = !!proposal;
     // New proposals start with the studio's default disclaimer (shared by
@@ -192,6 +274,9 @@ export default function ProposalEditor({ proposal, companies, services, presetCo
                 body: form.body,
                 // Blank means none.
                 disclaimer: form.disclaimer.trim() || null,
+                team_user_ids: form.team_user_ids,
+                team_heading: form.team_heading.trim() || null,
+                show_about: form.show_about,
                 contact_id: form.contact_id || null,
                 // The estimate is the services' total, worked out on save.
                 // Left out when locked, so the server keeps them as they are.
@@ -348,6 +433,19 @@ export default function ProposalEditor({ proposal, companies, services, presetCo
                     className="input"
                 />
                 <p className="form-hint form-hint--attached">Shown to the client below the scope of work, above the services. Leave it blank for none.</p>
+            </div>
+
+            <TeamPanel
+                ids={form.team_user_ids}
+                heading={form.team_heading}
+                onChange={(changes) => setForm({ ...form, ...changes })}
+            />
+
+            {/* The studio's About, closing the proposal -- its text is in Settings. */}
+            <div className="form-panel">
+                <div className="section-label section-label--ruled">About</div>
+                <Toggle checked={form.show_about} onChange={(show_about) => setForm({ ...form, show_about })} label="Close with the About section" />
+                <p className="form-hint form-hint--attached">The studio&rsquo;s About, at the end of the proposal after the team. Its text is in Settings &rsaquo; Proposals.</p>
             </div>
 
             <div className="form-panel">

@@ -7,13 +7,21 @@ import { api } from './api';
 // a reload. `readUrl(id)` is the staff or portal read endpoint. A refused
 // mark (a staff preview of the portal is read-only) just leaves it as is
 // on the server -- it still clears here for the visit.
+// A thread's latest activity: its newest message (thread or reply).
+function latestActivity(thread) {
+    return [thread, ...(thread.replies || [])].map((m) => m.sent_at || '').sort().pop();
+}
+
 export function useUnreadThreads(threads, readUrl) {
-    const [readIds, setReadIds] = useState([]);
-    const isUnread = (thread) => Boolean(thread.unread) && !readIds.includes(thread.id);
+    // What's been read here, by how far: thread id -> its latest message
+    // when read. A reply arriving later (the Messages tab checks for new
+    // ones) makes it unread again.
+    const [readUpTo, setReadUpTo] = useState({});
+    const isUnread = (thread) => Boolean(thread.unread) && readUpTo[thread.id] !== latestActivity(thread);
 
     function markRead(thread) {
         if (!isUnread(thread)) return;
-        setReadIds((ids) => [...ids, thread.id]);
+        setReadUpTo((read) => ({ ...read, [thread.id]: latestActivity(thread) }));
         api.post(readUrl(thread.id)).catch(() => {});
     }
 

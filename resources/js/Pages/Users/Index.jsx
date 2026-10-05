@@ -1,5 +1,5 @@
 import { Head, usePage } from '@inertiajs/react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ArrowCounterClockwise, EnvelopeSimple, Trash, UserMinus } from '@phosphor-icons/react';
 import AppLayout from '../../Layouts/AppLayout';
 import Badge from '../../Components/Badge';
@@ -7,9 +7,13 @@ import Button from '../../Components/Button';
 import EmptyState from '../../Components/EmptyState';
 import Drawer from '../../Components/Drawer';
 import Toggle from '../../Components/Toggle';
+import RowActions from '../../Components/RowActions';
+import Avatar from '../../Components/Avatar';
+import BioForm from '../../Components/BioForm';
 import { api } from '../../lib/api';
 import PageHeader from '../../Components/PageHeader';
 import TabToolbar from '../../Components/TabToolbar';
+import { shrinkImage } from '../../lib/shrinkImage';
 
 function emptyForm() {
     return { name: '', email: '', role: 'team_member' };
@@ -72,6 +76,63 @@ function AccessDrawer({ user, options, onSaved, onClose }) {
     );
 }
 
+// Someone's avatar (used around the app) and their bio -- bio photo,
+// position and bio, for proposals' team sections -- edited from the Team
+// page. Photo changes save on pick.
+function ProfileDrawer({ user, onSaved, onClose }) {
+    const [current, setCurrent] = useState(user);
+    const [busy, setBusy] = useState(false);
+    const [error, setError] = useState('');
+    const fileRef = useRef(null);
+
+    async function photo(task) {
+        setBusy(true);
+        setError('');
+        try {
+            const updated = await task();
+            setCurrent(updated);
+            onSaved(updated);
+        } catch (err) {
+            setError(err.message || 'Could not update the photo.');
+        } finally {
+            setBusy(false);
+        }
+    }
+
+    function upload(e) {
+        const file = e.target.files[0];
+        e.target.value = '';
+        if (!file) return;
+        photo(async () => {
+            const fd = new FormData();
+            fd.append('avatar', await shrinkImage(file));
+            return api.postForm(`/api/users/${user.id}/avatar`, fd);
+        });
+    }
+
+    return (
+        <Drawer size="wide" onClose={onClose}>
+            <h2 className="drawer__title">{current.name}</h2>
+            <div className="form-panel">
+                <div className="section-label section-label--ruled">Avatar</div>
+                <p className="form-hint">Shown next to their messages and around the app.</p>
+                <div className="users__photo">
+                    <Avatar name={current.name} avatarUrl={current.avatar_url} id={current.id} size={72} />
+                    <Button variant="secondary" onClick={() => fileRef.current.click()} disabled={busy}>
+                        {current.avatar_url ? 'Change avatar' : 'Upload avatar'}
+                    </Button>
+                    {current.avatar_url && (
+                        <Button variant="danger" onClick={() => photo(() => api.delete(`/api/users/${user.id}/avatar`))} disabled={busy}>Remove</Button>
+                    )}
+                    <input ref={fileRef} type="file" accept="image/*" hidden onChange={upload} />
+                </div>
+                {error && <div className="form-message form-message--error form-message--spaced">{error}</div>}
+            </div>
+            <BioForm user={current} endpoint={`/api/users/${user.id}`} photoEndpoint={`/api/users/${user.id}/bio-photo`} onSaved={(updated) => { setCurrent(updated); onSaved(updated); }} />
+        </Drawer>
+    );
+}
+
 export default function UsersIndex({ users: usersProp, permissionOptions = {} }) {
     const { props } = usePage();
     const currentUserId = props.auth?.user?.id;
@@ -82,10 +143,20 @@ export default function UsersIndex({ users: usersProp, permissionOptions = {} })
     const [busyId, setBusyId] = useState(null);
     // The team member whose access is open in the drawer.
     const [accessUser, setAccessUser] = useState(null);
+    // Whose photo and bio are open.
+    const [profileUser, setProfileUser] = useState(null);
 
     useEffect(() => {
         setUsers(usersProp);
     }, [usersProp]);
+
+    // The row opens their photo and bio, like every other list; its own
+    // controls (role, access, the icon buttons) don't -- but the open caret
+    // (.row-action) is there to, so its click goes through.
+    function openRow(e, user) {
+        if (e.target.closest('button:not(.row-action), select, input, a')) return;
+        setProfileUser(user);
+    }
 
     async function submit(e) {
         e.preventDefault();
@@ -205,8 +276,11 @@ export default function UsersIndex({ users: usersProp, permissionOptions = {} })
                         </thead>
                         <tbody>
                             {users.map((user) => (
-                                <tr key={user.id}>
-                                    <td className="table__cell--strong">{user.name}</td>
+                                <tr key={user.id} onClick={(e) => openRow(e, user)} className="table__row--link">
+                                    <td className="table__cell--strong">
+                                        {user.name}
+                                        {user.job_title && <div className="table__meta">{user.job_title}</div>}
+                                    </td>
                                     <td className="table__cell--muted">{user.email}</td>
                                     <td>
                                         <select
@@ -222,13 +296,13 @@ export default function UsersIndex({ users: usersProp, permissionOptions = {} })
                                     </td>
                                     <td>
                                         {user.role === 'super_admin' ? (
-                                            <span className="table__cell--muted">Everything</span>
+                                            <span className="users__access">Everything</span>
                                         ) : (
                                             <button
                                                 type="button"
                                                 onClick={() => setAccessUser(user)}
                                                 disabled={!!user.deactivated_at}
-                                                className="text-action text-action--xs"
+                                                className="users__access users__access--link"
                                             >
                                                 {accessSummary(user, permissionOptions)}
                                             </button>
@@ -258,6 +332,7 @@ export default function UsersIndex({ users: usersProp, permissionOptions = {} })
                                                     <Trash />
                                                 </button>
                                             )}
+                                            <RowActions openLabel={`Open ${user.name}`} />
                                         </div>
                                     </td>
                                 </tr>
@@ -266,6 +341,14 @@ export default function UsersIndex({ users: usersProp, permissionOptions = {} })
                     </table>
                 )}
             </div>
+
+            {profileUser && (
+                <ProfileDrawer
+                    user={profileUser}
+                    onSaved={(updated) => setUsers((current) => current.map((u) => (u.id === updated.id ? updated : u)))}
+                    onClose={() => setProfileUser(null)}
+                />
+            )}
 
             {accessUser && (
                 <AccessDrawer

@@ -1,7 +1,35 @@
-// The Team page (Pages/Users/Index.jsx): a team member's access drawer, a
-// switch per permission with what it unlocks under it.
+// The Team page (Pages/Users/Index.jsx): the Access column, the photo row
+// in someone's drawer, and the access drawer's switches.
 
 .users {
+    // A super admin's "Everything" and a team member's summary read the
+    // same; the team member's opens their access, so it shows it on hover.
+    &__access {
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+        font-weight: var(--font-weight-normal);
+        color: var(--color-text-muted);
+        text-align: left;
+
+        &--link {
+            text-decoration: underline;
+            text-decoration-color: transparent;
+            text-underline-offset: 3px;
+            transition: color var(--duration-fast) var(--ease-standard), text-decoration-color var(--duration-fast) var(--ease-standard);
+
+            &:hover:not(:disabled) {
+                color: var(--color-text);
+                text-decoration-color: currentColor;
+            }
+        }
+    }
+
+    &__photo {
+        display: flex;
+        align-items: center;
+        gap: var(--space-3);
+    }
+
     &__permissions {
         display: flex;
         flex-direction: column;

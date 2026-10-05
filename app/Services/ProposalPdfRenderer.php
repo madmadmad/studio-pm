@@ -17,6 +17,8 @@ class ProposalPdfRenderer
 
         return Pdf::loadView('pdfs.proposal', [
             'proposal' => $proposal,
+            'team' => $proposal->teamMembers(),
+            'about' => $proposal->aboutSection(),
             'studio' => StudioProfile::current(),
         ])->setPaper('letter');
     }

@@ -8,6 +8,7 @@ use App\Models\MessageReaction;
 use App\Models\Project;
 use App\Policies\Portal\MessagePolicy;
 use App\Services\MessageThreadService;
+use App\Services\MessageVersion;
 use App\Services\UnreadMessages;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -16,6 +17,15 @@ use Illuminate\Validation\Rule;
 class MessageController extends Controller
 {
     public function __construct(protected MessagePolicy $policy, protected MessageThreadService $threads) {}
+
+    // Whether anything's changed on the threads this client is on --
+    // polled by the portal's Messages tab.
+    public function version(Request $request, Project $project)
+    {
+        abort_unless($this->policy->view($request->user(), $project), 403);
+
+        return ['version' => MessageVersion::of($project->messages()->includingContact($request->user()))];
+    }
 
     public function index(Request $request, Project $project)
     {

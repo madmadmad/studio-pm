@@ -16,13 +16,20 @@ class AvatarProcessor
 {
     const DIMENSION = 400;
 
-    public static function store(UploadedFile $file): string
+    // A bio photo is a portrait (4:5) shown large and printed in proposal
+    // PDFs, so it's kept bigger: 800 x 1000.
+    const BIO_PHOTO_WIDTH = 800;
+
+    const BIO_PHOTO_HEIGHT = 1000;
+
+    // Cropped to fill `width` x `height` (square unless a height is given).
+    public static function store(UploadedFile $file, int $width = self::DIMENSION, string $folder = 'avatars', ?int $height = null): string
     {
         $manager = new ImageManager(Driver::class);
         $image = $manager->decodeBinary(file_get_contents($file->getRealPath()));
-        $image->cover(self::DIMENSION, self::DIMENSION);
+        $image->cover($width, $height ?? $width);
 
-        $path = 'avatars/'.Str::random(40).'.jpg';
+        $path = $folder.'/'.Str::random(40).'.jpg';
         Storage::disk(config('filesystems.private_disk'))->put($path, (string) $image->encode(new JpegEncoder(quality: 85)));
 
         return $path;
