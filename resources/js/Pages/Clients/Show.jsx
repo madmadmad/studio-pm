@@ -148,7 +148,7 @@ function DetailsCard({ company, firmDefaultTerms }) {
                             {company.brand_color ? (
                                 <span className="color-swatch-value"><span className="color-swatch-value__chip" style={{ backgroundColor: company.brand_color }} />{company.brand_color}</span>
                             ) : (
-                                <>Studio red<span className="field-grid__note"> (default)</span></>
+                                <>Default</>
                             )}
                         </div>
                     </Field>

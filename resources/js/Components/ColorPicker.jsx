@@ -8,7 +8,7 @@ const DEFAULT = '#CF0034'; // the studio red (BrandPalette::DEFAULT) -- not var(
 // a pasted hex code, and the reset goes back to the default (null). Text
 // drawn in the color is checked for contrast on the server
 // (app/Support/BrandPalette), so any color is allowed here.
-export default function ColorPicker({ value, onChange, defaultLabel = 'Use the studio red', id }) {
+export default function ColorPicker({ value, onChange, defaultLabel = 'Use default', id }) {
     const [text, setText] = useState(value ?? '');
 
     useEffect(() => setText(value ?? ''), [value]);
