@@ -21,15 +21,16 @@
         }
     }
 
-    // A figure picked out quietly (a project's Remaining budget): lighter
-    // than the other cards, with its text left as it is.
+    // A figure of secondary importance (a project's Remaining budget, the
+    // dashboard's Outstanding): a quieter fill of the brand color, 60% of
+    // it over the page, with text in whichever of white or near-black
+    // reads on it (BrandPalette).
     &--neutral {
-        background-color: var(--color-surface-highlight);
+        background-color: var(--color-primary-quiet);
+        color: var(--color-primary-quiet-on);
 
-        // The usual muted label is under AA on this lighter fill; the
-        // light grey keeps it readable (5.95:1).
         .metric-card__label {
-            color: var(--color-accent);
+            color: var(--color-primary-quiet-on);
         }
     }
 

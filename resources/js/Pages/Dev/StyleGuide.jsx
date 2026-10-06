@@ -63,6 +63,8 @@ const COLOR_GROUPS = [
             ['Text on light', '--brand-text-light'],
             ['Icon on dark', '--brand-icon-dark'],
             ['Icon on light', '--brand-icon-light'],
+            ['Quiet on dark', '--brand-quiet-dark'],
+            ['Quiet on light', '--brand-quiet-light'],
             ['Danger', '--danger'],
         ],
     },

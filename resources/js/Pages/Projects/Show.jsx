@@ -222,7 +222,8 @@ function ProjectSummary({ project, proposedHours }) {
                 <div className="metric-grid metric-grid--one-row metric-grid--loose">
                     {budget > 0 && <MetricCard label="Budget" value={formatCurrency(budget)} />}
                     <MetricCard label="Total invoiced" value={formatCurrency(totalInvoiced)} />
-                    {budget > 0 && <MetricCard label="Remaining" value={formatCurrency(remaining)} negative={remaining < 0} tone="neutral" />}
+                    {/* Danger once it's over budget, like Hours remaining -- a red figure wouldn't read on the brand fill. */}
+                    {budget > 0 && <MetricCard label="Remaining" value={formatCurrency(remaining)} tone={remaining < 0 ? 'danger' : 'neutral'} />}
                 </div>
             )}
         </>

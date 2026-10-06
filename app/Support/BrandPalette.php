@@ -29,6 +29,9 @@ class BrandPalette
 
     const LIGHT_SURFACE = '#F7F8F8';
 
+    // How much of the color a quiet fill takes, the rest the page (60% opacity).
+    const QUIET_STRENGTH = 0.6;
+
     // Text on a fill: white or near-black (the app's own --color-secondary-on),
     // whichever reads better -- see on().
     const ON_LIGHT = '#FFFFFF';
@@ -60,6 +63,11 @@ class BrandPalette
             '--brand-text-light' => self::hex(self::passing($base, self::TEXT_CONTRAST, [$lightSurface, self::mix($base, self::rgb('#FFFFFF'), 0.10)])),
             '--brand-icon-dark' => self::hex(self::passing($base, self::MARK_CONTRAST, [$darkRaised])),
             '--brand-icon-light' => self::hex(self::passing($base, self::MARK_CONTRAST, [$lightSurface])),
+            // A quieter fill for a figure of secondary importance (a
+            // project's Remaining): QUIET_STRENGTH of the color over the
+            // page, so it differs by theme, with its own text color.
+            ...self::quiet($base, 'dark', self::rgb(self::DARK_BG)),
+            ...self::quiet($base, 'light', self::rgb('#FFFFFF')),
         ];
     }
 
@@ -79,6 +87,13 @@ class BrandPalette
     public static function rgb(string $hex): array
     {
         return array_map('hexdec', str_split(ltrim($hex, '#'), 2));
+    }
+
+    private static function quiet(array $base, string $theme, array $page): array
+    {
+        $fill = self::mix($base, $page, self::QUIET_STRENGTH);
+
+        return ["--brand-quiet-{$theme}" => self::hex($fill), "--brand-quiet-{$theme}-on" => self::on(self::rgb(self::hex($fill)))];
     }
 
     // White or near-black text on the fill, by APCA (the contrast model

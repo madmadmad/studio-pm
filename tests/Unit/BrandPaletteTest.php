@@ -80,8 +80,8 @@ class BrandPaletteTest extends TestCase
 
         foreach (BrandPalette::for(BrandPalette::DEFAULT) as $name => $hex) {
             $this->assertSame($hex, $value($name), "{$name} in _tokens.scss");
-            // Danger is the same red, fixed (it has no icon variants).
-            if (! str_contains($name, 'icon')) {
+            // Danger is the same red, fixed (it has no icon or quiet variants).
+            if (! str_contains($name, 'icon') && ! str_contains($name, 'quiet')) {
                 $this->assertSame($hex, $value(str_replace('--brand', '--danger', $name)), str_replace('--brand', '--danger', $name).' in _tokens.scss');
             }
         }

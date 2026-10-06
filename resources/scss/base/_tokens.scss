@@ -26,6 +26,10 @@
     --brand-text-light: #CF0034; // as text on light surfaces and its own tint (4.5:1)
     --brand-icon-dark: #E10038; // icons and marks on dark surfaces (3:1)
     --brand-icon-light: #CF0034; // icons and marks on light surfaces (3:1)
+    --brand-quiet-dark: #870C2D; // a quieter fill (60% over the dark page), for a secondary figure
+    --brand-quiet-dark-on: #FFFFFF;
+    --brand-quiet-light: #E26685; // the same over the white page
+    --brand-quiet-light-on: #FFFFFF;
 
     // Danger -- its own red, the same whatever the brand color, so delete
     // and overdue never turn green. The studio red's set, fixed.
@@ -59,6 +63,8 @@
     --color-primary-text: var(--brand-text-dark);
     --color-primary-on: var(--brand-on);
     --gradient-primary: linear-gradient(135deg, var(--brand), var(--brand-hover)); // the headline metric card
+    --color-primary-quiet: var(--brand-quiet-dark); // a secondary figure beside it (a project's Remaining)
+    --color-primary-quiet-on: var(--brand-quiet-dark-on);
 
     // Secondary -- the strong neutral, reversed for a dark UI: an off-white
     // fill for the page's prominent action ("Add client") and the active
@@ -411,6 +417,8 @@
     --color-primary-soft: color-mix(in srgb, var(--brand) 10%, #fff);
     --color-primary-text: var(--brand-text-light);
     --color-primary-icon: var(--brand-icon-light);
+    --color-primary-quiet: var(--brand-quiet-light);
+    --color-primary-quiet-on: var(--brand-quiet-light-on);
     --color-indicator: var(--brand-icon-light);
     --color-danger-soft: color-mix(in srgb, var(--danger) 10%, #fff);
     --color-danger-text: var(--danger-text-light);
@@ -524,6 +532,8 @@
     --color-primary-text: var(--brand-text-light);
     --color-primary-icon: var(--brand-icon-light);
     --color-edit: var(--color-primary-icon); // set here, not inherited: :root's resolves to the dark icon
+    --color-primary-quiet: var(--brand-quiet-light);
+    --color-primary-quiet-on: var(--brand-quiet-light-on);
     --color-indicator: var(--brand-icon-light);
     --color-secondary: #23262e;
     --color-secondary-hover: #373b45;
