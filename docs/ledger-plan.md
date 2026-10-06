@@ -435,6 +435,27 @@ The existing year-based reports stay as they are for now (Q7).
 
 ### Phase 6: Bonsai import and backfill
 
+**Goal (decided):** before launch, import the full Bonsai history from
+January 1, 2025 — clients, projects, invoices with their lines, payments,
+expenses — so the ledger opens on 2025-01-01 with opening balances as of
+December 31, 2024. Phases 1–3 come first, so imported records post
+through the same rules as live ones.
+
+Imported records are history, not new work: tagged with a Bonsai id
+(idempotent re-runs), never emailed, reminded, repeated or sent to Stripe,
+and they keep their Bonsai invoice numbers (the next new number continues
+after the highest). Every importer has `--dry-run`, and runs against a
+local copy first.
+
+Sources beyond Bonsai, so the bank-side accounts reconcile:
+- Stripe balance history / payouts export (2025 on): actual fees and
+  payouts for each payment.
+- Capital One and Waterford statements: the monthly card payments
+  (transfers) and the 12/31/2024 opening balances.
+- Payroll provider reports: one payroll entry per pay period.
+- The CPA's 2025 return/adjustments (depreciation etc.) as journal
+  entries, then 2025 locked.
+
 `php artisan bonsai:import-expenses {csv} {--dry-run}` creates expenses
 from a Bonsai CSV export, matching the "tags" column to categories by name
 through the seeder's alias map. It applies the Advertising rule, sends
