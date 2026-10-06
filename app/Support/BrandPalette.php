@@ -29,8 +29,8 @@ class BrandPalette
 
     const LIGHT_SURFACE = '#F7F8F8';
 
-    // How much of the color a quiet fill takes, the rest the page (60% opacity).
-    const QUIET_STRENGTH = 0.6;
+    // How much of the color a quiet fill takes, the rest the page (30% opacity).
+    const QUIET_STRENGTH = 0.3;
 
     // Text on a fill: white or near-black (the app's own --color-secondary-on),
     // whichever reads better -- see on().
