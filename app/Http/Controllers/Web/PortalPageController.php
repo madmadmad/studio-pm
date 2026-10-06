@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Message;
 use App\Models\Project;
 use App\Policies\Portal\ProjectPolicy;
+use App\Services\ActiveMessages;
 use App\Services\MessageVersion;
 use App\Services\UnreadMessages;
 use Illuminate\Http\Request;
@@ -49,6 +50,9 @@ class PortalPageController extends Controller
             'projects' => $projects,
             // Proposals waiting on this client (a card at the top).
             'awaitingProposals' => $request->user()->company->proposals()->where('status', 'sent')->count(),
+            // Conversations with something new this past week (a card).
+            'activeMessages' => ActiveMessages::count($request->user()),
+            'activeMessagesDays' => ActiveMessages::WINDOW_DAYS,
         ]);
     }
 

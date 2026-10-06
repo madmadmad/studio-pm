@@ -11,7 +11,7 @@ import ProjectsTable, { PROJECT_STATUS_OPTIONS } from '../../../Components/Proje
 // proposal, in the staff Projects list (read-only). Rows open the portal
 // project page. Across the top: their active projects, the open tasks on
 // them, and any proposals waiting on their review (red when there are).
-export default function PortalProjectsIndex({ projects, awaitingProposals = 0 }) {
+export default function PortalProjectsIndex({ projects, awaitingProposals = 0, activeMessages = 0, activeMessagesDays = 7 }) {
     const [search, setSearch] = useState('');
     const [filter, setFilter] = useState('all');
 
@@ -33,6 +33,8 @@ export default function PortalProjectsIndex({ projects, awaitingProposals = 0 })
             <div className="metric-grid">
                 <MetricCard label="Active projects" value={projects.filter((p) => p.status === 'active').length} />
                 <MetricCard label="Open tasks" value={openTasks} />
+                {/* Conversations with a new message in the window (ActiveMessages). */}
+                <MetricCard label={`Active messages (last ${activeMessagesDays} days)`} value={activeMessages} />
                 <MetricCard
                     label="Proposals awaiting your review"
                     value={awaitingProposals}
