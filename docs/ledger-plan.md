@@ -150,7 +150,17 @@ production may have more rows than local. Proposal: seed the 22 as
 `expense_categories.account_id`, and map each existing category to an
 account (seeded guesses, editable). Categories stay the friendly picker;
 the account is what posts. An expense whose category has no account posts
-to an **Uncategorized Expense** account and gets flagged. See Q3.
+to an **Uncategorized Expense** account and gets flagged.
+
+*Resolved:* the expense categories become your Bonsai list, so the picker
+reads the way Bonsai did and imported history matches by name. Each
+category gets an `account_id` (plus `billable_account_id` for Advertising,
+C2). The seven generic categories are folded into their Bonsai
+equivalents: Software & Subscriptions → Subscriptions & Memberships,
+Equipment → Electronics & Furniture, Travel → Other Travel Expenses,
+Office Supplies → Other Office Expenses, Contractors → Subcontractors.
+Advertising and Hosting keep their names (the hosting report matches
+"Hosting").
 
 **C2. Client media vs our own advertising share one category.** "Advertising"
 is used for both. Proposal: categories get an optional second account,
@@ -166,7 +176,20 @@ payment, debit `stripe_clearing` for the **gross** the client paid
 (Phase 4 form: date, gross cleared, net deposited): debit checking (net),
 debit Payment Processing Fees (the difference), credit `stripe_clearing`
 (gross). Clearing still nets to zero per payout, and a later Stripe
-integration can post the same payout entry automatically. See Q4.
+integration can post the same payout entry automatically.
+
+*Revised recommendation:* the fee is an expense of the day the charge
+happens, not the payout day, so the most accurate option is to read it
+when the payment arrives. Stripe reports the exact fee on each charge's
+balance transaction. The existing webhook can make one read-only call
+(`PaymentIntent` → `latest_charge.balance_transaction`, giving `fee` and
+`net`) and post the design as written: debit clearing for the net, debit
+Payment Processing Fees for the fee, credit revenue/tax/surcharge. Payouts
+then just move the net from clearing to checking. That's a narrow read, not
+the full Stripe integration. If the lookup fails, the payment posts gross
+to clearing and the payout entry picks up the difference as the fee, so
+nothing is ever lost. The timing difference only matters across a
+month-end, but it's the cleaner record.
 
 **C4. Sales tax is missing from the design.** Invoices collect sales tax
 (`tax_rate`, `taxable` lines, `SalesTaxReport`), and it isn't revenue.
@@ -237,7 +260,8 @@ Retirement Expense are both Bonsai tags (expense categories) and payroll
 form lines. The payroll form posts straight to Officer Compensation /
 Wages / Payroll Tax Expense / Retirement Match. Payroll shouldn't also be
 entered as expenses, or it's counted twice. The backfill will flag expenses
-in those categories. Withholding liabilities aren't modeled: crediting
+in those categories. (Bonsai "Wages & Commissions" history goes to Wages
+and is listed for reclassifying, per your mapping.) Withholding liabilities aren't modeled: crediting
 checking for the full amount is right if the payroll provider pulls
 gross + employer costs from checking (Q8).
 
@@ -255,27 +279,67 @@ CPA's chart arrives. `parent_id` groups them for reports. Cost of revenue is
 a parent under expenses, so the P&L can show gross profit without a sixth
 type.
 
-- **1000 Assets**: 1010 Checking – Waterford Bank (`checking`), 1050 Stripe
-  Clearing (`stripe_clearing`)
-- **2000 Liabilities**: 2010 Capital One Card (`capital_one_card`), 2200
-  Sales Tax Payable (`sales_tax_payable`)
-- **3000 Equity**: 3010 Owner's Capital, 3020 Owner's Draws, 3900 Retained
-  Earnings, 3950 Opening Balance Equity (`opening_balance_equity`)
-- **4000 Income**: 4010 Design & Development Services (`service_revenue`),
-  4020 Ad Management, 4030 Client Media, 4040 Hosting, 4090 Card Surcharge
-  Income (`surcharge_income`), 4900 Other Income (`other_income`)
-- **5000 Cost of Revenue**: 5010 Client Media Spend, 5020 Hosting Cost,
-  5030 Client Software
-- **6000 Operating Expenses**: Advertising & Marketing, Work Devices &
-  Software, Officer Compensation, Wages & Commissions, Payroll Taxes,
-  Retirement Match, Business Insurance, Health & Life Insurance, Rent &
-  Lease Property, Utilities, Internet, Telephone, Mobile Phone, Business
-  Meals, Charitable Donations, Local Taxes, Accounting Fees, Payment
-  Processing Fees (`merchant_fees`), Payroll Processing Fees, HSA Fees,
-  Other Office Expenses, Uncategorized Expense (`uncategorized_expense`)
+Revised after review to follow your 54 Bonsai categories. Accounts get a
+`description` column (not in the original design) for the CPA notes.
 
-(Charitable donations and owner draws may belong elsewhere for an S corp /
-sole prop; the CPA's call.)
+- **1000 Assets**: Checking – Waterford Bank (`checking`), Stripe
+  Clearing (`stripe_clearing`)
+- **2000 Liabilities**: Capital One Card (`capital_one_card`), Sales Tax
+  Payable (`sales_tax_payable`)
+- **3000 Equity**: Shareholder Capital, Shareholder Distributions
+  (`shareholder_distributions`; Bonsai "Draw" and "Personal"), Retained
+  Earnings, Opening Balance Equity (`opening_balance_equity`)
+- **4000 Income**: Design & Development Services (`service_revenue`),
+  Ad Management, Client Media, Hosting, Card Surcharge Income
+  (`surcharge_income`), Other Income (`other_income`)
+- **5000 Cost of Revenue**: Hosting Cost (Bonsai "Hosting"), Client Media
+  Spend, Client Software, Subcontractors, Cost of Labor, Materials &
+  Supplies, Misc COGS
+- **6000 Operating Expenses**, one account per Bonsai category, same name:
+  Accounting Fees, Advertising & Marketing, Auto Insurance, Business
+  Insurance, Business Meals\*, Car & Truck Expenses, Charitable
+  Donations\*, Client Entertainment\*, Depreciation (CPA year-end entries
+  only), Education & Training, Electronics & Furniture\*, Equipment
+  Repairs, Flights, Taxi & Transportation, Gas & Fuel, Health & Life
+  Insurance, Hotel & Accommodation, HSA fees, Internet, Local Taxes, Misc
+  Fees, Mobile Phone, Officer Compensation, Ohio State/County Sales Tax,
+  Ohio State Workers' Compensation tax, Other Expenses, Other Office
+  Expenses, Other Perks & Benefits, Other Travel Expenses, Payment
+  Processing Fees (`merchant_fees`), Payroll Processing Fees, Payroll
+  Taxes, Professional Services, Real Estate Taxes, Rental Equipment, Rent &
+  Lease Property, Retirement Expense, Studio Software, Subscriptions &
+  Memberships, Taxes & Licenses, Telephone, Utilities, Wages, Work Devices
+  & Software, Uncategorized Expense (`uncategorized_expense`)
+
+\* CPA flag in the description: Charitable Donations pass through to the
+shareholder return (not a business deduction); Business Meals generally
+50% deductible; Client Entertainment generally not deductible; Electronics
+& Furniture: larger purchases may need capitalizing.
+
+Payroll form lines map to Officer Compensation, Wages, Payroll Taxes and
+Retirement Expense. That replaces "Payroll Tax Expense" and "Retirement
+Match" from the original design, so payroll and Bonsai history land in the
+same accounts.
+
+**Bonsai name → account rules** (seeder data only, nothing hardcoded
+elsewhere, so Studio Software / Work Devices & Software / Client Software
+can be merged later):
+- "Hotel & Accomodation" (Bonsai's spelling) → Hotel & Accommodation.
+- "Advertising" → Client Media Spend when billable or tied to a client,
+  otherwise Advertising & Marketing (same rule as C2 for new expenses).
+- "Wages & Commissions" → Wages; history listed in the backfill report so
+  you can reclassify your own salary to Officer Compensation.
+- "Hosting" → Hosting Cost.
+- "Draw", "Personal" → Shareholder Distributions (equity, not expense).
+- "Credit card refund credit" → no account; review list on import.
+- "Depletion", "Child Care", "Home Office" → no account; listed in the
+  backfill report if any rows use them.
+
+**Sales tax, two different things:** "Ohio State/County Sales Tax" is the
+expense for tax *paid on purchases* (e.g. use tax). Tax *collected* on
+invoices goes to Sales Tax Payable (C4), and remitting it debits the
+payable, not this expense. The transfer/entry screens will make that the
+obvious path.
 
 ---
 
@@ -295,6 +359,10 @@ for review.
   greater than zero) as raw SQL in the migration, branching on the driver
   (SQLite needs it at `CREATE TABLE`; MySQL 8 needs a table-level
   constraint). A test proves the database itself rejects a bad line.
+  Production runs SQLite, so the SQLite path is the one that matters.
+  Gotcha: SQLite can't add a CHECK to an existing table, so it has to be
+  right at creation (a later change means a table rebuild).
+- `accounts.description` (nullable text) for the CPA flags.
 - Models: `Account`, `JournalEntry`, `JournalLine`, `AccountingPeriod`,
   `BankReconciliation`. Updates and deletes on posted entries/lines throw
   at the model level, and accounts can't be deleted, only deactivated.
@@ -314,10 +382,13 @@ for review.
   so Forge's deploy `migrate` creates the chart, matching how categories are
   seeded today (Q2).
 - Migration adding `expense_categories.account_id` + `billable_account_id`,
-  `services.revenue_account_id`, `invoice_categories.revenue_account_id`,
-  with seeded guesses for the existing rows (Hosting → Hosting Cost /
-  Hosting revenue, Advertising → Advertising & Marketing / Client Media
-  Spend, Software & Subscriptions → Work Devices & Software, etc.).
+  `services.revenue_account_id`, `invoice_categories.revenue_account_id`.
+- Expense categories brought in line with the Bonsai list (C1): missing
+  ones created and mapped, the generic seven folded in (their expenses
+  moved to the Bonsai category, then the old row removed). Draw and
+  Personal are categories that post to Shareholder Distributions.
+- The seeder also holds a `BONSAI_ALIASES` map ("Hotel & Accomodation",
+  the skip and review lists) for the Phase 6 import.
 - A read-only Chart of accounts page under Bookkeeping, plus account
   pickers on the category and service drawers.
 
@@ -362,7 +433,17 @@ like the current ones:
   equity).
 The existing year-based reports stay as they are for now (Q7).
 
-### Phase 6: backfill
+### Phase 6: Bonsai import and backfill
+
+`php artisan bonsai:import-expenses {csv} {--dry-run}` creates expenses
+from a Bonsai CSV export, matching the "tags" column to categories by name
+through the seeder's alias map. It applies the Advertising rule, sends
+"Credit card refund credit" rows to a review list, lists Depletion / Child
+Care / Home Office rows, and skips rows already imported (by a stable
+hash of date + amount + description). I'll need a sample export to build
+against. This was deferred earlier until Plaid goes to Production; it's
+pulled in here because the ledger needs the history.
+
 `php artisan ledger:backfill {--dry-run} {--from=YYYY-MM-DD}`, local or
 explicitly run by you only. It posts through the same posters in date order
 and skips sources that already have a live entry, so re-running is safe.
@@ -374,36 +455,37 @@ locked periods.
 
 ---
 
-## 5. Questions for you
+## 5. Decisions and open questions
 
-1. **What database does production run?** SQLite or MySQL (Forge)? It
-   decides how the CHECK constraint is written, and I want the migration
-   tested on that engine before deploy.
-2. **Seed the chart from a migration** (runs on deploy, like the categories),
-   or a seeder you run by hand? I'd use a migration, idempotent.
-3. **Production expense categories:** are the Bonsai tags already rows in
-   production's `expense_categories`, or only the seven from the
-   migrations? If you can share the production list (names only), I'll
-   seed the category→account mapping to match. Otherwise I'll map the seven
-   and leave the rest to the picker.
-4. **Stripe fee at payout (C3):** OK to post gross to clearing and record the
-   fee when you enter each payout?
-5. **Billed price (C6):** OK to treat the invoice line as the billed price
-   rather than adding a column? Should the server enforce cost × markup on
-   expense lines, or keep them editable?
-6. **Backfill start date and opening balances (C13):** from what date? Do you
-   want an opening-balance form (checking, card, Stripe clearing as of the
-   start date), and will you enter past card payments as transfers?
-7. **Existing reports:** keep the current year-based P&L and cards next to the
-   ledger ones, or switch them to the ledger once it's trusted? They'll
-   differ (surcharge income, payroll, fees, sales tax).
-8. **Payroll:** does the provider debit checking for the gross plus employer
-   tax and match (so crediting checking for the total is right), or should
-   withholdings go to a payable?
-9. **Permissions:** viewing the ledger and making manual entries under the
-   existing `bookkeeping` permission, period locking super admin only? Or a
-   new `ledger` permission?
-10. **Payments by check/other:** straight to checking, or through an
-    Undeposited Funds account?
-11. **Card surcharge:** the 3% fee is credited to Card Surcharge Income as
-    designed, right? Your current reports don't count it as income at all.
+Settled:
+- **Production database:** SQLite (per its env). The CHECK is written for
+  SQLite, with a MySQL branch kept for a future move.
+- **Expense categories:** your 54 Bonsai categories, mapped as in section 3.
+- **Backfill start date:** not needed yet. The app is still in development,
+  and the backfill can be re-run on a fresh database at any point, so it
+  doesn't block Phases 1–5. Suggested when the time comes: **January 1 of
+  the tax year you start keeping books here** (January 1, 2026 if this
+  year's books move in), with opening balances for checking and the card
+  taken from the December 31 statements. A full tax year is what the CPA
+  works from.
+
+Defaults I'll use unless you say otherwise:
+- **Stripe fee:** read it from Stripe in the webhook at payment time (C3,
+  revised). Falls back to recognizing it at payout.
+- **Chart seeding:** from a migration (runs on deploy), idempotent.
+- **Billed price:** the invoice line is the billed price; no new column.
+  Expense lines stay editable.
+- **Existing reports:** left as they are next to the ledger reports, to be
+  compared and switched over later.
+- **Permissions:** the existing `bookkeeping` permission for viewing the
+  ledger and manual entries; period locking super admin only.
+- **Check/other payments:** straight to checking.
+- **Card surcharge:** credited to Card Surcharge Income.
+
+Still open (not blocking Phase 1):
+1. **Payroll:** does the provider debit checking for gross plus employer
+   tax and match (crediting checking for the total is right), or should
+   withholdings go to a payable? Needed by Phase 4.
+2. **Opening-balance form:** wanted, and will you enter past card payments
+   as transfers? Needed by Phase 6.
+3. **A sample Bonsai CSV export:** needed by Phase 6.
