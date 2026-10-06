@@ -34,7 +34,11 @@ export default function PortalProjectsIndex({ projects, awaitingProposals = 0, a
                 <MetricCard label="Active projects" value={projects.filter((p) => p.status === 'active').length} />
                 <MetricCard label="Open tasks" value={openTasks} />
                 {/* Conversations with a new message in the window (ActiveMessages). */}
-                <MetricCard label={`Active messages (last ${activeMessagesDays} days)`} value={activeMessages} />
+                <MetricCard
+                    label={`Active messages (last ${activeMessagesDays} days)`}
+                    value={activeMessages}
+                    tone={activeMessages > 0 ? 'primary' : null}
+                />
                 <MetricCard
                     label="Proposals awaiting your review"
                     value={awaitingProposals}
