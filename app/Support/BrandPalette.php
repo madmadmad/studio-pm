@@ -29,8 +29,8 @@ class BrandPalette
 
     const LIGHT_SURFACE = '#F7F8F8';
 
-    // Text on a fill: white when it passes, else near-black (the app's own
-    // --color-secondary-on).
+    // Text on a fill: white or near-black (the app's own --color-secondary-on),
+    // whichever reads better -- see on().
     const ON_LIGHT = '#FFFFFF';
 
     const ON_DARK = '#121418';
@@ -48,9 +48,7 @@ class BrandPalette
         $darkRaised = self::mix(self::rgb(self::DARK_BG), self::rgb('#EBEFF9'), 0.96); // --color-surface-raised
         $lightSurface = self::rgb(self::LIGHT_SURFACE);
 
-        $on = self::contrast($base, self::rgb(self::ON_LIGHT)) >= self::TEXT_CONTRAST
-            || self::contrast($base, self::rgb(self::ON_LIGHT)) >= self::contrast($base, self::rgb(self::ON_DARK))
-            ? self::ON_LIGHT : self::ON_DARK;
+        $on = self::on($base);
 
         return [
             '--brand' => self::hex($base),
@@ -81,6 +79,45 @@ class BrandPalette
     public static function rgb(string $hex): array
     {
         return array_map('hexdec', str_split(ltrim($hex, '#'), 2));
+    }
+
+    // White or near-black text on the fill, by APCA (the contrast model
+    // drafted for WCAG 3) rather than the WCAG 2 ratio used everywhere else
+    // here. For picking between the two the WCAG 2 ratio is known to go
+    // wrong on mid-tone colors -- a mid green, orange or bright blue scores
+    // higher with black text, though nearly everyone reads white on them
+    // more easily. APCA tracks what people actually see.
+    private static function on(array $fill): string
+    {
+        return abs(self::apca(self::rgb(self::ON_LIGHT), $fill)) >= abs(self::apca(self::rgb(self::ON_DARK), $fill))
+            ? self::ON_LIGHT : self::ON_DARK;
+    }
+
+    // APCA lightness contrast (Lc, roughly -108..106) of text on a
+    // background, per the 0.0.98G-4g constants. The sign is polarity:
+    // positive for dark text on light, negative for light on dark.
+    public static function apca(array $text, array $background): float
+    {
+        $y = function (array $rgb) {
+            [$r, $g, $b] = array_map(fn ($c) => ($c / 255) ** 2.4, $rgb);
+            $y = 0.2126729 * $r + 0.7151522 * $g + 0.0721750 * $b;
+
+            return $y < 0.022 ? $y + (0.022 - $y) ** 1.414 : $y; // soft clamp near black
+        };
+        [$yText, $yBg] = [$y($text), $y($background)];
+        if (abs($yBg - $yText) < 0.0005) {
+            return 0.0;
+        }
+
+        if ($yBg > $yText) {
+            $sapc = ($yBg ** 0.56 - $yText ** 0.57) * 1.14;
+
+            return $sapc < 0.1 ? 0.0 : ($sapc - 0.027) * 100;
+        }
+
+        $sapc = ($yBg ** 0.65 - $yText ** 0.62) * 1.14;
+
+        return $sapc > -0.1 ? 0.0 : ($sapc + 0.027) * 100;
     }
 
     // A step deeper under white text, or a step lighter under dark text --

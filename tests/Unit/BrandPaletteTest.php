@@ -31,13 +31,26 @@ class BrandPaletteTest extends TestCase
         $this->assertGreaterThanOrEqual(3.0, BrandPalette::contrast($rgb('--brand-icon-dark'), $darkRaised));
         $this->assertGreaterThanOrEqual(3.0, BrandPalette::contrast($rgb('--brand-icon-light'), $lightSurface));
 
-        // White on the fill when it passes; otherwise whichever reads better.
-        $onWhite = BrandPalette::contrast($rgb('--brand'), [255, 255, 255]);
-        $onDark = BrandPalette::contrast($rgb('--brand'), BrandPalette::rgb(BrandPalette::ON_DARK));
-        $expected = $onWhite >= 4.5 || $onWhite >= $onDark ? '#FFFFFF' : BrandPalette::ON_DARK;
-        $this->assertSame($expected, $p['--brand-on']);
-        $this->assertGreaterThanOrEqual(max(3.0, min($onWhite, $onDark) * 0.9),
-            BrandPalette::contrast($rgb('--brand-hover'), BrandPalette::rgb($p['--brand-on'])), 'hover keeps its text readable');
+        // Text on the fill: white or near-black, whichever APCA rates higher
+        // -- and it's comfortably readable either way (Lc 45+).
+        $apcaWhite = abs(BrandPalette::apca([255, 255, 255], $rgb('--brand')));
+        $apcaDark = abs(BrandPalette::apca(BrandPalette::rgb(BrandPalette::ON_DARK), $rgb('--brand')));
+        $this->assertSame($apcaWhite >= $apcaDark ? '#FFFFFF' : BrandPalette::ON_DARK, $p['--brand-on']);
+        $this->assertGreaterThanOrEqual(45, max($apcaWhite, $apcaDark));
+        $this->assertGreaterThanOrEqual(max($apcaWhite, $apcaDark) * 0.9,
+            abs(BrandPalette::apca(BrandPalette::rgb($p['--brand-on']), $rgb('--brand-hover'))), 'hover keeps its text readable');
+    }
+
+    // The WCAG 2 ratio would put black text on these (white scores under
+    // 4.5:1), though white reads better on them -- APCA gets it right.
+    public function test_mid_tone_colors_get_white_text(): void
+    {
+        foreach (['#2E993B', '#FF6B00', '#2196F3', '#4CAF50'] as $color) {
+            $this->assertSame('#FFFFFF', BrandPalette::for($color)['--brand-on'], $color);
+        }
+        foreach (['#FFD400', '#FFEB3B', '#F7C6D9', '#00BCD4'] as $color) {
+            $this->assertSame(BrandPalette::ON_DARK, BrandPalette::for($color)['--brand-on'], $color);
+        }
     }
 
     public function test_a_color_that_already_passes_is_left_alone(): void
