@@ -26,7 +26,7 @@ import ContactCards from '../../Components/client/ContactCards';
 import ClientInvoicesTable from '../../Components/client/ClientInvoicesTable';
 import { categoryFilters, categoryName } from '../../Components/InvoiceCategory';
 import ClientProposalsTable from '../../Components/client/ClientProposalsTable';
-import { GearSix } from '@phosphor-icons/react';
+import { Eye, GearSix } from '@phosphor-icons/react';
 import BackLink from '../../Components/BackLink';
 
 function reload() {
@@ -106,6 +106,24 @@ function DetailsCard({ company, firmDefaultTerms }) {
                     actions={
                         <>
                             <CompanyStatusBadge company={company} />
+                            {/* A read-only look at their portal, in a new tab
+                                (PortalPreviewController) -- as on the Clients list. */}
+                            {company.contacts?.some((contact) => contact.has_portal_access) ? (
+                                <a
+                                    href={`/clients/${company.id}/portal-preview`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    title="Preview client portal"
+                                    aria-label="Preview client portal"
+                                    className="icon-btn icon-btn--secondary icon-btn--lg"
+                                >
+                                    <Eye />
+                                </a>
+                            ) : (
+                                <span title="No one here has portal access yet" className="icon-btn icon-btn--secondary icon-btn--lg icon-btn--unavailable">
+                                    <Eye />
+                                </span>
+                            )}
                             <button onClick={() => setEditing(true)} title="Edit client" aria-label="Edit client" className="icon-btn icon-btn--secondary icon-btn--lg">
                                 <GearSix />
                             </button>
