@@ -2,10 +2,11 @@
 
 namespace App\Models;
 
+use App\Support\AvatarProcessor;
+use App\Support\RichText;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use App\Support\RichText;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
@@ -88,7 +89,7 @@ class Proposal extends Model
                 'job_title' => $user->job_title,
                 'bio' => RichText::toSafeHtml($user->bio),
                 'photo_url' => ! $user->bio_photo_path ? null : ($publicToken
-                    ? route('proposals.public.team-photo', ['token' => $publicToken, 'user' => $user->id])
+                    ? route('proposals.public.team-photo', ['token' => $publicToken, 'user' => $user->id, 'v' => AvatarProcessor::version($user->bio_photo_path)])
                     : $user->bio_photo_url),
             ])->all(),
         ];

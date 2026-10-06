@@ -11,7 +11,7 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Intervention\Image\Drivers\Gd\Driver;
-use Intervention\Image\Encoders\JpegEncoder;
+use Intervention\Image\Encoders\WebpEncoder;
 use Intervention\Image\ImageManager;
 use Throwable;
 
@@ -36,8 +36,8 @@ class GenerateAttachmentThumbnail implements ShouldQueue
             $max = config('message_attachments.thumbnail_max_dimension');
             $image->scaleDown(width: $max, height: $max);
 
-            $thumbnailPath = preg_replace('/\.[^.]+$/', '', $this->attachment->path).'-thumb.jpg';
-            $disk->put($thumbnailPath, (string) $image->encode(new JpegEncoder(quality: 80)));
+            $thumbnailPath = preg_replace('/\.[^.]+$/', '', $this->attachment->path).'-thumb.webp';
+            $disk->put($thumbnailPath, (string) $image->encode(new WebpEncoder(quality: 78)));
 
             $this->attachment->update([
                 'thumbnail_path' => $thumbnailPath,

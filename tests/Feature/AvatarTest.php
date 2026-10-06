@@ -104,4 +104,54 @@ class AvatarTest extends TestCase
         // persists for the rest of the test method's HTTP calls).
         $this->get(route('avatars.user', $owner))->assertForbidden();
     }
+
+    public function test_an_avatar_is_stored_as_webp_and_served_from_a_versioned_cacheable_url(): void
+    {
+        Storage::fake('local');
+        $user = User::factory()->create();
+
+        $this->actingAs($user)->postJson('/api/profile/avatar', [
+            'avatar' => UploadedFile::fake()->image('me.jpg', 900, 700),
+        ])->assertOk();
+        $user->refresh();
+
+        $this->assertStringEndsWith('.webp', $user->avatar_path);
+        $this->assertSame('image/webp', (new \finfo(FILEINFO_MIME_TYPE))->buffer(Storage::disk('local')->get($user->avatar_path)));
+        $this->assertStringContainsString('?v=', $user->avatar_url);
+
+        $response = $this->get($user->avatar_url)->assertOk();
+        $this->assertStringContainsString('max-age=86400', $response->headers->get('Cache-Control'));
+
+        // A new photo means a new URL, so the browser never shows a stale one.
+        $firstUrl = $user->avatar_url;
+        $this->actingAs($user)->postJson('/api/profile/avatar', [
+            'avatar' => UploadedFile::fake()->image('again.jpg', 900, 700),
+        ])->assertOk();
+        $this->assertNotSame($firstUrl, $user->refresh()->avatar_url);
+    }
+
+    public function test_on_s3_an_avatar_redirects_to_the_same_signed_url_all_day(): void
+    {
+        // Presigning is local math -- no request ever reaches AWS here.
+        config([
+            'filesystems.private_disk' => 's3',
+            'filesystems.disks.s3' => [
+                'driver' => 's3', 'key' => 'test-key', 'secret' => 'test-secret',
+                'region' => 'us-east-1', 'bucket' => 'studio-pm-test',
+            ],
+        ]);
+        $owner = User::factory()->create(['avatar_path' => 'avatars/abc.webp']);
+        $viewer = User::factory()->create();
+
+        $this->travelTo(now()->startOfDay()->addHours(9));
+        $morning = $this->actingAs($viewer)->get($owner->avatar_url)->assertRedirect();
+        $this->travelTo(now()->addHours(8));
+        $evening = $this->actingAs($viewer)->get($owner->avatar_url)->assertRedirect();
+
+        $this->assertSame($morning->headers->get('Location'), $evening->headers->get('Location'));
+        $this->assertStringContainsString('response-cache-control=', $morning->headers->get('Location'));
+        // The redirect is cached until midnight: 15h left at 9am, 7h at 5pm.
+        $this->assertStringContainsString('max-age=54000', $morning->headers->get('Cache-Control'));
+        $this->assertStringContainsString('max-age=25200', $evening->headers->get('Cache-Control'));
+    }
 }

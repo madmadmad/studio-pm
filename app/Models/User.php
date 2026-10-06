@@ -3,6 +3,8 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Support\AvatarProcessor;
+use App\Support\RichText;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -10,6 +12,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
@@ -60,22 +63,22 @@ class User extends Authenticatable
     // avatar, private like it.
     protected function getBioPhotoUrlAttribute(): ?string
     {
-        return $this->bio_photo_path ? route('bio-photos.user', $this) : null;
+        return $this->bio_photo_path ? route('bio-photos.user', [$this, 'v' => AvatarProcessor::version($this->bio_photo_path)]) : null;
     }
 
     protected function getAvatarUrlAttribute(): ?string
     {
-        return $this->avatar_path ? route('avatars.user', $this) : null;
+        return $this->avatar_path ? route('avatars.user', [$this, 'v' => AvatarProcessor::version($this->avatar_path)]) : null;
     }
 
     // A new bio photo in place of the old one (null to remove it).
-    public function replaceBioPhoto(?\Illuminate\Http\UploadedFile $file): self
+    public function replaceBioPhoto(?UploadedFile $file): self
     {
         $old = $this->bio_photo_path;
         $this->update(['bio_photo_path' => $file
-            ? \App\Support\AvatarProcessor::store($file, \App\Support\AvatarProcessor::BIO_PHOTO_WIDTH, 'bio-photos', \App\Support\AvatarProcessor::BIO_PHOTO_HEIGHT)
+            ? AvatarProcessor::store($file, AvatarProcessor::BIO_PHOTO_WIDTH, 'bio-photos', AvatarProcessor::BIO_PHOTO_HEIGHT)
             : null]);
-        \App\Support\AvatarProcessor::delete($old);
+        AvatarProcessor::delete($old);
 
         return $this->fresh();
     }
@@ -84,7 +87,7 @@ class User extends Authenticatable
     // nothing when it's blank.
     public static function cleanBio(?string $bio): ?string
     {
-        return \App\Support\RichText::isBlank($bio) ? null : \App\Support\RichText::toSafeHtml($bio);
+        return RichText::isBlank($bio) ? null : RichText::toSafeHtml($bio);
     }
 
     public function isSuperAdmin(): bool

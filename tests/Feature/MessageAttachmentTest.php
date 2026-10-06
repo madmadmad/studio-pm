@@ -46,6 +46,7 @@ class MessageAttachmentTest extends TestCase
         // QUEUE_CONNECTION=sync in tests, so the thumbnail job already ran.
         $this->assertSame('ready', $attachment['thumbnail_status']);
         Storage::disk('local')->assertExists($attachment['thumbnail_path']);
+        $this->assertStringEndsWith('-thumb.webp', $attachment['thumbnail_path']);
     }
 
     public function test_a_completely_empty_message_is_rejected(): void

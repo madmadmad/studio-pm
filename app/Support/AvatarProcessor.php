@@ -6,7 +6,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Intervention\Image\Drivers\Gd\Driver;
-use Intervention\Image\Encoders\JpegEncoder;
+use Intervention\Image\Encoders\WebpEncoder;
 use Intervention\Image\ImageManager;
 
 // Shared by the staff and portal profile controllers -- an avatar is
@@ -22,17 +22,27 @@ class AvatarProcessor
 
     const BIO_PHOTO_HEIGHT = 1000;
 
-    // Cropped to fill `width` x `height` (square unless a height is given).
+    // Cropped to fill `width` x `height` (square unless a height is given),
+    // saved as WebP -- roughly a third smaller than a JPEG of the same
+    // quality, and dompdf reads it for the proposal PDF too.
     public static function store(UploadedFile $file, int $width = self::DIMENSION, string $folder = 'avatars', ?int $height = null): string
     {
         $manager = new ImageManager(Driver::class);
         $image = $manager->decodeBinary(file_get_contents($file->getRealPath()));
         $image->cover($width, $height ?? $width);
 
-        $path = $folder.'/'.Str::random(40).'.jpg';
-        Storage::disk(config('filesystems.private_disk'))->put($path, (string) $image->encode(new JpegEncoder(quality: 85)));
+        $path = $folder.'/'.Str::random(40).'.webp';
+        Storage::disk(config('filesystems.private_disk'))->put($path, (string) $image->encode(new WebpEncoder(quality: 82)));
 
         return $path;
+    }
+
+    // A short fingerprint of the stored path for the image's URL (?v=...):
+    // every upload gets a new random path, so a new photo gets a new URL
+    // and the browser can cache each one as immutable.
+    public static function version(string $path): string
+    {
+        return substr(md5($path), 0, 8);
     }
 
     public static function delete(?string $path): void

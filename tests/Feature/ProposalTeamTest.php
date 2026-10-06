@@ -4,10 +4,12 @@ namespace Tests\Feature;
 
 use App\Models\Company;
 use App\Models\Proposal;
+use App\Models\StudioProfile;
 use App\Models\User;
 use App\Services\ProposalPdfRenderer;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
@@ -107,11 +109,26 @@ class ProposalTeamTest extends TestCase
         $person = User::factory()->create(['name' => 'Rosa Alder', 'job_title' => 'Strategist', 'bio' => '<p>Plans things.</p>']);
         $proposal->update(['team_user_ids' => [$person->id]]);
 
-        $html = view('pdfs.proposal', ['proposal' => $proposal->load('items', 'company', 'project'), 'team' => $proposal->teamMembers(), 'about' => $proposal->aboutSection(), 'studio' => \App\Models\StudioProfile::current()])->render();
+        $html = view('pdfs.proposal', ['proposal' => $proposal->load('items', 'company', 'project'), 'team' => $proposal->teamMembers(), 'about' => $proposal->aboutSection(), 'studio' => StudioProfile::current()])->render();
 
         $this->assertStringContainsString('Your team', $html);
         $this->assertStringContainsString('Strategist', $html);
         $this->assertNotEmpty(ProposalPdfRenderer::render($proposal)->output());
+    }
+
+    // Bio photos are stored as WebP; dompdf has to be able to embed one.
+    public function test_the_pdf_embeds_a_webp_bio_photo(): void
+    {
+        Storage::fake(config('filesystems.private_disk'));
+        $me = User::factory()->create();
+        $proposal = $this->proposal();
+        $proposal->update(['team_user_ids' => [$me->id]]);
+        $imagesWithout = substr_count(ProposalPdfRenderer::render($proposal->fresh())->output(), '/Subtype /Image');
+
+        $this->actingAs($me)->post('/api/profile/bio-photo', ['photo' => UploadedFile::fake()->image('headshot.jpg', 1200, 1200)])->assertOk();
+        $this->assertStringEndsWith('.webp', $me->refresh()->bio_photo_path);
+
+        $this->assertGreaterThan($imagesWithout, substr_count(ProposalPdfRenderer::render($proposal->fresh())->output(), '/Subtype /Image'));
     }
 
     public function test_picking_the_team_takes_the_proposals_permission(): void
@@ -127,7 +144,7 @@ class ProposalTeamTest extends TestCase
 
         // On by default, from Settings; headed by the studio's name.
         $this->get('/p/'.$proposal->accept_token)->assertInertia(fn (Assert $page) => $page
-            ->where('proposal.about.heading', \App\Models\StudioProfile::brandName())
+            ->where('proposal.about.heading', StudioProfile::brandName())
             ->where('proposal.about.body', fn ($body) => str_contains($body, 'We specialize in crafting')));
 
         $this->actingAs($admin)->patchJson('/api/studio-profile', [
@@ -142,21 +159,21 @@ class ProposalTeamTest extends TestCase
         $this->actingAs($admin)->patchJson("/api/proposals/{$proposal->id}", ['title' => 'Brand refresh', 'body' => '<p>Scope</p>', 'show_about' => false])->assertOk();
         $this->get('/p/'.$proposal->accept_token)->assertInertia(fn (Assert $page) => $page->where('proposal.about', null));
         $fresh = $proposal->fresh()->load('items', 'company', 'project');
-        $pdfHtml = view('pdfs.proposal', ['proposal' => $fresh, 'team' => collect(), 'about' => $fresh->aboutSection(), 'studio' => \App\Models\StudioProfile::current()])->render();
+        $pdfHtml = view('pdfs.proposal', ['proposal' => $fresh, 'team' => collect(), 'about' => $fresh->aboutSection(), 'studio' => StudioProfile::current()])->render();
         $this->assertStringNotContainsString('Small studio', $pdfHtml);
     }
 
     // Dated the day it's sent (or written, before then), good for 90 days.
     public function test_a_proposal_shows_its_date_and_how_long_it_is_good_for(): void
     {
-        $this->travelTo(\Illuminate\Support\Carbon::parse('2026-10-05 10:00'));
+        $this->travelTo(Carbon::parse('2026-10-05 10:00'));
         $proposal = $this->proposal();
         $this->get('/p/'.$proposal->accept_token)->assertInertia(fn (Assert $page) => $page
             ->where('proposal.dates.date', '2026-10-05')
             ->where('proposal.dates.valid_until', '2027-01-03')
             ->where('proposal.dates.valid_days', 90));
 
-        $proposal->update(['sent_at' => \Illuminate\Support\Carbon::parse('2026-10-12 15:00')]);
+        $proposal->update(['sent_at' => Carbon::parse('2026-10-12 15:00')]);
         $this->get('/p/'.$proposal->accept_token)->assertInertia(fn (Assert $page) => $page
             ->where('proposal.dates.date', '2026-10-12')
             ->where('proposal.dates.valid_until', '2027-01-10'));

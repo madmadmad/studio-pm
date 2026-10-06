@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\AvatarProcessor;
 use Illuminate\Auth\Authenticatable as AuthenticatableTrait;
 use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -57,7 +58,7 @@ class Contact extends Model implements AuthenticatableContract
     // Never a raw disk URL -- see User::getAvatarUrlAttribute() for why.
     protected function getAvatarUrlAttribute(): ?string
     {
-        return $this->avatar_path ? route('avatars.contact', $this) : null;
+        return $this->avatar_path ? route('avatars.contact', [$this, 'v' => AvatarProcessor::version($this->avatar_path)]) : null;
     }
 
     // Client access is whole-company, not per-project -- every contact
