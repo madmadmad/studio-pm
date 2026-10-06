@@ -11,6 +11,7 @@ import ProjectBoard from '../../Components/ProjectBoard';
 import EmptyState from '../../Components/EmptyState';
 import { useFavorites } from '../../Components/StarButton';
 import AppearanceSetting from '../../Components/AppearanceSetting';
+import BrandColorSetting from '../../Components/BrandColorSetting';
 import { useRememberedTab } from '../../lib/useRememberedTab';
 import BioForm from '../../Components/BioForm';
 import { shrinkImage } from '../../lib/shrinkImage';
@@ -247,6 +248,7 @@ export default function ProfileIndex({ profileUser, passwordHint, timesheet, tim
                     <BioForm user={user} endpoint="/api/profile/bio" photoEndpoint="/api/profile/bio-photo" onSaved={(updated) => setUser((current) => ({ ...current, job_title: updated.job_title, bio: updated.bio, bio_photo_url: updated.bio_photo_url }))} />
                     <PasswordPanel hint={passwordHint} />
                     <AppearanceSetting current={user.theme} endpoint="/api/profile/appearance" />
+                    <BrandColorSetting current={user.brand_color} />
                 </div>
             )}
         </AppLayout>

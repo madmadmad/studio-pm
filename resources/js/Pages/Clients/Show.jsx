@@ -7,6 +7,7 @@ import { CompanyStatusBadge } from '../../Components/StatusBadges';
 import ProjectsTable from '../../Components/ProjectsTable';
 import { formatCurrency, invoiceTotal, isOverdue } from '../../lib/format';
 import { CLIENT_PAYMENT_TERMS, paymentTermsLabel } from '../../lib/paymentTerms';
+import ColorPicker from '../../Components/ColorPicker';
 import { api } from '../../lib/api';
 import { useRememberedTab } from '../../lib/useRememberedTab';
 import PageHeader from '../../Components/PageHeader';
@@ -76,6 +77,7 @@ function DetailsCard({ company, firmDefaultTerms }) {
         status: company.status,
         default_payment_terms: company.default_payment_terms ?? '',
         reminders_enabled: company.reminders_enabled === null ? '' : company.reminders_enabled ? '1' : '0',
+        brand_color: company.brand_color ?? null,
     });
 
     async function submit(e) {
@@ -123,6 +125,15 @@ function DetailsCard({ company, firmDefaultTerms }) {
                             {company.reminders_enabled === null && <span className="field-grid__note"> (app default)</span>}
                         </div>
                     </Field>
+                    <Field label="Brand color">
+                        <div className="field-grid__value">
+                            {company.brand_color ? (
+                                <span className="color-swatch-value"><span className="color-swatch-value__chip" style={{ backgroundColor: company.brand_color }} />{company.brand_color}</span>
+                            ) : (
+                                <>Studio red<span className="field-grid__note"> (default)</span></>
+                            )}
+                        </div>
+                    </Field>
                 </ClientFields>
             </>
         );
@@ -160,6 +171,11 @@ function DetailsCard({ company, firmDefaultTerms }) {
                     <option value="1">On</option>
                     <option value="0">Off</option>
                 </select>
+            </div>
+            <div className="form-grid__full">
+                <label className="label" htmlFor="client-brand-color">Brand color</label>
+                <ColorPicker id="client-brand-color" value={form.brand_color} onChange={(brand_color) => setForm({ ...form, brand_color })} />
+                <p className="form-hint form-hint--attached">Their portal and the invoice and proposal links they&rsquo;re sent use it.</p>
             </div>
             <input placeholder="Street address" value={form.address_line1} onChange={(e) => setForm({ ...form, address_line1: e.target.value })} className="input form-grid__full" />
             <div className="form-grid__full address-fields">

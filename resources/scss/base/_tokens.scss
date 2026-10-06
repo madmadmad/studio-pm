@@ -9,24 +9,40 @@
     color-scheme: dark;
 
     // -----------------------------------------------------------------
-    // Palette -- the raw brand scale. Referenced only by the role tokens
-    // below; components never use these directly.
+    // Brand -- the one color, and everything drawn in it. Referenced only
+    // by the role tokens below; components never use these directly.
+    //
+    // These are the studio red. A person's own color (Profile) or, on
+    // what a client sees, the client's (their page) replaces the whole
+    // set on <html style> -- app/Support/BrandPalette works out each one
+    // from the color, nudged lighter or darker only as far as contrast
+    // needs, and these defaults are its output for the red (kept in step
+    // by BrandPaletteTest).
     // -----------------------------------------------------------------
-    --palette-red-100: #FF0D4A; // brightest -- non-text marks only (fails AA under white text)
-    --palette-red-200: #CF0034;
-    --palette-red-300: #CF0034; // base -- the lightest red that passes AA under white text (4.75:1)
-    --palette-red-400: #CF0034;
-    --palette-red-500: #CF0034; // deepest
-    --palette-red-tint: #CF0034; // lifted for red text on charcoal (6-7:1); the base reds read too dark
+    --brand: #CF0034; // fills
+    --brand-hover: #B0002C; // a fill under the pointer, toward more contrast with its text
+    --brand-on: #FFFFFF; // text and icons on a fill: white, or near-black when white won't pass
+    --brand-text-dark: #FF4D7A; // as text on dark surfaces and its own tint (4.5:1)
+    --brand-text-light: #CF0034; // as text on light surfaces and its own tint (4.5:1)
+    --brand-icon-dark: #E10038; // icons and marks on dark surfaces (3:1)
+    --brand-icon-light: #CF0034; // icons and marks on light surfaces (3:1)
+
+    // Danger -- its own red, the same whatever the brand color, so delete
+    // and overdue never turn green. The studio red's set, fixed.
+    --danger: #CF0034;
+    --danger-hover: #B0002C;
+    --danger-on: #FFFFFF;
+    --danger-text-dark: #FF4D7A;
+    --danger-text-light: #CF0034;
 
     // -----------------------------------------------------------------
     // Color -- by role, never by hue, so any of these can be re-pointed
     // without renaming anything. Components use only these names; each
     // raw value appears once, here.
     //
-    // One hue: the red is the only color. Everything else is a neutral
-    // grey, and grey -- not a second hue -- is what separates states that
-    // would otherwise both be red (see success and danger below).
+    // The brand color is the one hue, plus danger's red. Everything else
+    // is a neutral grey -- grey, not another hue, is what separates the
+    // other states.
     //
     // Intents come as a set: the base (fills), -hover (a filled control
     // under the pointer), -soft (a low-alpha tint for badge and banner
@@ -35,15 +51,14 @@
     // a base fill).
     // -----------------------------------------------------------------
 
-    // Primary -- the brand red: main actions (confirm, save), switched-on
+    // Primary -- the brand color: main actions (confirm, save), switched-on
     // controls, the open caret, counts, schedule bars, headline cards.
-    // Hover steps one deeper along the scale, which keeps white text passing.
-    --color-primary: var(--palette-red-300);
-    --color-primary-hover: var(--palette-red-400);
-    --color-primary-soft: color-mix(in srgb, var(--palette-red-300) 16%, transparent);
-    --color-primary-text: var(--palette-red-tint);
-    --color-primary-on: #fff;
-    --gradient-primary: linear-gradient(135deg, var(--palette-red-300), var(--palette-red-500)); // the headline metric card
+    --color-primary: var(--brand);
+    --color-primary-hover: var(--brand-hover);
+    --color-primary-soft: color-mix(in srgb, var(--brand) 16%, transparent);
+    --color-primary-text: var(--brand-text-dark);
+    --color-primary-on: var(--brand-on);
+    --gradient-primary: linear-gradient(135deg, var(--brand), var(--brand-hover)); // the headline metric card
 
     // Secondary -- the strong neutral, reversed for a dark UI: an off-white
     // fill for the page's prominent action ("Add client") and the active
@@ -64,22 +79,23 @@
     --color-accent-text: var(--color-text);
     --color-accent-on: #121418;
 
-    // Success and danger are both red; what separates them is treatment,
-    // not hue. Success badges take the soft tint; success as text or a
-    // notice goes neutral (components/_alert, _table...). Danger badges
-    // are a solid fill with a warning glyph; destructive actions sit grey
-    // with a trash glyph and only turn red under the pointer.
+    // Success follows the brand color; danger keeps its own red. With the
+    // studio red they match, so what separates them is treatment, not
+    // hue: success badges take the soft tint; success as text or a notice
+    // goes neutral (components/_alert, _table...). Danger badges are a
+    // solid fill with a warning glyph; destructive actions sit grey with a
+    // trash glyph and only turn red under the pointer.
     --color-success: var(--color-primary); // done, paid, accepted, billable
     --color-success-hover: var(--color-primary-hover);
     --color-success-soft: var(--color-primary-soft);
     --color-success-text: var(--color-primary-text);
     --color-success-on: var(--color-primary-on);
 
-    --color-danger: var(--color-primary); // destructive, errors, negative figures, overdue
-    --color-danger-hover: var(--color-primary-hover);
-    --color-danger-soft: var(--color-primary-soft);
-    --color-danger-text: var(--color-primary-text);
-    --color-danger-on: var(--color-primary-on);
+    --color-danger: var(--danger); // destructive, errors, negative figures, overdue
+    --color-danger-hover: var(--danger-hover);
+    --color-danger-soft: color-mix(in srgb, var(--danger) 16%, transparent);
+    --color-danger-text: var(--danger-text-dark);
+    --color-danger-on: var(--danger-on);
 
     // Not used outside the style guide yet. No extra hues, so both are
     // neutral for now.
@@ -96,24 +112,22 @@
     --color-info-on: var(--color-accent-on);
 
     // The neutral button fill -- Cancel and every other "not this" action
-    // beside a red one. A subtle grey, lifting a touch on hover.
+    // beside a primary one. A subtle grey, lifting a touch on hover.
     --color-neutral-fill: var(--color-surface-muted);
     --color-neutral-fill-hover: color-mix(in srgb, var(--color-surface-muted) 88%, #fff);
 
-    // Red icons -- confirm, edit, restore and delete (on hover), the drawer
-    // date's calendar, the task list's client eye: the brightest red, so
-    // they're easy to spot on the dark surfaces (3.2:1 on a card, 3.9:1 on
-    // the page -- the 3:1 an icon needs; the base red falls short).
-    --color-primary-icon: var(--palette-red-100);
+    // Brand-colored icons -- confirm, edit, restore and delete (on hover),
+    // the drawer date's calendar, the task list's client eye -- at the 3:1
+    // an icon needs on the dark surfaces.
+    --color-primary-icon: var(--brand-icon-dark);
     --color-edit: var(--color-primary-icon); // the edit pencil, everywhere
 
-    // Marks with no text of their own, where the brightest red reads best
-    // (4.4:1+ on every surface).
-    --color-indicator: var(--palette-red-100);
+    // Marks with no text of their own.
+    --color-indicator: var(--brand-icon-dark);
 
     // The keyboard focus outline (abstracts/_mixins focus-ring). The text
-    // tint rather than a base red, so it stays visible against a red fill.
-    --color-focus-ring: var(--palette-red-tint);
+    // color rather than the fill, so it stays visible against a fill.
+    --color-focus-ring: var(--brand-text-dark);
 
     // Text. Off-white, not #fff, to take the glare off.
     --color-text: #E6E8EB; // 12-15:1 on every surface
@@ -135,7 +149,7 @@
     --color-field: color-mix(in srgb, var(--color-bg) 92%, #EBEFF9); // inputs and selects: a faint lift over whatever they sit on, so a borderless field reads on every layer
     --color-field-border: transparent; // borderless on dark; light mode outlines them
     --color-toggle-knob: var(--color-text); // a switch's knob
-    --color-chart-muted: var(--color-text-subtle); // a chart's second series (expenses) beside the red
+    --color-chart-muted: var(--color-text-subtle); // a chart's second series (expenses) beside the brand color
     --color-chart-muted-on: #23262E; // text on a chart-grey fill (a --muted metric card); dark in both themes, 5:1+ on either grey
     --color-border: color-mix(in srgb, var(--color-bg) 88%, #EBEFF9); // dividers -- decorative, deliberately low contrast
     --color-border-strong: color-mix(in srgb, var(--color-bg) 85%, #EBEFF9);; // the toggle's off track, an inline edit's edge on hover or focus
@@ -162,10 +176,10 @@
 
     // Decorative fills with no meaning of their own -- initials avatars
     // (Avatar.jsx picks from these plus a few soft intents). Greys, and
-    // one warmed a touch toward the red.
+    // one warmed a touch toward the brand color.
     --color-decorative-1: #2B2F36;
     --color-decorative-2: #353A42;
-    --color-decorative-3: color-mix(in srgb, var(--palette-red-300) 14%, #2B2F36);
+    --color-decorative-3: color-mix(in srgb, var(--brand) 14%, #2B2F36);
 
     // -----------------------------------------------------------------
     // Typography
@@ -384,8 +398,8 @@
 // -----------------------------------------------------------------------
 // Light mode -- a person's Appearance setting (Profile > Account): the same
 // role names re-pointed to a light set, so every component follows without
-// knowing which it's in. Dark (:root above) is the default. The red stays
-// the red; on white it reads as text at the base value (5.6:1).
+// knowing which it's in. Dark (:root above) is the default. The brand
+// and danger colors switch to their on-light text and icon values.
 //
 // <html data-theme="..."> is set from the person's setting before the
 // page draws (resources/views/app.blade.php): "light", or "system" to
@@ -394,10 +408,12 @@
 @mixin light-theme {
     color-scheme: light;
 
-    --palette-red-tint: var(--palette-red-300);
-
-    --color-primary-soft: color-mix(in srgb, var(--palette-red-300) 10%, #fff);
-    --color-primary-text: var(--palette-red-400); // 5.67:1 on white
+    --color-primary-soft: color-mix(in srgb, var(--brand) 10%, #fff);
+    --color-primary-text: var(--brand-text-light);
+    --color-primary-icon: var(--brand-icon-light);
+    --color-indicator: var(--brand-icon-light);
+    --color-danger-soft: color-mix(in srgb, var(--danger) 10%, #fff);
+    --color-danger-text: var(--danger-text-light);
 
     --color-secondary: #23262e;
     --color-secondary-hover: #373b45;
@@ -410,7 +426,7 @@
 
     --color-neutral-fill: #E8EAEE;
     --color-neutral-fill-hover: #DCDFE4; // darkens on light, rather than lifting
-    --color-focus-ring: var(--palette-red-300);
+    --color-focus-ring: var(--brand-text-light);
 
     --color-text: #23262E; // 15:1 on white
     --color-text-muted: #595F64; // 6.4:1 on white, 5.9:1 on a card
@@ -439,7 +455,7 @@
     // panel sitting on it.
     --color-canvas: #EEF0F1;
     --color-on-canvas: #23262E;
-    --color-on-canvas-strong: #fff; // the current nav item, on its red fill
+    --color-on-canvas-strong: #fff; // the current nav item
     --color-on-canvas-muted: color-mix(in srgb, var(--color-on-canvas) 72%, transparent);
     --color-on-canvas-subtle: color-mix(in srgb, var(--color-on-canvas) 55%, transparent);
     --color-on-canvas-border: color-mix(in srgb, var(--color-on-canvas) 12%, transparent);
@@ -453,7 +469,7 @@
 
     --color-decorative-1: #E3E6EA;
     --color-decorative-2: #D8DCE1;
-    --color-decorative-3: color-mix(in srgb, var(--palette-red-300) 12%, #E3E6EA);
+    --color-decorative-3: color-mix(in srgb, var(--brand) 12%, #E3E6EA);
 
     // Shadows read heavier on white: the same layers, lighter.
     --shadow-card:
@@ -504,16 +520,20 @@
 .document {
     color-scheme: light;
 
-    --color-primary-soft: color-mix(in srgb, var(--palette-red-300) 10%, #fff);
-    --color-primary-text: var(--palette-red-400); // 5.67:1 on white
+    --color-primary-soft: color-mix(in srgb, var(--brand) 10%, #fff);
+    --color-primary-text: var(--brand-text-light);
+    --color-primary-icon: var(--brand-icon-light);
+    --color-edit: var(--color-primary-icon); // set here, not inherited: :root's resolves to the dark icon
+    --color-indicator: var(--brand-icon-light);
     --color-secondary: #23262e;
     --color-secondary-hover: #373b45;
     --color-secondary-on: #fff;
     --color-accent: #595f64;
     --color-accent-text: #23262e;
-    --color-danger-text: var(--palette-red-400);
-    --color-success-text: var(--palette-red-400);
-    --color-focus-ring: var(--palette-red-300);
+    --color-danger-soft: color-mix(in srgb, var(--danger) 10%, #fff);
+    --color-danger-text: var(--danger-text-light);
+    --color-success-text: var(--brand-text-light);
+    --color-focus-ring: var(--brand-text-light);
 
     --color-text: #23262e;
     --color-text-muted: #595f64;

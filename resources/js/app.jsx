@@ -1,6 +1,7 @@
 import { createInertiaApp, router } from '@inertiajs/react';
 import { createRoot } from 'react-dom/client';
 import { IconContext } from '@phosphor-icons/react';
+import { applyBrand } from './lib/brand';
 
 const pages = import.meta.glob('./Pages/**/*.jsx', { eager: true });
 
@@ -20,6 +21,10 @@ router.on('location', (event) => {
         window.location.href = url.href;
     }
 });
+
+// Each page carries the brand palette it's drawn in (HandleInertiaRequests,
+// or a public page's client) -- keep <html> on it as pages change.
+router.on('navigate', (event) => applyBrand(event.detail.page.props.brand));
 
 createInertiaApp({
     resolve: (name) => {

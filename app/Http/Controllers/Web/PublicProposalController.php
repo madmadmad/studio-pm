@@ -8,6 +8,7 @@ use App\Models\Proposal;
 use App\Models\StudioProfile;
 use App\Models\User;
 use App\Services\ProposalPdfRenderer;
+use App\Support\BrandPalette;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -28,6 +29,8 @@ class PublicProposalController extends Controller
             'proposal' => $proposal->setAttribute('team', $proposal->teamSection($token))->setAttribute('about', $proposal->aboutSection())->setAttribute('dates', $proposal->documentDates()),
             'token' => $token,
             'studio' => StudioProfile::current(),
+            // In the client's own color, whoever opens the link.
+            'brand' => BrandPalette::for($proposal->company?->brand_color),
         ]);
     }
 

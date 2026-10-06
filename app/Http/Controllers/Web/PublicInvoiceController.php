@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Invoice;
 use App\Models\StudioProfile;
 use App\Services\InvoicePdfRenderer;
+use App\Support\BrandPalette;
 use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\Response as HttpResponse;
@@ -21,6 +22,8 @@ class PublicInvoiceController extends Controller
         return Inertia::render('Public/InvoiceShow', [
             'invoice' => $invoice->setAttribute('document_title', $invoice->documentTitle()),
             'studio' => StudioProfile::current(),
+            // In the client's own color, whoever opens the link.
+            'brand' => BrandPalette::for($invoice->company?->brand_color),
         ]);
     }
 

@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Company extends Model
 {
-    protected $fillable = ['name', 'phone', 'address_line1', 'city', 'state', 'postal_code', 'status', 'default_payment_terms', 'reminders_enabled'];
+    protected $fillable = ['name', 'phone', 'address_line1', 'city', 'state', 'postal_code', 'status', 'default_payment_terms', 'reminders_enabled', 'brand_color'];
 
     protected $casts = [
         'default_payment_terms' => PaymentTerms::class,

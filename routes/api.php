@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AppearanceController;
+use App\Http\Controllers\BrandColorController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\ExpenseCategoryController;
@@ -59,6 +60,7 @@ Route::middleware('auth:sanctum')->name('api.')->group(function () {
 
     Route::post('profile/avatar', [ProfileController::class, 'updateAvatar']);
     Route::patch('profile/appearance', [AppearanceController::class, 'update']);
+    Route::patch('profile/brand-color', [BrandColorController::class, 'update']);
     Route::delete('profile/avatar', [ProfileController::class, 'destroyAvatar']);
     Route::patch('profile/bio', [ProfileController::class, 'updateBio']);
     Route::post('profile/bio-photo', [ProfileController::class, 'updateBioPhoto']);

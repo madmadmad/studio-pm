@@ -53,20 +53,22 @@ const capitalize = (word) => word[0].toUpperCase() + word.slice(1);
 // grid, so the columns line up across them.
 const COLOR_GROUPS = [
     {
-        title: 'Palette',
-        note: 'The raw brand scale, brightest to deepest, plus the tint lifted for red text on charcoal. Only the role tokens below reference these -- components never do. The brightest two fail AA under white text, so they are never fills behind text.',
+        title: 'Brand',
+        note: 'One color in -- yours (Profile), or on what a client sees, theirs -- and each of these worked out from it by app/Support/BrandPalette, nudged lighter or darker only as far as contrast needs. Only the role tokens below reference these -- components never do. Danger keeps its own red whatever the brand color.',
         colors: [
-            ['Red 100', '--palette-red-100'],
-            ['Red 200', '--palette-red-200'],
-            ['Red 300 (base)', '--palette-red-300'],
-            ['Red 400', '--palette-red-400'],
-            ['Red 500', '--palette-red-500'],
-            ['Red tint', '--palette-red-tint'],
+            ['Brand', '--brand'],
+            ['Hover', '--brand-hover'],
+            ['On', '--brand-on'],
+            ['Text on dark', '--brand-text-dark'],
+            ['Text on light', '--brand-text-light'],
+            ['Icon on dark', '--brand-icon-dark'],
+            ['Icon on light', '--brand-icon-light'],
+            ['Danger', '--danger'],
         ],
     },
     {
         title: 'Intents',
-        note: 'By meaning, never hue -- and one hue: red, with grey separating states that would otherwise both be red. Base fills; -hover under the pointer; -soft (low alpha) for badge and banner backgrounds; -text for the intent as text on a dark surface or on its -soft; -on for text on a base fill.',
+        note: 'By meaning, never hue -- the brand color plus danger\'s red, with grey separating the other states. Base fills; -hover under the pointer; -soft (low alpha) for badge and banner backgrounds; -text for the intent as text on a dark surface or on its -soft; -on for text on a base fill.',
         columns: 5,
         colors: INTENTS.flatMap((intent) => [
             [capitalize(intent), `--color-${intent}`],

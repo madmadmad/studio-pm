@@ -5,6 +5,8 @@ namespace App\Http\Middleware;
 use App\Models\Contact;
 use App\Models\InvoiceCategory;
 use App\Models\StudioProfile;
+use App\Models\User;
+use App\Support\BrandPalette;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -60,6 +62,15 @@ class HandleInertiaRequests extends Middleware
             'portalPreview' => fn () => $request->session()->has('portal_preview') && $request->user() instanceof Contact
                 ? ['contact' => $request->user()->name, 'company' => $request->user()->company?->name]
                 : null,
+            // The brand color's palette (BrandPalette), set on <html style> by
+            // app.blade.php and kept current by app.jsx: staff see their own
+            // color, a client their company's. The public invoice/proposal
+            // pages pass their client's instead.
+            'brand' => fn () => BrandPalette::for(match (true) {
+                $request->user() instanceof Contact => $request->user()->company?->brand_color,
+                $request->user() instanceof User => $request->user()->brand_color,
+                default => null,
+            }),
             // What an invoice can be categorised as, beyond project work
             // (Settings). Staff only.
             'invoiceCategories' => fn () => $request->user() instanceof Contact ? null : InvoiceCategory::orderBy('name')->get(['id', 'name']),

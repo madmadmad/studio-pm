@@ -54,7 +54,14 @@ class CompanyController extends Controller
             'status' => ['sometimes', 'in:active,inactive'],
             'default_payment_terms' => ['nullable', Rule::enum(PaymentTerms::class)->only(PaymentTerms::forClients())],
             'reminders_enabled' => ['nullable', 'boolean'],
+            // What this client sees -- the portal, their invoice and
+            // proposal links -- in their own color (BrandPalette).
+            'brand_color' => ['nullable', 'regex:/^#[0-9a-fA-F]{6}$/'],
         ]);
+
+        if (array_key_exists('brand_color', $data)) {
+            $data['brand_color'] = $data['brand_color'] ? strtoupper($data['brand_color']) : null;
+        }
 
         if (array_key_exists('default_payment_terms', $data)) {
             $data['default_payment_terms'] = ($data['default_payment_terms'] ?? '') ?: null;
