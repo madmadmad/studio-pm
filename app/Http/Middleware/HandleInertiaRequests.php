@@ -45,6 +45,10 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $this->sharedUser($request),
             ],
+            // A one-off notice flashed by a redirect -- "a sign-in link is on
+            // its way", "your portal access has ended", Fortify's password
+            // reset "we've emailed you" -- for the auth pages that show it.
+            'status' => fn () => $request->hasSession() ? $request->session()->get('status') : null,
             // The studio's logo (Settings), for light and dark backgrounds --
             // every page, signed in or not (sign-in screens, public links).
             'branding' => fn () => [

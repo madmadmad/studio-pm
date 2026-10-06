@@ -346,6 +346,26 @@ function ContactsCard({ company }) {
         }
     }
 
+    async function resendInvite(contact) {
+        if (!confirm(`Send ${contact.name} their portal invite again? They'll get a new sign-in link, good for a week.`)) return;
+        try {
+            await api.post(`/api/contacts/${contact.id}/portal-invite/resend`);
+            alert(`Invite sent to ${contact.email}.`);
+        } catch (err) {
+            alert(err.message || 'Could not resend this invite.');
+        }
+    }
+
+    async function revokePortal(contact) {
+        if (!confirm(`Remove ${contact.name}'s client portal access? They'll be signed out and their sign-in links will stop working. You can invite them again later.`)) return;
+        try {
+            await api.delete(`/api/contacts/${contact.id}/portal-invite`);
+            reload();
+        } catch (err) {
+            alert(err.message || 'Could not remove portal access.');
+        }
+    }
+
     async function deleteContact(contact) {
         const warning = contact.has_portal_access
             ? ` This will also revoke their client portal access.`
@@ -389,6 +409,8 @@ function ContactsCard({ company }) {
                                 { label: contact.is_primary ? 'Unset primary' : 'Make primary', onSelect: () => toggleFlag(contact, 'is_primary') },
                                 { label: contact.is_billing ? 'Unset billing' : 'Make billing', onSelect: () => toggleFlag(contact, 'is_billing') },
                                 !contact.has_portal_access && { label: 'Invite to portal', onSelect: () => inviteToPortal(contact) },
+                                contact.has_portal_access && { label: 'Resend portal invite', onSelect: () => resendInvite(contact) },
+                                contact.has_portal_access && { label: 'Remove portal access', onSelect: () => revokePortal(contact), danger: true },
                                 { label: 'Delete contact', onSelect: () => deleteContact(contact), danger: true },
                             ]}
                         />

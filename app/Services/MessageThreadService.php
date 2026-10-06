@@ -315,7 +315,9 @@ class MessageThreadService
     protected function notify(Message $thread, iterable $recipients, $notification): void
     {
         foreach ($recipients as $recipient) {
-            if (! $recipient) {
+            // A contact whose portal access was revoked stays on their old
+            // threads but gets no more emails (each carries a sign-in link).
+            if (! $recipient || ($recipient instanceof Contact && ! $recipient->hasPortalAccess())) {
                 continue;
             }
 

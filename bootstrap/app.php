@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureContactHasPortalAccess;
 use App\Http\Middleware\EnsureUserHasPermission;
 use App\Http\Middleware\EnsureUserIsActive;
 use App\Http\Middleware\HandleInertiaRequests;
@@ -30,7 +31,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             HandleInertiaRequests::class,
         ]);
-        $middleware->alias(['permission' => EnsureUserHasPermission::class, 'portal.preview' => PortalPreviewReadOnly::class]);
+        $middleware->alias(['permission' => EnsureUserHasPermission::class, 'portal.preview' => PortalPreviewReadOnly::class, 'portal.access' => EnsureContactHasPortalAccess::class]);
         // Global, not just the web group -- a deactivated user's existing
         // session cookie could otherwise still hit the API guard directly.
         $middleware->append(EnsureUserIsActive::class);

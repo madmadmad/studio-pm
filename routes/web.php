@@ -1,15 +1,18 @@
 <?php
 
 use App\Http\Controllers\AvatarController;
+use App\Http\Controllers\Dev\NotificationPreviewController;
+use App\Http\Controllers\InvoiceController;
+use App\Http\Controllers\ProposalController;
 use App\Http\Controllers\Web\AcceptInvitationController;
 use App\Http\Controllers\Web\BookkeepingPageController;
-use App\Http\Controllers\Web\PortalPreviewController;
 use App\Http\Controllers\Web\ClientPageController;
 use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\ExpensePageController;
 use App\Http\Controllers\Web\InvoicePageController;
 use App\Http\Controllers\Web\PortalAuthController;
 use App\Http\Controllers\Web\PortalPageController;
+use App\Http\Controllers\Web\PortalPreviewController;
 use App\Http\Controllers\Web\PortalProfilePageController;
 use App\Http\Controllers\Web\ProfilePageController;
 use App\Http\Controllers\Web\ProjectPageController;
@@ -109,9 +112,9 @@ Route::middleware('auth')->group(function () {
         // The proposal, invoice and notification emails as they're sent,
         // for styling the templates.
         if (app()->isLocal()) {
-            Route::get('/dev/mail/proposal/{proposal?}', [\App\Http\Controllers\ProposalController::class, 'emailBrowserPreview'])->name('dev.mail.proposal');
-            Route::get('/dev/mail/invoice/{invoice?}', [\App\Http\Controllers\InvoiceController::class, 'emailBrowserPreview'])->name('dev.mail.invoice');
-            Route::get('/dev/mail/notification/{type?}', [\App\Http\Controllers\Dev\NotificationPreviewController::class, 'show'])->name('dev.mail.notification');
+            Route::get('/dev/mail/proposal/{proposal?}', [ProposalController::class, 'emailBrowserPreview'])->name('dev.mail.proposal');
+            Route::get('/dev/mail/invoice/{invoice?}', [InvoiceController::class, 'emailBrowserPreview'])->name('dev.mail.invoice');
+            Route::get('/dev/mail/notification/{type?}', [NotificationPreviewController::class, 'show'])->name('dev.mail.notification');
         }
 
         // Live reference for the shared button/card/field/table classes in
@@ -131,7 +134,7 @@ Route::prefix('portal')->name('portal.')->group(function () {
     // older session/tab is still open, and the signature is the real gate.
     Route::get('/login/verify/{contactId}/{token}', [PortalAuthController::class, 'verify'])->name('verify');
 
-    Route::middleware(['auth:client', 'portal.preview'])->group(function () {
+    Route::middleware(['auth:client', 'portal.access', 'portal.preview'])->group(function () {
         Route::post('/logout', [PortalAuthController::class, 'logout'])->name('logout');
         Route::post('/preview/exit', [PortalPreviewController::class, 'exit'])->name('preview.exit');
         Route::get('/', [PortalPageController::class, 'index'])->name('dashboard');

@@ -87,6 +87,8 @@ Route::middleware('auth:sanctum')->name('api.')->group(function () {
         Route::apiResource('companies', CompanyController::class);
         Route::apiResource('companies.contacts', ContactController::class)->shallow();
         Route::post('contacts/{contact}/portal-invite', [PortalInviteController::class, 'store']);
+        Route::post('contacts/{contact}/portal-invite/resend', [PortalInviteController::class, 'resend']);
+        Route::delete('contacts/{contact}/portal-invite', [PortalInviteController::class, 'destroy']);
     });
 
     Route::middleware('permission:services')->apiResource('services', ServiceController::class);
@@ -156,7 +158,7 @@ Route::middleware('auth:sanctum')->name('api.')->group(function () {
 
 // Client Hub mutations -- separate guard, separate controllers, since Gate
 // policies are keyed to the staff User model (see Policies\Portal\*).
-Route::middleware(['auth:client', 'portal.preview'])->prefix('portal')->name('api.portal.')->group(function () {
+Route::middleware(['auth:client', 'portal.access', 'portal.preview'])->prefix('portal')->name('api.portal.')->group(function () {
     Route::post('projects/{project}/tasks', [PortalTaskController::class, 'store']);
     Route::patch('tasks/{task}', [PortalTaskController::class, 'update']);
 

@@ -45,7 +45,9 @@ class PortalAuthController extends Controller
 
         $contact = Contact::find($contactId);
 
-        if (! $contact) {
+        // An older link (a message email's lasts three days) mustn't get
+        // someone back in after their access was revoked.
+        if (! $contact || ! $contact->hasPortalAccess()) {
             return Inertia::render('Portal/Auth/LinkInvalid', ['reason' => 'invalid']);
         }
 
