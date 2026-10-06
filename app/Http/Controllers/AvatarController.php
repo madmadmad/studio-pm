@@ -23,7 +23,7 @@ class AvatarController extends Controller
 
         abort_unless($user->avatar_path, 404);
 
-        return $this->respondWithPrivateFile(config('filesystems.private_disk'), $user->avatar_path);
+        return $this->respondWithPhoto($request, $user->avatar_path);
     }
 
     // A staff member's bio photo, for staff (the client reaches it only
@@ -33,7 +33,7 @@ class AvatarController extends Controller
         abort_unless($request->user('web'), 403);
         abort_unless($user->bio_photo_path, 404);
 
-        return $this->respondWithPrivateFile(config('filesystems.private_disk'), $user->bio_photo_path);
+        return $this->respondWithPhoto($request, $user->bio_photo_path);
     }
 
     public function contact(Request $request, Contact $contact)
@@ -42,6 +42,6 @@ class AvatarController extends Controller
 
         abort_unless($contact->avatar_path, 404);
 
-        return $this->respondWithPrivateFile(config('filesystems.private_disk'), $contact->avatar_path);
+        return $this->respondWithPhoto($request, $contact->avatar_path);
     }
 }

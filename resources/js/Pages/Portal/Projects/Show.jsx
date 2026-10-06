@@ -259,6 +259,7 @@ const MESSAGE_ENDPOINTS = {
     react: (id) => `/api/portal/messages/${id}/reactions`,
     attachmentUrl: (id) => `/api/portal/attachments/${id}`,
     attachmentThumbnailUrl: (id) => `/api/portal/attachments/${id}/thumbnail`,
+    attachmentDisplayUrl: (id) => `/api/portal/attachments/${id}/display`,
 };
 
 function messageEndpoints(project) {

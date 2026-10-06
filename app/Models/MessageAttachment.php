@@ -10,7 +10,7 @@ class MessageAttachment extends Model
 {
     protected $fillable = [
         'message_id', 'disk', 'path', 'original_name', 'mime_type', 'size',
-        'width', 'height', 'thumbnail_path', 'thumbnail_status',
+        'width', 'height', 'thumbnail_path', 'display_path', 'thumbnail_status',
     ];
 
     protected $casts = [
@@ -46,6 +46,13 @@ class MessageAttachment extends Model
     public function hasThumbnail(): bool
     {
         return $this->thumbnail_status === 'ready' && $this->thumbnail_path !== null;
+    }
+
+    // Every file this attachment has on its disk: the original plus any
+    // thumbnail and lightbox-sized copy.
+    public function storedPaths(): array
+    {
+        return array_values(array_filter([$this->path, $this->thumbnail_path, $this->display_path]));
     }
 
     // Null on the local disk (dev): the download controller streams the file

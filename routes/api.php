@@ -11,6 +11,7 @@ use App\Http\Controllers\MessageAttachmentController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\NoteController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\PlaidController;
 use App\Http\Controllers\Portal\MessageAttachmentController as PortalMessageAttachmentController;
 use App\Http\Controllers\Portal\MessageController as PortalMessageController;
 use App\Http\Controllers\Portal\ProfileController as PortalProfileController;
@@ -18,11 +19,12 @@ use App\Http\Controllers\Portal\TaskController as PortalTaskController;
 use App\Http\Controllers\PortalInviteController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProjectAssignmentController;
-use App\Http\Controllers\ProjectFavoriteController;
 use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\ProjectFavoriteController;
 use App\Http\Controllers\ProposalController;
 use App\Http\Controllers\ScheduleItemController;
 use App\Http\Controllers\ServiceController;
+use App\Http\Controllers\StudioLogoController;
 use App\Http\Controllers\StudioProfileController;
 use App\Http\Controllers\SubtaskController;
 use App\Http\Controllers\TaskController;
@@ -53,6 +55,7 @@ Route::middleware('auth:sanctum')->name('api.')->group(function () {
     Route::post('messages/{message}/reactions', [MessageController::class, 'react']);
     Route::get('attachments/{attachment}', [MessageAttachmentController::class, 'show']);
     Route::get('attachments/{attachment}/thumbnail', [MessageAttachmentController::class, 'thumbnail']);
+    Route::get('attachments/{attachment}/display', [MessageAttachmentController::class, 'display']);
 
     Route::post('profile/avatar', [ProfileController::class, 'updateAvatar']);
     Route::patch('profile/appearance', [AppearanceController::class, 'update']);
@@ -126,14 +129,14 @@ Route::middleware('auth:sanctum')->name('api.')->group(function () {
 
     Route::middleware('permission:settings')->group(function () {
         Route::patch('studio-profile', [StudioProfileController::class, 'update']);
-        Route::post('studio-profile/logo/{variant}', [\App\Http\Controllers\StudioLogoController::class, 'store']);
-        Route::delete('studio-profile/logo/{variant}', [\App\Http\Controllers\StudioLogoController::class, 'destroy']);
+        Route::post('studio-profile/logo/{variant}', [StudioLogoController::class, 'store']);
+        Route::delete('studio-profile/logo/{variant}', [StudioLogoController::class, 'destroy']);
         Route::apiResource('invoice-categories', InvoiceCategoryController::class)->only(['store', 'update', 'destroy']);
         // Bank feeds (Plaid), in Settings: connect, sync, disconnect.
-        Route::post('plaid/link-token', [\App\Http\Controllers\PlaidController::class, 'linkToken']);
-        Route::post('plaid/items', [\App\Http\Controllers\PlaidController::class, 'store']);
-        Route::post('plaid/sync', [\App\Http\Controllers\PlaidController::class, 'sync']);
-        Route::delete('plaid/items/{plaidItem}', [\App\Http\Controllers\PlaidController::class, 'destroy']);
+        Route::post('plaid/link-token', [PlaidController::class, 'linkToken']);
+        Route::post('plaid/items', [PlaidController::class, 'store']);
+        Route::post('plaid/sync', [PlaidController::class, 'sync']);
+        Route::delete('plaid/items/{plaidItem}', [PlaidController::class, 'destroy']);
     });
 
     Route::middleware('permission:team')->group(function () {
@@ -164,6 +167,7 @@ Route::middleware(['auth:client', 'portal.preview'])->prefix('portal')->name('ap
     Route::post('messages/{message}/read', [PortalMessageController::class, 'read']);
     Route::get('attachments/{attachment}', [PortalMessageAttachmentController::class, 'show']);
     Route::get('attachments/{attachment}/thumbnail', [PortalMessageAttachmentController::class, 'thumbnail']);
+    Route::get('attachments/{attachment}/display', [PortalMessageAttachmentController::class, 'display']);
 
     Route::post('profile/avatar', [PortalProfileController::class, 'updateAvatar']);
     Route::patch('profile/appearance', [AppearanceController::class, 'update']);

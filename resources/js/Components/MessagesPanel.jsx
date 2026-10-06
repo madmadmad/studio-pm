@@ -419,7 +419,9 @@ function MessageAttachments({ message, endpoints, onOpenLightbox }) {
     const files = (message.attachments || []).filter((a) => !a.is_image);
     const links = message.links || [];
     const lightboxImages = images.map((img) => ({
-        src: endpoints.attachmentUrl(img.id),
+        // A lightbox-sized copy when the original is big; downloading
+        // always gets the original.
+        src: endpoints.attachmentDisplayUrl(img.id),
         downloadUrl: endpoints.attachmentUrl(img.id),
         name: img.original_name,
     }));
@@ -435,6 +437,8 @@ function MessageAttachments({ message, endpoints, onOpenLightbox }) {
                     <img
                         src={images[0].thumbnail_status === 'ready' ? endpoints.attachmentThumbnailUrl(images[0].id) : endpoints.attachmentUrl(images[0].id)}
                         alt={images[0].original_name}
+                        loading="lazy"
+                        decoding="async"
                         className="message__image-img"
                     />
                 </button>
@@ -451,6 +455,8 @@ function MessageAttachments({ message, endpoints, onOpenLightbox }) {
                             <img
                                 src={img.thumbnail_status === 'ready' ? endpoints.attachmentThumbnailUrl(img.id) : endpoints.attachmentUrl(img.id)}
                                 alt={img.original_name}
+                                loading="lazy"
+                                decoding="async"
                                 className="message__gallery-img"
                             />
                         </button>

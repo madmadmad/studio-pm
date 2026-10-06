@@ -70,4 +70,8 @@ return [
 
     'thumbnail_max_dimension' => 400,
 
+    // Images bigger than this get a WebP copy at this size for the
+    // lightbox; the download button always gets the untouched original.
+    'display_max_dimension' => 2000,
+
 ];

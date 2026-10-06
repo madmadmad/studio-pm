@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Company;
+use App\Models\MessageAttachment;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -172,5 +173,84 @@ class MessageAttachmentTest extends TestCase
         $attachmentId = $thread['attachments'][0]['id'];
 
         $this->actingAs($otherClient, 'client')->get("/api/portal/attachments/{$attachmentId}")->assertForbidden();
+    }
+
+    public function test_a_big_image_gets_a_lightbox_copy_and_the_original_is_kept(): void
+    {
+        Storage::fake('local');
+        ['project' => $project, 'manager' => $manager, 'client' => $client] = $this->makeProjectWithPeople();
+
+        $attachment = $this->actingAs($manager)->postJson("/api/projects/{$project->id}/messages", [
+            'subject' => 'Photos',
+            'recipients' => ["contact:{$client->id}"],
+            'attachments' => [UploadedFile::fake()->image('site.jpg', 3000, 2000)],
+        ])->assertCreated()->json('attachments.0');
+
+        $this->assertStringEndsWith('-display.webp', $attachment['display_path']);
+        [$width, $height] = getimagesizefromstring(Storage::disk('local')->get($attachment['display_path']));
+        $this->assertSame([2000, 1333], [$width, $height]);
+        Storage::disk('local')->assertExists($attachment['path']);
+
+        $display = $this->actingAs($client, 'client')->get("/api/portal/attachments/{$attachment['id']}/display")->assertOk();
+        $this->assertSame(Storage::disk('local')->get($attachment['display_path']), $display->streamedContent());
+        $original = $this->actingAs($manager)->get("/api/attachments/{$attachment['id']}")->assertOk();
+        $this->assertSame(Storage::disk('local')->get($attachment['path']), $original->streamedContent());
+    }
+
+    public function test_a_small_image_is_shown_in_the_lightbox_as_it_is(): void
+    {
+        Storage::fake('local');
+        ['project' => $project, 'manager' => $manager, 'teammate' => $teammate] = $this->makeProjectWithPeople();
+
+        $attachment = $this->actingAs($manager)->postJson("/api/projects/{$project->id}/messages", [
+            'subject' => 'Logo',
+            'recipients' => ["user:{$teammate->id}"],
+            'attachments' => [UploadedFile::fake()->image('logo.png', 800, 600)],
+        ])->json('attachments.0');
+
+        $this->assertNull($attachment['display_path']);
+        $display = $this->actingAs($teammate)->get("/api/attachments/{$attachment['id']}/display")->assertOk();
+        $this->assertSame(Storage::disk('local')->get($attachment['path']), $display->streamedContent());
+    }
+
+    public function test_someone_off_the_project_cannot_see_the_lightbox_copy(): void
+    {
+        Storage::fake('local');
+        ['project' => $project, 'manager' => $manager, 'teammate' => $teammate] = $this->makeProjectWithPeople();
+        $outsider = User::factory()->teamMember()->create();
+
+        $attachmentId = $this->actingAs($manager)->postJson("/api/projects/{$project->id}/messages", [
+            'subject' => 'Photos',
+            'recipients' => ["user:{$teammate->id}"],
+            'attachments' => [UploadedFile::fake()->image('site.jpg', 3000, 2000)],
+        ])->json('attachments.0.id');
+
+        $this->actingAs($outsider)->get("/api/attachments/{$attachmentId}/display")->assertForbidden();
+    }
+
+    public function test_the_backfill_replaces_an_older_jpeg_thumbnail_and_adds_the_lightbox_copy(): void
+    {
+        Storage::fake('local');
+        ['project' => $project, 'manager' => $manager, 'teammate' => $teammate] = $this->makeProjectWithPeople();
+
+        $id = $this->actingAs($manager)->postJson("/api/projects/{$project->id}/messages", [
+            'subject' => 'Photos',
+            'recipients' => ["user:{$teammate->id}"],
+            'attachments' => [UploadedFile::fake()->image('site.jpg', 3000, 2000)],
+        ])->json('attachments.0.id');
+
+        // As it was stored before WebP: a JPEG thumbnail, no lightbox copy.
+        $attachment = MessageAttachment::find($id);
+        Storage::disk('local')->delete([$attachment->thumbnail_path, $attachment->display_path]);
+        $oldThumb = preg_replace('/\.[^.]+$/', '', $attachment->path).'-thumb.jpg';
+        Storage::disk('local')->put($oldThumb, 'old-thumb');
+        $attachment->update(['thumbnail_path' => $oldThumb, 'display_path' => null]);
+
+        $this->artisan('images:backfill')->assertSuccessful();
+
+        $attachment->refresh();
+        $this->assertStringEndsWith('-thumb.webp', $attachment->thumbnail_path);
+        $this->assertNotNull($attachment->display_path);
+        Storage::disk('local')->assertMissing($oldThumb);
     }
 }

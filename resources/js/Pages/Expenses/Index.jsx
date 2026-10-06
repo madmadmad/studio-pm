@@ -11,6 +11,7 @@ import MetricCard from '../../Components/MetricCard';
 import { useListMotion } from '../../lib/listMotion';
 import { expenseCategoryIcon } from '../../lib/expenseCategoryIcon';
 import { api } from '../../lib/api';
+import { shrinkImage } from '../../lib/shrinkImage';
 import PageHeader from '../../Components/PageHeader';
 import Drawer, { DrawerByline, DrawerDate } from '../../Components/Drawer';
 import Toggle from '../../Components/Toggle';
@@ -162,9 +163,12 @@ function ReceiptPanel({ expense, file, onPick, onClear }) {
                     ref={inputRef}
                     type="file"
                     accept="image/*,.pdf"
-                    onChange={(e) => {
-                        onPick(e.target.files?.[0] ?? null);
+                    onChange={async (e) => {
+                        const picked = e.target.files?.[0] ?? null;
                         e.target.value = '';
+                        // A phone photo of a receipt shrinks to a fraction of
+                        // its size and stays legible at 2400px; PDFs go up as they are.
+                        onPick(picked && await shrinkImage(picked, { maxSide: 2400 }));
                     }}
                     hidden
                 />

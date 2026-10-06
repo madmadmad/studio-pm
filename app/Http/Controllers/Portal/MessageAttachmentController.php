@@ -29,4 +29,12 @@ class MessageAttachmentController extends Controller
 
         return $this->respondWithPrivateFile($attachment->disk, $attachment->thumbnail_path);
     }
+
+    // What the lightbox shows: the WebP copy of a big image, else the original.
+    public function display(Request $request, MessageAttachment $attachment)
+    {
+        abort_unless($this->policy->viewThread($request->user(), $attachment->message), 403);
+
+        return $this->respondWithPrivateFile($attachment->disk, $attachment->display_path ?? $attachment->path);
+    }
 }

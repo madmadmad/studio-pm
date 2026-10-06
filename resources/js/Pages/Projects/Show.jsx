@@ -1165,6 +1165,7 @@ function MessagesTab({ project, unread }) {
         react: (id) => `/api/messages/${id}/reactions`,
         attachmentUrl: (id) => `/api/attachments/${id}`,
         attachmentThumbnailUrl: (id) => `/api/attachments/${id}/thumbnail`,
+        attachmentDisplayUrl: (id) => `/api/attachments/${id}/display`,
     };
 
     return (

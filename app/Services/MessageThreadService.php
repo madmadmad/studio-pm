@@ -189,7 +189,7 @@ class MessageThreadService
             $message->update(['body' => $body]);
 
             foreach ($message->attachments()->whereIn('id', $removeAttachmentIds)->get() as $attachment) {
-                Storage::disk($attachment->disk)->delete(array_filter([$attachment->path, $attachment->thumbnail_path]));
+                Storage::disk($attachment->disk)->delete($attachment->storedPaths());
                 $attachment->delete();
             }
             $message->links()->whereIn('id', $removeLinkIds)->delete();
@@ -240,7 +240,7 @@ class MessageThreadService
     public function deleteMessage(Message $message): void
     {
         foreach ($message->attachments as $attachment) {
-            Storage::disk($attachment->disk)->delete(array_filter([$attachment->path, $attachment->thumbnail_path]));
+            Storage::disk($attachment->disk)->delete($attachment->storedPaths());
         }
         $message->attachments()->delete();
         $message->delete();

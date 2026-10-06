@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Company;
 use App\Models\User;
+use App\Support\AvatarProcessor;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -153,5 +154,50 @@ class AvatarTest extends TestCase
         // The redirect is cached until midnight: 15h left at 9am, 7h at 5pm.
         $this->assertStringContainsString('max-age=54000', $morning->headers->get('Cache-Control'));
         $this->assertStringContainsString('max-age=25200', $evening->headers->get('Cache-Control'));
+    }
+
+    public function test_an_avatar_has_a_small_copy_served_at_size_sm(): void
+    {
+        Storage::fake('local');
+        $user = User::factory()->create();
+
+        $this->actingAs($user)->postJson('/api/profile/avatar', [
+            'avatar' => UploadedFile::fake()->image('me.jpg', 900, 700),
+        ])->assertOk();
+        $user->refresh();
+
+        $small = AvatarProcessor::smallPath($user->avatar_path);
+        [$width, $height] = getimagesizefromstring(Storage::disk('local')->get($small));
+        $this->assertSame([96, 96], [$width, $height]);
+
+        $response = $this->get($user->avatar_url.'&size=sm')->assertOk();
+        $this->assertSame(Storage::disk('local')->get($small), $response->streamedContent());
+
+        $this->actingAs($user)->deleteJson('/api/profile/avatar')->assertOk();
+        Storage::disk('local')->assertMissing($small);
+    }
+
+    public function test_an_older_avatar_without_a_small_copy_falls_back_to_the_full_one(): void
+    {
+        Storage::fake('local');
+        Storage::disk('local')->put('avatars/old.jpg', 'old-jpeg-bytes');
+        $owner = User::factory()->create(['avatar_path' => 'avatars/old.jpg']);
+
+        $response = $this->actingAs(User::factory()->create())->get($owner->avatar_url.'&size=sm')->assertOk();
+        $this->assertSame('old-jpeg-bytes', $response->streamedContent());
+    }
+
+    public function test_the_backfill_makes_small_copies_for_older_photos(): void
+    {
+        Storage::fake('local');
+        $disk = Storage::disk('local');
+        $disk->put('avatars/old.jpg', UploadedFile::fake()->image('a.jpg', 400, 400)->getContent());
+        $disk->put('bio-photos/old.jpg', UploadedFile::fake()->image('b.jpg', 800, 1000)->getContent());
+        User::factory()->create(['avatar_path' => 'avatars/old.jpg', 'bio_photo_path' => 'bio-photos/old.jpg']);
+
+        $this->artisan('images:backfill')->assertSuccessful();
+
+        $this->assertSame([96, 96], array_slice(getimagesizefromstring($disk->get('avatars/old-sm.webp')), 0, 2));
+        $this->assertSame([400, 500], array_slice(getimagesizefromstring($disk->get('bio-photos/old-sm.webp')), 0, 2));
     }
 }

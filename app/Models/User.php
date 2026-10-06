@@ -76,7 +76,7 @@ class User extends Authenticatable
     {
         $old = $this->bio_photo_path;
         $this->update(['bio_photo_path' => $file
-            ? AvatarProcessor::store($file, AvatarProcessor::BIO_PHOTO_WIDTH, 'bio-photos', AvatarProcessor::BIO_PHOTO_HEIGHT)
+            ? AvatarProcessor::store($file, AvatarProcessor::BIO_PHOTO_WIDTH, 'bio-photos', AvatarProcessor::BIO_PHOTO_HEIGHT, AvatarProcessor::BIO_PHOTO_SMALL_WIDTH)
             : null]);
         AvatarProcessor::delete($old);
 

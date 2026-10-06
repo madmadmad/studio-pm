@@ -1,3 +1,5 @@
+import { photoSrcSet } from '../lib/photoSrcSet';
+
 const PALETTE = [
     'var(--color-decorative-1)',
     'var(--color-decorative-2)',
@@ -35,6 +37,11 @@ export default function Avatar({ name, avatarUrl, id, size = 40, responsive = fa
         return (
             <img
                 src={avatarUrl}
+                srcSet={photoSrcSet(avatarUrl, 96, 400)}
+                // .avatar--responsive tops out at --space-10 (40px).
+                sizes={responsive ? '40px' : `${size}px`}
+                loading="lazy"
+                decoding="async"
                 alt={name || ''}
                 className={`avatar avatar--photo${sizeClass}`}
                 style={dimensions}

@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers\Concerns;
 
+use App\Support\AvatarProcessor;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -36,6 +38,19 @@ trait ServesPrivateFile
         }
 
         return Storage::disk($disk)->response($path, $downloadName, ['Cache-Control' => $cacheControl]);
+    }
+
+    // An avatar or bio photo: ?size=sm is its small copy (the frontend's
+    // srcset), or the full one for an older photo without a small copy yet.
+    protected function respondWithPhoto(Request $request, string $path): StreamedResponse|RedirectResponse
+    {
+        $disk = config('filesystems.private_disk');
+
+        if ($request->query('size') === 'sm' && Storage::disk($disk)->exists($small = AvatarProcessor::smallPath($path))) {
+            $path = $small;
+        }
+
+        return $this->respondWithPrivateFile($disk, $path);
     }
 
     // Presigned by hand rather than via temporaryUrl(), which has no way to
