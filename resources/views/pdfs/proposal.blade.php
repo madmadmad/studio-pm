@@ -144,8 +144,9 @@
                 <table class="member">
                     <tr>
                         <td class="member-photo">
-                            @if ($member->bio_photo_path)
-                                <img src="{{ \Illuminate\Support\Facades\Storage::disk(config('filesystems.private_disk'))->path($member->bio_photo_path) }}" alt="">
+                            {{-- 450px wide: the 135px frame at 300dpi. --}}
+                            @if ($member->bio_photo_path && ($photo = \App\Support\AvatarProcessor::pdfDataUri($member->bio_photo_path, 450)))
+                                <img src="{{ $photo }}" alt="">
                             @else
                                 <div class="member-initials">{{ collect(explode(' ', $member->name))->filter()->take(2)->map(fn ($w) => mb_strtoupper(mb_substr($w, 0, 1)))->implode('') }}</div>
                             @endif

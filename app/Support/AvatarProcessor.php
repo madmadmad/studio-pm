@@ -6,8 +6,10 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Intervention\Image\Drivers\Gd\Driver;
+use Intervention\Image\Encoders\JpegEncoder;
 use Intervention\Image\Encoders\WebpEncoder;
 use Intervention\Image\ImageManager;
+use Throwable;
 
 // Shared by the staff and portal profile controllers -- an avatar is
 // cropped square and resized synchronously (small, fast, no need for the
@@ -73,6 +75,22 @@ class AvatarProcessor
     public static function version(string $path): string
     {
         return substr(md5($path), 0, 8);
+    }
+
+    // A photo for a PDF, as a data: URI -- read from the disk itself, since
+    // on s3 there's no local file for dompdf to open. Re-encoded as a JPEG
+    // sized for print (dompdf would store a WebP as a much bigger lossless
+    // PNG). Null when it can't be read, so the PDF shows initials instead.
+    public static function pdfDataUri(string $path, int $width): ?string
+    {
+        try {
+            $image = (new ImageManager(Driver::class))->decodeBinary(Storage::disk(config('filesystems.private_disk'))->get($path));
+            $image->scaleDown(width: $width);
+
+            return 'data:image/jpeg;base64,'.base64_encode((string) $image->encode(new JpegEncoder(quality: 85)));
+        } catch (Throwable) {
+            return null;
+        }
     }
 
     public static function delete(?string $path): void

@@ -123,6 +123,7 @@ Route::middleware('auth:sanctum')->name('api.')->group(function () {
         Route::apiResource('expense-categories', ExpenseCategoryController::class)->only(['index', 'store', 'update', 'destroy']);
         Route::apiResource('taxes', TaxController::class)->only(['index', 'store', 'update', 'destroy']);
         Route::apiResource('expenses', ExpenseController::class)->only(['index', 'store', 'update', 'destroy']);
+        Route::get('expenses/{expense}/receipt', [ExpenseController::class, 'receipt'])->name('expenses.receipt');
         Route::post('expenses/{expense}/attach-to-invoice', [ExpenseController::class, 'attachToInvoice']);
         Route::post('expenses/{expense}/detach-from-invoice', [ExpenseController::class, 'detachFromInvoice']);
     });

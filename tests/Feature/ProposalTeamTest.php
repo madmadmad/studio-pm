@@ -116,8 +116,7 @@ class ProposalTeamTest extends TestCase
         $this->assertNotEmpty(ProposalPdfRenderer::render($proposal)->output());
     }
 
-    // Bio photos are stored as WebP; dompdf has to be able to embed one.
-    public function test_the_pdf_embeds_a_webp_bio_photo(): void
+    public function test_the_pdf_embeds_the_bio_photo_as_a_jpeg(): void
     {
         Storage::fake(config('filesystems.private_disk'));
         $me = User::factory()->create();
@@ -128,7 +127,11 @@ class ProposalTeamTest extends TestCase
         $this->actingAs($me)->post('/api/profile/bio-photo', ['photo' => UploadedFile::fake()->image('headshot.jpg', 1200, 1200)])->assertOk();
         $this->assertStringEndsWith('.webp', $me->refresh()->bio_photo_path);
 
-        $this->assertGreaterThan($imagesWithout, substr_count(ProposalPdfRenderer::render($proposal->fresh())->output(), '/Subtype /Image'));
+        // Embedded from the disk's bytes (not a local path, which s3 doesn't
+        // have) as a JPEG: one image, no PNG alpha mask alongside it.
+        $html = view('pdfs.proposal', ['proposal' => $proposal->fresh()->load('items', 'company', 'project'), 'team' => $proposal->fresh()->teamMembers(), 'about' => $proposal->aboutSection(), 'studio' => StudioProfile::current()])->render();
+        $this->assertStringContainsString('src="data:image/jpeg;base64,', $html);
+        $this->assertSame($imagesWithout + 1, substr_count(ProposalPdfRenderer::render($proposal->fresh())->output(), '/Subtype /Image'));
     }
 
     public function test_picking_the_team_takes_the_proposals_permission(): void

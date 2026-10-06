@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\ServesPrivateFile;
 use App\Models\Expense;
 use App\Models\Invoice;
 use App\Models\PlaidDismissal;
@@ -13,6 +14,8 @@ use Illuminate\Validation\Rule;
 
 class ExpenseController extends Controller
 {
+    use ServesPrivateFile;
+
     public function index(Request $request)
     {
         return Expense::query()
@@ -38,7 +41,7 @@ class ExpenseController extends Controller
         }
 
         if ($request->hasFile('receipt')) {
-            $data['receipt_path'] = $request->file('receipt')->store('expense-receipts', 'public');
+            $data['receipt_path'] = $request->file('receipt')->store('expense-receipts', config('filesystems.private_disk'));
             $data['receipt_filename'] = $request->file('receipt')->getClientOriginalName();
         }
 
@@ -70,9 +73,9 @@ class ExpenseController extends Controller
 
         if ($request->hasFile('receipt')) {
             if ($expense->receipt_path) {
-                Storage::disk('public')->delete($expense->receipt_path);
+                Storage::disk(config('filesystems.private_disk'))->delete($expense->receipt_path);
             }
-            $data['receipt_path'] = $request->file('receipt')->store('expense-receipts', 'public');
+            $data['receipt_path'] = $request->file('receipt')->store('expense-receipts', config('filesystems.private_disk'));
             $data['receipt_filename'] = $request->file('receipt')->getClientOriginalName();
         }
 
@@ -91,7 +94,7 @@ class ExpenseController extends Controller
         abort_unless($expense->billing_status === 'unbilled', 422, 'Billed expenses cannot be deleted -- detach from the invoice first.');
 
         if ($expense->receipt_path) {
-            Storage::disk('public')->delete($expense->receipt_path);
+            Storage::disk(config('filesystems.private_disk'))->delete($expense->receipt_path);
         }
 
         // A bank charge deleted here stays deleted: the feed skips it.
@@ -102,6 +105,15 @@ class ExpenseController extends Controller
         $expense->delete();
 
         return response()->noContent();
+    }
+
+    // Receipts are private (they carry card numbers, addresses and the
+    // like): only someone with the expenses permission gets one.
+    public function receipt(Expense $expense)
+    {
+        abort_unless($expense->receipt_path, 404);
+
+        return $this->respondWithPrivateFile(config('filesystems.private_disk'), $expense->receipt_path, $expense->receipt_filename);
     }
 
     public function attachToInvoice(Request $request, Expense $expense)

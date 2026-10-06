@@ -5,7 +5,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
 class Expense extends Model
@@ -75,7 +74,9 @@ class Expense extends Model
 
     public function getReceiptUrlAttribute(): ?string
     {
-        return $this->receipt_path ? Storage::disk('public')->url($this->receipt_path) : null;
+        // Private, so through the app; ?v= is a fingerprint of the stored
+        // path, so a replaced receipt gets a new (uncached) URL.
+        return $this->receipt_path ? route('api.expenses.receipt', [$this, 'v' => substr(md5($this->receipt_path), 0, 8)]) : null;
     }
 
     // What actually lands on the invoice line item: the expense cost plus
