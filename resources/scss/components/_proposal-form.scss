@@ -45,6 +45,11 @@
         font-size: var(--font-size-sm);
         line-height: var(--line-height-sm);
         font-variant-numeric: tabular-nums;
+
+        // "Flat fee" standing in for an editable line's quantity.
+        &--muted {
+            color: var(--color-text-muted);
+        }
     }
 
     &__locked-note {

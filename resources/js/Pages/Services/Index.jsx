@@ -69,17 +69,26 @@ function ServiceDrawer({ service, onSaved, onDelete, onClose }) {
                     <div className="section-label section-label--tight">Name</div>
                     <input required autoFocus placeholder="e.g. Design" {...field('name')} className="input input--xs" />
                 </div>
-                <div className="form-grid drawer__section">
-                    <div>
-                        <div className="section-label section-label--tight">Default rate ($)</div>
-                        <input required type="number" min="0" step="0.01" {...field('default_rate')} className="input input--xs u-tabular-nums" />
+                {/* Hourly: a proposal line is hours times the rate. Flat fee:
+                    one price, quantity 1. */}
+                <div className="drawer__section">
+                    <div className="form-grid">
+                        <div>
+                            <div className="section-label section-label--tight">Billed</div>
+                            <select {...field('unit')} className="input input--xs">
+                                <option value="hourly">Hourly</option>
+                                <option value="fixed">Flat fee</option>
+                            </select>
+                        </div>
+                        <div>
+                            <div className="section-label section-label--tight">{form.unit === 'fixed' ? 'Fee ($)' : 'Hourly rate ($)'}</div>
+                            <input required type="number" min="0" step="0.01" {...field('default_rate')} className="input input--xs u-tabular-nums" />
+                        </div>
                     </div>
-                    <div>
-                        <div className="section-label section-label--tight">Unit</div>
-                        <select {...field('unit')} className="input input--xs">
-                            <option value="hourly">Hourly</option>
-                            <option value="fixed">Fixed</option>
-                        </select>
+                    <div className="form-hint form-hint--attached">
+                        {form.unit === 'fixed'
+                            ? 'One price for the whole service. On a proposal it’s a single line, not hours times a rate.'
+                            : 'On a proposal, the line is hours times this rate.'}
                     </div>
                 </div>
                 <div className="drawer__section">
@@ -167,7 +176,7 @@ export default function ServicesIndex({ services: servicesProp }) {
                             <tr>
                                 <th>Name</th>
                                 <th>Rate</th>
-                                <th>Unit</th>
+                                <th>Billed</th>
                                 <th>Time</th>
                                 <th></th>
                             </tr>
@@ -176,8 +185,10 @@ export default function ServicesIndex({ services: servicesProp }) {
                             {services.map((service) => (
                                 <tr key={service.id} onClick={(e) => openRow(e, service)} className="table__row--link">
                                     <td className="table__cell--strong">{service.name}</td>
-                                    <td className="table__cell--numeric">{formatCurrency(service.default_rate)}</td>
-                                    <td className="table__cell--muted table__cell--capitalize">{service.unit}</td>
+                                    <td className="table__cell--numeric">
+                                        {formatCurrency(service.default_rate)}{service.unit === 'fixed' ? '' : ' / hr'}
+                                    </td>
+                                    <td className="table__cell--muted">{service.unit === 'fixed' ? 'Flat fee' : 'Hourly'}</td>
                                     <td>
                                         {service.billable
                                             ? <Badge tone="success" label="Billable" />

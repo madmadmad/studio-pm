@@ -207,6 +207,14 @@ export default function ProposalEditor({ proposal, companies, services, presetCo
         }
     }
 
+    // A line for a flat-fee service: one price, so no quantity to enter.
+    // Only at quantity 1, so a line saved with more (before the service was
+    // flat) still shows what it's multiplied by.
+    function isFlatFee(item) {
+        const service = services.find((s) => String(s.id) === String(item.service_id));
+        return service?.unit === 'fixed' && Number(item.quantity) === 1;
+    }
+
     function updateItem(idx, field, value) {
         const items = form.items.map((item, i) => {
             if (i !== idx) return item;
@@ -217,6 +225,8 @@ export default function ProposalEditor({ proposal, companies, services, presetCo
                     next.description = service.name;
                     next.details = isBlankRichText(next.details) ? toRichText(service.description) : next.details;
                     next.rate = service.default_rate;
+                    // A flat fee is one price, not hours times a rate.
+                    if (service.unit === 'fixed') next.quantity = 1;
                 }
             }
             // A custom item has no service name, so its details double as
@@ -462,7 +472,9 @@ export default function ProposalEditor({ proposal, companies, services, presetCo
                                         <div className="proposal-form__service proposal-form__cell">
                                             {services.find((svc) => String(svc.id) === String(item.service_id))?.name ?? item.description}
                                         </div>
-                                        <div className="proposal-form__qty proposal-form__cell">{item.quantity}</div>
+                                        <div className="proposal-form__qty proposal-form__cell">
+                                            {isFlatFee(item) ? 'Flat fee' : item.quantity}
+                                        </div>
                                         <div className="proposal-form__rate proposal-form__cell">{formatCurrency(item.rate)}</div>
                                         <div className="proposal-form__line-total">{formatCurrency(lineAmount(item))}</div>
                                     </div>
@@ -513,17 +525,21 @@ export default function ProposalEditor({ proposal, companies, services, presetCo
                                         <option value="">Custom</option>
                                         {services.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
                                     </select>
-                                    <input
-                                        type="number"
-                                        min="0"
-                                        step="0.25"
-                                        placeholder="Qty"
-                                        value={item.quantity}
-                                        onChange={(e) => updateItem(idx, 'quantity', e.target.value)}
-                                        className="input input--xs proposal-form__qty"
-                                    />
+                                    {isFlatFee(item) ? (
+                                        <div className="proposal-form__qty proposal-form__cell proposal-form__cell--muted">Flat fee</div>
+                                    ) : (
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            step="0.25"
+                                            placeholder="Qty"
+                                            value={item.quantity}
+                                            onChange={(e) => updateItem(idx, 'quantity', e.target.value)}
+                                            className="input input--xs proposal-form__qty"
+                                        />
+                                    )}
                                     <CurrencyInput
-                                        placeholder="Rate"
+                                        placeholder={isFlatFee(item) ? 'Fee' : 'Rate'}
                                         value={item.rate}
                                         onChange={(value) => updateItem(idx, 'rate', value)}
                                         className="input input--xs proposal-form__rate"
