@@ -482,10 +482,16 @@ Defaults I'll use unless you say otherwise:
 - **Check/other payments:** straight to checking.
 - **Card surcharge:** credited to Card Surcharge Income.
 
+- **Payroll:** the provider pulls the full amount from checking, so the
+  payroll entry credits checking for the total; no withholding payables.
+- **Opening balances:** no dedicated form. It's one general journal entry
+  on the start date (debit checking, credit the card balance, the
+  difference to Opening Balance Equity), entered with the Phase 4 journal
+  screen.
+
 Still open (not blocking Phase 1):
-1. **Payroll:** does the provider debit checking for gross plus employer
-   tax and match (crediting checking for the total is right), or should
-   withholdings go to a payable? Needed by Phase 4.
-2. **Opening-balance form:** wanted, and will you enter past card payments
-   as transfers? Needed by Phase 6.
-3. **A sample Bonsai CSV export:** needed by Phase 6.
+1. **Bonsai exports:** a sample expenses CSV (with the "tags" column), and
+   invoices/payments only if past invoices aren't already in studio-pm.
+   Needed by Phase 6. Keep exports out of the repo.
+2. **MySQL or SQLite for production:** README says MySQL on Forge, the
+   production env says SQLite. Migrations will be written to work on both.
