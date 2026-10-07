@@ -451,6 +451,14 @@ like the current ones:
   equity).
 The existing year-based reports stay as they are for now (Q7).
 
+*Phase 5 as built:* the fiscal year is the calendar year. With no
+closing entries, income and expense accounts are read from January 1
+(the general ledger's opening balances for them restart each year), and
+earlier years' profit is computed into Retained Earnings on the trial
+balance and balance sheet, with this year's as "Current year earnings".
+The reports live at `/bookkeeping/ledger/*`, linked from the Financial
+reports card for its chosen year; the year-based reports are unchanged.
+
 ### Phase 6: Bonsai import and backfill
 
 **Goal (decided):** before launch, import the full Bonsai history from
