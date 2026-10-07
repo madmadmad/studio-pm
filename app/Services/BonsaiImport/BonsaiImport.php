@@ -84,10 +84,12 @@ class BonsaiImport
 
     public function __construct(private Ledger $ledger) {}
 
-    // $bankCsv is the bank's export of the card payments from checking;
-    // $opening the balances the day before $from, as decimals by account
-    // handle ('checking' => '200000.00', 'capital_one_card' => ...).
-    public function run(string $expensesCsv, string $invoicesCsv, string $itemsJsonl, string $from = BonsaiRules::FROM, bool $commit = false, ?string $bankCsv = null, array $opening = []): ImportReport
+    // $bankCsv is checking's export from the bank (the card payments come
+    // from it, and the rest is matched against the ledger); $cardCsvs the
+    // card's exports, matched likewise; $opening the balances the day
+    // before $from, as decimals by account handle ('checking' =>
+    // '200000.00', 'capital_one_card' => ...).
+    public function run(string $expensesCsv, string $invoicesCsv, string $itemsJsonl, string $from = BonsaiRules::FROM, bool $commit = false, ?string $bankCsv = null, array $opening = [], array $cardCsvs = []): ImportReport
     {
         $this->report = new ImportReport;
         $expenseRows = $this->readCsv($expensesCsv);
@@ -95,6 +97,11 @@ class BonsaiImport
             ->keyBy(fn (array $row) => (int) Str::afterLast($row['contractor_invoice_link'], '/'))
             ->all();
         $invoices = $this->readJsonl($itemsJsonl);
+        $bankRows = $bankCsv ? $this->readCsv($bankCsv) : [];
+        $statements = array_filter([
+            'checking' => StatementMatch::rows($bankRows),
+            'capital_one_card' => StatementMatch::rows(array_merge(...array_map(fn ($csv) => $this->readCsv($csv), $cardCsvs))),
+        ]);
 
         DB::beginTransaction();
         try {
@@ -106,11 +113,9 @@ class BonsaiImport
             $this->importInvoices($invoices, $invoiceRows, $from);
             $this->settleUnbilled();
             $this->openingBalances($opening, $from);
-            if ($bankCsv) {
-                $this->cardPayments($this->readCsv($bankCsv));
-            }
-            $this->post();
-            $this->summarize($invoiceRows, $from);
+            $this->cardPayments($bankRows);
+            $this->postAndMatch($statements, $from);
+            $this->summarize($invoiceRows, $from, $opening, $statements);
             $commit ? DB::commit() : DB::rollBack();
         } catch (Throwable $e) {
             DB::rollBack();
@@ -328,6 +333,7 @@ class BonsaiImport
     {
         $checking = in_array(trim($r['tags']), BonsaiRules::CHECKING_TAGS, true)
             || preg_match(BonsaiRules::CHECKING_NOTES, $r['notes'])
+            || preg_match(BonsaiRules::CHECKING_VENDORS, $r['name'])
             || preg_match(BonsaiRules::SALES_TAX_REMITTANCE, $r['name']);
 
         return Account::forKey($checking ? 'checking' : 'capital_one_card');
@@ -703,21 +709,19 @@ class BonsaiImport
 
     // The monthly Capital One payments from checking, from the bank's
     // export: transfers, not expenses. Also keeps the bank's running
-    // balance to check the ledger against.
+    // balance to check the ledger against. (The bank's other rows are
+    // matched against the ledger once it's posted.)
     private function cardPayments(array $rows): void
     {
-        foreach ($rows as $row) {
-            $date = Carbon::createFromFormat('m/d/Y', trim($row['Date']))->toDateString();
-            $cents = $this->cents(str_replace(['$', ','], '', $row['Amount']));
-            if (trim((string) ($row['Balance'] ?? '')) !== '') {
-                $this->bankBalances[] = ['date' => $date, 'balance' => $this->cents(str_replace(['$', ','], '', $row['Balance']))];
+        foreach (StatementMatch::rows($rows) as $row) {
+            ['date' => $date, 'cents' => $cents] = $row;
+            if ($row['balance'] !== null) {
+                $this->bankBalances[] = ['date' => $date, 'balance' => $row['balance']];
             }
-            if (! preg_match('/CAPITAL ONE/i', $row['Description']) || $cents >= 0) {
-                $this->report->review('Bank row not imported (not a card payment)', "{$date} {$row['Description']} {$row['Amount']}");
-
+            if (! preg_match(BonsaiRules::CARD_PAYMENT, $row['description']) || $cents >= 0) {
                 continue;
             }
-            $key = "bank:{$date}:{$cents}:".trim($row['Description']);
+            $key = "bank:{$date}:{$cents}:{$row['description']}";
             if ($this->records->has($key)) {
                 $this->report->count('Card payments already imported (skipped)');
 
@@ -732,6 +736,90 @@ class BonsaiImport
 
     // ---- Ledger ---------------------------------------------------------
 
+    // Posts everything, then matches the ledger against the statements.
+    // An expense on the card that the card never charged, with the same
+    // amount leaving checking (or the other way round), was paid from the
+    // other account: it's moved and everything posted again -- inside a
+    // savepoint, so the history has no reversals from the import.
+    private function postAndMatch(array $statements, string $from): void
+    {
+        DB::beginTransaction();
+        $this->post();
+        $matches = $this->match($statements, $from);
+        $moves = $this->misplaced($matches);
+        if ($moves === []) {
+            DB::commit();
+            $this->reportMatches($matches);
+
+            return;
+        }
+
+        DB::rollBack();
+        foreach ($moves as [$expense, $key, $why]) {
+            $expense->update(['paid_from_account_id' => Account::forKey($key)->id]);
+            $this->report->review($key === 'checking' ? 'Moved to paid from checking (the bank paid it, not the card)' : 'Moved to paid from the card (the card paid it, not the bank)', $why);
+        }
+        $this->post();
+        $this->reportMatches($this->match($statements, $from));
+    }
+
+    /** @return array<string, StatementMatch> */
+    private function match(array $statements, string $from): array
+    {
+        return collect($statements)->map(fn (array $rows, string $key) => StatementMatch::run(Account::forKey($key), $rows, $from))->all();
+    }
+
+    // Expenses left over on one account whose amount is left over on the
+    // other's statement, the closest date first.
+    /** @param array<string, StatementMatch> $matches */
+    private function misplaced(array $matches): array
+    {
+        if (count($matches) < 2) {
+            return [];
+        }
+
+        $moves = [];
+        foreach (['capital_one_card' => 'checking', 'checking' => 'capital_one_card'] as $on => $to) {
+            $free = $matches[$to]->statementLeft;
+            foreach ($matches[$on]->ledgerLeft as $left) {
+                $expense = $left['line']->entry->source;
+                if (! $expense instanceof Expense) {
+                    continue;
+                }
+                $best = null;
+                foreach ($free as $i => $row) {
+                    $days = abs(Carbon::parse($row['date'])->diffInDays(Carbon::parse($left['date'])));
+                    if ($row['cents'] === $left['cents'] && $days <= StatementMatch::MAX_DAYS && ($best === null || $days < $best[1])) {
+                        $best = [$i, $days];
+                    }
+                }
+                if ($best !== null) {
+                    $row = $free[$best[0]];
+                    unset($free[$best[0]]);
+                    $moves[] = [$expense, $to, sprintf('%s %s $%s → %s %s', $left['date'], $expense->name, number_format(-$left['cents'] / 100, 2), $row['date'], $row['description'])];
+                }
+            }
+        }
+
+        return $moves;
+    }
+
+    /** @param array<string, StatementMatch> $matches */
+    private function reportMatches(array $matches): void
+    {
+        $money = fn (int $cents) => ($cents < 0 ? '-$' : '$').number_format(abs($cents) / 100, 2);
+        foreach ($matches as $key => $match) {
+            $name = $key === 'checking' ? 'checking' : 'the card';
+            $this->report->count("Statement rows matched to the ledger ({$name})", $match->matched);
+            foreach ($match->statementLeft as $row) {
+                $this->report->review("On {$name}'s statement, not in the ledger", sprintf('%s %12s  %s', $row['date'], $money($row['cents']), $row['description']));
+            }
+            foreach ($match->ledgerLeft as $row) {
+                $this->report->review("In the ledger for {$name}, not on its statement", sprintf('%s %12s  #%d %s', $row['date'], $money($row['cents']), $row['line']->entry->entry_number, $row['description']));
+            }
+        }
+    }
+
     private function post(): void
     {
         foreach ([[ExpensePoster::class, $this->expenses], [PaymentPoster::class, $this->payments]] as [$poster, $records]) {
@@ -745,7 +833,7 @@ class BonsaiImport
         }
     }
 
-    private function summarize(array $invoiceRows, string $from): void
+    private function summarize(array $invoiceRows, string $from, array $opening = [], array $statements = []): void
     {
         $money = fn (int $cents) => '$'.number_format($cents / 100, 2);
         $today = now()->startOfDay();
@@ -768,13 +856,23 @@ class BonsaiImport
         }
         $this->report->ledger[] = sprintf('Journal entries: %d', JournalEntry::count());
 
-        // Checking against the bank: the ledger's balance at the end of each
-        // day the bank reported one. Close means nothing that went through
-        // checking is missing.
+        // The card against its statements: what it owed at the start plus
+        // everything on them since.
+        if (isset($statements['capital_one_card'])) {
+            $card = Account::forKey('capital_one_card');
+            $owed = $this->cents((string) ($opening['capital_one_card'] ?? '0')) - collect($statements['capital_one_card'])->where('date', '>=', $from)->sum('cents');
+            $ledger = Balances::normal($card, Balances::sums(null, $today)[$card->id] ?? null);
+            $this->report->ledger[] = sprintf('Capital One: statements say %s owed, ledger %s, difference %s', $money($owed), $money($ledger), $money($ledger - $owed));
+        }
+
+        // Checking against the bank: the ledger's balance at the end of the
+        // last day each month the bank reported one. Close means nothing
+        // that went through checking is missing.
         if ($this->bankBalances) {
             $checking = Account::forKey('checking');
-            $this->report->ledger[] = 'Checking vs the bank (end of day):';
-            foreach (collect($this->bankBalances)->sortBy('date') as $row) {
+            $this->report->ledger[] = 'Checking vs the bank (end of each month):';
+            // (The bank lists the newest first, within a day too.)
+            foreach (collect($this->bankBalances)->reverse()->sortBy('date')->groupBy(fn ($row) => substr($row['date'], 0, 7))->map->last() as $row) {
                 $ledger = Balances::normal($checking, Balances::sums(null, Carbon::parse($row['date']))[$checking->id] ?? null);
                 $this->report->ledger[] = sprintf('  %s  bank %s  ledger %s  difference %s', $row['date'], $money($row['balance']), $money($ledger), $money($ledger - $row['balance']));
             }

@@ -138,6 +138,22 @@ class BonsaiImportTest extends TestCase
         $this->assertStringContainsString('2025-03-26  bank $1,234.56', implode("\n", $report->ledger));
     }
 
+    public function test_the_statements_are_matched_and_an_expense_the_bank_paid_moves_to_checking(): void
+    {
+        $dir = base_path('tests/Fixtures/bonsai');
+        $report = app(BonsaiImport::class)->run("{$dir}/expenses.csv", "{$dir}/invoices.csv", "{$dir}/items.jsonl", '2025-01-01', true, "{$dir}/checking.csv", [], ["{$dir}/card.csv"]);
+
+        $this->assertSame('checking', Expense::firstWhere('name', 'Spectrum')->paidFrom->system_key, 'the bank paid it, though Bonsai put it on the card');
+        $this->assertCount(1, $report->review['Moved to paid from checking (the bank paid it, not the card)']);
+        $this->assertSame(0, JournalEntry::whereNotNull('reverses_entry_id')->count(), 'posted again from scratch, not reversed');
+        $this->assertSame(-(50000 + 20000 + 53870) + 100000, $this->balance('capital_one_card'));
+
+        $this->assertSame(3, $report->counts['Statement rows matched to the ledger (the card)']);
+        $this->assertStringContainsString('AMERICAN FUNDS', implode("\n", $report->review["On checking's statement, not in the ledger"]));
+        $this->assertStringContainsString('NETLIFY', implode("\n", $report->review["On the card's statement, not in the ledger"]));
+        $this->assertArrayNotHasKey('In the ledger for the card, not on its statement', $report->review, 'Adobe is after the statements end');
+    }
+
     public function test_the_command_needs_its_files(): void
     {
         $this->artisan('bonsai:import --expenses=/nope.csv')->assertFailed();

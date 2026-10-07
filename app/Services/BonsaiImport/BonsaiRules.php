@@ -19,6 +19,13 @@ class BonsaiRules
         'Utilities', 'Draw',
     ];
 
+    // Vendors paid by ACH or check from checking, whatever the tag (Level 2
+    // Audio by check, the rest ACH). Everyone else is on the card.
+    public const CHECKING_VENDORS = '/MADHOUSE FILMS|SCHOLAR HOUSE|PEACOCK SOCIAL|H\.?O\.?T\.? GRAPHICS|APLING|AARON RAJNER|ANDREW MENICH|LUETTKE|MARSHALL MELHORN|LEVEL 2 AUDIO|CLARK SCHAEFER|GRANT BEACHY|SATTLER PAINTING/i';
+
+    // The monthly card payment, as the bank describes it.
+    public const CARD_PAYMENT = '/CAPITAL ONE ONLINE PMT/i';
+
     // Notes that say it was a check, an ACH debit or a bank transfer.
     public const CHECKING_NOTES = '/\b(check|ach|bank transfer)\b|#\s?\d{4}\b/i';
 
