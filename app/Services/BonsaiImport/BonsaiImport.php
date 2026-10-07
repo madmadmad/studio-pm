@@ -113,7 +113,8 @@ class BonsaiImport
             $this->importInvoices($invoices, $invoiceRows, $from);
             $this->settleUnbilled();
             $this->openingBalances($opening, $from);
-            $this->cardPayments($bankRows);
+            $this->bankTransfers($bankRows, $from);
+            $this->payrollRuns($bankRows, $from);
             $this->postAndMatch($statements, $from);
             $this->summarize($invoiceRows, $from, $opening, $statements);
             $commit ? DB::commit() : DB::rollBack();
@@ -285,6 +286,14 @@ class BonsaiImport
             if (! $category) {
                 $this->report->review('Tag with no category (posts to Uncategorized)', $line);
             }
+            if (preg_match(BonsaiRules::PAID_PERSONALLY, $r['notes'])) {
+                $this->journal($key, $date, "Paid personally: {$r['name']}", [
+                    ['account' => $category?->account ?? 'uncategorized_expense', 'debit_cents' => $cents],
+                    ['account' => 'shareholder_capital', 'credit_cents' => $cents],
+                ], 'Paid from a personal account (to Shareholder Capital)');
+
+                continue;
+            }
 
             $company = trim($r['client']) !== '' ? $this->companyNamed($r['client']) : null;
             $media = BonsaiRules::isMedia($r['name']);
@@ -337,6 +346,9 @@ class BonsaiImport
 
     private function paidFrom(array $r): Account
     {
+        if (in_array(trim($r['tags']), BonsaiRules::PAYROLL_TAGS, true)) {
+            return Account::forKey('payroll_clearing');
+        }
         $checking = in_array(trim($r['tags']), BonsaiRules::CHECKING_TAGS, true)
             || preg_match(BonsaiRules::CHECKING_NOTES, $r['notes'])
             || preg_match(BonsaiRules::CHECKING_VENDORS, $r['name'])
@@ -713,30 +725,81 @@ class BonsaiImport
         }
     }
 
-    // The monthly Capital One payments from checking, from the bank's
-    // export: transfers, not expenses. Also keeps the bank's running
-    // balance to check the ledger against. (The bank's other rows are
-    // matched against the ledger once it's posted.)
-    private function cardPayments(array $rows): void
+    // Transfers out of checking, from the bank's export: the monthly
+    // Capital One payments, and what each pay run takes (to Payroll
+    // Clearing). Also keeps the bank's running balance to check the
+    // ledger against. (The bank's other rows are matched against the
+    // ledger once it's posted.)
+    private function bankTransfers(array $rows, string $from): void
     {
         foreach (StatementMatch::rows($rows) as $row) {
-            ['date' => $date, 'cents' => $cents] = $row;
+            ['date' => $date, 'cents' => $cents, 'description' => $description] = $row;
             if ($row['balance'] !== null) {
                 $this->bankBalances[] = ['date' => $date, 'balance' => $row['balance']];
             }
-            if (! preg_match(BonsaiRules::CARD_PAYMENT, $row['description']) || $cents >= 0) {
+            [$to, $memo, $countAs] = match (true) {
+                preg_match(BonsaiRules::CARD_PAYMENT, $description) && $cents < 0 => ['capital_one_card', 'Capital One payment', 'Card payments from checking (transfers)'],
+                (bool) preg_match(BonsaiRules::PAYROLL_DEBITS, $description) => ['payroll_clearing', 'Payroll: '.Str::before($description, ' 0'), 'Payroll debits from checking (to Payroll Clearing)'],
+                default => [null, null, null],
+            };
+            if (! $to || $date < $from || $cents === 0) {
                 continue;
             }
-            $key = "bank:{$date}:{$cents}:{$row['description']}";
+            $key = "bank:{$date}:{$cents}:{$description}";
             if ($this->records->has($key)) {
-                $this->report->count('Card payments already imported (skipped)');
+                $this->report->count('Bank transfers already imported (skipped)');
 
                 continue;
             }
-            $this->journal($key, $date, 'Capital One payment', [
-                ['account' => 'capital_one_card', 'debit_cents' => -$cents],
-                ['account' => 'checking', 'credit_cents' => -$cents],
-            ], 'Card payments from checking (transfers)');
+            $this->journal($key, $date, $memo, $cents < 0
+                ? [['account' => $to, 'debit_cents' => -$cents], ['account' => 'checking', 'credit_cents' => -$cents]]
+                : [['account' => 'checking', 'debit_cents' => $cents], ['account' => $to, 'credit_cents' => $cents]], $countAs);
+        }
+    }
+
+    // Settles each pay run in Payroll Clearing: Bonsai's wages, employer
+    // taxes and match for the run (from the payroll report), less what
+    // the bank paid out for it, is the employees' health insurance
+    // deduction -- back to Health & Life Insurance, as they paid that
+    // share of the premiums. A run is the bank's Data Service debit; each
+    // expense and American Funds debit belongs to the nearest one.
+    private function payrollRuns(array $rows, string $from): void
+    {
+        $bank = collect(StatementMatch::rows($rows))->filter(fn ($r) => $r['date'] >= $from && preg_match(BonsaiRules::PAYROLL_DEBITS, $r['description']));
+        $runs = $bank->filter(fn ($r) => $r['cents'] < 0 && str_contains(strtoupper($r['description']), 'DATA SERVICE'))->pluck('date')->unique()->sort()->values();
+        if ($runs->isEmpty()) {
+            return;
+        }
+        $nearest = fn (string $date) => $runs->sortBy(fn ($run) => [abs(Carbon::parse($run)->diffInDays(Carbon::parse($date))), $run])->first();
+
+        $costs = [];
+        $paid = [];
+        foreach (Expense::where('paid_from_account_id', Account::forKey('payroll_clearing')->id)->where('date', '>=', $from)->get() as $expense) {
+            $run = $nearest($expense->date->toDateString());
+            $costs[$run] = ($costs[$run] ?? 0) + Money::toCents($expense->amount);
+        }
+        foreach ($bank as $row) {
+            $run = $nearest($row['date']);
+            $paid[$run] = ($paid[$run] ?? 0) - $row['cents'];
+        }
+
+        $health = ($this->categories['Health & Life Insurance'] ?? null)?->account ?? Account::forKey('uncategorized_expense');
+        $money = fn (int $cents) => '$'.number_format($cents / 100, 2);
+        foreach ($runs as $run) {
+            $deduction = ($costs[$run] ?? 0) - ($paid[$run] ?? 0);
+            $line = sprintf('%s  Bonsai %s, bank %s, health deduction %s', $run, $money($costs[$run] ?? 0), $money($paid[$run] ?? 0), $money($deduction));
+            if ($deduction < 0 || $deduction > BonsaiRules::PAYROLL_HEALTH_LIMIT) {
+                $this->report->review('Pay run that doesn\'t add up (left in Payroll Clearing)', $line);
+
+                continue;
+            }
+            $this->report->review('Pay runs: employees\' health deduction (Bonsai less the bank)', $line);
+            if ($deduction > 0 && ! $this->records->has("payroll-health:{$run}")) {
+                $this->journal("payroll-health:{$run}", $run, "Employees' health insurance deduction, payroll of {$run}", [
+                    ['account' => 'payroll_clearing', 'debit_cents' => $deduction],
+                    ['account' => $health, 'credit_cents' => $deduction],
+                ], 'Pay runs settled (health deduction to Health & Life Insurance)');
+            }
         }
     }
 
@@ -856,7 +919,7 @@ class BonsaiImport
 
         $tb = TrialBalance::asOf($today);
         $this->report->ledger[] = sprintf('Trial balance today: debits %s, credits %s (%s)', $money($tb['totals']['debit']), $money($tb['totals']['credit']), $tb['balanced'] ? 'balanced' : 'OUT OF BALANCE');
-        foreach (['checking', 'capital_one_card', 'sales_tax_payable', 'uncategorized_expense'] as $key) {
+        foreach (['checking', 'capital_one_card', 'payroll_clearing', 'sales_tax_payable', 'uncategorized_expense'] as $key) {
             $account = Account::forKey($key);
             $this->report->ledger[] = sprintf('%s: %s', $account->name, $money(Balances::normal($account, Balances::sums(null, $today)[$account->id] ?? null)));
         }

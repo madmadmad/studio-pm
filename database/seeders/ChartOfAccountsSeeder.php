@@ -32,6 +32,7 @@ class ChartOfAccountsSeeder extends Seeder
         'liabilities' => [
             ['2000', 'Liabilities', 'liability', 'liabilities', null],
             ['2010', 'Capital One Card', 'liability', 'capital_one_card', 'Most expenses are charged here; paid off monthly from checking (a transfer, not an expense).'],
+            ['2100', 'Payroll Clearing', 'liability', 'payroll_clearing', 'A pay run\'s wages, employer taxes and retirement match, less what Data Service and American Funds took from checking and the employees\' health deduction. Nets to zero each pay run.'],
             ['2200', 'Sales Tax Payable', 'liability', 'sales_tax_payable', 'Ohio sales tax collected on invoices, owed to the state until remitted.'],
         ],
         'equity' => [

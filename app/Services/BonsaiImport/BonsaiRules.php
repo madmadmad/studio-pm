@@ -13,7 +13,7 @@ class BonsaiRules
 
     // Paid from checking rather than the Capital One card.
     public const CHECKING_TAGS = [
-        'Wages & Commissions', 'Payroll Taxes', 'Retirement Expense', 'Payroll Processing Fees',
+        'Payroll Processing Fees',
         'Rent & Lease Property', 'Health & Life Insurance', 'HSA fees', 'Business Insurance',
         'Local Taxes', 'Real Estate Taxes', 'Ohio State Workers\' Compensation tax', 'Taxes & Licenses',
         'Utilities', 'Draw',
@@ -25,6 +25,24 @@ class BonsaiRules
 
     // The monthly card payment, as the bank describes it.
     public const CARD_PAYMENT = '/CAPITAL ONE ONLINE PMT/i';
+
+    // A pay run's costs, from Data Service's report: paid from Payroll
+    // Clearing rather than checking.
+    public const PAYROLL_TAGS = ['Wages & Commissions', 'Payroll Taxes', 'Retirement Expense'];
+
+    // What a pay run takes from checking: Data Service's debit (net pay,
+    // withholdings, employer taxes) and American Funds' (the IRA
+    // deferrals and match). What's left in Payroll Clearing is the
+    // employees' health insurance deduction (HLTH125), which stays in
+    // checking and pays back the premiums.
+    public const PAYROLL_DEBITS = '/DATA SERVICE CEN PAYROLL|AMERICAN FUNDS INVESTMENT/i';
+
+    // More than this left over on a pay run isn't a health deduction;
+    // it's left in Payroll Clearing for a person to look at.
+    public const PAYROLL_HEALTH_LIMIT = 150000;
+
+    // Paid from the owner's own account: Shareholder Capital, not checking.
+    public const PAID_PERSONALLY = '/from personal bank account/i';
 
     // Notes that say it was a check, an ACH debit or a bank transfer.
     public const CHECKING_NOTES = '/\b(check|ach|bank transfer)\b|#\s?\d{4}\b/i';

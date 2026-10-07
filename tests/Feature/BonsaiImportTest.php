@@ -56,6 +56,7 @@ class BonsaiImportTest extends TestCase
 
         $this->assertSame('capital_one_card', Expense::firstWhere('name', 'Spectrum')->paidFrom->system_key);
         $this->assertSame('checking', Expense::firstWhere('name', 'Columbia Gas')->paidFrom->system_key);
+        $this->assertSame('payroll_clearing', Expense::firstWhere('name', 'Data Service Payroll')->paidFrom->system_key);
         $printing = Expense::firstWhere('name', 'GOTPRINT.COM');
         $this->assertSame('Printing', $printing->category->name);
         $this->assertSame('25.00', $printing->markup_percent);
@@ -70,6 +71,16 @@ class BonsaiImportTest extends TestCase
         $this->assertNull(Expense::firstWhere('name', 'Draw'));
         $this->assertSame(775, $this->balance('sales_tax_payable'));
         $this->assertSame(100000, $this->balance('shareholder_distributions'));
+    }
+
+    public function test_what_was_paid_from_a_personal_account_is_shareholder_capital(): void
+    {
+        $report = $this->import();
+
+        $this->assertSame(1, $report->counts['Paid from a personal account (to Shareholder Capital)']);
+        $this->assertNull(Expense::firstWhere('name', 'HNB-ECHO SPECIAL ACH'));
+        $this->assertSame(-450000, $this->balance('shareholder_capital'));
+        $this->assertSame(450000, Account::where('name', 'Health & Life Insurance')->sole()->netDebitCents());
     }
 
     public function test_invoices_come_in_with_their_lines_payments_and_attached_expenses(): void
@@ -110,7 +121,8 @@ class BonsaiImportTest extends TestCase
         $this->assertSame(-300, $this->balance('surcharge_income'));
         $this->assertSame(300, $this->balance('merchant_fees'));
         $this->assertSame(-1000, $this->balance('late_fee_income'));
-        $this->assertSame(102000 + 10000 - 8000 - 775 - 100000 - 500000, $this->balance('checking'));
+        $this->assertSame(102000 + 10000 - 8000 - 775 - 100000, $this->balance('checking'));
+        $this->assertSame(-500000, $this->balance('payroll_clearing'), 'until the bank pays it out');
         $this->assertSame(-(50000 + 12000 + 20000 + 53870), $this->balance('capital_one_card'));
     }
 
@@ -122,7 +134,7 @@ class BonsaiImportTest extends TestCase
         $report = $this->import();
 
         $this->assertSame($counts, [Company::count(), Expense::count(), Invoice::count(), Payment::count(), JournalEntry::count()]);
-        $this->assertSame(8, $report->counts['Expenses already imported (skipped)'], 'six expenses, the sales tax payment, the draw');
+        $this->assertSame(9, $report->counts['Expenses already imported (skipped)'], 'six expenses, the sales tax payment, the draw, the one paid personally');
         $this->assertSame(3, $report->counts['Invoices already imported (skipped)']);
     }
 
@@ -151,9 +163,20 @@ class BonsaiImportTest extends TestCase
         $this->assertSame(-(50000 + 20000 + 53870) + 100000, $this->balance('capital_one_card'));
 
         $this->assertSame(3, $report->counts['Statement rows matched to the ledger (the card)']);
-        $this->assertStringContainsString('AMERICAN FUNDS', implode("\n", $report->review["On checking's statement, not in the ledger"]));
+        $this->assertStringContainsString('AMEX', implode("\n", $report->review["On checking's statement, not in the ledger"]));
         $this->assertStringContainsString('NETLIFY', implode("\n", $report->review["On the card's statement, not in the ledger"]));
         $this->assertArrayNotHasKey('In the ledger for the card, not on its statement', $report->review, 'Adobe is after the statements end');
+    }
+
+    public function test_a_pay_run_is_settled_in_payroll_clearing_with_the_health_deduction(): void
+    {
+        $dir = base_path('tests/Fixtures/bonsai');
+        $report = app(BonsaiImport::class)->run("{$dir}/expenses.csv", "{$dir}/invoices.csv", "{$dir}/items.jsonl", '2025-01-01', true, "{$dir}/checking.csv");
+
+        $this->assertSame(2, $report->counts['Payroll debits from checking (to Payroll Clearing)'], 'Data Service and American Funds');
+        $this->assertSame(['2025-03-12  Bonsai $5,000.00, bank $4,950.00, health deduction $50.00'], $report->review["Pay runs: employees' health deduction (Bonsai less the bank)"]);
+        $this->assertSame(0, $this->balance('payroll_clearing'));
+        $this->assertSame(450000 - 5000, Account::where('name', 'Health & Life Insurance')->sole()->netDebitCents());
     }
 
     public function test_the_command_needs_its_files(): void

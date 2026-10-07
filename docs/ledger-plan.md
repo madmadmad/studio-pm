@@ -525,6 +525,26 @@ pulled in here because the ledger needs the history.
     `~/Downloads/bonsai_invoice_items_<date>.jsonl`, checked against the
     CSV totals.
   - Late fees: a Late Fee Income account (proposed, not yet confirmed).
+  - Opening balances at 2024-12-31: checking $200,000 (the partnership
+    draw deposited 12/17/2024; the CPA may reclassify it as Shareholder
+    Capital), Capital One $2,308.32.
+  - Statements: the import matches the full Waterford export (`--bank`)
+    and Capital One's exports (`--card`, one per file) against the ledger
+    and lists the leftovers. A card expense the bank paid (or the other
+    way round) is moved to that account. Vendors paid by ACH or check are
+    read as paid from checking (`BonsaiRules::CHECKING_VENDORS`).
+  - The 2025-02-21 health premium is in Bonsai twice ("ICHRA premiums" and
+    "HNB-ECHO SPECIAL ACH", expense 5767491); the bank paid it once, so
+    5767491 is skipped.
+  - Rows paid from a personal account (the $4,500 of 2025-01-01) post to
+    Shareholder Capital rather than checking.
+  - Payroll: Bonsai's wages, employer taxes and IRA match agree with Data
+    Service's cash requirement summary, and are paid from a Payroll
+    Clearing account. The bank's Data Service debit (net pay,
+    withholdings, employer taxes) and American Funds debit (IRA deferrals
+    and match) move checking into it. What's left on each run is the
+    employees' health deduction (HLTH125), credited to Health & Life
+    Insurance; clearing ends each run at zero.
 
  {--dry-run} {--from=YYYY-MM-DD}`, local or
 explicitly run by you only. It posts through the same posters in date order
