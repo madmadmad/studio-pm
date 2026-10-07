@@ -29,7 +29,8 @@ export default function ExpensesByMonth({ report }) {
     // The month in progress isn't over, so the average is of whole months.
     const whole = months.length > 1 && report.to >= new Date().toISOString().slice(0, 10) ? months.slice(0, -1) : months;
     const average = whole.length ? whole.reduce((sum, ym) => sum + sumMonth(ym), 0) / whole.length : 0;
-    const biggest = [...groups].sort((a, b) => b.total - a.total)[0];
+    // The last whole month, with or without payroll as the switch says.
+    const lastMonth = whole[whole.length - 1];
     const query = `from=${report.from}&to=${report.to}`;
 
     // Colors stay with their group whether payroll is shown or not.
@@ -58,7 +59,7 @@ export default function ExpensesByMonth({ report }) {
             <div className="metric-grid">
                 <MetricCard label={whole.length === months.length ? 'Average a month' : 'Average a month (whole months)'} value={money(average)} tone="primary" />
                 <MetricCard label="Total" value={money(total)} />
-                <MetricCard label="Largest group" value={biggest ? `${biggest.label}, ${money(biggest.total)}` : '—'} />
+                <MetricCard label={lastMonth ? `Last month, ${monthLabel(lastMonth)}` : 'Last month'} value={lastMonth ? money(sumMonth(lastMonth)) : '—'} />
             </div>
 
             {groups.length === 0 ? (
