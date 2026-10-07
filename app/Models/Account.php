@@ -25,10 +25,11 @@ class Account extends Model
 
     public const TYPES = [self::ASSET, self::LIABILITY, self::EQUITY, self::INCOME, self::EXPENSE];
 
-    protected $fillable = ['code', 'name', 'type', 'system_key', 'parent_id', 'description', 'is_active'];
+    protected $fillable = ['code', 'code_is_placeholder', 'name', 'type', 'system_key', 'parent_id', 'description', 'is_active'];
 
     protected $casts = [
         'is_active' => 'boolean',
+        'code_is_placeholder' => 'boolean',
     ];
 
     protected static function booted(): void

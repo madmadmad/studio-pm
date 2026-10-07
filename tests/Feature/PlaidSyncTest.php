@@ -133,10 +133,10 @@ class PlaidSyncTest extends TestCase
         $this->assertSame('54.99', Expense::sole()->amount);
     }
 
-    public function test_a_travel_charge_gets_the_travel_category(): void
+    public function test_a_flight_gets_the_flights_category(): void
     {
         $this->connectedItem();
-        $travel = ExpenseCategory::firstOrCreate(['name' => 'Travel'], ['color' => '#595F64']);
+        $travel = ExpenseCategory::where('name', 'Flights, Taxi & Transportation')->firstOrFail();
         Http::fake(['*/transactions/sync' => Http::response($this->syncPage([$this->transaction('t-1', 220, ['merchant_name' => 'United', 'personal_finance_category' => ['primary' => 'TRAVEL', 'detailed' => 'TRAVEL_FLIGHTS']])]))]);
 
         $this->actingAs(User::factory()->create())->postJson('/api/plaid/sync')->assertOk();

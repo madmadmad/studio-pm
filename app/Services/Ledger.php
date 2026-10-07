@@ -191,6 +191,9 @@ class Ledger
         if (! $resolved) {
             throw new LedgerException('A line names an account that doesn\'t exist'.(is_string($account) ? " (\"{$account}\")." : '.'));
         }
+        if ($resolved->children()->exists()) {
+            throw new LedgerException("\"{$resolved->name}\" is a group heading. Post to one of the accounts under it.");
+        }
         if (! $resolved->is_active) {
             throw new LedgerException("\"{$resolved->name}\" is inactive. Reactivate it or post to another account.");
         }

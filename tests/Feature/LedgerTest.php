@@ -29,9 +29,10 @@ class LedgerTest extends TestCase
 
         $this->ledger = app(Ledger::class);
 
-        Account::create(['code' => '1010', 'name' => 'Checking', 'type' => Account::ASSET, 'system_key' => 'checking']);
-        Account::create(['code' => '2010', 'name' => 'Capital One Card', 'type' => Account::LIABILITY, 'system_key' => 'capital_one_card']);
-        Account::create(['code' => '6100', 'name' => 'Internet', 'type' => Account::EXPENSE, 'system_key' => 'internet']);
+        // The chart is seeded by migration. Internet has no handle of its
+        // own (only accounts the code depends on do), so give it one here
+        // to keep the lines short.
+        Account::where('name', 'Internet')->firstOrFail()->update(['system_key' => 'internet']);
     }
 
     // A $120 internet bill on the card.
@@ -183,6 +184,16 @@ class LedgerTest extends TestCase
         $line->update(['bank_reconciliation_id' => $statement->id]);
 
         $this->assertSame($statement->id, $line->fresh()->bank_reconciliation_id);
+    }
+
+    public function test_a_group_heading_cant_be_posted_to(): void
+    {
+        $this->expectExceptionMessage('"Operating Expenses" is a group heading.');
+
+        $this->ledger->post('2026-03-04', [
+            ['account' => 'operating_expenses', 'debit_cents' => 100],
+            ['account' => 'capital_one_card', 'credit_cents' => 100],
+        ]);
     }
 
     public function test_accounts_are_deactivated_never_deleted(): void

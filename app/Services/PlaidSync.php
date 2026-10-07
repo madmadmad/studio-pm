@@ -23,10 +23,14 @@ class PlaidSync
     // A first guess at the expense category, from Plaid's -- matched to
     // ours by name, so it's only set where that category exists.
     private const CATEGORY_GUESSES = [
-        'GENERAL_MERCHANDISE_OFFICE_SUPPLIES' => 'Office Supplies',
-        'GENERAL_MERCHANDISE_ELECTRONICS' => 'Equipment',
-        'TRAVEL' => 'Travel',
-        'TRANSPORTATION' => 'Travel',
+        'GENERAL_MERCHANDISE_OFFICE_SUPPLIES' => 'Other Office Expenses',
+        'GENERAL_MERCHANDISE_ELECTRONICS' => 'Electronics & Furniture',
+        'TRAVEL_FLIGHTS' => 'Flights, Taxi & Transportation',
+        'TRAVEL_TAXIS_AND_RIDE_SHARES' => 'Flights, Taxi & Transportation',
+        'TRAVEL_LODGING' => 'Hotel & Accommodation',
+        'TRAVEL' => 'Other Travel Expenses',
+        'TRANSPORTATION_GAS' => 'Gas & Fuel',
+        'TRANSPORTATION' => 'Flights, Taxi & Transportation',
     ];
 
     public function __construct(private PlaidClient $plaid) {}

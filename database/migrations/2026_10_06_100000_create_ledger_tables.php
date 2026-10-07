@@ -109,12 +109,17 @@ return new class extends Migration
         return '(debit_cents > 0 and credit_cents = 0) or (credit_cents > 0 and debit_cents = 0)';
     }
 
+    // Without foreign key checks: the restricts above (an account's
+    // heading, a reversal's original) would otherwise refuse to drop
+    // tables that have rows.
     public function down(): void
     {
-        Schema::dropIfExists('journal_lines');
-        Schema::dropIfExists('journal_entries');
-        Schema::dropIfExists('bank_reconciliations');
-        Schema::dropIfExists('accounting_periods');
-        Schema::dropIfExists('accounts');
+        Schema::withoutForeignKeyConstraints(function () {
+            Schema::dropIfExists('journal_lines');
+            Schema::dropIfExists('journal_entries');
+            Schema::dropIfExists('bank_reconciliations');
+            Schema::dropIfExists('accounting_periods');
+            Schema::dropIfExists('accounts');
+        });
     }
 };
