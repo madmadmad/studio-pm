@@ -14,7 +14,7 @@ class Expense extends Model
         'is_billable', 'markup_percent', 'tax_id', 'date',
         'is_recurring', 'recurrence_interval', 'receipt_path', 'receipt_filename',
         'source_label', 'plaid_transaction_id', 'billing_status',
-        'invoice_id', 'invoice_item_id', 'paid_from_account_id',
+        'invoice_id', 'invoice_item_id', 'paid_from_account_id', 'notes',
     ];
 
     protected $casts = [

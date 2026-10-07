@@ -11,22 +11,24 @@ use Illuminate\Database\Eloquent\Model;
 // A client's payment on an invoice -- revenue on cash basis, so this is
 // where income is recorded.
 //
-// Money in: card and ACH land in Stripe Clearing (less Stripe's fee, when
-// it's known, which debits Payment Processing Fees), a check goes to
-// checking. Credited: the sales tax in the payment to Sales Tax Payable,
-// the card surcharge to Card Surcharge Income, and the rest as revenue,
-// shared across the invoice's lines by amount. Each line's revenue goes
-// to the first of: the rebilled expense's category ("billed as"), the
+// Money in: what Stripe took lands in Stripe Clearing, anything else in
+// checking -- less the processor's fee, when it's known, which debits
+// Payment Processing Fees. Credited: the sales tax in the payment to Sales
+// Tax Payable, the card surcharge to Card Surcharge Income, any late fee to
+// Late Fee Income, and the rest as revenue, shared across the invoice's
+// lines by amount. Each line's revenue goes to the first of: the line's
+// own revenue account, the rebilled expense's category ("billed as"), the
 // line's service, the invoice's category, Design & Development Services.
 class PaymentPoster extends Poster
 {
     protected function draft(Model $record): ?array
     {
         /** @var Payment $record */
-        $invoice = $record->invoice()->with(['items.expense.category.revenueAccount', 'items.service.revenueAccount', 'category.revenueAccount'])->first();
+        $invoice = $record->invoice()->with(['items.revenueAccount', 'items.expense.category.revenueAccount', 'items.service.revenueAccount', 'category.revenueAccount'])->first();
         $paid = Money::toCents($record->amount);
         $surcharge = Money::toCents($record->surcharge_amount);
-        if (! $invoice || $paid + $surcharge <= 0) {
+        $lateFee = Money::toCents($record->late_fee);
+        if (! $invoice || $paid + $surcharge + $lateFee <= 0) {
             return null;
         }
 
@@ -35,13 +37,15 @@ class PaymentPoster extends Poster
         $total = Money::toCents($invoice->total());
         $invoiceTax = Money::toCents($invoice->taxAmount());
         $tax = $total > 0 ? min($paid, (int) round($invoiceTax * $paid / $total)) : 0;
-        $fee = $record->viaStripe() ? min(Money::toCents($record->stripe_fee), $paid + $surcharge) : 0;
+        $received = $paid + $surcharge + $lateFee;
+        $fee = min(Money::toCents($record->stripe_fee), $received);
 
         $lines = [
-            ['account' => $this->account($record->viaStripe() ? 'stripe_clearing' : 'checking'), 'debit_cents' => $paid + $surcharge - $fee],
+            ['account' => $this->account($record->viaStripe() ? 'stripe_clearing' : 'checking'), 'debit_cents' => $received - $fee],
             ['account' => $this->account('merchant_fees'), 'debit_cents' => $fee],
             ['account' => $this->account('sales_tax_payable'), 'credit_cents' => $tax],
             ['account' => $this->account('surcharge_income'), 'credit_cents' => $surcharge, 'company_id' => $invoice->company_id],
+            ['account' => $this->account('late_fee_income'), 'credit_cents' => $lateFee, 'company_id' => $invoice->company_id],
             ...$this->revenue($invoice->items->all(), $invoice->category?->revenueAccount, $paid - $tax, $invoice->company_id),
         ];
 
@@ -85,7 +89,8 @@ class PaymentPoster extends Poster
 
     private function revenueAccount(InvoiceItem $item, ?Account $categoryAccount): Account
     {
-        $mapped = $item->expense?->category?->revenueAccount
+        $mapped = $item->revenueAccount
+            ?? $item->expense?->category?->revenueAccount
             ?? $item->service?->revenueAccount
             ?? $categoryAccount;
 

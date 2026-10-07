@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class InvoiceItem extends Model
 {
-    protected $fillable = ['invoice_id', 'service_id', 'description', 'details', 'amount', 'taxable', 'position'];
+    protected $fillable = ['invoice_id', 'service_id', 'description', 'details', 'amount', 'taxable', 'position', 'revenue_account_id'];
 
     protected $casts = [
         'taxable' => 'boolean',
@@ -23,6 +23,13 @@ class InvoiceItem extends Model
     public function service(): BelongsTo
     {
         return $this->belongsTo(Service::class);
+    }
+
+    // Where this line's income posts, when it shouldn't follow its service
+    // or rebilled expense (time on an ad invoice is ad management).
+    public function revenueAccount(): BelongsTo
+    {
+        return $this->belongsTo(Account::class, 'revenue_account_id');
     }
 
     public function timeEntries(): HasMany

@@ -49,6 +49,7 @@ class ChartOfAccountsSeeder extends Seeder
             ['4040', 'Hosting', 'income', 'hosting_revenue', 'Hosting billed to clients, marked up (the cost is Hosting Cost).'],
             ['4050', 'Printing', 'income', 'printing_revenue', 'Printing resold to clients, marked up (the cost is Printing Cost).'],
             ['4090', 'Card Surcharge Income', 'income', 'surcharge_income', 'The card processing fee clients pay to cover Stripe\'s fee.'],
+            ['4095', 'Late Fee Income', 'income', 'late_fee_income', 'Late fees clients paid on overdue invoices.'],
             ['4900', 'Other Income', 'income', 'other_income', null],
         ],
         'cost_of_revenue' => [
