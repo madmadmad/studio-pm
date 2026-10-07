@@ -48,6 +48,12 @@ class BonsaiRules
     // with a receipt (same day, amount and first word) is skipped.
     public const DUPLICATE_WINDOW = ['2026-04-01', '2026-06-30'];
 
+    // Rows left out one by one, by Bonsai's expense id (from its receipt
+    // link), with why.
+    public const SKIP_EXPENSES = [
+        '5767491' => 'Second copy of the ICHRA premium of 2025-02-21 (the bank paid it once)',
+    ];
+
     // How long after an invoice's date an expense can still be on it.
     public const ATTACH_GRACE_DAYS = 14;
 

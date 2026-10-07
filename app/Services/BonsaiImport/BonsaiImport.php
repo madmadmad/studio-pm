@@ -220,6 +220,12 @@ class BonsaiImport
                 continue;
             }
 
+            if (preg_match('#/expenses/(\d+)/#', $r['receipt'], $m) && isset(BonsaiRules::SKIP_EXPENSES[$m[1]])) {
+                $this->report->skip(BonsaiRules::SKIP_EXPENSES[$m[1]], $line);
+
+                continue;
+            }
+
             $others = $sameDay[$r['date'].'|'.$this->cents($r['amount_after_tax'])]->reject(fn (array $o) => $o === $r);
             if (BonsaiRules::isMasked($r['name'])) {
                 if ($others->contains(fn (array $o) => BonsaiRules::isMedia($o['name']))) {

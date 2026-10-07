@@ -50,6 +50,8 @@ class BonsaiImportTest extends TestCase
         $this->assertCount(1, $report->skipped['Receipt-less copy of a charge with a receipt (bank feed)']);
         $this->assertCount(1, $report->skipped['Bonsai payment fee (posted with its payment)']);
         $this->assertCount(1, $report->skipped['Before 2025-01-01']);
+        $this->assertCount(1, $report->skipped['Second copy of the ICHRA premium of 2025-02-21 (the bank paid it once)']);
+        $this->assertNull(Expense::firstWhere('name', 'HNB-ECHO SPECIAL ACH'));
         $this->assertCount(1, $report->review['Wages to split out officer compensation']);
 
         $this->assertSame('capital_one_card', Expense::firstWhere('name', 'Spectrum')->paidFrom->system_key);
