@@ -1,0 +1,71 @@
+// The line editor in a general journal entry (Components/ledger/
+// NewEntryDrawer.jsx): a row per line -- account, client, debit, credit,
+// remove -- then the totals under the amount columns and, while they
+// differ, how far apart they are. On a phone each line wraps: the
+// account across the top, the rest beneath.
+@use '../abstracts' as *;
+
+.journal-lines {
+    display: grid;
+    gap: var(--space-2);
+
+    &__row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+        gap: var(--space-2);
+        align-items: center;
+
+        @include respond-to('md') {
+            grid-template-columns: minmax(0, 2fr) minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 1fr) auto;
+        }
+    }
+
+    &__account {
+        grid-column: 1 / -1;
+
+        @include respond-to('md') {
+            grid-column: auto;
+        }
+    }
+
+    &__client {
+        grid-column: 1 / -1;
+
+        @include respond-to('md') {
+            grid-column: auto;
+        }
+    }
+
+    // The column headings, only where the row is one line wide.
+    &__head {
+        display: none;
+
+        @include respond-to('md') {
+            display: grid;
+            font-size: var(--font-size-xs);
+            line-height: var(--line-height-xs);
+            color: var(--color-text-muted);
+        }
+    }
+
+    &__totals {
+        padding-top: var(--space-2);
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+        font-weight: var(--font-weight-semibold);
+        font-variant-numeric: tabular-nums;
+        border-top: var(--border-width) solid var(--color-border);
+    }
+
+    &__amount {
+        text-align: right;
+    }
+
+    // "Out of balance by $10.00" -- in the danger text, since it blocks
+    // posting.
+    &__difference {
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+        color: var(--color-danger-text);
+    }
+}

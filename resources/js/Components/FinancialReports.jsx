@@ -11,6 +11,7 @@ const REPORTS = [
 
 // Not year-based, so linked without ?year.
 const LEDGER = [
+    { href: '/bookkeeping/journal', label: 'Journal' },
     { href: '/bookkeeping/accounts', label: 'Chart of accounts' },
 ];
 

@@ -5,26 +5,23 @@ import Badge from '../../Components/Badge';
 import EmptyState from '../../Components/EmptyState';
 import PageHeader from '../../Components/PageHeader';
 import TabBar from '../../Components/TabBar';
+import TabToolbar from '../../Components/TabToolbar';
 import Toggle from '../../Components/Toggle';
+import AccountDrawer from '../../Components/ledger/AccountDrawer';
+import AccountSelect, { groupAccounts } from '../../Components/ledger/AccountSelect';
 import { api } from '../../lib/api';
 import { useRememberedTab } from '../../lib/useRememberedTab';
 
 const TABS = ['Accounts', 'Mappings'];
 
-// The headings (accounts with nothing above them), each with the accounts
-// under it, in code order.
-function groupAccounts(accounts) {
-    return accounts
-        .filter((a) => a.parent_id === null)
-        .map((heading) => ({ heading, accounts: accounts.filter((a) => a.parent_id === heading.id) }));
-}
-
-// Every account of the chart, a table per group heading.
-function AccountsTab({ accounts }) {
+// Every account of the chart, a table per group heading. A row opens the
+// account to edit; accounts are added under a heading.
+function AccountsTab({ accounts, onOpen, onAdd }) {
     const placeholders = accounts.some((a) => a.code_is_placeholder);
 
     return (
         <>
+            <TabToolbar addLabel="Add account" onAdd={onAdd} />
             {placeholders && (
                 <p className="form-hint page-section page-section--tight">
                     Account codes are placeholders until our CPA supplies a chart of accounts.
@@ -52,7 +49,7 @@ function AccountsTab({ accounts }) {
                                 </thead>
                                 <tbody>
                                     {rows.map((account) => (
-                                        <tr key={account.id}>
+                                        <tr key={account.id} onClick={() => onOpen(account)} className="table__row--link">
                                             <td className="table__cell--muted u-tabular-nums">{account.code}</td>
                                             <td className="table__cell--strong">
                                                 <span className="table__group">
@@ -70,30 +67,6 @@ function AccountsTab({ accounts }) {
                 </div>
             ))}
         </>
-    );
-}
-
-// A select of the postable accounts of one type, grouped under their
-// headings. Blank is the fallback, named so it's clear what happens.
-function AccountSelect({ accounts, type, value, blankLabel, onChange, label }) {
-    const groups = groupAccounts(accounts.filter((a) => a.type === type))
-        .map(({ heading, accounts: rows }) => ({ heading, rows: rows.filter((a) => a.is_active || a.id === value) }))
-        .filter(({ rows }) => rows.length > 0);
-
-    return (
-        <select
-            aria-label={label}
-            value={value ?? ''}
-            onChange={(e) => onChange(e.target.value === '' ? null : Number(e.target.value))}
-            className="input input--xs"
-        >
-            <option value="">{blankLabel}</option>
-            {groups.map(({ heading, rows }) => (
-                <optgroup key={heading.id} label={heading.name}>
-                    {rows.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
-                </optgroup>
-            ))}
-        </select>
     );
 }
 
@@ -143,7 +116,7 @@ function MappingTable({ title, hint, rows, columns, accounts, endpoint, onSaved 
                                             ) : (
                                             <AccountSelect
                                                 accounts={accounts}
-                                                type={type}
+                                                filter={(a) => a.type === type}
                                                 value={row[field]}
                                                 blankLabel={blankLabel}
                                                 label={`${row.name}: ${heading}`}
@@ -211,18 +184,36 @@ function MappingsTab({ accounts, fallbacks, ...props }) {
 }
 
 // Bookkeeping > Chart of accounts: the ledger's accounts, and the mapping
-// from the app's categories and services to them. Accounts are read-only
-// here for now (adding, renaming and deactivating come with the journal
-// screens). Built by App\Http\Controllers\Web\LedgerPageController.
+// from the app's categories and services to them. Accounts are added,
+// renamed and deactivated here (never deleted). Built by
+// App\Http\Controllers\Web\LedgerPageController.
 export default function Accounts(props) {
     const [tab, setTab] = useRememberedTab('bookkeeping.accounts.tab', TABS, { param: 'tab' });
+    const [accounts, setAccounts] = useState(props.accounts);
+    // 'new' while adding, an account while editing, null when closed.
+    const [editing, setEditing] = useState(null);
+
+    function saved(account) {
+        setAccounts((current) => [...current.filter((a) => a.id !== account.id), account].sort((a, b) => a.code.localeCompare(b.code)));
+    }
 
     return (
         <AppLayout>
             <Head title="Chart of accounts" />
             <PageHeader back={{ href: '/bookkeeping', label: 'Bookkeeping' }} title="Chart of accounts" />
             <TabBar tabs={TABS} tab={tab} setTab={setTab} />
-            {tab === 'Accounts' ? <AccountsTab accounts={props.accounts} /> : <MappingsTab {...props} />}
+            {tab === 'Accounts'
+                ? <AccountsTab accounts={accounts} onOpen={setEditing} onAdd={() => setEditing('new')} />
+                : <MappingsTab {...props} accounts={accounts} />}
+            {editing && (
+                <AccountDrawer
+                    key={editing === 'new' ? 'new' : editing.id}
+                    account={editing === 'new' ? null : editing}
+                    accounts={accounts}
+                    onSaved={saved}
+                    onClose={() => setEditing(null)}
+                />
+            )}
         </AppLayout>
     );
 }
