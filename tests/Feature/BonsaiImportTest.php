@@ -46,7 +46,7 @@ class BonsaiImportTest extends TestCase
     {
         $report = $this->import();
 
-        $this->assertSame(6, $report->counts['Expenses']);
+        $this->assertSame(7, $report->counts['Expenses']);
         $this->assertCount(1, $report->skipped['Masked bank-feed copy of a Google Ads charge']);
         $this->assertCount(1, $report->skipped['Receipt-less copy of a charge with a receipt (bank feed)']);
         $this->assertCount(1, $report->skipped['Bonsai payment fee (posted with its payment)']);
@@ -58,6 +58,7 @@ class BonsaiImportTest extends TestCase
         $this->assertSame('capital_one_card', Expense::firstWhere('name', 'Spectrum')->paidFrom->system_key);
         $this->assertSame('checking', Expense::firstWhere('name', 'Columbia Gas')->paidFrom->system_key);
         $this->assertSame('payroll_clearing', Expense::firstWhere('name', 'Data Service Payroll')->paidFrom->system_key);
+        $this->assertSame('Hosting', Expense::firstWhere('name', 'SQSP* WEBSIT#233029694')->category->name, 'Squarespace is hosting, though Bonsai tagged it a meal');
         $printing = Expense::firstWhere('name', 'GOTPRINT.COM');
         $this->assertSame('Printing', $printing->category->name);
         $this->assertSame('25.00', $printing->markup_percent);
@@ -130,7 +131,7 @@ class BonsaiImportTest extends TestCase
         $this->assertSame(-1000, $this->balance('late_fee_income'));
         $this->assertSame(102000 + 10000 - 8000 - 775 - 100000, $this->balance('checking'));
         $this->assertSame(-500000, $this->balance('payroll_clearing'), 'until the bank pays it out');
-        $this->assertSame(-(50000 + 12000 + 20000 + 53870), $this->balance('capital_one_card'));
+        $this->assertSame(-(50000 + 12000 + 20000 + 53870 + 14870), $this->balance('capital_one_card'));
     }
 
     public function test_running_again_skips_what_is_already_in(): void
@@ -141,7 +142,7 @@ class BonsaiImportTest extends TestCase
         $report = $this->import();
 
         $this->assertSame($counts, [Company::count(), Expense::count(), Invoice::count(), Payment::count(), JournalEntry::count()]);
-        $this->assertSame(9, $report->counts['Expenses already imported (skipped)'], 'six expenses, the sales tax payment, the draw, the one paid personally');
+        $this->assertSame(10, $report->counts['Expenses already imported (skipped)'], 'seven expenses, the sales tax payment, the draw, the one paid personally');
         $this->assertSame(3, $report->counts['Invoices already imported (skipped)']);
     }
 
@@ -155,7 +156,7 @@ class BonsaiImportTest extends TestCase
         $opening = JournalEntry::where('memo', 'like', 'Opening balance%')->sole();
         $this->assertSame('2024-12-31', $opening->entry_date->toDateString());
         $this->assertSame(-20000000, $this->balance('opening_balance_equity'));
-        $this->assertSame(-(50000 + 12000 + 20000 + 53870) + 100000, $this->balance('capital_one_card'));
+        $this->assertSame(-(50000 + 12000 + 20000 + 53870 + 14870) + 100000, $this->balance('capital_one_card'));
         $this->assertStringContainsString('2025-03-26  bank $1,234.56', implode("\n", $report->ledger));
     }
 
@@ -167,12 +168,12 @@ class BonsaiImportTest extends TestCase
         $this->assertSame('checking', Expense::firstWhere('name', 'Spectrum')->paidFrom->system_key, 'the bank paid it, though Bonsai put it on the card');
         $this->assertCount(1, $report->review['Moved to paid from checking (the bank paid it, not the card)']);
         $this->assertSame(0, JournalEntry::whereNotNull('reverses_entry_id')->count(), 'posted again from scratch, not reversed');
-        $this->assertSame(-(50000 + 20000 + 53870) + 100000, $this->balance('capital_one_card'));
+        $this->assertSame(-(50000 + 20000 + 53870 + 14870) + 100000, $this->balance('capital_one_card'));
 
         $this->assertSame(3, $report->counts['Statement rows matched to the ledger (the card)']);
         $this->assertStringContainsString('AMEX', implode("\n", $report->review["On checking's statement, not in the ledger"]));
         $this->assertStringContainsString('NETLIFY', implode("\n", $report->review["On the card's statement, not in the ledger"]));
-        $this->assertArrayNotHasKey('In the ledger for the card, not on its statement', $report->review, 'Adobe is after the statements end');
+        $this->assertArrayNotHasKey('In the ledger for the card, not on its statement', $report->review, 'Adobe and Squarespace are after the statements end');
     }
 
     public function test_a_pay_run_is_settled_in_payroll_clearing_with_the_health_deduction(): void

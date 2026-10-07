@@ -13,3 +13,4 @@ date,name,currency,amount_after_tax,tax_rate,amount_pre_tax,markup_percentage,sa
 2025-03-12,Data Service Payroll,USD,5000.0,0,5000.0,0.0,"","","","","",Wages & Commissions,"",false
 2025-02-21,HNB-ECHO SPECIAL ACH,USD,2766.3,0,2766.3,0.0,"","","","","",Health & Life Insurance,https://app.hellobonsai.com/expenses/5767491/receipt,false
 2025-01-01,HNB-ECHO SPECIAL ACH ,USD,4500.0,0,4500.0,0.0,"","","","",Initial deposit Nov. 8 2024 from personal bank account.,Health & Life Insurance,"",false
+2026-05-02,SQSP* WEBSIT#233029694,USD,148.7,0,148.7,0.0,"","","","","",Business Meals,https://app.hellobonsai.com/expenses/7/receipt,false

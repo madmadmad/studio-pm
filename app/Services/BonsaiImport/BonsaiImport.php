@@ -282,7 +282,12 @@ class BonsaiImport
                 continue;
             }
 
-            $categoryName = BonsaiRules::isMedia($r['name']) ? 'Advertising' : (BonsaiRules::isPrinting($r['name']) ? 'Printing' : (is_string($alias) ? $alias : $tag));
+            $categoryName = match (true) {
+                BonsaiRules::isMedia($r['name']) => 'Advertising',
+                BonsaiRules::isPrinting($r['name']) => 'Printing',
+                BonsaiRules::isHosting($r['name']) => 'Hosting',
+                default => is_string($alias) ? $alias : $tag,
+            };
             $category = $this->categories[$categoryName] ?? null;
             if (! $category) {
                 $this->report->review('Tag with no category (posts to Uncategorized)', $line);

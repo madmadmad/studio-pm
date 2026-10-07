@@ -54,6 +54,10 @@ class BonsaiRules
     // Printers: the Printing category (Printing Cost when billed).
     public const PRINTING = '/GOTPRINT|MOO PRINT|H\.?O\.?T\.? Graphics|Invitation Printing|^Printing$/i';
 
+    // Hosting whatever its tag: Squarespace and Google Cloud (Hosting
+    // Cost; Hosting income when billed to a client).
+    public const HOSTING = '/SQSP\*|squarespace|google\s*cloud/i';
+
     // Bonsai's own card/ACH fee on a client payment; it posts with the
     // payment instead.
     public const BONSAI_FEE = '/^Bonsai Payments Processing Fee - Invoice #(\d+)/';
@@ -86,6 +90,11 @@ class BonsaiRules
     public static function isMedia(string $name): bool
     {
         return (bool) preg_match(self::MEDIA, $name);
+    }
+
+    public static function isHosting(string $name): bool
+    {
+        return (bool) preg_match(self::HOSTING, $name);
     }
 
     public static function isPrinting(string $name): bool
