@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from '@inertiajs/react';
 import { Books, FileCsv, FileText } from '@phosphor-icons/react';
+import { todayInAppTimezone } from '../lib/format';
 
 const REPORTS = [
     { href: '/bookkeeping/profit-loss', label: 'Profit & loss statement' },
@@ -9,11 +10,23 @@ const REPORTS = [
     { href: '/bookkeeping/hosting', label: 'Hosting profitability' },
 ];
 
-// Not year-based, so linked without ?year.
+// From the ledger: its screens, and its reports for the chosen year
+// (the reports take any dates once open).
 const LEDGER = [
-    { href: '/bookkeeping/journal', label: 'Journal' },
-    { href: '/bookkeeping/accounts', label: 'Chart of accounts' },
+    { href: () => '/bookkeeping/journal', label: 'Journal' },
+    { href: () => '/bookkeeping/accounts', label: 'Chart of accounts' },
+    { href: (year) => `/bookkeeping/ledger/profit-loss?from=${year}-01-01&to=${year}-12-31`, label: 'Profit & loss (ledger)' },
+    { href: (year) => `/bookkeeping/ledger/balance-sheet?to=${yearEnd(year)}`, label: 'Balance sheet' },
+    { href: (year) => `/bookkeeping/ledger/trial-balance?to=${yearEnd(year)}`, label: 'Trial balance' },
+    { href: (year) => `/bookkeeping/ledger/general-ledger?from=${year}-01-01&to=${year}-12-31`, label: 'General ledger' },
 ];
+
+// The year's last day, or today for this year (a balance sheet on a day
+// still to come reads the same as today's).
+function yearEnd(year) {
+    const today = todayInAppTimezone();
+    return Number(today.slice(0, 4)) === year ? today : `${year}-12-31`;
+}
 
 const DOWNLOADS = [
     { href: '/bookkeeping/profit-loss.csv', label: 'Profit & loss CSV' },
@@ -46,8 +59,8 @@ export default function FinancialReports({ years }) {
                             </li>
                         ))}
                         {LEDGER.map((r) => (
-                            <li key={r.href}>
-                                <Link href={r.href} className="financial-reports__link">
+                            <li key={r.label}>
+                                <Link href={r.href(year)} className="financial-reports__link">
                                     <Books /> {r.label}
                                 </Link>
                             </li>
