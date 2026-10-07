@@ -36,10 +36,15 @@ function AccountsTab({ accounts }) {
                         {rows.length === 0 ? (
                             <EmptyState text="No accounts under this heading." />
                         ) : (
-                            <table className="table">
+                            <table className="table chart-of-accounts__table">
+                                <colgroup>
+                                    <col className="chart-of-accounts__code" />
+                                    <col className="chart-of-accounts__name" />
+                                    <col />
+                                </colgroup>
                                 <thead>
                                     <tr>
-                                        <th className="table__cell--narrow">Code</th>
+                                        <th>Code</th>
                                         <th>Account</th>
                                         <th>Notes</th>
                                     </tr>
@@ -47,7 +52,7 @@ function AccountsTab({ accounts }) {
                                 <tbody>
                                     {rows.map((account) => (
                                         <tr key={account.id}>
-                                            <td className="table__cell--muted table__cell--narrow u-tabular-nums">{account.code}</td>
+                                            <td className="table__cell--muted u-tabular-nums">{account.code}</td>
                                             <td className="table__cell--strong">
                                                 <span className="table__group">
                                                     {account.name}
@@ -114,7 +119,11 @@ function MappingTable({ title, hint, rows, columns, accounts, endpoint, onSaved 
                 {rows.length === 0 ? (
                     <EmptyState text={`No ${title.toLowerCase()} yet.`} />
                 ) : (
-                    <table className="table">
+                    <table className="table chart-of-accounts__table">
+                        <colgroup>
+                            <col className="chart-of-accounts__name" />
+                            {columns.map(([field]) => <col key={field} />)}
+                        </colgroup>
                         <thead>
                             <tr>
                                 <th>Name</th>
