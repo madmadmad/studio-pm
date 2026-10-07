@@ -417,6 +417,15 @@ for review.
 - Tests for each posting rule, edits that do and don't repost, deletes,
   splits, Plaid-imported expenses, locked periods.
 
+*Phase 3 as built:* posting is wired by `App\Services\Posting\PostingHooks`
+(model events, not observer classes): a synchronous guard refuses
+locked-period changes, and the sync runs after commit. A refusal after
+commit is reported (logged), not thrown, since the record is already
+saved; the backfill picks up anything unposted. The Expenses page's
+Unbilled filter and "ready to bill" figure already list unbilled billable
+expenses, so no new view. "Taxable when billed" is on expense categories
+only; services can get it later if printing is sold as a service.
+
 ### Phase 4: manual entry screens
 Bookkeeping › Ledger, following the drawer convention:
 - Journal: list of entries (number, date, memo, source link, amount),
