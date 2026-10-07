@@ -60,6 +60,10 @@
             background-color: var(--color-chart-muted);
         }
 
+        &--dark::before {
+            background-color: var(--color-chart-dark);
+        }
+
         // A many-series chart's keys (StackedMonthChart): --color-chart-N.
         @for $i from 1 through 9 {
             &--series-#{$i}::before {
@@ -130,6 +134,10 @@
 
     &__bar--muted {
         fill: var(--color-chart-muted);
+    }
+
+    &__bar--dark {
+        fill: var(--color-chart-dark);
     }
 
     @for $i from 1 through 9 {

@@ -96,6 +96,27 @@ class ExpensesByMonth
         ];
     }
 
+    // Operating expenses, payroll and all, for each month of $year:
+    // [month number => cents]. The Bookkeeping chart sets them beside
+    // income.
+    public static function operatingTotals(int $year): array
+    {
+        $accountIds = Balances::accounts()
+            ->filter(fn (Account $a) => $a->type === Account::EXPENSE && $a->parent?->system_key !== 'cost_of_revenue')
+            ->pluck('id');
+
+        return JournalLine::query()
+            ->join('journal_entries', 'journal_entries.id', '=', 'journal_lines.journal_entry_id')
+            ->whereIn('journal_lines.account_id', $accountIds)
+            ->whereDate('journal_entries.entry_date', '>=', "{$year}-01-01")
+            ->whereDate('journal_entries.entry_date', '<=', "{$year}-12-31")
+            ->groupBy('month')
+            ->selectRaw('cast(substr(journal_entries.entry_date, 6, 2) as integer) as month, sum(journal_lines.debit_cents) - sum(journal_lines.credit_cents) as cents')
+            ->pluck('cents', 'month')
+            ->map(fn ($cents) => (int) $cents)
+            ->all();
+    }
+
     // One row per account under its group, a column a month, and totals
     // with and without payroll.
     public static function csvRows(array $report): array

@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Account;
+use App\Models\Transaction;
 use App\Models\User;
 use App\Services\Ledger;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -117,6 +118,17 @@ class LedgerReportsTest extends TestCase
             ->where('report.groups.8.key', 'payroll')
             ->where('report.groups.8.months.2026-02', 10000)
             ->where('report.groups', fn ($groups) => collect($groups)->sum('total') === 22000));
+    }
+
+    public function test_the_bookkeeping_chart_sets_operating_expenses_payroll_and_all_beside_income(): void
+    {
+        $this->travelTo('2026-03-15');
+
+        $months = Transaction::yearSeries(2026);
+
+        $this->assertSame(100.0, $months[1]['operating'], 'February: the wages, not the hosting cost');
+        $this->assertSame(0.0, $months[2]['operating']);
+        $this->assertNull($months[3]['operating'], 'April is still to come');
     }
 
     public function test_expenses_by_month_ends_at_this_month(): void

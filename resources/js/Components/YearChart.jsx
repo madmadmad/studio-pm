@@ -33,11 +33,13 @@ function niceStep(range, count = 4) {
     return step;
 }
 
-// Bookkeeping's series: income and expenses as bars, net as the line.
+// Bookkeeping's series: income, expenses and operating expenses (payroll
+// in, client media, printing and hosting out) as bars, net as the line.
 const BOOKKEEPING = {
     bars: [
         { key: 'income', label: 'Income', tone: 'primary' },
         { key: 'expenses', label: 'Expenses', tone: 'muted' },
+        { key: 'operating', label: 'Operating expenses', tone: 'dark' },
     ],
     line: { key: 'net', label: 'Net' },
     ariaLabel: 'Income, expenses and net by month',
@@ -46,12 +48,13 @@ const BOOKKEEPING = {
 // `series.format`: 'currency' (the default) or 'hours'. `series.floor`: the
 // least the scale reaches up to, so an empty year still has a sensible axis.
 
-// The year at a glance: a pair of bars per month with a line over them,
+// The year at a glance: a group of bars per month with a line over them,
 // months still to come left empty. Hover a month for its figures. Which
-// figures is `series` -- Bookkeeping's by default (income, expenses, net);
-// Expenses passes its own. Colors come from the theme tokens (the first
-// bar the red, the second grey, the line the text color), so it reads in
-// dark and light alike. Drawn to the width it's given.
+// figures is `series` -- Bookkeeping's by default (income, expenses,
+// operating expenses, net); Expenses passes its own. Colors come from the
+// theme tokens (a bar's tone: primary the brand color, muted grey, dark a
+// darker grey; the line the text color), so it reads in dark and light
+// alike. Drawn to the width it's given.
 export default function YearChart({ months, year, series = BOOKKEEPING, title }) {
     const ref = useRef(null);
     const [width, setWidth] = useState(0);
@@ -67,11 +70,10 @@ export default function YearChart({ months, year, series = BOOKKEEPING, title })
 
     const { bars, line } = series;
     const format = FORMATS[series.format ?? 'currency'];
-    const [first, second] = bars;
     // A month is past (or current) once it has figures; future ones are null.
     const isKnown = (m) => m[line.key] !== null;
     const known = months.filter(isKnown);
-    const values = known.flatMap((m) => [m[first.key], m[second.key], m[line.key]]);
+    const values = known.flatMap((m) => [...bars.map((b) => m[b.key] ?? 0), m[line.key]]);
     const top = Math.max(series.floor ?? 0, ...values);
     const bottom = Math.min(0, ...values);
     const step = niceStep(top - bottom || 1);
@@ -84,13 +86,16 @@ export default function YearChart({ months, year, series = BOOKKEEPING, title })
     const plotH = HEIGHT - PAD.top - PAD.bottom;
     const y = (v) => PAD.top + ((max - v) / (max - min || 1)) * plotH;
     const group = plotW / 12;
-    const barW = Math.max(Math.min(group * 0.28, 22), 2);
+    const gap = 3;
+    const barW = Math.max(Math.min((group * 0.56) / bars.length, 22), 2);
+    // The left edge of bar `b` in month `i`, the group centered.
+    const bx = (i, b) => cx(i) - (bars.length * barW + (bars.length - 1) * gap) / 2 + b * (barW + gap);
     const gx = (i) => PAD.left + i * group;
     const cx = (i) => gx(i) + group / 2;
     const bar = (value) => ({ y: Math.min(y(value), y(0)), h: Math.abs(y(value) - y(0)) });
 
     const linePoints = months.map((m, i) => (isKnown(m) ? `${cx(i)},${y(m[line.key])}` : null)).filter(Boolean);
-    const total = (key) => known.reduce((sum, m) => sum + m[key], 0);
+    const total = (key) => known.reduce((sum, m) => sum + (m[key] ?? 0), 0);
 
     const hovered = hover !== null ? months[hover] : null;
 
@@ -119,12 +124,9 @@ export default function YearChart({ months, year, series = BOOKKEEPING, title })
                         {months.map((m, i) => (
                             <g key={m.month}>
                                 {hover === i && <rect x={gx(i)} y={PAD.top} width={group} height={plotH} className="year-chart__hover" />}
-                                {isKnown(m) && (
-                                    <>
-                                        <rect x={cx(i) - barW - 1.5} y={bar(m[first.key]).y} width={barW} height={bar(m[first.key]).h} rx={2} className={`year-chart__bar year-chart__bar--${first.tone}`} />
-                                        <rect x={cx(i) + 1.5} y={bar(m[second.key]).y} width={barW} height={bar(m[second.key]).h} rx={2} className={`year-chart__bar year-chart__bar--${second.tone}`} />
-                                    </>
-                                )}
+                                {isKnown(m) && bars.map((b, j) => (
+                                    <rect key={b.key} x={bx(i, j)} y={bar(m[b.key] ?? 0).y} width={barW} height={bar(m[b.key] ?? 0).h} rx={2} className={`year-chart__bar year-chart__bar--${b.tone}`} />
+                                ))}
                                 <text x={cx(i)} y={HEIGHT - 8} textAnchor="middle" className={`year-chart__label${isKnown(m) ? '' : ' year-chart__label--future'}`}>{MONTHS[i]}</text>
                                 <rect x={gx(i)} y={PAD.top} width={group} height={plotH} fill="transparent" onMouseEnter={() => setHover(i)} />
                             </g>
@@ -144,7 +146,7 @@ export default function YearChart({ months, year, series = BOOKKEEPING, title })
                     >
                         <div className="year-chart__tip-month">{MONTHS[hover]} {year}</div>
                         {bars.map((b) => (
-                            <div key={b.key} className="year-chart__tip-row"><span className={`year-chart__key year-chart__key--${b.tone}`}>{b.label}</span>{format.full(hovered[b.key])}</div>
+                            <div key={b.key} className="year-chart__tip-row"><span className={`year-chart__key year-chart__key--${b.tone}`}>{b.label}</span>{format.full(hovered[b.key] ?? 0)}</div>
                         ))}
                         <div className="year-chart__tip-row year-chart__tip-row--line"><span className="year-chart__key year-chart__key--line">{line.label}</span>{format.full(hovered[line.key])}</div>
                     </div>
