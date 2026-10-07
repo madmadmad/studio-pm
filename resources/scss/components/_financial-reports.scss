@@ -1,7 +1,7 @@
 // Bookkeeping's Financial reports card (Components/FinancialReports.jsx):
-// a year picker, then the report pages and the CSV downloads side by side,
-// each a document icon and its name. On the same flat card as the filter
-// rows.
+// a year picker, then three columns side by side -- the year-based
+// reports, the ledger's reports, the CSV downloads -- each link an icon
+// and its name. On the same flat card as the filter rows.
 
 .financial-reports {
     margin-bottom: var(--space-section);
@@ -25,7 +25,7 @@
 
     &__columns {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); // one-off: two columns, stacking when narrow
+        grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); // one-off: three columns, stacking when narrow
         gap: var(--space-6);
     }
 
