@@ -478,6 +478,7 @@ export default function InvoiceDetail({ invoice: initialInvoice, studio, invoici
                                 className="input input--sm input--inline"
                             >
                                 <option value="check">Check</option>
+                                <option value="ach">ACH</option>
                                 <option value="other">Other</option>
                             </select>
                             <Button variant="confirm" onClick={recordPayment} disabled={recordingPayment}>

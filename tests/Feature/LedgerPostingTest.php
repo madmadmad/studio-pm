@@ -308,12 +308,23 @@ class LedgerPostingTest extends TestCase
         $invoice = $this->sentInvoice([['description' => 'Brand refresh', 'amount' => 1000]], ['stripe_checkout_session_id' => 'cs_test_2']);
 
         (new MarkInvoicePaidFromStripeWebhook)->handle(new WebhookReceived([
-            'type' => 'checkout.session.async_payment_succeeded',
-            'data' => ['object' => ['id' => 'cs_test_2', 'payment_intent' => 'pi_test_2', 'metadata' => ['method' => 'ach', 'base_amount' => '1000.00', 'surcharge_amount' => '0']]],
+            'type' => 'checkout.session.completed',
+            'data' => ['object' => ['id' => 'cs_test_2', 'payment_status' => 'paid', 'payment_intent' => 'pi_test_2', 'metadata' => ['method' => 'card', 'base_amount' => '1000.00', 'surcharge_amount' => '30.00']]],
         ]));
 
-        $this->assertSame(100000, $this->balance('stripe_clearing'));
+        $this->assertSame(103000, $this->balance('stripe_clearing'));
         $this->assertSame(0, $this->balance('merchant_fees'));
+    }
+
+    public function test_an_ach_payment_recorded_by_hand_goes_straight_to_checking(): void
+    {
+        $invoice = $this->sentInvoice([['description' => 'Brand refresh', 'amount' => 1000]]);
+
+        $this->actingAs($this->manager)->postJson("/api/invoices/{$invoice->id}/mark-paid", ['method' => 'ach'])->assertOk();
+
+        $this->assertSame('ach', $invoice->payments()->sole()->method);
+        $this->assertSame(100000, $this->balance('checking'));
+        $this->assertSame(0, $this->balance('stripe_clearing'));
     }
 
     public function test_a_client_with_ledger_history_cant_be_deleted(): void

@@ -13,11 +13,13 @@ class Payment extends Model
         'paid_at' => 'datetime',
     ];
 
-    // Card and ACH come through Stripe (and land in Stripe Clearing until
-    // a payout); a check or anything else goes straight to the bank.
+    // Card payments come through Stripe (and land in Stripe Clearing until
+    // a payout). ACH, checks and the rest are recorded by hand and go
+    // straight to the bank -- unless Stripe took them (an ACH checkout
+    // carries its payment intent).
     public function viaStripe(): bool
     {
-        return in_array($this->method, ['card', 'ach'], true);
+        return $this->method === 'card' || $this->stripe_payment_intent_id !== null;
     }
 
     public function invoice(): BelongsTo
