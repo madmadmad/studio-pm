@@ -411,6 +411,9 @@ for review.
   company deletion (C7). `recordPayment` in a transaction, dated
   `paid_at` (C11).
 - An "Unbilled billable expenses" view (or filter on Expenses).
+- Printing (one of the few taxable things we sell): an expense category
+  or service can be marked "taxable when billed", so an invoice line that
+  rebills it starts out taxable. Tax collected posts to Sales Tax Payable.
 - Tests for each posting rule, edits that do and don't repost, deletes,
   splits, Plaid-imported expenses, locked periods.
 

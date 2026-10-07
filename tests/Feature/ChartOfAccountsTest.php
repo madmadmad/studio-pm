@@ -30,10 +30,12 @@ class ChartOfAccountsTest extends TestCase
             'ad_management_revenue' => Account::INCOME,
             'client_media_revenue' => Account::INCOME,
             'hosting_revenue' => Account::INCOME,
+            'printing_revenue' => Account::INCOME,
             'surcharge_income' => Account::INCOME,
             'other_income' => Account::INCOME,
             'hosting_cost' => Account::EXPENSE,
             'client_media_spend' => Account::EXPENSE,
+            'printing_cost' => Account::EXPENSE,
             'merchant_fees' => Account::EXPENSE,
             'officer_compensation' => Account::EXPENSE,
             'wages' => Account::EXPENSE,
@@ -99,6 +101,15 @@ class ChartOfAccountsTest extends TestCase
 
         $this->assertSame('Advertising & Marketing', $advertising->account->name);
         $this->assertSame('Client Media Spend', $advertising->billableAccount->name);
+    }
+
+    public function test_printing_for_clients_is_a_cost_of_revenue_and_our_own_is_marketing(): void
+    {
+        $printing = ExpenseCategory::where('name', 'Printing')->first();
+
+        $this->assertSame('Advertising & Marketing', $printing->account->name);
+        $this->assertSame('printing_cost', $printing->billableAccount->system_key);
+        $this->assertSame('cost_of_revenue', Account::forKey('printing_cost')->parent->system_key);
     }
 
     public function test_draws_and_personal_spending_arent_expense_categories(): void
