@@ -33,6 +33,8 @@ class ClearTrialData extends Command
         'project_favorites', 'project_user', 'projects',
         'contact_magic_links', 'contacts', 'companies',
         'notifications', 'jobs', 'job_batches', 'failed_jobs',
+        // What the Bonsai import brought in, so it can bring it in again.
+        'import_records',
     ];
 
     public function handle(): int

@@ -1,0 +1,131 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Models\Account;
+use App\Models\Company;
+use App\Models\Expense;
+use App\Models\Invoice;
+use App\Models\JournalEntry;
+use App\Models\Payment;
+use App\Services\BonsaiImport\BonsaiImport;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
+
+// bonsai:import against a small sample of Bonsai's exports
+// (tests/Fixtures/bonsai), one row for each rule in BonsaiRules.
+class BonsaiImportTest extends TestCase
+{
+    use RefreshDatabase;
+
+    private function import(bool $commit = true)
+    {
+        $dir = base_path('tests/Fixtures/bonsai');
+
+        return app(BonsaiImport::class)->run("{$dir}/expenses.csv", "{$dir}/invoices.csv", "{$dir}/items.jsonl", '2025-01-01', $commit);
+    }
+
+    private function balance(string $key): int
+    {
+        return Account::forKey($key)->netDebitCents();
+    }
+
+    public function test_a_dry_run_reports_and_saves_nothing(): void
+    {
+        $report = $this->import(commit: false);
+
+        $this->assertSame(1, $report->counts['Clients']);
+        $this->assertSame(0, Company::count());
+        $this->assertSame(0, Expense::count());
+        $this->assertSame(0, JournalEntry::count());
+        $this->assertDatabaseCount('import_records', 0);
+    }
+
+    public function test_expenses_follow_the_rules(): void
+    {
+        $report = $this->import();
+
+        $this->assertSame(6, $report->counts['Expenses']);
+        $this->assertCount(1, $report->skipped['Masked bank-feed copy of a Google Ads charge']);
+        $this->assertCount(1, $report->skipped['Receipt-less copy of a charge with a receipt (bank feed)']);
+        $this->assertCount(1, $report->skipped['Bonsai payment fee (posted with its payment)']);
+        $this->assertCount(1, $report->skipped['Before 2025-01-01']);
+        $this->assertCount(1, $report->review['Wages to split out officer compensation']);
+
+        $this->assertSame('capital_one_card', Expense::firstWhere('name', 'Spectrum')->paidFrom->system_key);
+        $this->assertSame('checking', Expense::firstWhere('name', 'Columbia Gas')->paidFrom->system_key);
+        $printing = Expense::firstWhere('name', 'GOTPRINT.COM');
+        $this->assertSame('Printing', $printing->category->name);
+        $this->assertSame('25.00', $printing->markup_percent);
+        $this->assertStringContainsString('Bonsai receipt: https://app.hellobonsai.com/expenses/4/receipt', $printing->notes);
+    }
+
+    public function test_sales_tax_payments_and_draws_are_journal_entries_not_expenses(): void
+    {
+        $this->import();
+
+        $this->assertNull(Expense::firstWhere('name', 'Ohio Sales Tax Liability'));
+        $this->assertNull(Expense::firstWhere('name', 'Draw'));
+        $this->assertSame(775, $this->balance('sales_tax_payable'));
+        $this->assertSame(100000, $this->balance('shareholder_distributions'));
+    }
+
+    public function test_invoices_come_in_with_their_lines_payments_and_attached_expenses(): void
+    {
+        $report = $this->import();
+
+        $this->assertSame(2, $report->counts['Invoices, paid']);
+        $this->assertSame(1, $report->counts['Invoices, open']);
+        $this->assertCount(1, $report->skipped['Invoice scheduled in Bonsai']);
+
+        $invoice = Invoice::where('invoice_number', 1001)->first();
+        $this->assertSame('paid', $invoice->status);
+        $this->assertSame(1010.0, $invoice->total());
+        $this->assertSame(['Project Management', 'Google ADS111111111', 'GOTPRINT.COM'], $invoice->items->pluck('description')->all());
+        $this->assertSame("Client calls\n2 hours at \$130.00/hour", $invoice->items[0]->details);
+        $this->assertSame('billed_and_paid', Expense::firstWhere('name', 'Google ADS111111111')->billing_status);
+        $this->assertSame($invoice->items[2]->id, Expense::firstWhere('name', 'GOTPRINT.COM')->invoice_item_id, 'rebuilt from the expense Bonsai attached');
+        $this->assertEqualsWithDelta(10.0, (float) Payment::where('invoice_id', $invoice->id)->sole()->late_fee, 0.001);
+    }
+
+    public function test_a_reused_invoice_number_keeps_it_as_a_reference(): void
+    {
+        $this->import();
+
+        $second = Invoice::where('legacy_number', '1002-1')->sole();
+        $this->assertSame(1005, $second->invoice_number);
+        $this->assertSame('sent', $second->status);
+    }
+
+    public function test_the_ledger_splits_revenue_by_line_with_fees_surcharges_and_late_fees(): void
+    {
+        $this->import();
+
+        $this->assertSame(-26000, $this->balance('ad_management_revenue'), 'time on an ad invoice');
+        $this->assertSame(-50000, $this->balance('client_media_revenue'));
+        $this->assertSame(-25000, $this->balance('printing_revenue'));
+        $this->assertSame(-10000, $this->balance('hosting_revenue'));
+        $this->assertSame(-300, $this->balance('surcharge_income'));
+        $this->assertSame(300, $this->balance('merchant_fees'));
+        $this->assertSame(-1000, $this->balance('late_fee_income'));
+        $this->assertSame(102000 + 10000 - 8000 - 775 - 100000 - 500000, $this->balance('checking'));
+        $this->assertSame(-(50000 + 12000 + 20000 + 53870), $this->balance('capital_one_card'));
+    }
+
+    public function test_running_again_skips_what_is_already_in(): void
+    {
+        $this->import();
+        $counts = [Company::count(), Expense::count(), Invoice::count(), Payment::count(), JournalEntry::count()];
+
+        $report = $this->import();
+
+        $this->assertSame($counts, [Company::count(), Expense::count(), Invoice::count(), Payment::count(), JournalEntry::count()]);
+        $this->assertSame(8, $report->counts['Expenses already imported (skipped)'], 'six expenses, the sales tax payment, the draw');
+        $this->assertSame(3, $report->counts['Invoices already imported (skipped)']);
+    }
+
+    public function test_the_command_needs_its_files(): void
+    {
+        $this->artisan('bonsai:import --expenses=/nope.csv')->assertFailed();
+    }
+}

@@ -1,0 +1,5 @@
+status,total_amount,amount_due,calculated_tax_percent,calculated_tax_amount,paid_amount,paid_amount_after_fees,late_fee,client_pays_transaction_fee,payment_method,currency,issued_date,due_date,paid_date,invoice_number,contractor_project_name,client_or_company_name,client_email,contractor_invoice_link,tax_rate_ohio_sales_tax
+paid,1010.0,0,0.0,0.0,1020.0,1020.0,1.5,true,marked_as_paid,USD,2025-03-15,2025-04-14,2025-03-20 04:00:00 UTC,1001,Digital Advertising,Acme Co,pat@acme.test,https://app.hellobonsai.com/invoices/9001,0
+paid,100.0,0,0.0,0.0,103.0,100.0,0.0,true,credit_card,USD,2025-03-09,2025-04-08,2025-03-09 16:00:00 UTC,1002,Hosting (acme.com),Acme Co,pat@acme.test,https://app.hellobonsai.com/invoices/9002,0
+outstanding,50.0,50.0,0.0,0.0,0.0,0.0,1.5,true,"",USD,2026-09-30,2026-10-30,"",1002,Website Maintenance,Acme Co,pat@acme.test,https://app.hellobonsai.com/invoices/9003,0
+scheduled,100.0,100.0,0.0,0.0,0.0,0.0,0.0,true,"",USD,2027-03-09,2027-04-08,"",1004,Hosting (acme.com),Acme Co,pat@acme.test,https://app.hellobonsai.com/invoices/9004,0
