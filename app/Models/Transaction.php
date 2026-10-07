@@ -2,12 +2,17 @@
 
 namespace App\Models;
 
+use App\Services\LedgerReports\ExpensesByMonth;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Transaction extends Model
 {
-    protected $fillable = ['type', 'amount', 'tax_amount', 'taxable_amount', 'category', 'occurred_on', 'description', 'invoice_id', 'project_id'];
+    // The category invoice payments' rows carry. Their ledger entry comes
+    // from the Payment, so these rows don't post.
+    public const CLIENT_INVOICE = 'client invoice';
+
+    protected $fillable = ['type', 'amount', 'tax_amount', 'taxable_amount', 'category', 'occurred_on', 'description', 'invoice_id', 'project_id', 'deposit_account_id'];
 
     protected $casts = [
         'occurred_on' => 'date',
@@ -15,6 +20,12 @@ class Transaction extends Model
         'tax_amount' => 'decimal:2',
         'taxable_amount' => 'decimal:2',
     ];
+
+    // The account manual income went into (null: checking).
+    public function depositAccount(): BelongsTo
+    {
+        return $this->belongsTo(Account::class, 'deposit_account_id');
+    }
 
     // The Bookkeeping screen's month at a glance -- a simple income vs.
     // expense summary, not double-entry accounting. Sales tax received is
@@ -34,16 +45,21 @@ class Transaction extends Model
             ->groupBy(fn (Expense $e) => $e->date->month)
             ->map(fn ($month) => (float) $month->sum('amount'));
 
+        // Operating expenses from the ledger, payroll included: what it
+        // costs to run the studio, without the client media, printing and
+        // hosting billed back to clients.
+        $operating = ExpensesByMonth::operatingTotals($year);
+
         $lastMonth = $year < now()->year ? 12 : ($year === now()->year ? now()->month : 0);
 
-        return collect(range(1, 12))->map(function ($m) use ($income, $expenses, $lastMonth) {
+        return collect(range(1, 12))->map(function ($m) use ($income, $expenses, $operating, $lastMonth) {
             if ($m > $lastMonth) {
-                return ['month' => $m, 'income' => null, 'expenses' => null, 'net' => null];
+                return ['month' => $m, 'income' => null, 'expenses' => null, 'operating' => null, 'net' => null];
             }
             $in = round($income->get($m, 0), 2);
             $out = round($expenses->get($m, 0), 2);
 
-            return ['month' => $m, 'income' => $in, 'expenses' => $out, 'net' => round($in - $out, 2)];
+            return ['month' => $m, 'income' => $in, 'expenses' => $out, 'operating' => round(($operating[$m] ?? 0) / 100, 2), 'net' => round($in - $out, 2)];
         })->all();
     }
 

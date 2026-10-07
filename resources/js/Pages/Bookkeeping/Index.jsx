@@ -1,4 +1,4 @@
-import { Head, router } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
 import AppLayout from '../../Layouts/AppLayout';
 import Button from '../../Components/Button';
@@ -41,7 +41,15 @@ export default function BookkeepingIndex({ transactions, summary, year, reportYe
     return (
         <AppLayout>
             <Head title="Bookkeeping" />
-            <PageHeader title="Bookkeeping" />
+            <PageHeader
+                title="Bookkeeping"
+                actions={(
+                    <>
+                        <Link href="/bookkeeping/accounts" className="btn btn--secondary">Chart of accounts</Link>
+                        <Link href="/bookkeeping/journal" className="btn btn--primary">Journal</Link>
+                    </>
+                )}
+            />
 
             <div className="metric-grid">
                 <MetricCard tone="primary" label={`Income (${formatMonth(summary.month)})`} value={formatCurrency(summary.income)} />

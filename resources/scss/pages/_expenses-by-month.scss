@@ -1,0 +1,45 @@
+// Bookkeeping > Expenses by month (Pages/Bookkeeping/ExpensesByMonth.jsx):
+// the payroll switch over the figures, and a table a column a month that
+// scrolls sideways with the group names held in place.
+
+.expenses-by-month {
+    &__options {
+        display: flex;
+        justify-content: flex-end;
+        margin-bottom: var(--space-4);
+    }
+
+    &__table {
+        overflow-x: auto;
+
+        .table {
+            min-width: max-content;
+        }
+
+        th:first-child,
+        td:first-child {
+            position: sticky;
+            left: 0;
+            z-index: 1;
+            min-width: 12rem;
+            background-color: var(--color-surface);
+        }
+    }
+
+    // A group's row leads with its chart color; its accounts sit under it,
+    // indented.
+    &__group td:first-child {
+        .year-chart__key {
+            margin-right: var(--space-2);
+            vertical-align: middle;
+        }
+    }
+
+    &__account td:first-child {
+        padding-left: var(--space-8);
+    }
+
+    &__total td {
+        border-top: var(--border-width) solid var(--color-border-strong);
+    }
+}

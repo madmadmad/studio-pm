@@ -1,0 +1,20 @@
+// Bookkeeping > Chart of accounts (Pages/Bookkeeping/Accounts.jsx): a
+// table per group heading, and per mapping list. Fixed columns, so the
+// separate tables line up down the page instead of each sizing to its own
+// content.
+
+.chart-of-accounts {
+    &__table {
+        table-layout: fixed;
+    }
+
+    &__code {
+        width: 6rem; // one-off: fits a four-digit code and its heading
+    }
+
+    // The account (or the mapped record's) name. A share rather than a
+    // fixed width, so it holds up from a phone to a wide screen.
+    &__name {
+        width: 35%;
+    }
+}

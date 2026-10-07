@@ -2,10 +2,12 @@
 
 namespace Tests\Feature;
 
+use App\Models\Account;
 use App\Models\Expense;
 use App\Models\ExpenseCategory;
 use App\Models\PlaidItem;
 use App\Models\User;
+use App\Services\Ledger;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
@@ -107,6 +109,38 @@ class PlaidSyncTest extends TestCase
         Http::assertSent(fn ($request) => ($request['cursor'] ?? null) === 'cursor-1');
     }
 
+    public function test_bank_charges_post_to_the_card_and_changes_and_removals_follow_in_the_ledger(): void
+    {
+        $this->connectedItem();
+        Http::fakeSequence('*/transactions/sync')
+            ->push($this->syncPage([$this->transaction('t-1', 54.99), $this->transaction('t-2', 20, ['merchant_name' => 'Figma'])]))
+            ->push($this->syncPage(modified: [$this->transaction('t-1', 59.99)], removed: [['transaction_id' => 't-2']], cursor: 'cursor-2'));
+        $card = Account::forKey('capital_one_card');
+        $owed = fn () => (int) $card->lines()->sum('credit_cents') - (int) $card->lines()->sum('debit_cents');
+
+        $user = User::factory()->create();
+        $this->actingAs($user)->postJson('/api/plaid/sync')->assertOk();
+        $this->assertSame(7499, $owed());
+
+        $this->actingAs($user)->postJson('/api/plaid/sync')->assertOk();
+        $this->assertSame(5999, $owed(), 'Adobe went up, Figma came back out');
+    }
+
+    public function test_a_change_from_the_bank_inside_a_locked_period_is_skipped(): void
+    {
+        $this->connectedItem();
+        Http::fakeSequence('*/transactions/sync')
+            ->push($this->syncPage([$this->transaction('t-1', 54.99)]))
+            ->push($this->syncPage(modified: [$this->transaction('t-1', 59.99)], cursor: 'cursor-2'));
+
+        $user = User::factory()->create();
+        $this->actingAs($user)->postJson('/api/plaid/sync')->assertOk();
+        app(Ledger::class)->lockPeriod('2026-09-01', '2026-09-30');
+
+        $this->actingAs($user)->postJson('/api/plaid/sync')->assertOk()->assertJsonPath('result.updated', 0);
+        $this->assertSame('54.99', Expense::sole()->amount);
+    }
+
     public function test_a_deleted_bank_charge_never_syncs_back(): void
     {
         $this->connectedItem();
@@ -133,10 +167,10 @@ class PlaidSyncTest extends TestCase
         $this->assertSame('54.99', Expense::sole()->amount);
     }
 
-    public function test_a_travel_charge_gets_the_travel_category(): void
+    public function test_a_flight_gets_the_flights_category(): void
     {
         $this->connectedItem();
-        $travel = ExpenseCategory::firstOrCreate(['name' => 'Travel'], ['color' => '#595F64']);
+        $travel = ExpenseCategory::where('name', 'Flights, Taxi & Transportation')->firstOrFail();
         Http::fake(['*/transactions/sync' => Http::response($this->syncPage([$this->transaction('t-1', 220, ['merchant_name' => 'United', 'personal_finance_category' => ['primary' => 'TRAVEL', 'detailed' => 'TRAVEL_FLIGHTS']])]))]);
 
         $this->actingAs(User::factory()->create())->postJson('/api/plaid/sync')->assertOk();

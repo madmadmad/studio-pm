@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\PaymentTerms;
 use App\Models\Company;
+use App\Models\JournalLine;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -74,6 +75,10 @@ class CompanyController extends Controller
 
     public function destroy(Company $company)
     {
+        // Its ledger history (payments, billed costs) has to stay, and
+        // deleting the client would delete its invoices and payments.
+        abort_if(JournalLine::where('company_id', $company->id)->exists(), 422, "{$company->name} has entries in the books, so it can't be deleted.");
+
         $company->delete();
 
         return response()->noContent();

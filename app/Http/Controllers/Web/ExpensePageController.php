@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
+use App\Models\Account;
 use App\Models\Company;
 use App\Models\Expense;
 use App\Models\ExpenseCategory;
@@ -26,6 +27,16 @@ class ExpensePageController extends Controller
             'taxes' => Tax::orderBy('name')->get(),
             'projects' => Project::where('status', '!=', 'archived')->orderBy('name')->get(['id', 'name']),
             'draftInvoices' => Invoice::where('status', 'draft')->orderByDesc('id')->get(['id', 'invoice_number', 'project_id']),
+            // What an expense can be paid from: the bank and card accounts
+            // (not Stripe Clearing or Sales Tax Payable, which nothing is
+            // bought with).
+            'paymentAccounts' => Account::active()
+                ->whereIn('type', [Account::ASSET, Account::LIABILITY])
+                ->whereNotNull('parent_id')
+                ->where(fn ($q) => $q->whereNull('system_key')->orWhereNotIn('system_key', ['stripe_clearing', 'sales_tax_payable']))
+                ->orderBy('code')
+                ->get(['id', 'name']),
+            'defaultPaymentAccountId' => Account::forKey('capital_one_card')->id,
         ]);
     }
 }

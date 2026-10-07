@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class Invoice extends Model
@@ -388,7 +389,16 @@ class Invoice extends Model
     // recorded on the Payment only, never folded into the invoice or the
     // income Transaction, so bookkeeping can always tell "amount owed" from
     // "amount Stripe actually processed."
-    public function recordPayment(string $method, float $baseAmount, float $surchargeAmount = 0.0, ?string $stripePaymentIntentId = null): void
+    //
+    // $stripeFee is Stripe's processing fee on the charge, when known. All
+    // in one transaction, so the payment, the invoice's status and the
+    // ledger entry (posted once it commits) go together.
+    public function recordPayment(string $method, float $baseAmount, float $surchargeAmount = 0.0, ?string $stripePaymentIntentId = null, ?float $stripeFee = null): void
+    {
+        DB::transaction(fn () => $this->writePayment($method, $baseAmount, $surchargeAmount, $stripePaymentIntentId, $stripeFee));
+    }
+
+    private function writePayment(string $method, float $baseAmount, float $surchargeAmount, ?string $stripePaymentIntentId, ?float $stripeFee): void
     {
         $this->update(['status' => 'paid']);
 
@@ -396,6 +406,7 @@ class Invoice extends Model
             'method' => $method,
             'amount' => $baseAmount,
             'surcharge_amount' => $surchargeAmount,
+            'stripe_fee' => $stripeFee,
             'stripe_payment_intent_id' => $stripePaymentIntentId,
             'paid_at' => now(),
         ]);
@@ -407,7 +418,7 @@ class Invoice extends Model
             'amount' => $baseAmount,
             'tax_amount' => min($this->taxAmount(), $baseAmount),
             'taxable_amount' => $this->taxableSubtotal(),
-            'category' => 'client invoice',
+            'category' => Transaction::CLIENT_INVOICE,
             'occurred_on' => now(),
             'invoice_id' => $this->id,
             'project_id' => $this->project_id,

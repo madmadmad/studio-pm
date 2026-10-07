@@ -1,5 +1,8 @@
 <?php
 
+use App\Http\Controllers\AccountController;
+use App\Http\Controllers\AccountingPeriodController;
+use App\Http\Controllers\AccountMappingController;
 use App\Http\Controllers\AppearanceController;
 use App\Http\Controllers\BrandColorController;
 use App\Http\Controllers\CompanyController;
@@ -8,6 +11,7 @@ use App\Http\Controllers\ExpenseCategoryController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\InvoiceCategoryController;
 use App\Http\Controllers\InvoiceController;
+use App\Http\Controllers\JournalEntryController;
 use App\Http\Controllers\MessageAttachmentController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\NoteController;
@@ -121,6 +125,18 @@ Route::middleware('auth:sanctum')->name('api.')->group(function () {
     Route::middleware('permission:bookkeeping')->group(function () {
         Route::apiResource('transactions', TransactionController::class)->only(['index', 'store', 'destroy']);
         Route::get('bookkeeping/summary', [TransactionController::class, 'summary']);
+        // What each category and service posts to in the ledger.
+        Route::patch('account-mappings/expense-categories/{expenseCategory}', [AccountMappingController::class, 'expenseCategory']);
+        Route::patch('account-mappings/services/{service}', [AccountMappingController::class, 'service']);
+        Route::patch('account-mappings/invoice-categories/{invoiceCategory}', [AccountMappingController::class, 'invoiceCategory']);
+        // Entries made by hand, and the chart's accounts.
+        Route::post('journal-entries', [JournalEntryController::class, 'store']);
+        Route::post('journal-entries/transfer', [JournalEntryController::class, 'transfer']);
+        Route::post('journal-entries/payout', [JournalEntryController::class, 'payout']);
+        Route::post('journal-entries/payroll', [JournalEntryController::class, 'payroll']);
+        Route::post('journal-entries/{journalEntry}/reverse', [JournalEntryController::class, 'reverse']);
+        Route::post('accounts', [AccountController::class, 'store']);
+        Route::patch('accounts/{account}', [AccountController::class, 'update']);
     });
 
     Route::middleware('permission:expenses')->group(function () {
@@ -133,6 +149,9 @@ Route::middleware('auth:sanctum')->name('api.')->group(function () {
     });
 
     Route::middleware('permission:settings')->group(function () {
+        // Closing the books for a stretch of dates.
+        Route::post('accounting-periods', [AccountingPeriodController::class, 'store']);
+        Route::post('accounting-periods/{accountingPeriod}/unlock', [AccountingPeriodController::class, 'unlock']);
         Route::patch('studio-profile', [StudioProfileController::class, 'update']);
         Route::post('studio-profile/logo/{variant}', [StudioLogoController::class, 'store']);
         Route::delete('studio-profile/logo/{variant}', [StudioLogoController::class, 'destroy']);

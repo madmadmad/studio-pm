@@ -30,14 +30,14 @@ import {
 // keyword the name contains; anything unmatched gets the generic tag.
 const RULES = [
     [/software|subscription|saas|\bapps?\b|licen[cs]e/, AppWindow],
-    [/equipment|hardware|computer|laptop/, Laptop],
+    [/equipment|hardware|computer|laptop|electronic|devices/, Laptop],
     [/camera|photo|video/, Camera],
-    [/travel|flight|airfare|hotel|lodging/, AirplaneTilt],
+    [/travel|flight|airfare|hotel|lodging|accommodation|taxi|transportation/, AirplaneTilt],
     [/\bcars?\b|mileage|fuel|\bgas\b|parking|vehicle/, Car],
     [/meal|food|dining|restaurant|lunch|coffee/, ForkKnife],
     [/office|supplies|stationery/, Paperclip],
     [/print|business cards?/, Printer],
-    [/contractor|freelance|subcontract|staff|payroll/, UsersThree],
+    [/contractor|freelance|subcontract|staff|payroll|wage|labor|officer/, UsersThree],
     [/advertis|marketing|promo|ads\b/, Megaphone],
     [/hosting|domain|internet|web/, Globe],
     [/phone|mobile|cell/, Phone],

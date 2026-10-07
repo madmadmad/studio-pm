@@ -10,6 +10,8 @@ use App\Http\Controllers\Web\ClientPageController;
 use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\ExpensePageController;
 use App\Http\Controllers\Web\InvoicePageController;
+use App\Http\Controllers\Web\LedgerPageController;
+use App\Http\Controllers\Web\LedgerReportPageController;
 use App\Http\Controllers\Web\PortalAuthController;
 use App\Http\Controllers\Web\PortalPageController;
 use App\Http\Controllers\Web\PortalPreviewController;
@@ -98,6 +100,20 @@ Route::middleware('auth')->group(function () {
         Route::get('/bookkeeping/profit-loss.csv', [BookkeepingPageController::class, 'profitLossCsv'])->name('bookkeeping.profit-loss.csv');
         Route::get('/bookkeeping/invoices.csv', [BookkeepingPageController::class, 'invoicesCsv'])->name('bookkeeping.invoices.csv');
         Route::get('/bookkeeping/expenses.csv', [BookkeepingPageController::class, 'expensesCsv'])->name('bookkeeping.expenses.csv');
+        Route::get('/bookkeeping/accounts', [LedgerPageController::class, 'accounts'])->name('bookkeeping.accounts');
+        Route::get('/bookkeeping/journal', [LedgerPageController::class, 'journal'])->name('bookkeeping.journal');
+        Route::prefix('/bookkeeping/ledger')->name('bookkeeping.ledger.')->controller(LedgerReportPageController::class)->group(function () {
+            Route::get('/general-ledger', 'generalLedger')->name('general-ledger');
+            Route::get('/general-ledger.csv', 'generalLedgerCsv')->name('general-ledger.csv');
+            Route::get('/trial-balance', 'trialBalance')->name('trial-balance');
+            Route::get('/trial-balance.csv', 'trialBalanceCsv')->name('trial-balance.csv');
+            Route::get('/profit-loss', 'profitLoss')->name('profit-loss');
+            Route::get('/profit-loss.csv', 'profitLossCsv')->name('profit-loss.csv');
+            Route::get('/expenses-by-month', 'expensesByMonth')->name('expenses-by-month');
+            Route::get('/expenses-by-month.csv', 'expensesByMonthCsv')->name('expenses-by-month.csv');
+            Route::get('/balance-sheet', 'balanceSheet')->name('balance-sheet');
+            Route::get('/balance-sheet.csv', 'balanceSheetCsv')->name('balance-sheet.csv');
+        });
     });
 
     Route::middleware('permission:expenses')->get('/expenses', [ExpensePageController::class, 'index'])->name('expenses.index');

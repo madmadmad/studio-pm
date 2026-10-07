@@ -19,7 +19,9 @@ import CurrencyInput from '../../Components/CurrencyInput';
 import TabToolbar from '../../Components/TabToolbar';
 import YearChart from '../../Components/YearChart';
 
-function emptyForm() {
+// `paidFrom` is the account a new expense starts out paid from (the
+// Capital One card).
+function emptyForm(paidFrom = '') {
     return {
         name: '',
         amount: '',
@@ -33,6 +35,7 @@ function emptyForm() {
         is_recurring: false,
         recurrence_interval: 'monthly',
         source_label: '',
+        paid_from_account_id: paidFrom,
     };
 }
 
@@ -341,7 +344,7 @@ function yearSpend(expenses, today) {
     return { year, months: months.map((m) => ({ month: m.month, billable: round(m.billable), studio: round(m.studio), total: round(m.total) })) };
 }
 
-export default function ExpensesIndex({ expenses: expensesProp, categories: categoriesProp, taxes: taxesProp, projects, draftInvoices, companies = [], lastSplit = null }) {
+export default function ExpensesIndex({ expenses: expensesProp, categories: categoriesProp, taxes: taxesProp, projects, draftInvoices, companies = [], lastSplit = null, paymentAccounts = [], defaultPaymentAccountId = '' }) {
     const [expenses, setExpenses] = useState(expensesProp);
     const [categories, setCategories] = useState(categoriesProp);
     const [taxes, setTaxes] = useState(taxesProp);
@@ -356,7 +359,7 @@ export default function ExpensesIndex({ expenses: expensesProp, categories: cate
     const editingId = editing?.id ?? null;
     // Billed expenses can't be changed (the API refuses) -- they open read-only.
     const editable = !editing || editing.billing_status === 'unbilled';
-    const [form, setForm] = useState(emptyForm());
+    const [form, setForm] = useState(emptyForm(defaultPaymentAccountId));
     const [receiptFile, setReceiptFile] = useState(null);
     const [showAdditional, setShowAdditional] = useState(false);
     const [saving, setSaving] = useState(false);
@@ -395,7 +398,7 @@ export default function ExpensesIndex({ expenses: expensesProp, categories: cate
     function startCreate() {
         setEditing(null);
         setSplit(null);
-        setForm(emptyForm());
+        setForm(emptyForm(defaultPaymentAccountId));
         setReceiptFile(null);
         setError('');
         setShowForm(true);
@@ -417,6 +420,7 @@ export default function ExpensesIndex({ expenses: expensesProp, categories: cate
             is_recurring: expense.is_recurring,
             recurrence_interval: expense.recurrence_interval ?? 'monthly',
             source_label: expense.source_label ?? '',
+            paid_from_account_id: expense.paid_from_account_id ?? defaultPaymentAccountId,
         });
         setReceiptFile(null);
         setError('');
@@ -426,7 +430,7 @@ export default function ExpensesIndex({ expenses: expensesProp, categories: cate
     function cancel() {
         setShowForm(false);
         setEditing(null);
-        setForm(emptyForm());
+        setForm(emptyForm(defaultPaymentAccountId));
         setReceiptFile(null);
         setError('');
     }
@@ -595,6 +599,10 @@ export default function ExpensesIndex({ expenses: expensesProp, categories: cate
                                     {taxes.map((t) => <option key={t.id} value={t.id}>{t.name} ({t.rate}%)</option>)}
                                 </select>
                                 <input required type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className="input" />
+                                {/* Card or bank: a card payment from checking is a transfer, not an expense. */}
+                                <select aria-label="Paid from" value={form.paid_from_account_id} onChange={(e) => setForm({ ...form, paid_from_account_id: e.target.value })} className="input form-grid__full">
+                                    {paymentAccounts.map((a) => <option key={a.id} value={a.id}>Paid from {a.name}</option>)}
+                                </select>
 
                                 <select value={form.project_id} onChange={(e) => setForm({ ...form, project_id: e.target.value })} className="input form-grid__full">
                                     <option value="">No project</option>

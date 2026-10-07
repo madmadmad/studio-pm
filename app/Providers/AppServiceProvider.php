@@ -14,6 +14,7 @@ use App\Policies\TaskPolicy;
 use App\Policies\TimeEntryPolicy;
 use App\Policies\UserPolicy;
 use App\Services\EmailTemplates;
+use App\Services\Posting\PostingHooks;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -56,6 +57,9 @@ class AppServiceProvider extends ServiceProvider
         }
 
         Event::listen(WebhookReceived::class, MarkInvoicePaidFromStripeWebhook::class);
+
+        // Expenses, payments and income post to the ledger themselves.
+        PostingHooks::register();
 
         Password::defaults(fn () => $this->app->isProduction()
             ? Password::min(12)->mixedCase()->numbers()->symbols()->uncompromised()

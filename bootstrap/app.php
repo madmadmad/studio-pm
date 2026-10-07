@@ -1,5 +1,6 @@
 <?php
 
+use App\Exceptions\LedgerException;
 use App\Http\Middleware\EnsureContactHasPortalAccess;
 use App\Http\Middleware\EnsureUserHasPermission;
 use App\Http\Middleware\EnsureUserIsActive;
@@ -46,4 +47,10 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );
+
+        // A ledger rule (a locked period, a posted entry) refused the
+        // change: say so, like a validation error.
+        $exceptions->render(fn (LedgerException $e, Request $request) => $request->is('api/*') || $request->expectsJson()
+            ? response()->json(['message' => $e->getMessage()], 422)
+            : null);
     })->create();

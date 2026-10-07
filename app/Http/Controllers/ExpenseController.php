@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Concerns\ServesPrivateFile;
+use App\Models\Account;
 use App\Models\Expense;
 use App\Models\Invoice;
 use App\Models\PlaidDismissal;
+use App\Services\Posting\ExpensePoster;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -44,6 +46,9 @@ class ExpenseController extends Controller
             $data['receipt_path'] = $request->file('receipt')->store('expense-receipts', config('filesystems.private_disk'));
             $data['receipt_filename'] = $request->file('receipt')->getClientOriginalName();
         }
+
+        // Nearly everything is charged to the Capital One card.
+        $data['paid_from_account_id'] ??= Account::forKey('capital_one_card')->id;
 
         $expense = DB::transaction(function () use ($data, $splits) {
             $expense = Expense::create($data);
@@ -166,12 +171,17 @@ class ExpenseController extends Controller
         return $splits;
     }
 
+    // Replaces the split, then brings the ledger in step inside the same
+    // transaction: a change to the split alone doesn't touch the expense
+    // row, so nothing else would repost it, and a refusal (a locked period)
+    // undoes the split too.
     private function saveSplits(Expense $expense, array $splits): void
     {
         $expense->splits()->delete();
         foreach ($splits as $split) {
             $expense->splits()->create(['company_id' => $split['company_id'], 'amount' => round((float) $split['amount'], 2)]);
         }
+        app(ExpensePoster::class)->sync($expense);
     }
 
     private function validated(Request $request, ?Expense $expense = null): array
@@ -189,6 +199,8 @@ class ExpenseController extends Controller
             'is_recurring' => ['boolean'],
             'recurrence_interval' => ['nullable', 'in:weekly,monthly,quarterly,yearly'],
             'source_label' => ['nullable', 'string', 'max:255'],
+            // The card or bank account it was paid from.
+            'paid_from_account_id' => ['nullable', 'integer', Rule::exists('accounts', 'id')->whereIn('type', [Account::ASSET, Account::LIABILITY])->where('is_active', true)],
         ]);
     }
 }

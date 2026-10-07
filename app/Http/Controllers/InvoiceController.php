@@ -459,7 +459,9 @@ class InvoiceController extends Controller
     public function markPaid(Request $request, Invoice $invoice)
     {
         $data = $request->validate([
-            'method' => ['required', 'in:check,other'],
+            // Recorded by hand: ACH comes straight to the bank, not
+            // through Stripe.
+            'method' => ['required', 'in:check,ach,other'],
         ]);
 
         $invoice->recordPayment($data['method'], $invoice->total());
