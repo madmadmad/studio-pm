@@ -64,6 +64,14 @@ class Account extends Model
         return in_array($this->type, [self::ASSET, self::EXPENSE], true);
     }
 
+    // Debits less credits on the account, in cents, over everything posted.
+    // Positive is a debit balance (cash on hand, an expense); a liability
+    // or income account normally runs negative here.
+    public function netDebitCents(): int
+    {
+        return (int) $this->lines()->sum('debit_cents') - (int) $this->lines()->sum('credit_cents');
+    }
+
     public function parent(): BelongsTo
     {
         return $this->belongsTo(Account::class, 'parent_id');

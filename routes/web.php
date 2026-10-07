@@ -100,6 +100,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/bookkeeping/invoices.csv', [BookkeepingPageController::class, 'invoicesCsv'])->name('bookkeeping.invoices.csv');
         Route::get('/bookkeeping/expenses.csv', [BookkeepingPageController::class, 'expensesCsv'])->name('bookkeeping.expenses.csv');
         Route::get('/bookkeeping/accounts', [LedgerPageController::class, 'accounts'])->name('bookkeeping.accounts');
+        Route::get('/bookkeeping/journal', [LedgerPageController::class, 'journal'])->name('bookkeeping.journal');
     });
 
     Route::middleware('permission:expenses')->get('/expenses', [ExpensePageController::class, 'index'])->name('expenses.index');

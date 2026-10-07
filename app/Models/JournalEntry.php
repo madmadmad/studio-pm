@@ -69,4 +69,58 @@ class JournalEntry extends Model
     {
         return (int) $this->lines->sum('debit_cents');
     }
+
+    // Entries the app posted for a record (an expense, a payment) follow
+    // that record; only entries made by hand are reversed by hand.
+    public function isManual(): bool
+    {
+        return $this->source_type === null;
+    }
+
+    // What the Journal screen shows: the entry, its lines, where it came
+    // from (with a link), and the entries it reverses or was reversed by.
+    // Expects lines.account, lines.company, source, creator, reverses and
+    // reversal loaded.
+    public function summary(): array
+    {
+        return [
+            'id' => $this->id,
+            'entry_number' => $this->entry_number,
+            'entry_date' => $this->entry_date->toDateString(),
+            'memo' => $this->memo,
+            'total_cents' => $this->totalCents(),
+            'manual' => $this->isManual(),
+            'source' => $this->sourceSummary(),
+            'created_by' => $this->creator?->name,
+            'posted_at' => $this->posted_at->toIso8601String(),
+            'reverses' => $this->reverses?->only('id', 'entry_number'),
+            'reversed_by' => $this->reversal?->only('id', 'entry_number'),
+            'lines' => $this->lines->map(fn (JournalLine $line) => [
+                'id' => $line->id,
+                'account' => $line->account->only('id', 'code', 'name'),
+                'company' => $line->company?->only('id', 'name'),
+                'debit_cents' => $line->debit_cents,
+                'credit_cents' => $line->credit_cents,
+                'description' => $line->description,
+            ])->values()->all(),
+        ];
+    }
+
+    // ['kind', 'label', 'url'] for the record behind an entry, or null for
+    // one made by hand. A record deleted since still names its kind.
+    private function sourceSummary(): ?array
+    {
+        if ($this->isManual()) {
+            return null;
+        }
+
+        $source = $this->source;
+
+        return match ($this->source_type) {
+            (new Expense)->getMorphClass() => ['kind' => 'Expense', 'label' => $source?->name ?? 'Deleted expense', 'url' => '/expenses'],
+            (new Payment)->getMorphClass() => ['kind' => 'Payment', 'label' => $source ? "Invoice #{$source->invoice?->invoice_number}" : 'Deleted payment', 'url' => $source ? "/invoices/{$source->invoice_id}" : null],
+            (new Transaction)->getMorphClass() => ['kind' => 'Income', 'label' => $source?->description ?: 'Other income', 'url' => '/bookkeeping'],
+            default => ['kind' => class_basename($this->source_type), 'label' => (string) $this->source_id, 'url' => null],
+        };
+    }
 }
