@@ -14,6 +14,7 @@ use App\Models\JournalEntry;
 use App\Models\Payment;
 use App\Models\Project;
 use App\Models\Service;
+use App\Models\Transaction;
 use App\Services\Ledger;
 use App\Services\LedgerReports\Balances;
 use App\Services\LedgerReports\ProfitAndLoss;
@@ -684,6 +685,19 @@ class BonsaiImport
         ]);
         $this->payments[] = $payment;
         $this->report->count('Payments');
+
+        // The income record the app writes with every payment (the income
+        // charts and reports read these; the ledger posts the payment).
+        Transaction::create([
+            'type' => 'income',
+            'amount' => Money::fromCents($totalCents),
+            'tax_amount' => min($invoice->taxAmount(), $totalCents / 100),
+            'taxable_amount' => $invoice->taxableSubtotal(),
+            'category' => Transaction::CLIENT_INVOICE,
+            'occurred_on' => $payment->paid_at->toDateString(),
+            'invoice_id' => $invoice->id,
+            'project_id' => $invoice->project_id,
+        ]);
     }
 
     // Billable expenses no invoice line was found for: billed already if

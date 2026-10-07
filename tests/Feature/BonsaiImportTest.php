@@ -8,6 +8,7 @@ use App\Models\Expense;
 use App\Models\Invoice;
 use App\Models\JournalEntry;
 use App\Models\Payment;
+use App\Models\Transaction;
 use App\Services\BonsaiImport\BonsaiImport;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -99,6 +100,11 @@ class BonsaiImportTest extends TestCase
         $this->assertSame('billed_and_paid', Expense::firstWhere('name', 'Google ADS111111111')->billing_status);
         $this->assertSame($invoice->items[2]->id, Expense::firstWhere('name', 'GOTPRINT.COM')->invoice_item_id, 'rebuilt from the expense Bonsai attached');
         $this->assertEqualsWithDelta(10.0, (float) Payment::where('invoice_id', $invoice->id)->sole()->late_fee, 0.001);
+
+        $income = Transaction::where('invoice_id', $invoice->id)->sole();
+        $this->assertSame(Transaction::CLIENT_INVOICE, $income->category);
+        $this->assertEqualsWithDelta(1010.0, (float) $income->amount, 0.001, 'what the income charts read');
+        $this->assertSame(Payment::count(), Transaction::count());
     }
 
     public function test_a_reused_invoice_number_keeps_it_as_a_reference(): void
