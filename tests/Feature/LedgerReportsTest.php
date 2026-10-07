@@ -104,6 +104,29 @@ class LedgerReportsTest extends TestCase
                 && collect($equity)->doesntContain(fn ($e) => $e['account']['name'] === 'Retained Earnings')));
     }
 
+    public function test_expenses_by_month_groups_operating_expenses_and_leaves_out_cost_of_revenue(): void
+    {
+        $this->actingAs($this->manager)->get('/bookkeeping/ledger/expenses-by-month?from=2025-05-01&to=2026-02-28')->assertOk()->assertInertia(fn (Assert $page) => $page
+            ->component('Bookkeeping/ExpensesByMonth')
+            ->has('report.months', 10)
+            ->where('report.months.0', '2025-05')
+            ->where('report.groups.1.key', 'utilities')
+            ->where('report.groups.1.total', 12000)
+            ->where('report.groups.1.months.2025-06', 12000)
+            ->where('report.groups.1.accounts.0.account.name', 'Internet')
+            ->where('report.groups.8.key', 'payroll')
+            ->where('report.groups.8.months.2026-02', 10000)
+            ->where('report.groups', fn ($groups) => collect($groups)->sum('total') === 22000));
+    }
+
+    public function test_expenses_by_month_ends_at_this_month(): void
+    {
+        $this->travelTo('2026-03-15');
+
+        $this->actingAs($this->manager)->get('/bookkeeping/ledger/expenses-by-month?from=2026-01-01&to=2026-12-31')->assertOk()->assertInertia(fn (Assert $page) => $page
+            ->where('report.months', ['2026-01', '2026-02', '2026-03']));
+    }
+
     public function test_each_report_downloads_as_csv(): void
     {
         $this->actingAs($this->manager);
@@ -120,6 +143,10 @@ class LedgerReportsTest extends TestCase
 
         $csv = $this->get('/bookkeeping/ledger/general-ledger.csv?from=2026-01-01&to=2026-03-31')->assertDownload('general-ledger-2026-01-01-to-2026-03-31.csv')->streamedContent();
         $this->assertStringContainsString('"Card payment"', $csv);
+
+        $csv = $this->get('/bookkeeping/ledger/expenses-by-month.csv?from=2026-01-01&to=2026-02-28')->assertDownload('expenses-by-month-2026-01-01-to-2026-02-28.csv')->streamedContent();
+        $this->assertStringContainsString('"Total without payroll",0.00,0.00,0.00', $csv);
+        $this->assertStringContainsString('"Total operating expenses",0.00,100.00,100.00', $csv);
     }
 
     public function test_dates_given_backwards_are_put_in_order(): void
@@ -133,7 +160,7 @@ class LedgerReportsTest extends TestCase
     {
         $member = User::factory()->teamMember()->create();
 
-        foreach (['general-ledger', 'trial-balance', 'profit-loss', 'balance-sheet', 'balance-sheet.csv'] as $report) {
+        foreach (['general-ledger', 'trial-balance', 'profit-loss', 'balance-sheet', 'balance-sheet.csv', 'expenses-by-month', 'expenses-by-month.csv'] as $report) {
             $this->actingAs($member)->get("/bookkeeping/ledger/{$report}")->assertForbidden();
         }
     }

@@ -109,6 +109,8 @@ Route::middleware('auth')->group(function () {
             Route::get('/trial-balance.csv', 'trialBalanceCsv')->name('trial-balance.csv');
             Route::get('/profit-loss', 'profitLoss')->name('profit-loss');
             Route::get('/profit-loss.csv', 'profitLossCsv')->name('profit-loss.csv');
+            Route::get('/expenses-by-month', 'expensesByMonth')->name('expenses-by-month');
+            Route::get('/expenses-by-month.csv', 'expensesByMonthCsv')->name('expenses-by-month.csv');
             Route::get('/balance-sheet', 'balanceSheet')->name('balance-sheet');
             Route::get('/balance-sheet.csv', 'balanceSheetCsv')->name('balance-sheet.csv');
         });

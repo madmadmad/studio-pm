@@ -22,6 +22,7 @@ const GROUPS = [
         icon: Books,
         links: [
             { href: (year) => `/bookkeeping/ledger/profit-loss?from=${year}-01-01&to=${year}-12-31`, label: 'Profit & loss' },
+            { href: (year) => `/bookkeeping/ledger/expenses-by-month?from=${year}-01-01&to=${year}-12-31`, label: 'Expenses by month' },
             { href: (year) => `/bookkeeping/ledger/balance-sheet?to=${yearEnd(year)}`, label: 'Balance sheet' },
             { href: (year) => `/bookkeeping/ledger/trial-balance?to=${yearEnd(year)}`, label: 'Trial balance' },
             { href: (year) => `/bookkeeping/ledger/general-ledger?from=${year}-01-01&to=${year}-12-31`, label: 'General ledger' },

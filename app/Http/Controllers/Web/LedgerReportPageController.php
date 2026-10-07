@@ -6,6 +6,7 @@ use App\Http\Controllers\Concerns\StreamsCsv;
 use App\Http\Controllers\Controller;
 use App\Models\Account;
 use App\Services\LedgerReports\BalanceSheet;
+use App\Services\LedgerReports\ExpensesByMonth;
 use App\Services\LedgerReports\GeneralLedger;
 use App\Services\LedgerReports\ProfitAndLoss;
 use App\Services\LedgerReports\TrialBalance;
@@ -64,6 +65,20 @@ class LedgerReportPageController extends Controller
         [$from, $to] = $this->range($request);
 
         return $this->csv("profit-and-loss-{$from->toDateString()}-to-{$to->toDateString()}.csv", ProfitAndLoss::csvRows(ProfitAndLoss::for($from, $to)));
+    }
+
+    public function expensesByMonth(Request $request): Response
+    {
+        [$from, $to] = $this->range($request);
+
+        return Inertia::render('Bookkeeping/ExpensesByMonth', ['report' => ExpensesByMonth::for($from, $to)]);
+    }
+
+    public function expensesByMonthCsv(Request $request): StreamedResponse
+    {
+        [$from, $to] = $this->range($request);
+
+        return $this->csv("expenses-by-month-{$from->toDateString()}-to-{$to->toDateString()}.csv", ExpensesByMonth::csvRows(ExpensesByMonth::for($from, $to)));
     }
 
     public function balanceSheet(Request $request): Response
