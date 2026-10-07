@@ -1,12 +1,17 @@
 import { useState } from 'react';
 import { Link } from '@inertiajs/react';
-import { FileCsv, FileText } from '@phosphor-icons/react';
+import { Books, FileCsv, FileText } from '@phosphor-icons/react';
 
 const REPORTS = [
     { href: '/bookkeeping/profit-loss', label: 'Profit & loss statement' },
     { href: '/bookkeeping/sales-tax', label: 'Sales tax report' },
     { href: '/bookkeeping/invoice-categories', label: 'Invoices by category' },
     { href: '/bookkeeping/hosting', label: 'Hosting profitability' },
+];
+
+// Not year-based, so linked without ?year.
+const LEDGER = [
+    { href: '/bookkeeping/accounts', label: 'Chart of accounts' },
 ];
 
 const DOWNLOADS = [
@@ -36,6 +41,13 @@ export default function FinancialReports({ years }) {
                             <li key={r.href}>
                                 <Link href={`${r.href}?year=${year}`} className="financial-reports__link">
                                     <FileText /> {r.label}
+                                </Link>
+                            </li>
+                        ))}
+                        {LEDGER.map((r) => (
+                            <li key={r.href}>
+                                <Link href={r.href} className="financial-reports__link">
+                                    <Books /> {r.label}
                                 </Link>
                             </li>
                         ))}

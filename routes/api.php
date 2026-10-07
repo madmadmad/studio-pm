@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AccountMappingController;
 use App\Http\Controllers\AppearanceController;
 use App\Http\Controllers\BrandColorController;
 use App\Http\Controllers\CompanyController;
@@ -121,6 +122,10 @@ Route::middleware('auth:sanctum')->name('api.')->group(function () {
     Route::middleware('permission:bookkeeping')->group(function () {
         Route::apiResource('transactions', TransactionController::class)->only(['index', 'store', 'destroy']);
         Route::get('bookkeeping/summary', [TransactionController::class, 'summary']);
+        // What each category and service posts to in the ledger.
+        Route::patch('account-mappings/expense-categories/{expenseCategory}', [AccountMappingController::class, 'expenseCategory']);
+        Route::patch('account-mappings/services/{service}', [AccountMappingController::class, 'service']);
+        Route::patch('account-mappings/invoice-categories/{invoiceCategory}', [AccountMappingController::class, 'invoiceCategory']);
     });
 
     Route::middleware('permission:expenses')->group(function () {

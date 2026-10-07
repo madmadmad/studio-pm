@@ -10,6 +10,7 @@ use App\Http\Controllers\Web\ClientPageController;
 use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\ExpensePageController;
 use App\Http\Controllers\Web\InvoicePageController;
+use App\Http\Controllers\Web\LedgerPageController;
 use App\Http\Controllers\Web\PortalAuthController;
 use App\Http\Controllers\Web\PortalPageController;
 use App\Http\Controllers\Web\PortalPreviewController;
@@ -98,6 +99,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/bookkeeping/profit-loss.csv', [BookkeepingPageController::class, 'profitLossCsv'])->name('bookkeeping.profit-loss.csv');
         Route::get('/bookkeeping/invoices.csv', [BookkeepingPageController::class, 'invoicesCsv'])->name('bookkeeping.invoices.csv');
         Route::get('/bookkeeping/expenses.csv', [BookkeepingPageController::class, 'expensesCsv'])->name('bookkeeping.expenses.csv');
+        Route::get('/bookkeeping/accounts', [LedgerPageController::class, 'accounts'])->name('bookkeeping.accounts');
     });
 
     Route::middleware('permission:expenses')->get('/expenses', [ExpensePageController::class, 'index'])->name('expenses.index');
