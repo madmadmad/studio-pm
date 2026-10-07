@@ -49,7 +49,7 @@ class BonsaiRules
 
     // Ad platforms: media buys whatever their tag (Client Media Spend when
     // billed to a client).
-    public const MEDIA = '/\bADS\d{6,}\b|google ads|FACEBK|FACEBOOKAD|facebook ads/i';
+    public const MEDIA = '/\bADS\d{6,}\b|google ads|FACEBK|FACEBOOKAD|facebook ads|\b(google|meta|facebook|linkedin)( ad)? placement\b/i';
 
     // Printers: the Printing category (Printing Cost when billed).
     public const PRINTING = '/GOTPRINT|MOO PRINT|H\.?O\.?T\.? Graphics|Invitation Printing|^Printing$/i';

@@ -98,6 +98,7 @@ class BonsaiImportTest extends TestCase
         $this->assertSame(['Project Management', 'Google ADS111111111', 'GOTPRINT.COM'], $invoice->items->pluck('description')->all());
         $this->assertSame("Client calls\n2 hours at \$130.00/hour", $invoice->items[0]->details);
         $this->assertSame('billed_and_paid', Expense::firstWhere('name', 'Google ADS111111111')->billing_status);
+        $this->assertSame($invoice->items[1]->id, Expense::firstWhere('name', 'Google ADS111111111')->invoice_item_id, 'the first row of the export is matched too');
         $this->assertSame($invoice->items[2]->id, Expense::firstWhere('name', 'GOTPRINT.COM')->invoice_item_id, 'rebuilt from the expense Bonsai attached');
         $this->assertEqualsWithDelta(10.0, (float) Payment::where('invoice_id', $invoice->id)->sole()->late_fee, 0.001);
 

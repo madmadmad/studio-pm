@@ -486,7 +486,7 @@ class BonsaiImport
                 'service_id' => $this->services[strtolower($name)] ?? null,
             ]);
 
-            if ($match = $this->takeBillable($company->id, $this->norm($name), $cents, $inv['issued_date'])) {
+            if (($match = $this->takeBillable($company->id, $this->norm($name), $cents, $inv['issued_date'])) !== null) {
                 $this->bill($match, $invoice, $line);
             } else {
                 $line->update(['revenue_account_id' => $this->lineRevenue($name, $item['unit_type'], $projectName)]);
@@ -518,18 +518,24 @@ class BonsaiImport
     // The open billable expense a line names: same client, name and price,
     // the most recent on or before the invoice -- identical charges ($500
     // of Google Ads) recur every month, and the oldest open one belongs to
-    // an earlier invoice.
+    // an earlier invoice. Only if there's none, the earliest in the days
+    // after it (ATTACH_GRACE_DAYS), which otherwise belong to the next.
     private function takeBillable(int $companyId, string $name, int $cents, string $issued): ?int
     {
-        $found = null;
-        foreach ($this->billable as $i => $b) {
-            if (! $b['taken'] && $b['company'] === $companyId && $b['name'] === $name && $b['price'] === $cents && $b['date'] <= $this->attachableUntil($issued)
-                && ($found === null || $b['date'] > $this->billable[$found]['date'])) {
-                $found = $i;
-            }
-        }
+        $open = array_filter($this->billable, fn ($b) => ! $b['taken'] && $b['company'] === $companyId && $b['name'] === $name && $b['price'] === $cents && $b['date'] <= $this->attachableUntil($issued));
 
-        return $found;
+        return array_key_first($this->closestFirst($open, $issued));
+    }
+
+    // Billable expenses in the order an invoice of $issued claims them:
+    // on or before it, the latest first, then the grace days after it,
+    // the earliest first.
+    private function closestFirst(array $billable, string $issued): array
+    {
+        uasort($billable, fn ($a, $b) => [$a['date'] > $issued, $a['date'] > $issued ? $a['date'] : '', $b['date']]
+            <=> [$b['date'] > $issued, $b['date'] > $issued ? $b['date'] : '', $a['date']]);
+
+        return $billable;
     }
 
     // Bonsai lets an expense dated a little after the invoice go on it (a
@@ -594,8 +600,7 @@ class BonsaiImport
         }
 
         $issued = $invoice->issued_on->toDateString();
-        $open = array_filter($this->billable, fn ($b) => ! $b['taken'] && $b['company'] === $company->id && $b['date'] <= $this->attachableUntil($issued));
-        uasort($open, fn ($a, $b) => $b['date'] <=> $a['date']);
+        $open = $this->closestFirst(array_filter($this->billable, fn ($b) => ! $b['taken'] && $b['company'] === $company->id && $b['date'] <= $this->attachableUntil($issued)), $issued);
         $candidates = [
             array_filter($open, fn ($b) => $b['project'] === $this->norm($projectName)),
             $open,
