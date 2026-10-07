@@ -387,6 +387,12 @@ for review.
   ones created and mapped, the generic seven folded in (their expenses
   moved to the Bonsai category, then the old row removed). Draw and
   Personal are categories that post to Shareholder Distributions.
+- *As built:* Draw and Personal are **not** expense categories after all
+  (today's expense cards and P&L sum every expense, so distributions would
+  read as costs). They're in `BONSAI_ALIASES` as distributions, posted
+  as journal entries by the import. The account mapping UI is one
+  Mappings tab on the Chart of accounts page (bookkeeping permission),
+  not pickers in three drawers. Group headings can't be posted to.
 - The seeder also holds a `BONSAI_ALIASES` map ("Hotel & Accomodation",
   the skip and review lists) for the Phase 6 import.
 - A read-only Chart of accounts page under Bookkeeping, plus account
