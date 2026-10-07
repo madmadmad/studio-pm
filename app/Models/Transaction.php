@@ -7,7 +7,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Transaction extends Model
 {
-    protected $fillable = ['type', 'amount', 'tax_amount', 'taxable_amount', 'category', 'occurred_on', 'description', 'invoice_id', 'project_id'];
+    // The category invoice payments' rows carry. Their ledger entry comes
+    // from the Payment, so these rows don't post.
+    public const CLIENT_INVOICE = 'client invoice';
+
+    protected $fillable = ['type', 'amount', 'tax_amount', 'taxable_amount', 'category', 'occurred_on', 'description', 'invoice_id', 'project_id', 'deposit_account_id'];
 
     protected $casts = [
         'occurred_on' => 'date',
@@ -15,6 +19,12 @@ class Transaction extends Model
         'tax_amount' => 'decimal:2',
         'taxable_amount' => 'decimal:2',
     ];
+
+    // The account manual income went into (null: checking).
+    public function depositAccount(): BelongsTo
+    {
+        return $this->belongsTo(Account::class, 'deposit_account_id');
+    }
 
     // The Bookkeeping screen's month at a glance -- a simple income vs.
     // expense summary, not double-entry accounting. Sales tax received is

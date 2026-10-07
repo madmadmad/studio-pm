@@ -164,6 +164,16 @@ class ChartOfAccountsSeeder extends Seeder
         'Work Devices & Software' => ['Work Devices & Software'],
     ];
 
+    // Category => [revenue account handle, taxable]: how its expenses read
+    // when rebilled on an invoice. The line's income posts to that account
+    // (rather than the service's or the invoice's), and starts out taxable
+    // when flagged -- printing is one of the few taxable things we sell.
+    public const REBILLING = [
+        'Hosting' => ['hosting_revenue', false],
+        'Advertising' => ['client_media_revenue', false],
+        'Printing' => ['printing_revenue', true],
+    ];
+
     // The app's original categories, folded into their Bonsai equivalents
     // by the migration (Advertising and Hosting keep their names).
     public const RENAMED_CATEGORIES = [
@@ -226,6 +236,18 @@ class ChartOfAccountsSeeder extends Seeder
 
             DB::table('expenses')->where('category_id', $original->id)->update(['category_id' => $existing->id]);
             DB::table('expense_categories')->where('id', $original->id)->delete();
+        }
+    }
+
+    // Sets REBILLING on categories that don't have a revenue account yet.
+    // Run by the 2026_10_07_100000 migration, which adds the columns.
+    public function seedRebilling(): void
+    {
+        foreach (self::REBILLING as $category => [$revenueKey, $taxable]) {
+            DB::table('expense_categories')->where('name', $category)->whereNull('revenue_account_id')->update([
+                'revenue_account_id' => DB::table('accounts')->where('system_key', $revenueKey)->value('id'),
+                'taxable_when_billed' => $taxable,
+            ]);
         }
     }
 

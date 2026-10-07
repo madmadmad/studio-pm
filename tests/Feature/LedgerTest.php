@@ -6,7 +6,6 @@ use App\Exceptions\LedgerException;
 use App\Models\Account;
 use App\Models\BankReconciliation;
 use App\Models\Company;
-use App\Models\Expense;
 use App\Models\JournalEntry;
 use App\Models\JournalLine;
 use App\Models\User;
@@ -78,12 +77,12 @@ class LedgerTest extends TestCase
 
     public function test_an_entry_remembers_the_record_that_caused_it(): void
     {
-        $expense = Expense::create(['name' => 'Spectrum', 'amount' => '120.00', 'date' => '2026-03-04', 'is_billable' => false]);
+        $source = Company::create(['name' => 'Spectrum']); // any record can be a source; a client doesn't post itself
 
-        $entry = $this->ledger->post('2026-03-04', $this->cardCharge(), source: $expense);
+        $entry = $this->ledger->post('2026-03-04', $this->cardCharge(), source: $source);
 
-        $this->assertTrue($entry->source->is($expense));
-        $this->assertTrue($this->ledger->liveEntryFor($expense)->is($entry));
+        $this->assertTrue($entry->source->is($source));
+        $this->assertTrue($this->ledger->liveEntryFor($source)->is($entry));
     }
 
     public function test_an_unbalanced_entry_is_refused_and_nothing_is_written(): void
@@ -217,8 +216,8 @@ class LedgerTest extends TestCase
 
     public function test_a_reversal_mirrors_the_entry_and_links_back_to_it(): void
     {
-        $expense = Expense::create(['name' => 'Spectrum', 'amount' => '120.00', 'date' => '2026-03-04', 'is_billable' => false]);
-        $entry = $this->ledger->post('2026-03-04', $this->cardCharge(), source: $expense);
+        $source = Company::create(['name' => 'Spectrum']); // any record can be a source; a client doesn't post itself
+        $entry = $this->ledger->post('2026-03-04', $this->cardCharge(), source: $source);
 
         $reversal = $this->ledger->reverse($entry);
 
@@ -226,8 +225,8 @@ class LedgerTest extends TestCase
         $this->assertTrue($entry->reversal->is($reversal));
         $this->assertSame('2026-03-04', $reversal->entry_date->toDateString(), 'dated like the original');
         $this->assertSame('Reverses entry #1', $reversal->memo);
-        $this->assertTrue($reversal->source->is($expense));
-        $this->assertNull($this->ledger->liveEntryFor($expense), 'nothing stands for the expense any more');
+        $this->assertTrue($reversal->source->is($source));
+        $this->assertNull($this->ledger->liveEntryFor($source), 'nothing stands for the source any more');
 
         // Debits became credits, and every account nets to zero.
         $this->assertSame(12000, $reversal->lines->firstWhere('account_id', Account::forKey('capital_one_card')->id)->debit_cents);
@@ -239,13 +238,13 @@ class LedgerTest extends TestCase
 
     public function test_an_edit_is_a_reversal_then_a_new_entry(): void
     {
-        $expense = Expense::create(['name' => 'Spectrum', 'amount' => '120.00', 'date' => '2026-03-04', 'is_billable' => false]);
-        $original = $this->ledger->post('2026-03-04', $this->cardCharge(), source: $expense);
+        $source = Company::create(['name' => 'Spectrum']); // any record can be a source; a client doesn't post itself
+        $original = $this->ledger->post('2026-03-04', $this->cardCharge(), source: $source);
 
         $this->ledger->reverse($original);
-        $corrected = $this->ledger->post('2026-03-04', $this->cardCharge(13000), source: $expense);
+        $corrected = $this->ledger->post('2026-03-04', $this->cardCharge(13000), source: $source);
 
-        $this->assertTrue($this->ledger->liveEntryFor($expense)->is($corrected));
+        $this->assertTrue($this->ledger->liveEntryFor($source)->is($corrected));
         $this->assertSame(13000, (int) Account::forKey('internet')->lines()->sum('debit_cents') - (int) Account::forKey('internet')->lines()->sum('credit_cents'));
     }
 

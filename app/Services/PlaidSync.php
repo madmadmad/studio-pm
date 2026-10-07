@@ -2,12 +2,14 @@
 
 namespace App\Services;
 
+use App\Exceptions\LedgerException;
 use App\Models\Expense;
 use App\Models\ExpenseCategory;
 use App\Models\PlaidDismissal;
 use App\Models\PlaidItem;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 // Brings a connected bank's charges into the expense list. Each posted
 // charge becomes an unbilled, non-billable expense ("Chase ••4521" as its
@@ -85,18 +87,21 @@ class PlaidSync
                     continue;
                 }
                 if (! $this->isExpense($t)) {
-                    $expense->delete();
-                    $counts['removed']++;
+                    $counts['removed'] += (int) $this->unlessLocked($expense, fn () => $expense->delete());
 
                     continue;
                 }
-                $expense->update(['amount' => $t['amount'], 'date' => $t['date']]);
-                $counts['updated']++;
+                $counts['updated'] += (int) $this->unlessLocked($expense, fn () => $expense->update(['amount' => $t['amount'], 'date' => $t['date']]));
             }
 
-            $counts['removed'] += Expense::whereIn('plaid_transaction_id', collect($removed)->pluck('transaction_id'))
+            // One by one, not a bulk delete, so each is reversed out of the
+            // ledger.
+            Expense::whereIn('plaid_transaction_id', collect($removed)->pluck('transaction_id'))
                 ->where('billing_status', 'unbilled')
-                ->delete();
+                ->get()
+                ->each(function (Expense $expense) use (&$counts) {
+                    $counts['removed'] += (int) $this->unlessLocked($expense, fn () => $expense->delete());
+                });
 
             return $counts;
         });
@@ -145,5 +150,21 @@ class PlaidSync
         $name = self::CATEGORY_GUESSES[$plaid['detailed'] ?? ''] ?? self::CATEGORY_GUESSES[$plaid['primary'] ?? ''] ?? null;
 
         return $name ? ExpenseCategory::whereRaw('lower(name) = ?', [strtolower($name)])->value('id') : null;
+    }
+
+    // Applies a bank's change to an expense, unless the books are locked
+    // for its date -- then the expense stays as it was, and it's logged
+    // for a person to sort out. True when the change was made.
+    private function unlessLocked(Expense $expense, callable $change): bool
+    {
+        try {
+            $change();
+
+            return true;
+        } catch (LedgerException $e) {
+            Log::warning("Plaid change to expense #{$expense->id} skipped: {$e->getMessage()}");
+
+            return false;
+        }
     }
 }

@@ -14,7 +14,7 @@ class Expense extends Model
         'is_billable', 'markup_percent', 'tax_id', 'date',
         'is_recurring', 'recurrence_interval', 'receipt_path', 'receipt_filename',
         'source_label', 'plaid_transaction_id', 'billing_status',
-        'invoice_id', 'invoice_item_id',
+        'invoice_id', 'invoice_item_id', 'paid_from_account_id',
     ];
 
     protected $casts = [
@@ -39,6 +39,13 @@ class Expense extends Model
                 ]);
             }
         });
+    }
+
+    // The card or bank account it was paid from (null: the Capital One
+    // card). A transfer between them is a journal entry, never an expense.
+    public function paidFrom(): BelongsTo
+    {
+        return $this->belongsTo(Account::class, 'paid_from_account_id');
     }
 
     public function category(): BelongsTo
@@ -95,10 +102,12 @@ class Expense extends Model
             ]);
         }
 
-        // Added as the invoice's last line.
+        // Added as the invoice's last line -- taxable when its category's
+        // rebilled lines are (printing).
         $item = $invoice->items()->create([
             'description' => $this->name,
             'amount' => $this->billableAmount(),
+            'taxable' => (bool) $this->category?->taxable_when_billed,
             'position' => ($invoice->items()->reorder()->max('position') ?? -1) + 1,
         ]);
 

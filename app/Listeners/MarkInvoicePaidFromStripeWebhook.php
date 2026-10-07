@@ -3,6 +3,7 @@
 namespace App\Listeners;
 
 use App\Models\Invoice;
+use App\Services\StripeFees;
 use Illuminate\Support\Facades\Log;
 use Laravel\Cashier\Events\WebhookReceived;
 
@@ -51,6 +52,11 @@ class MarkInvoicePaidFromStripeWebhook
             Log::warning("Stripe checkout base_amount ({$baseAmount}) doesn't match invoice #{$invoice->invoice_number} total ({$invoice->total()}) -- recording the payment as received anyway.");
         }
 
-        $invoice->recordPayment($method, $baseAmount, $surchargeAmount, $session['payment_intent'] ?? null);
+        // Stripe's fee on the charge, so the ledger books it with the
+        // payment. Null if it can't be read; the payout picks it up.
+        $paymentIntent = $session['payment_intent'] ?? null;
+        $fee = app(StripeFees::class)->forPaymentIntent($paymentIntent);
+
+        $invoice->recordPayment($method, $baseAmount, $surchargeAmount, $paymentIntent, $fee);
     }
 }
