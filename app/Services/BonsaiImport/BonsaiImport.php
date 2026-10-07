@@ -79,9 +79,15 @@ class BonsaiImport
     /** @var list<Payment> */
     private array $payments = [];
 
+    /** @var list<array{date: string, balance: int}> the bank's balance after each row it exported */
+    private array $bankBalances = [];
+
     public function __construct(private Ledger $ledger) {}
 
-    public function run(string $expensesCsv, string $invoicesCsv, string $itemsJsonl, string $from = BonsaiRules::FROM, bool $commit = false): ImportReport
+    // $bankCsv is the bank's export of the card payments from checking;
+    // $opening the balances the day before $from, as decimals by account
+    // handle ('checking' => '200000.00', 'capital_one_card' => ...).
+    public function run(string $expensesCsv, string $invoicesCsv, string $itemsJsonl, string $from = BonsaiRules::FROM, bool $commit = false, ?string $bankCsv = null, array $opening = []): ImportReport
     {
         $this->report = new ImportReport;
         $expenseRows = $this->readCsv($expensesCsv);
@@ -99,6 +105,10 @@ class BonsaiImport
             $this->importExpenses($expenseRows, $from);
             $this->importInvoices($invoices, $invoiceRows, $from);
             $this->settleUnbilled();
+            $this->openingBalances($opening, $from);
+            if ($bankCsv) {
+                $this->cardPayments($this->readCsv($bankCsv));
+            }
             $this->post();
             $this->summarize($invoiceRows, $from);
             $commit ? DB::commit() : DB::rollBack();
@@ -669,6 +679,57 @@ class BonsaiImport
         }
     }
 
+    // ---- Opening balances and the bank -----------------------------------
+
+    // What checking had and the card owed the day before the history
+    // starts, against Opening Balance Equity. (Checking's opening $200,000
+    // was the partnership's money moved in; the CPA may reclassify it as
+    // shareholder capital.)
+    private function openingBalances(array $opening, string $from): void
+    {
+        $date = Carbon::parse($from)->subDay()->toDateString();
+        foreach ($opening as $key => $amount) {
+            $cents = $this->cents((string) $amount);
+            if ($cents === 0 || $this->records->has("opening:{$key}")) {
+                continue;
+            }
+            $account = Account::forKey($key);
+            $lines = $account->isDebitNormal()
+                ? [['account' => $account, 'debit_cents' => $cents], ['account' => 'opening_balance_equity', 'credit_cents' => $cents]]
+                : [['account' => 'opening_balance_equity', 'debit_cents' => $cents], ['account' => $account, 'credit_cents' => $cents]];
+            $this->journal("opening:{$key}", $date, "Opening balance: {$account->name}", $lines, 'Opening balances');
+        }
+    }
+
+    // The monthly Capital One payments from checking, from the bank's
+    // export: transfers, not expenses. Also keeps the bank's running
+    // balance to check the ledger against.
+    private function cardPayments(array $rows): void
+    {
+        foreach ($rows as $row) {
+            $date = Carbon::createFromFormat('m/d/Y', trim($row['Date']))->toDateString();
+            $cents = $this->cents(str_replace(['$', ','], '', $row['Amount']));
+            if (trim((string) ($row['Balance'] ?? '')) !== '') {
+                $this->bankBalances[] = ['date' => $date, 'balance' => $this->cents(str_replace(['$', ','], '', $row['Balance']))];
+            }
+            if (! preg_match('/CAPITAL ONE/i', $row['Description']) || $cents >= 0) {
+                $this->report->review('Bank row not imported (not a card payment)', "{$date} {$row['Description']} {$row['Amount']}");
+
+                continue;
+            }
+            $key = "bank:{$date}:{$cents}:".trim($row['Description']);
+            if ($this->records->has($key)) {
+                $this->report->count('Card payments already imported (skipped)');
+
+                continue;
+            }
+            $this->journal($key, $date, 'Capital One payment', [
+                ['account' => 'capital_one_card', 'debit_cents' => -$cents],
+                ['account' => 'checking', 'credit_cents' => -$cents],
+            ], 'Card payments from checking (transfers)');
+        }
+    }
+
     // ---- Ledger ---------------------------------------------------------
 
     private function post(): void
@@ -706,6 +767,18 @@ class BonsaiImport
             $this->report->ledger[] = sprintf('%s: %s', $account->name, $money(Balances::normal($account, Balances::sums(null, $today)[$account->id] ?? null)));
         }
         $this->report->ledger[] = sprintf('Journal entries: %d', JournalEntry::count());
+
+        // Checking against the bank: the ledger's balance at the end of each
+        // day the bank reported one. Close means nothing that went through
+        // checking is missing.
+        if ($this->bankBalances) {
+            $checking = Account::forKey('checking');
+            $this->report->ledger[] = 'Checking vs the bank (end of day):';
+            foreach (collect($this->bankBalances)->sortBy('date') as $row) {
+                $ledger = Balances::normal($checking, Balances::sums(null, Carbon::parse($row['date']))[$checking->id] ?? null);
+                $this->report->ledger[] = sprintf('  %s  bank %s  ledger %s  difference %s', $row['date'], $money($row['balance']), $money($ledger), $money($ledger - $row['balance']));
+            }
+        }
     }
 
     // ---- Reading --------------------------------------------------------

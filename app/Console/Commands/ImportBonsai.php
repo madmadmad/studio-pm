@@ -18,6 +18,9 @@ class ImportBonsai extends Command
         {--invoices= : Bonsai\'s invoice CSV export}
         {--items= : The invoice line items pulled through the Bonsai connector (JSON Lines)}
         {--from='.BonsaiRules::FROM.' : Leave out anything before this date}
+        {--bank= : The bank\'s export of the Capital One payments from checking (optional)}
+        {--opening-checking= : Checking\'s balance the day before --from}
+        {--opening-card= : What the Capital One card owed the day before --from}
         {--force : Import for real (back up the database first)}';
 
     protected $description = 'Import the Bonsai history (a dry run unless --force)';
@@ -35,7 +38,14 @@ class ImportBonsai extends Command
         $commit = (bool) $this->option('force');
         $this->info($commit ? 'Importing…' : 'Dry run: nothing will be saved.');
 
-        $report = $import->run($this->option('expenses'), $this->option('invoices'), $this->option('items'), $this->option('from'), $commit);
+        if ($this->option('bank') && ! is_readable($this->option('bank'))) {
+            $this->error('--bank needs a readable file.');
+
+            return self::FAILURE;
+        }
+        $opening = array_filter(['checking' => $this->option('opening-checking'), 'capital_one_card' => $this->option('opening-card')]);
+
+        $report = $import->run($this->option('expenses'), $this->option('invoices'), $this->option('items'), $this->option('from'), $commit, $this->option('bank'), $opening);
 
         $path = 'bonsai-import/report-'.now()->format('Y-m-d-His').($commit ? '' : '-dry-run').'.txt';
         Storage::disk('local')->put($path, $report->render(full: true));

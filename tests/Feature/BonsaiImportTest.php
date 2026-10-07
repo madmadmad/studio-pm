@@ -124,6 +124,20 @@ class BonsaiImportTest extends TestCase
         $this->assertSame(3, $report->counts['Invoices already imported (skipped)']);
     }
 
+    public function test_opening_balances_and_card_payments_from_the_bank_check_against_its_balance(): void
+    {
+        $dir = base_path('tests/Fixtures/bonsai');
+        $report = app(BonsaiImport::class)->run("{$dir}/expenses.csv", "{$dir}/invoices.csv", "{$dir}/items.jsonl", '2025-01-01', true, "{$dir}/bank.csv", ['checking' => '200000.00']);
+
+        $this->assertSame(1, $report->counts['Opening balances']);
+        $this->assertSame(1, $report->counts['Card payments from checking (transfers)']);
+        $opening = JournalEntry::where('memo', 'like', 'Opening balance%')->sole();
+        $this->assertSame('2024-12-31', $opening->entry_date->toDateString());
+        $this->assertSame(-20000000, $this->balance('opening_balance_equity'));
+        $this->assertSame(-(50000 + 12000 + 20000 + 53870) + 100000, $this->balance('capital_one_card'));
+        $this->assertStringContainsString('2025-03-26  bank $1,234.56', implode("\n", $report->ledger));
+    }
+
     public function test_the_command_needs_its_files(): void
     {
         $this->artisan('bonsai:import --expenses=/nope.csv')->assertFailed();
