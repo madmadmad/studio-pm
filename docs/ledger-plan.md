@@ -491,7 +491,28 @@ hash of date + amount + description). I'll need a sample export to build
 against. This was deferred earlier until Plaid goes to Production; it's
 pulled in here because the ledger needs the history.
 
-`php artisan ledger:backfill {--dry-run} {--from=YYYY-MM-DD}`, local or
+**Findings from the 2026-10-07 exports** (1,887 expenses, 639 invoices):
+- The invoice CSV has totals only; line items come from the Bonsai
+  connector, pulled to a file in `~/Downloads` at each run. Confirmed
+  revenue rules per line: matches a billable expense → that category's
+  "billed as" account (client media, printing, hosting); hosting lines →
+  Hosting; time on a Digital Advertising invoice → Ad Management; other
+  time → Design & Development (linked to the matching service by name).
+- Payments come from the CSV (paid date, method, gross, after-fee). The
+  50 "Bonsai Payments Processing Fee" expense rows equal the invoice fees
+  exactly, so the fee posts with the payment and those rows are skipped.
+- "Ohio Sales Tax Liability" rows are remittances: they debit Sales Tax
+  Payable, not an expense.
+- Likely duplicates to skip, pending confirmation: 33 masked
+  "************" Personal rows (Apr 15–Jun 11, 2026, $15,099.95), each
+  matching a Google Ads charge the same day to the cent; and 58 same-day
+  same-amount pairs where one has no receipt (mostly Apr–Jun 2026).
+- Pre-2025 rows (58, $16.6k) are out of range. Invoice #1250 is used
+  twice. Some paid invoices include late fees ($878 on 17).
+- Open answers: the masked rows, utilities' paid-from account, #1250,
+  late fee account.
+
+ {--dry-run} {--from=YYYY-MM-DD}`, local or
 explicitly run by you only. It posts through the same posters in date order
 and skips sources that already have a live entry, so re-running is safe.
 `--dry-run` writes nothing and reports problems: expenses with no category
