@@ -19,7 +19,7 @@ class LedgerPageController extends Controller
     {
         return Inertia::render('Bookkeeping/Accounts', [
             'accounts' => Account::orderBy('code')->get(['id', 'code', 'code_is_placeholder', 'name', 'type', 'system_key', 'parent_id', 'description', 'is_active']),
-            'expenseCategories' => ExpenseCategory::orderBy('name')->get(['id', 'name', 'account_id', 'billable_account_id']),
+            'expenseCategories' => ExpenseCategory::orderBy('name')->get(['id', 'name', 'account_id', 'billable_account_id', 'revenue_account_id', 'taxable_when_billed']),
             'services' => Service::orderBy('name')->get(['id', 'name', 'revenue_account_id']),
             'invoiceCategories' => InvoiceCategory::orderBy('name')->get(['id', 'name', 'revenue_account_id']),
             // What an unmapped record falls back to.

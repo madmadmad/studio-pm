@@ -22,11 +22,16 @@ class AccountMappingController extends Controller
             // Where it posts instead when the expense is billed to a client
             // (Advertising → Client Media Spend). Null: the same account.
             'billable_account_id' => $this->postable(Account::EXPENSE),
+            // How it reads rebilled on an invoice: where the income goes
+            // (null: the line's service or the invoice decides), and
+            // whether the line starts out taxable.
+            'revenue_account_id' => $this->postable(Account::INCOME),
+            'taxable_when_billed' => ['sometimes', 'boolean'],
         ]);
 
         $expenseCategory->update($data);
 
-        return $expenseCategory->only('id', 'name', 'account_id', 'billable_account_id');
+        return $expenseCategory->only('id', 'name', 'account_id', 'billable_account_id', 'revenue_account_id', 'taxable_when_billed');
     }
 
     public function service(Request $request, Service $service)

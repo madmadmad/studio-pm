@@ -5,6 +5,7 @@ import Badge from '../../Components/Badge';
 import EmptyState from '../../Components/EmptyState';
 import PageHeader from '../../Components/PageHeader';
 import TabBar from '../../Components/TabBar';
+import Toggle from '../../Components/Toggle';
 import { api } from '../../lib/api';
 import { useRememberedTab } from '../../lib/useRememberedTab';
 
@@ -96,8 +97,9 @@ function AccountSelect({ accounts, type, value, blankLabel, onChange, label }) {
     );
 }
 
-// One mapping table: a record per row, each account picker saving as it
-// changes. `columns` are [field, heading, account type, blank label].
+// One mapping table: a record per row, each control saving as it
+// changes. `columns` are [field, heading, account type, blank label] for
+// an account picker, or [field, heading, 'toggle'] for an on/off.
 function MappingTable({ title, hint, rows, columns, accounts, endpoint, onSaved }) {
     const [error, setError] = useState('');
 
@@ -136,6 +138,9 @@ function MappingTable({ title, hint, rows, columns, accounts, endpoint, onSaved 
                                     <td className="table__cell--strong">{row.name}</td>
                                     {columns.map(([field, heading, type, blankLabel]) => (
                                         <td key={field} className="table__cell--tight">
+                                            {type === 'toggle' ? (
+                                                <Toggle checked={Boolean(row[field])} ariaLabel={`${row.name}: ${heading}`} onChange={(value) => save(row, field, value)} />
+                                            ) : (
                                             <AccountSelect
                                                 accounts={accounts}
                                                 type={type}
@@ -144,6 +149,7 @@ function MappingTable({ title, hint, rows, columns, accounts, endpoint, onSaved 
                                                 label={`${row.name}: ${heading}`}
                                                 onChange={(value) => save(row, field, value)}
                                             />
+                                            )}
                                         </td>
                                     ))}
                                 </tr>
@@ -170,11 +176,13 @@ function MappingsTab({ accounts, fallbacks, ...props }) {
         <>
             <MappingTable
                 title="Expense categories"
-                hint={`Where an expense posts, by its category. A category with no account posts to ${fallbacks.expense}. "When billed" is used instead for an expense billed to a client: Advertising billed to a client is client media spend, not our marketing.`}
+                hint={`Where an expense posts, by its category. A category with no account posts to ${fallbacks.expense}. "When billed" is used instead for an expense billed to a client: Advertising billed to a client is client media spend, not our marketing. "Billed as" is where the income goes when it's rebilled on an invoice, and "Taxable" starts that invoice line out taxable (printing).`}
                 rows={categories}
                 columns={[
                     ['account_id', 'Posts to', 'expense', `${fallbacks.expense} (not mapped)`],
                     ['billable_account_id', 'When billed', 'expense', 'Same account'],
+                    ['revenue_account_id', 'Billed as', 'income', 'Service\u2019s or invoice\u2019s'],
+                    ['taxable_when_billed', 'Taxable', 'toggle'],
                 ]}
                 accounts={accounts}
                 endpoint="/api/account-mappings/expense-categories"

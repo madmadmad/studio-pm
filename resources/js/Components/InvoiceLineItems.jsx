@@ -54,7 +54,9 @@ function AddExpense({ projectId, items, onAdd }) {
     if (available.length === 0) return null;
 
     function pick(expense) {
-        onAdd({ description: expense.name, details: '', amount: billableAmount(expense), expense_id: expense.id });
+        // Taxable from the start when its category's rebilled lines are
+        // (printing).
+        onAdd({ description: expense.name, details: '', amount: billableAmount(expense), expense_id: expense.id, taxable: Boolean(expense.category?.taxable_when_billed) });
         setOpen(false);
     }
 
