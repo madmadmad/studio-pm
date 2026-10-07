@@ -509,8 +509,22 @@ pulled in here because the ledger needs the history.
   same-amount pairs where one has no receipt (mostly Apr–Jun 2026).
 - Pre-2025 rows (58, $16.6k) are out of range. Invoice #1250 is used
   twice. Some paid invoices include late fees ($878 on 17).
-- Open answers: the masked rows, utilities' paid-from account, #1250,
-  late fee account.
+- *Decided (2026-10-07):*
+  - The 33 masked "************" rows are bank-feed copies of the named
+    Google Ads charges (same count, same $15,099.95, and the April–June
+    invoices rebill each charge once): skipped. Every named Google Ads
+    charge is real and is a media buy (Client Media Spend) whatever its
+    tag; Facebook ad charges billed to clients the same.
+  - Other same-day, same-amount pairs where one has no receipt: the
+    receipt-less twin is skipped, except Twilio SendGrid's two $21.50
+    charges a month, which are real.
+  - Utilities are paid from checking.
+  - The second #1250 (TRECA, issued after Pioneer's) is kept as Bonsai
+    reference "1250-1" and takes the next free studio-pm number.
+  - Line items: pulled through the connector to
+    `~/Downloads/bonsai_invoice_items_<date>.jsonl`, checked against the
+    CSV totals.
+  - Late fees: a Late Fee Income account (proposed, not yet confirmed).
 
  {--dry-run} {--from=YYYY-MM-DD}`, local or
 explicitly run by you only. It posts through the same posters in date order
