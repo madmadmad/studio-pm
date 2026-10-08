@@ -12,7 +12,8 @@ const percent = (value) => (value === null || value === undefined ? '—' : `${v
 // Hosting profitability for a year: per client, what they were invoiced
 // for hosting (paid beside it) against their share of the hosting bills
 // (expense splits), and the margin; a client opens to their months.
-// Hosting bills not split yet show as Unassigned. Built by
+// A bill's Not billed share (servers nobody is billed for) has its own
+// row; hosting bills not split yet show as Unassigned. Built by
 // App\Services\HostingProfitabilityReport.
 export default function Hosting({ report, years }) {
     const [open, setOpen] = useState(null);
@@ -66,7 +67,7 @@ export default function Hosting({ report, years }) {
                         </tr>
                     </thead>
                     <tbody>
-                        {report.clients.length === 0 && report.unassigned === 0 && (
+                        {report.clients.length === 0 && report.unassigned === 0 && report.not_billed === 0 && (
                             <tr><td colSpan={6} className="table__cell--muted">No hosting invoices or split hosting costs in {report.year}.</td></tr>
                         )}
                         {report.clients.map((client) => {
@@ -100,6 +101,19 @@ export default function Hosting({ report, years }) {
                                 </Fragment>
                             );
                         })}
+                        {report.not_billed > 0 && (
+                            <tr>
+                                <td className="table__cell--strong">
+                                    Not billed
+                                    <div className="table__note">Servers no client pays for (internal sites, ones hosted free)</div>
+                                </td>
+                                <td />
+                                <td />
+                                <td className="table__cell--end table__cell--numeric">{formatCurrency(report.not_billed)}</td>
+                                <td className="table__cell--end table__cell--numeric table__cell--negative">{formatCurrency(-report.not_billed)}</td>
+                                <td />
+                            </tr>
+                        )}
                         {report.unassigned > 0 && (
                             <tr>
                                 <td className="table__cell--strong">

@@ -204,8 +204,27 @@ function ReceiptPanel({ expense, file, onPick, onClear }) {
     );
 }
 
+// A split row's client: a company id, '' while unchosen, or NOT_BILLED
+// for the share no client pays for (a saved row's null company_id).
+const NOT_BILLED = 'not-billed';
 let splitKey = 0;
-const splitRow = (companyId = '', amount = '') => ({ key: `split-${++splitKey}`, company_id: companyId ? String(companyId) : '', amount: amount === '' ? '' : String(amount) });
+const splitRow = (companyId = '', amount = '') => ({
+    key: `split-${++splitKey}`,
+    company_id: companyId === null ? NOT_BILLED : companyId ? String(companyId) : '',
+    amount: amount === '' ? '' : String(amount),
+});
+
+// The saved split a new bill starts from: of the recent ones, a bill of
+// the same name with the nearest total -- so the Andersons' Linode bill
+// and the main one, both "LINODE . AKAMAI", each start from their own.
+function pickLastSplit(lastSplits, name, total) {
+    if (!lastSplits.length) return null;
+    const sameName = lastSplits.filter((s) => s.name.trim().toLowerCase() === (name || '').trim().toLowerCase());
+    const pool = sameName.length ? sameName : lastSplits;
+    const amount = parseFloat(total);
+    if (!(amount > 0)) return pool[0];
+    return pool.reduce((best, s) => (Math.abs(parseFloat(s.amount) - amount) < Math.abs(parseFloat(best.amount) - amount) ? s : best));
+}
 
 // A saved split ({ amount, splits }) fitted to a new total: each client's
 // share scaled by the same proportion, in whole cents that add up to the
@@ -227,8 +246,8 @@ function scaleSplit(saved, total) {
 // "Split across clients": a shared cost (a month's Linode bill) divided
 // between the clients it covers, for hosting profitability. A list of
 // client and amount, adding up to the expense; "Use last split" fits the
-// last one made to this total. A split cost is never billed. `rows` is
-// null while off.
+// nearest recent one to this total. A share can be Not billed (servers no
+// client pays for). A split cost is never billed. `rows` is null while off.
 function SplitPanel({ rows, onChange, total, companies, lastSplit }) {
     const on = rows !== null;
     const sum = (rows || []).reduce((s, r) => s + (parseFloat(r.amount) || 0), 0);
@@ -255,6 +274,7 @@ function SplitPanel({ rows, onChange, total, companies, lastSplit }) {
                             <div key={row.key} className="expenses__split-row">
                                 <select value={row.company_id} onChange={(e) => update(row.key, 'company_id', e.target.value)} aria-label="Client" className="input">
                                     <option value="">Client&hellip;</option>
+                                    <option value={NOT_BILLED} disabled={used.includes(NOT_BILLED) && row.company_id !== NOT_BILLED}>Not billed</option>
                                     {companies.map((c) => (
                                         <option key={c.id} value={c.id} disabled={used.includes(String(c.id)) && row.company_id !== String(c.id)}>{c.name}</option>
                                     ))}
@@ -309,7 +329,7 @@ function expenseMetrics(expenses) {
 
 // The year's spending by month for the chart, split by who carries it:
 // billed to clients (a billable expense, or the clients' shares of a split
-// one) and the studio's own cost (the rest). Months still to come are null.
+// one) and the studio's own cost (the rest, a Not billed share included). Months still to come are null.
 const SPEND_SERIES = {
     bars: [
         { key: 'billable', label: 'Billed to clients', tone: 'primary' },
@@ -334,7 +354,7 @@ function yearSpend(expenses, today) {
         const amount = parseFloat(e.amount) || 0;
         const billable = e.is_billable
             ? amount
-            : Math.min(amount, (e.splits ?? []).reduce((sum, s) => sum + (parseFloat(s.amount) || 0), 0));
+            : Math.min(amount, (e.splits ?? []).filter((s) => s.company_id !== null).reduce((sum, s) => sum + (parseFloat(s.amount) || 0), 0));
         m.billable += billable;
         m.studio += amount - billable;
         m.total += amount;
@@ -344,7 +364,7 @@ function yearSpend(expenses, today) {
     return { year, months: months.map((m) => ({ month: m.month, billable: round(m.billable), studio: round(m.studio), total: round(m.total) })) };
 }
 
-export default function ExpensesIndex({ expenses: expensesProp, categories: categoriesProp, taxes: taxesProp, projects, draftInvoices, companies = [], lastSplit = null, paymentAccounts = [], defaultPaymentAccountId = '' }) {
+export default function ExpensesIndex({ expenses: expensesProp, categories: categoriesProp, taxes: taxesProp, projects, draftInvoices, companies = [], lastSplits = [], paymentAccounts = [], defaultPaymentAccountId = '' }) {
     const [expenses, setExpenses] = useState(expensesProp);
     const [categories, setCategories] = useState(categoriesProp);
     const [taxes, setTaxes] = useState(taxesProp);
@@ -389,7 +409,8 @@ export default function ExpensesIndex({ expenses: expensesProp, categories: cate
 
     function changeCategory(value) {
         setForm({ ...form, category_id: value });
-        // A new hosting bill starts from the last split, fitted to its total.
+        // A new hosting bill starts from its last split, fitted to its total.
+        const lastSplit = pickLastSplit(lastSplits, form.name, form.amount);
         if (!editing && split === null && lastSplit && String(value) === String(hostingCategoryId)) {
             setSplit(scaleSplit(lastSplit, form.amount));
         }
@@ -442,7 +463,7 @@ export default function ExpensesIndex({ expenses: expensesProp, categories: cate
             return;
         }
         if (split !== null && split.some((r) => !r.company_id || !(parseFloat(r.amount) > 0))) {
-            setError('Each client in the split needs a share.');
+            setError('Each row in the split needs a client (or Not billed) and a share.');
             return;
         }
         setSaving(true);
@@ -451,7 +472,7 @@ export default function ExpensesIndex({ expenses: expensesProp, categories: cate
             const fd = toFormData(split !== null ? { ...form, is_billable: false } : form, receiptFile);
             // Sent when split, and to clear one that was.
             if (split !== null || editing?.splits?.length) {
-                fd.append('splits', JSON.stringify((split || []).map((r) => ({ company_id: Number(r.company_id), amount: parseFloat(r.amount) }))));
+                fd.append('splits', JSON.stringify((split || []).map((r) => ({ company_id: r.company_id === NOT_BILLED ? null : Number(r.company_id), amount: parseFloat(r.amount) }))));
             }
             if (editingId) {
                 fd.append('_method', 'put');
@@ -622,7 +643,7 @@ export default function ExpensesIndex({ expenses: expensesProp, categories: cate
 
                             </div>
 
-                            <SplitPanel rows={split} onChange={setSplit} total={form.amount} companies={companies} lastSplit={lastSplit} />
+                            <SplitPanel rows={split} onChange={setSplit} total={form.amount} companies={companies} lastSplit={pickLastSplit(lastSplits.filter((s) => s.id !== editing?.id), form.name, form.amount)} />
 
                             <ReceiptPanel
                                 expense={editing}

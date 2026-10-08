@@ -19,10 +19,12 @@ class ExpensePageController extends Controller
     {
         return Inertia::render('Expenses/Index', [
             'expenses' => Expense::with(['category', 'project', 'tax', 'splits.company:id,name'])->orderByDesc('date')->get(),
-            // For splitting a shared cost: the clients, and the last split
-            // made -- what the next one starts from.
+            // For splitting a shared cost: the clients, and the recent
+            // splits -- a new bill starts from the one with its name and
+            // the nearest total (two Linode accounts bill under one name).
             'companies' => Company::orderBy('name')->get(['id', 'name']),
-            'lastSplit' => Expense::has('splits')->with('splits:id,expense_id,company_id,amount')->latest('date')->latest('id')->first()?->only('amount', 'splits'),
+            'lastSplits' => Expense::has('splits')->with('splits:id,expense_id,company_id,amount')->latest('date')->latest('id')->limit(12)->get()
+                ->map(fn (Expense $e) => $e->only('id', 'name', 'amount', 'splits')),
             'categories' => ExpenseCategory::orderBy('name')->get(),
             'taxes' => Tax::orderBy('name')->get(),
             'projects' => Project::where('status', '!=', 'archived')->orderBy('name')->get(['id', 'name']),

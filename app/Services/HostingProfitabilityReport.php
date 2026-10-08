@@ -13,8 +13,10 @@ use Illuminate\Support\Carbon;
 // for each client, what they were invoiced for hosting -- invoices in the
 // Hosting category issued that year, sent or paid, with what's been paid
 // beside it -- against their share of the hosting bills (expense splits on
-// expenses dated that year), and the margin; month by month too. Hosting
-// bills not split yet show as unassigned, so no cost goes missing.
+// expenses dated that year), and the margin; month by month too. The
+// share of a bill split as Not billed (servers nobody is billed for) and
+// hosting bills not split yet are shown on their own, so no cost goes
+// missing.
 class HostingProfitabilityReport
 {
     public static function forYear(int $year): array
@@ -37,6 +39,8 @@ class HostingProfitabilityReport
         $unassigned = $hostingExpenseCategory
             ? (float) Expense::where('category_id', $hostingExpenseCategory)->whereYear('date', $year)->doesntHave('splits')->sum('amount')
             : 0.0;
+
+        $notBilled = round((float) $splits->whereNull('company_id')->sum('amount'), 2);
 
         $companies = $invoices->pluck('company')->merge($splits->pluck('company'))->filter()->unique('id')->sortBy('name');
 
@@ -68,11 +72,12 @@ class HostingProfitabilityReport
         })->values();
 
         $invoiced = round($clients->sum('invoiced'), 2);
-        $cost = round($clients->sum('cost') + $unassigned, 2);
+        $cost = round($clients->sum('cost') + $notBilled + $unassigned, 2);
 
         return [
             'year' => $year,
             'clients' => $clients->all(),
+            'not_billed' => $notBilled,
             'unassigned' => round($unassigned, 2),
             'totals' => [
                 'invoiced' => $invoiced,
@@ -84,13 +89,17 @@ class HostingProfitabilityReport
         ];
     }
 
-    // A row per client, then any unassigned cost and the year's total.
+    // A row per client, then any not-billed and unassigned cost and the
+    // year's total.
     public static function csvRows(array $report): array
     {
         $money = fn ($n) => number_format((float) $n, 2, '.', '');
         $rows = [['Client', 'Invoiced', 'Paid', 'Cost', 'Margin', 'Margin %']];
         foreach ($report['clients'] as $c) {
             $rows[] = [$c['name'], $money($c['invoiced']), $money($c['paid']), $money($c['cost']), $money($c['margin']), $c['margin_percent'] ?? ''];
+        }
+        if ($report['not_billed'] > 0) {
+            $rows[] = ['Not billed (servers no client pays for)', '', '', $money($report['not_billed']), $money(-$report['not_billed']), ''];
         }
         if ($report['unassigned'] > 0) {
             $rows[] = ['Unassigned hosting cost', '', '', $money($report['unassigned']), $money(-$report['unassigned']), ''];

@@ -65,15 +65,28 @@ class HostingProfitabilityTest extends TestCase
         $this->assertSame(0, Expense::count());
     }
 
-    public function test_the_expenses_page_offers_the_last_split(): void
+    public function test_the_expenses_page_offers_the_recent_splits_newest_first(): void
     {
         [$a, $b, $manager, $hosting] = $this->setUpClients();
         $this->logBill($manager, $hosting, '2026-08-01', 40, [['company_id' => $a->id, 'amount' => 24], ['company_id' => $b->id, 'amount' => 16]]);
         $this->logBill($manager, $hosting, '2026-09-01', 50, [['company_id' => $a->id, 'amount' => 30], ['company_id' => $b->id, 'amount' => 20]]);
 
         $this->actingAs($manager)->get('/expenses')->assertInertia(fn ($page) => $page
-            ->where('lastSplit.amount', '50.00')
-            ->has('lastSplit.splits', 2));
+            ->has('lastSplits', 2)
+            ->where('lastSplits.0.name', 'Linode')
+            ->where('lastSplits.0.amount', '50.00')
+            ->has('lastSplits.0.splits', 2));
+    }
+
+    public function test_a_share_can_be_not_billed_once(): void
+    {
+        [$a, $b, $manager, $hosting] = $this->setUpClients();
+
+        $this->logBill($manager, $hosting, '2026-09-01', 50, [['company_id' => $a->id, 'amount' => 30], ['company_id' => null, 'amount' => 20]])
+            ->assertCreated()->assertJsonCount(2, 'splits');
+        $this->logBill($manager, $hosting, '2026-09-01', 50, [['company_id' => null, 'amount' => 25], ['company_id' => null, 'amount' => 25]])
+            ->assertUnprocessable()->assertJsonValidationErrors('splits');
+        $this->assertSame(1, Expense::count());
     }
 
     public function test_the_report_sets_each_clients_hosting_against_their_share_of_the_bills(): void
@@ -85,6 +98,7 @@ class HostingProfitabilityTest extends TestCase
         $this->logBill($manager, $hosting, '2026-09-01', 50, [['company_id' => $a->id, 'amount' => 30], ['company_id' => $b->id, 'amount' => 20]]);
         $this->logBill($manager, $hosting, '2026-10-01', 50, [['company_id' => $a->id, 'amount' => 30], ['company_id' => $b->id, 'amount' => 20]]);
         $this->logBill($manager, $hosting, '2026-10-02', 10, []); // not split yet
+        $this->logBill($manager, $hosting, '2026-10-03', 7, [['company_id' => null, 'amount' => 7]]); // servers no client pays for
 
         $this->actingAs($manager)->get('/bookkeeping/hosting?year=2026')->assertOk()->assertInertia(fn ($page) => $page
             ->component('Bookkeeping/Hosting')
@@ -96,12 +110,15 @@ class HostingProfitabilityTest extends TestCase
             ->where('report.clients.1.invoiced', 190)
             ->where('report.clients.1.paid', 95)
             ->where('report.clients.1.cost', 40)
+            ->has('report.clients', 2)
+            ->where('report.not_billed', 7)
             ->where('report.unassigned', 10)
-            ->where('report.totals.cost', 110)
-            ->where('report.totals.margin', 1280));
+            ->where('report.totals.cost', 117)
+            ->where('report.totals.margin', 1273));
 
         $csv = $this->get('/bookkeeping/hosting.csv?year=2026')->assertDownload('hosting-profitability-2026.csv')->streamedContent();
         $this->assertStringContainsString('"Alder & Finch Design",1200.00,1200.00,60.00,1140.00,95', $csv);
+        $this->assertStringContainsString('"Not billed (servers no client pays for)",,,7.00,-7.00,', $csv);
         $this->assertStringContainsString('"Unassigned hosting cost",,,10.00,-10.00,', $csv);
     }
 }

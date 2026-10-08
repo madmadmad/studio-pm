@@ -149,7 +149,8 @@ class ExpenseController extends Controller
 
     // A split across clients, sent from the form as JSON (it rides along
     // with the receipt upload): [{company_id, amount}], each client once,
-    // adding up to the expense to the cent. An empty list is no split.
+    // adding up to the expense to the cent. A null company_id is the
+    // Not billed share (at most one). An empty list is no split.
     private function validatedSplits(Request $request, float $total): array
     {
         $splits = json_decode((string) $request->input('splits', '[]'), true);
@@ -157,10 +158,13 @@ class ExpenseController extends Controller
 
         $validator = Validator::make(['splits' => $splits], [
             'splits' => ['array', 'max:100'],
-            'splits.*.company_id' => ['required', 'integer', 'distinct', 'exists:companies,id'],
+            'splits.*.company_id' => ['present', 'nullable', 'integer', 'distinct', 'exists:companies,id'],
             'splits.*.amount' => ['required', 'numeric', 'min:0.01'],
         ], ['splits.*.company_id.distinct' => 'Each client can only be in the split once.']);
         $validator->after(function ($validator) use ($splits, $total) {
+            if (count(array_filter($splits, fn ($s) => is_array($s) && ($s['company_id'] ?? null) === null)) > 1) {
+                $validator->errors()->add('splits', 'Only one Not billed share per split.');
+            }
             $sum = round(array_sum(array_column($splits, 'amount')), 2);
             if ($splits && abs($sum - round($total, 2)) > 0.004) {
                 $validator->errors()->add('splits', sprintf('The split adds up to $%s, not the expense\'s $%s.', number_format($sum, 2), number_format($total, 2)));
@@ -179,7 +183,7 @@ class ExpenseController extends Controller
     {
         $expense->splits()->delete();
         foreach ($splits as $split) {
-            $expense->splits()->create(['company_id' => $split['company_id'], 'amount' => round((float) $split['amount'], 2)]);
+            $expense->splits()->create(['company_id' => $split['company_id'] ?? null, 'amount' => round((float) $split['amount'], 2)]);
         }
         app(ExpensePoster::class)->sync($expense);
     }
