@@ -5,6 +5,8 @@ use App\Http\Controllers\AccountingPeriodController;
 use App\Http\Controllers\AccountMappingController;
 use App\Http\Controllers\AppearanceController;
 use App\Http\Controllers\BrandColorController;
+use App\Http\Controllers\Chat\ChatMessageController;
+use App\Http\Controllers\Chat\ConversationController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\ExpenseCategoryController;
@@ -61,6 +63,23 @@ Route::middleware('auth:sanctum')->name('api.')->group(function () {
     Route::get('attachments/{attachment}', [MessageAttachmentController::class, 'show']);
     Route::get('attachments/{attachment}/thumbnail', [MessageAttachmentController::class, 'thumbnail']);
     Route::get('attachments/{attachment}/display', [MessageAttachmentController::class, 'display']);
+
+    // Chat (staff only -- the `staff` middleware, then the policies).
+    Route::middleware('staff')->prefix('chat')->group(function () {
+        Route::get('conversations', [ConversationController::class, 'index']);
+        Route::get('unread', [ConversationController::class, 'unread']);
+        Route::get('channels', [ConversationController::class, 'channels']);
+        Route::post('channels', [ConversationController::class, 'storeChannel']);
+        Route::post('channels/{conversation}/join', [ConversationController::class, 'join']);
+        Route::post('channels/{conversation}/leave', [ConversationController::class, 'leave']);
+        Route::post('direct', [ConversationController::class, 'direct']);
+        Route::post('conversations/{conversation}/read', [ConversationController::class, 'read']);
+        Route::get('conversations/{conversation}/messages', [ChatMessageController::class, 'index']);
+        Route::post('conversations/{conversation}/messages', [ChatMessageController::class, 'store']);
+        Route::patch('messages/{message}', [ChatMessageController::class, 'update']);
+        Route::delete('messages/{message}', [ChatMessageController::class, 'destroy']);
+        Route::post('messages/{message}/reactions', [ChatMessageController::class, 'react']);
+    });
 
     Route::post('profile/avatar', [ProfileController::class, 'updateAvatar']);
     Route::patch('profile/appearance', [AppearanceController::class, 'update']);

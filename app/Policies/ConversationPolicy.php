@@ -5,12 +5,17 @@ namespace App\Policies;
 use App\Models\Conversation;
 use App\Models\User;
 
-// Chat is staff only, and every rule here takes a staff User -- a Client
-// Hub Contact never matches the type hint, so the Gate denies them before
-// any of this runs. Within the staff: you see and post in the conversations
-// you're in, and any of you can find and join a channel.
+// Chat is staff only: before() turns away anyone who isn't a staff User (a
+// Client Hub Contact) before any rule runs. Within the staff: you see and
+// post in the conversations you're in, and any of you can find and join a
+// channel.
 class ConversationPolicy
 {
+    public function before(mixed $actor): ?bool
+    {
+        return $actor instanceof User ? null : false;
+    }
+
     // Browse channels, start a channel or a direct message.
     public function viewAny(User $user): bool
     {

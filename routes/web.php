@@ -1,11 +1,13 @@
 <?php
 
 use App\Http\Controllers\AvatarController;
+use App\Http\Controllers\Chat\ChatAttachmentController;
 use App\Http\Controllers\Dev\NotificationPreviewController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\ProposalController;
 use App\Http\Controllers\Web\AcceptInvitationController;
 use App\Http\Controllers\Web\BookkeepingPageController;
+use App\Http\Controllers\Web\ChatPageController;
 use App\Http\Controllers\Web\ClientPageController;
 use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\ExpensePageController;
@@ -67,6 +69,17 @@ Route::middleware('auth')->group(function () {
     Route::get('/timesheets', [TimePageController::class, 'weekly'])->name('timesheets.index');
 
     Route::get('/profile', [ProfilePageController::class, 'index'])->name('profile.index');
+
+    // Chat: the studio's own channels and direct messages. Every staff
+    // member, never a client: the web guard by name (not whichever is the
+    // default), the `staff` middleware, then the policies.
+    Route::middleware(['auth:web', 'staff'])->group(function () {
+        Route::get('/chat', [ChatPageController::class, 'index'])->name('chat.index');
+        Route::get('/chat/{conversation}', [ChatPageController::class, 'show'])->name('chat.show');
+        Route::get('/chat/attachments/{attachment}', [ChatAttachmentController::class, 'show'])->name('chat.attachments.show');
+        Route::get('/chat/attachments/{attachment}/thumbnail', [ChatAttachmentController::class, 'thumbnail'])->name('chat.attachments.thumbnail');
+        Route::get('/chat/attachments/{attachment}/display', [ChatAttachmentController::class, 'display'])->name('chat.attachments.display');
+    });
 
     // Each part of the studio behind its permission (config/permissions.php).
     // A super admin has them all; settings and team are theirs alone.

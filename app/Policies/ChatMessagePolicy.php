@@ -10,6 +10,12 @@ use App\Models\User;
 // Anyone in the conversation can react.
 class ChatMessagePolicy
 {
+    // Staff only (as ConversationPolicy).
+    public function before(mixed $actor): ?bool
+    {
+        return $actor instanceof User ? null : false;
+    }
+
     public function update(User $user, ChatMessage $message): bool
     {
         return ! $message->trashed() && $message->isAuthor($user) && $user->can('post', $message->conversation);

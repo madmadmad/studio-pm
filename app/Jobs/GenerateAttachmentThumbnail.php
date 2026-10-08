@@ -2,7 +2,9 @@
 
 namespace App\Jobs;
 
+use App\Events\ChatMessageChanged;
 use App\Models\ChatAttachment;
+use App\Models\ChatMessage;
 use App\Models\MessageAttachment;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -72,6 +74,21 @@ class GenerateAttachmentThumbnail implements ShouldQueue
 
             $this->attachment->update(['thumbnail_status' => 'failed']);
         }
+
+        $this->announceToChat();
+    }
+
+    // A Chat image's open tabs swap their placeholder for the thumbnail (or,
+    // if it failed, the full image); touching the message brings it into a
+    // reconnecting tab's catch-up too.
+    private function announceToChat(): void
+    {
+        if (! $this->attachment instanceof ChatAttachment || ! ($message = $this->attachment->message)) {
+            return;
+        }
+
+        $message->touch();
+        rescue(fn () => event(new ChatMessageChanged($message->load(ChatMessage::displayRelations()), ChatMessageChanged::ATTACHMENTS)));
     }
 
     private function isGif(): bool

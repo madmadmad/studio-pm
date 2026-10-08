@@ -65,6 +65,27 @@ class Conversation extends Model
         return $query->where('type', self::TYPE_CHANNEL);
     }
 
+    // How the Chat sidebar shows it, with this person's unread counts
+    // (ChatUnread). A direct message is named by its people, so it carries
+    // them; a channel carries its name and size. Load members first.
+    public function toSummaryArray(array $counts = []): array
+    {
+        return [
+            'id' => $this->id,
+            'type' => $this->type,
+            'name' => $this->name,
+            'slug' => $this->slug,
+            'description' => $this->description,
+            'members' => $this->isDirect()
+                ? $this->members->map(fn (User $m) => ['id' => $m->id, 'name' => $m->name, 'avatar_url' => $m->avatar_url, 'active' => $m->isActive()])->values()->all()
+                : [],
+            'member_count' => $this->members->count(),
+            'unread' => $counts['unread'] ?? 0,
+            'mentions' => $counts['mentions'] ?? 0,
+            'updated_at' => $this->updated_at?->toIso8601String(),
+        ];
+    }
+
     // The same set of people always makes the same key, in any order.
     public static function directKey(array $userIds): string
     {
