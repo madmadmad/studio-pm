@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Models\ChatAttachment;
 use App\Models\MessageAttachment;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -20,12 +21,13 @@ use Throwable;
 // thumbnail_status flips to 'ready' (or 'failed', in which case it just
 // falls back to the full image). A big image also gets a lightbox-sized
 // WebP copy (display_path); smaller ones and GIFs (which may be animated)
-// are shown in the lightbox as they are.
+// are shown in the lightbox as they are. Makes them for project message
+// and Chat attachments alike (the two tables share these columns).
 class GenerateAttachmentThumbnail implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public function __construct(public MessageAttachment $attachment) {}
+    public function __construct(public MessageAttachment|ChatAttachment $attachment) {}
 
     public function handle(): void
     {

@@ -164,6 +164,14 @@ class User extends Authenticatable
         return $this->belongsToMany(Project::class, 'project_favorites')->withTimestamps();
     }
 
+    // The Chat channels and direct messages this person is in.
+    public function conversations(): BelongsToMany
+    {
+        return $this->belongsToMany(Conversation::class)
+            ->withPivot(['last_read_message_id', 'joined_at', 'muted'])
+            ->withTimestamps();
+    }
+
     public function timeEntries(): HasMany
     {
         return $this->hasMany(TimeEntry::class);
