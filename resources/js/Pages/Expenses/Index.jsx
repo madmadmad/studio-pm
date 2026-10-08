@@ -510,6 +510,11 @@ export default function ExpensesIndex({ expenses: expensesProp, categories: cate
             <Head title="Expenses" />
             <PageHeader
                 title="Expenses"
+                actions={(
+                    <Button variant="secondary" onClick={() => setManaging(true)}>
+                        Categories &amp; taxes
+                    </Button>
+                )}
             />
 
             <div className="metric-grid">
@@ -551,9 +556,6 @@ export default function ExpensesIndex({ expenses: expensesProp, categories: cate
                         </button>
                     ))}
                 </div>
-                <Button variant="secondary" onClick={() => setManaging(true)} className="filter-bar__end">
-                    Categories &amp; taxes
-                </Button>
             </div>
 
             {managing && (
