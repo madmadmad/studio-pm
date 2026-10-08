@@ -18,11 +18,14 @@
     "dependencies": {
         "@formkit/auto-animate": "^0.10.0",
         "@inertiajs/react": "^3.7.1",
+        "@laravel/echo-react": "^2.6.1",
         "@phosphor-icons/react": "^2.1.10",
         "@tiptap/pm": "^3.31.3",
         "@tiptap/react": "^3.31.3",
         "@tiptap/starter-kit": "^3.31.3",
         "@vitejs/plugin-react": "^6.1.1",
+        "laravel-echo": "^2.6.1",
+        "pusher-js": "^8.6.0",
         "react": "^19.3.0",
         "react-dom": "^19.3.0",
         "ziggy-js": "^2.6.4"

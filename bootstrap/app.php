@@ -4,6 +4,7 @@ use App\Exceptions\LedgerException;
 use App\Http\Middleware\EnsureContactHasPortalAccess;
 use App\Http\Middleware\EnsureUserHasPermission;
 use App\Http\Middleware\EnsureUserIsActive;
+use App\Http\Middleware\EnsureUserIsStaff;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\PortalPreviewReadOnly;
 use Illuminate\Console\Scheduling\Schedule;
@@ -19,6 +20,11 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
+    // Chat's private and presence channels (routes/channels.php) are staff
+    // only: /broadcasting/auth signs channels for an active staff User on the
+    // web guard, never a Client Hub contact (whose session lives on the
+    // `client` guard, sometimes alongside a staff one in a portal preview).
+    ->withBroadcasting(__DIR__.'/../routes/channels.php', ['middleware' => ['web', 'auth:web', 'staff']])
     ->withSchedule(function (Schedule $schedule): void {
         // Repeating invoices' copies first, so their 9 AM sends are queued.
         $schedule->command('invoices:create-repeats')->dailyAt('06:00')->timezone('America/New_York');
@@ -32,7 +38,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             HandleInertiaRequests::class,
         ]);
-        $middleware->alias(['permission' => EnsureUserHasPermission::class, 'portal.preview' => PortalPreviewReadOnly::class, 'portal.access' => EnsureContactHasPortalAccess::class]);
+        $middleware->alias(['permission' => EnsureUserHasPermission::class, 'portal.preview' => PortalPreviewReadOnly::class, 'portal.access' => EnsureContactHasPortalAccess::class, 'staff' => EnsureUserIsStaff::class]);
         // Global, not just the web group -- a deactivated user's existing
         // session cookie could otherwise still hit the API guard directly.
         $middleware->append(EnsureUserIsActive::class);
