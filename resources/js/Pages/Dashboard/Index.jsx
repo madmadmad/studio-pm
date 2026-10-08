@@ -191,7 +191,7 @@ export default function DashboardIndex({ can = {}, metrics, activity, projects, 
 
             {can.invoices ? (
                 <div className="metric-grid">
-                    <MetricCard tone="neutral" label={`Outstanding (${metrics.outstanding.count})`} value={formatCurrency(metrics.outstanding.amount)} />
+                    <MetricCard label={`Outstanding (${metrics.outstanding.count})`} value={formatCurrency(metrics.outstanding.amount)} />
                     <MetricCard label="Paid this month" value={formatCurrency(metrics.paid_this_month)} />
                     <MetricCard label="Unbilled hours" value={hoursLabel(metrics.unbilled_hours)} />
                     <MetricCard tone="primary" label={`Overdue (${metrics.overdue.count})`} value={formatCurrency(metrics.overdue.amount)} />

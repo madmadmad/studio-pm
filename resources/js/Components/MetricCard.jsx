@@ -1,8 +1,8 @@
 // `negative` flags a value that's gone the wrong way (over budget).
 // `tone` fills the card with a brand color and reverses its text to white
 // (any intent: 'primary' for a headline figure, 'danger' for one that's
-// gone over, 'muted' for the chart-grey beside a red one, 'neutral' for a
-// secondary figure in a quieter fill of the brand color, ...).
+// gone over, 'muted' for the chart-grey beside a red one, ...). With no
+// tone, a secondary figure: the default surface-subtle grey.
 // `negative` shows only on an unfilled card.
 export default function MetricCard({ label, value, negative = false, tone = null }) {
     return (

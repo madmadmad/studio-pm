@@ -21,19 +21,6 @@
         }
     }
 
-    // A figure of secondary importance (a project's Remaining budget, the
-    // dashboard's Outstanding): a quieter fill of the brand color, 30% of
-    // it over the page, with text in whichever of white or near-black
-    // reads on it (BrandPalette).
-    &--neutral {
-        background-color: var(--color-primary-quiet);
-        color: var(--color-primary-quiet-on);
-
-        .metric-card__label {
-            color: var(--color-primary-quiet-on);
-        }
-    }
-
     // The headline figure ("Hours remaining", "Outstanding"): the one
     // loud surface on a page, a gradient down the red scale.
     &--primary,

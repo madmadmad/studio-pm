@@ -223,7 +223,7 @@ function ProjectSummary({ project, proposedHours }) {
                     {budget > 0 && <MetricCard label="Budget" value={formatCurrency(budget)} />}
                     <MetricCard label="Total invoiced" value={formatCurrency(totalInvoiced)} />
                     {/* Danger once it's over budget, like Hours remaining -- a red figure wouldn't read on the brand fill. */}
-                    {budget > 0 && <MetricCard label="Remaining" value={formatCurrency(remaining)} tone={remaining < 0 ? 'danger' : 'neutral'} />}
+                    {budget > 0 && <MetricCard label="Remaining" value={formatCurrency(remaining)} tone={remaining < 0 ? 'danger' : null} />}
                 </div>
             )}
         </>
