@@ -7,6 +7,7 @@ use App\Http\Controllers\AppearanceController;
 use App\Http\Controllers\BrandColorController;
 use App\Http\Controllers\Chat\ChatMessageController;
 use App\Http\Controllers\Chat\ConversationController;
+use App\Http\Controllers\Chat\GifController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\ExpenseCategoryController;
@@ -69,6 +70,7 @@ Route::middleware('auth:sanctum')->name('api.')->group(function () {
         Route::get('conversations', [ConversationController::class, 'index']);
         Route::get('unread', [ConversationController::class, 'unread']);
         Route::get('channels', [ConversationController::class, 'channels']);
+        Route::get('gifs', [GifController::class, 'index']);
         Route::post('channels', [ConversationController::class, 'storeChannel']);
         Route::post('channels/{conversation}/join', [ConversationController::class, 'join']);
         Route::post('channels/{conversation}/leave', [ConversationController::class, 'leave']);

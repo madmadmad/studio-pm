@@ -6,9 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Models\ChatMessage;
 use App\Models\Conversation;
 use App\Services\ChatService;
+use App\Services\Giphy;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 // A conversation's messages: its history a page at a time, catching up
 // after a dropped connection, and posting, editing, deleting and reacting.
@@ -63,17 +65,29 @@ class ChatMessageController extends Controller
         ]);
     }
 
-    public function store(Request $request, Conversation $conversation)
+    public function store(Request $request, Conversation $conversation, Giphy $giphy)
     {
         $this->authorize('post', $conversation);
 
         $data = $request->validate([
-            'body' => ['nullable', 'string', 'max:'.config('chat.max_body_length'), 'required_without:attachments'],
+            'body' => ['nullable', 'string', 'max:'.config('chat.max_body_length'), 'required_without_all:attachments,gif_id'],
             'client_id' => ['nullable', 'string', 'max:64'],
+            // A GIF goes on its own.
+            'gif_id' => ['nullable', 'string', 'max:64', 'regex:/^[A-Za-z0-9]+$/', 'prohibits:attachments'],
             ...static::attachmentRules(),
-        ], ['body.required_without' => 'Write a message or attach a file.']);
+        ], ['body.required_without_all' => 'Write a message or attach a file.']);
 
-        $message = $this->chat->post($conversation, $request->user(), $data['body'] ?? null, $request->file('attachments', []), $data['client_id'] ?? null);
+        // Looked up on GIPHY, so what's saved is GIPHY's own URL for it.
+        $gif = null;
+        if (isset($data['gif_id'])) {
+            abort_unless(Giphy::enabled(), 404);
+            $gif = rescue(fn () => $giphy->find($data['gif_id']), null, report: false);
+            if (! $gif) {
+                throw ValidationException::withMessages(['gif_id' => "That GIF isn't available."]);
+            }
+        }
+
+        $message = $this->chat->post($conversation, $request->user(), $data['body'] ?? null, $request->file('attachments', []), $data['client_id'] ?? null, $gif);
 
         return response()->json($message->toChatArray($data['client_id'] ?? null), 201);
     }
@@ -83,8 +97,8 @@ class ChatMessageController extends Controller
         $this->authorize('update', $message);
 
         $data = $request->validate([
-            // A message with files may lose its words; one without can't.
-            'body' => [$message->attachments()->exists() ? 'nullable' : 'required', 'string', 'max:'.config('chat.max_body_length')],
+            // A message with files or a GIF may lose its words; one without can't.
+            'body' => [$message->gif || $message->attachments()->exists() ? 'nullable' : 'required', 'string', 'max:'.config('chat.max_body_length')],
         ]);
 
         return response()->json($this->chat->edit($message, $data['body'] ?? null)->toChatArray());

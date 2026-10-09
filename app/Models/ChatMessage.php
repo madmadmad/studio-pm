@@ -16,10 +16,12 @@ class ChatMessage extends Model
 {
     use SoftDeletes;
 
-    protected $fillable = ['conversation_id', 'user_id', 'body', 'edited_at'];
+    protected $fillable = ['conversation_id', 'user_id', 'body', 'gif', 'edited_at'];
 
     protected $casts = [
         'edited_at' => 'datetime',
+        // { id, title, url, width, height } from GIPHY (App\Services\Giphy).
+        'gif' => 'array',
     ];
 
     public const MENTION_PATTERN = '/<@(\d+)>/';
@@ -80,6 +82,7 @@ class ChatMessage extends Model
             'client_id' => $clientId,
             'user' => $this->user ? ['id' => $this->user->id, 'name' => $this->user->name, 'avatar_url' => $this->user->avatar_url] : null,
             'body' => $deleted ? null : $this->body,
+            'gif' => $deleted ? null : $this->gif,
             'mention_ids' => $deleted ? [] : $this->mentions->pluck('id')->all(),
             'attachments' => $deleted ? [] : $this->attachments->map->toChatArray()->all(),
             'reactions' => $deleted ? [] : ChatReaction::grouped($this->reactions),

@@ -1,0 +1,85 @@
+// The Chat composer's GIF button and its panel (Components/chat/
+// GifPicker.jsx): a search field, two columns of GIPHY previews that load
+// more as you scroll, and GIPHY's attribution. The panel is a .popover
+// opening above the composer, pinned to the button's right edge.
+@use '../abstracts' as *;
+
+.gif-picker {
+    // The panel's size: wide enough for two columns of GIPHY's 200px
+    // previews, and a few rows tall.
+    --gif-picker-width: 26rem;
+    --gif-picker-height: 22rem;
+
+    position: relative;
+    display: inline-flex;
+
+    &__panel {
+        right: 0;
+        bottom: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-2);
+        width: var(--gif-picker-width);
+        margin-top: 0;
+        margin-bottom: var(--space-1);
+        padding: var(--space-3);
+    }
+
+    &__search {
+        width: 100%;
+    }
+
+    &__results {
+        height: var(--gif-picker-height);
+        overflow-y: auto;
+        overscroll-behavior: contain;
+    }
+
+    // Masonry by columns: each GIF keeps its own shape.
+    &__grid {
+        columns: 2;
+        column-gap: var(--space-2);
+    }
+
+    &__item {
+        display: block;
+        width: 100%;
+        margin-bottom: var(--space-2);
+        overflow: hidden;
+        background-color: var(--color-surface-muted);
+        border-radius: var(--radius-base);
+        break-inside: avoid;
+
+        &:focus-visible {
+            @include focus-ring;
+        }
+    }
+
+    &__img {
+        display: block;
+        width: 100%;
+        height: auto;
+        transition: opacity var(--duration-fast) var(--ease-standard);
+
+        .gif-picker__item:hover & {
+            opacity: 0.8;
+        }
+    }
+
+    &__status {
+        padding-block: var(--space-4);
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+        color: var(--color-text-muted);
+        text-align: center;
+    }
+
+    &__attribution {
+        font-size: var(--font-size-2xs);
+        line-height: var(--line-height-xs);
+        font-weight: var(--font-weight-semibold);
+        color: var(--color-text-subtle);
+        text-align: right;
+        text-transform: uppercase;
+    }
+}

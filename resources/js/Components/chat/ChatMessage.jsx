@@ -107,7 +107,7 @@ function EditForm({ message, staffById, members, limits, onSave, onCancel }) {
 
     async function save() {
         const body = bodyForSaving(text.trim(), mentions);
-        if (!body && message.attachments.length === 0) {
+        if (!body && message.attachments.length === 0 && !message.gif) {
             setError('A message needs words or a file. Delete it instead?');
             return;
         }
@@ -204,6 +204,17 @@ function ChatMessage({ message, continued, me, staffById, members, limits, onRea
                                 staffById={staffById}
                                 meId={me.id}
                                 suffix={message.edited_at && <span className="chat-message__edited" title={`Edited ${formatDateTime(message.edited_at)}`}>(edited)</span>}
+                            />
+                        )}
+                        {message.gif && (
+                            <img
+                                src={message.gif.url}
+                                alt={message.gif.title || 'GIF'}
+                                title={message.gif.title}
+                                width={message.gif.width || undefined}
+                                height={message.gif.height || undefined}
+                                onLoad={onImageLoad}
+                                className="chat-message__gif"
                             />
                         )}
                         {message.pending ? (

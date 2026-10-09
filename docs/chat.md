@@ -41,6 +41,15 @@ Keep the bucket private, with public access off. Allowed file types are the same
 
 PHP and the web server must accept an upload as large as the limit. On Forge, set `upload_max_filesize` and `post_max_size` to at least `26M` (PHP settings) and `client_max_body_size` to at least `26M` (Nginx). Laravel Cloud's defaults are already above this.
 
+### GIFs (GIPHY)
+
+| Variable | What it is |
+|---|---|
+| `GIPHY_API_KEY` | A key from [developers.giphy.com](https://developers.giphy.com). Without one, the GIF button is hidden. |
+| `GIPHY_RATING` | Optional. The highest content rating offered: `g`, `pg` (the default), `pg-13` or `r`. |
+
+Searches go through the server (`/api/chat/gifs`), so the key never reaches a browser. A sent GIF is looked up on GIPHY by its ID, and GIPHY's own URL is saved, never one the browser supplied. The GIFs themselves load from GIPHY's servers. A new GIPHY key starts as a rate-limited beta key, which is plenty for the studio. Applying for a production key needs the app's GIPHY attribution ("Powered by GIPHY" in the picker) to be in place, and it is.
+
 ### Queue
 
 Real-time delivery does not use the queue: messages, edits, deletes and reactions broadcast during the request. Image thumbnails are queued, so a queue worker should be running, as it already is for invoices. Until a thumbnail is ready, the full image shows instead.

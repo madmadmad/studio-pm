@@ -1,13 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
 import { Paperclip, PaperPlaneRight, X } from '@phosphor-icons/react';
 import EmojiPicker from '../EmojiPicker';
+import GifPicker from './GifPicker';
 import { iconFor } from '../AttachmentChip';
 import MentionTextarea from './MentionTextarea';
 import { bodyForSaving } from '../../lib/chatText';
 import { formatFileSize } from '../../lib/format';
 
 // Writing a message: text with @mentions and emoji, and files -- from the
-// paperclip, pasted, or dropped on the conversation (`droppedFiles`).
+// paperclip, pasted, or dropped on the conversation (`droppedFiles`). A GIF
+// (when GIPHY's set up) goes at once, as a message of its own.
 // Enter sends; Shift+Enter is a new line. A file over the size limit is
 // turned away here, before it uploads; the server checks everything again.
 export default function ChatComposer({ placeholder, members, limits, onSend, onTyping, droppedFiles, focusKey }) {
@@ -121,6 +123,7 @@ export default function ChatComposer({ placeholder, members, limits, onSend, onT
                         <Paperclip size={20} />
                         <input type="file" multiple hidden onChange={(e) => { addFiles(e.target.files); e.target.value = ''; }} />
                     </label>
+                    {limits.gifs && <GifPicker onPick={(gif) => onSend({ body: '', files: [], gif })} />}
                     <EmojiPicker onPick={(emoji) => field.current?.insert(emoji)} placement="up" align="right" />
                     <button type="submit" className="icon-btn icon-btn--confirm" title="Send (Enter)" aria-label="Send" disabled={!text.trim() && files.length === 0}>
                         <PaperPlaneRight size={20} />

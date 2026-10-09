@@ -178,8 +178,8 @@ export function useChatConversation(conversationId, me) {
     // Shown at once (an optimistic copy with a client id), then swapped for
     // the saved message by whichever arrives first: the response or the
     // broadcast. A failure stays in the list to retry or discard.
-    const send = useCallback(async ({ body, files = [] }, clientId = newClientId()) => {
-        pendingFiles.current[clientId] = { body, files };
+    const send = useCallback(async ({ body, files = [], gif = null }, clientId = newClientId()) => {
+        pendingFiles.current[clientId] = { body, files, gif };
         lastTypingSent.current = 0;
         const optimistic = {
             id: `pending-${clientId}`,
@@ -190,6 +190,7 @@ export function useChatConversation(conversationId, me) {
             conversation_id: conversationId,
             user: { id: me.id, name: me.name, avatar_url: me.avatar_url },
             body: body || null,
+            gif: gif && { id: gif.id, title: gif.title, url: gif.url, width: gif.width, height: gif.height },
             mention_ids: [],
             attachments: files.map((file, i) => ({ id: `${clientId}-${i}`, name: file.name, size: file.size, is_image: false })),
             reactions: [],
@@ -210,7 +211,7 @@ export function useChatConversation(conversationId, me) {
                 files.forEach((file) => form.append('attachments[]', file));
                 saved = await api.postFormWithProgress(base, form, markProgress);
             } else {
-                saved = await api.post(base, { body, client_id: clientId });
+                saved = await api.post(base, { body, client_id: clientId, ...(gif ? { gif_id: gif.id } : {}) });
             }
             delete pendingFiles.current[clientId];
             setMessages((list) => upsert(list, saved));

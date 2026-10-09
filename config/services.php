@@ -14,6 +14,14 @@ return [
     |
     */
 
+    // Chat's GIF search (App\Services\Giphy). Without a key the GIF button
+    // stays hidden. `rating` is the highest content rating offered: g, pg,
+    // pg-13 or r.
+    'giphy' => [
+        'key' => env('GIPHY_API_KEY'),
+        'rating' => env('GIPHY_RATING', 'pg'),
+    ],
+
     'postmark' => [
         'key' => env('POSTMARK_API_KEY'),
     ],

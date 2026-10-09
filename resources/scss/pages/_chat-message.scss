@@ -118,6 +118,19 @@
         opacity: 1;
     }
 
+    // A GIF from GIPHY, at its own shape, no bigger than a thumbnail.
+    &__gif {
+        display: block;
+        width: auto;
+        max-width: min(100%, var(--size-popover));
+        height: auto;
+        border-radius: var(--radius-base);
+
+        &:not(:first-child) {
+            margin-top: var(--space-2);
+        }
+    }
+
     &__uploads {
         margin-top: var(--space-1);
         font-size: var(--font-size-xs);

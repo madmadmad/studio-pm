@@ -6,6 +6,7 @@ use App\Http\Controllers\Chat\ConversationController;
 use App\Http\Controllers\Controller;
 use App\Models\Conversation;
 use App\Models\User;
+use App\Services\Giphy;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -40,6 +41,8 @@ class ChatPageController extends Controller
                 'maxFiles' => (int) config('chat.max_files_per_message'),
                 'maxFileSizeKb' => (int) config('chat.max_file_size_kb'),
                 'maxBodyLength' => (int) config('chat.max_body_length'),
+                // Whether there's a GIPHY key (the GIF button).
+                'gifs' => Giphy::enabled(),
             ],
         ]);
     }

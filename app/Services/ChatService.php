@@ -101,10 +101,10 @@ class ChatService
     /**
      * @param  UploadedFile[]  $files
      */
-    public function post(Conversation $conversation, User $author, ?string $body, array $files = [], ?string $clientId = null): ChatMessage
+    public function post(Conversation $conversation, User $author, ?string $body, array $files = [], ?string $clientId = null, ?array $gif = null): ChatMessage
     {
-        $message = DB::transaction(function () use ($conversation, $author, $body, $files) {
-            $message = $conversation->messages()->create(['user_id' => $author->id, 'body' => $this->cleanBody($body)]);
+        $message = DB::transaction(function () use ($conversation, $author, $body, $files, $gif) {
+            $message = $conversation->messages()->create(['user_id' => $author->id, 'body' => $this->cleanBody($body), 'gif' => $gif]);
             $this->syncMentions($message, $conversation);
             $this->storeAttachments($message, $files);
             // Something new: back in the sidebar of anyone who'd closed it.
@@ -149,6 +149,7 @@ class ChatService
             $message->attachments()->delete();
             $message->reactions()->delete();
             $message->mentions()->detach();
+            $message->forceFill(['gif' => null])->save();
             $message->delete();
         });
 
