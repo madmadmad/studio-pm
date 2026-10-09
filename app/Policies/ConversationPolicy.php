@@ -45,6 +45,12 @@ class ConversationPolicy
         return $user->isActive() && $conversation->isChannel();
     }
 
+    // Rename a channel or change its description: anyone in it.
+    public function update(User $user, Conversation $conversation): bool
+    {
+        return $conversation->isChannel() && $this->view($user, $conversation);
+    }
+
     // A direct message can be closed (hidden from your sidebar); a channel
     // is left instead.
     public function close(User $user, Conversation $conversation): bool

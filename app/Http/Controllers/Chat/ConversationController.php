@@ -49,19 +49,43 @@ class ConversationController extends Controller
     {
         $this->authorize('create', Conversation::class);
 
+        [$slug, $description] = $this->validatedChannel($request);
+        $channel = $this->chat->createChannel($request->user(), $slug, $description);
+
+        return response()->json($channel->load('members')->toSummaryArray(), 201);
+    }
+
+    // A new name or description. #general keeps its name -- it's where
+    // everyone starts (ChatSeeder) -- but its description can change.
+    public function updateChannel(Request $request, Conversation $conversation)
+    {
+        $this->authorize('update', $conversation);
+
+        if ($conversation->slug === 'general') {
+            $request->merge(['name' => 'general']);
+        }
+        [$slug, $description] = $this->validatedChannel($request, $conversation);
+        $this->chat->updateChannel($conversation, $slug, $description);
+
+        $counts = ChatUnread::forUser($request->user())[$conversation->id] ?? [];
+
+        return response()->json($conversation->load('members')->toSummaryArray($counts));
+    }
+
+    // A channel's name is its slug: "Design Crit" is #design-crit. Unique,
+    // other than the channel's own.
+    protected function validatedChannel(Request $request, ?Conversation $channel = null): array
+    {
         $data = $request->validate([
             'name' => ['required', 'string', 'max:80'],
             'description' => ['nullable', 'string', 'max:255'],
         ]);
-        // Channel names are their slug: "Design Crit" is #design-crit.
         $slug = Str::slug($data['name']);
         validator(['name' => $slug], [
-            'name' => ['required', Rule::unique('conversations', 'slug')],
+            'name' => ['required', Rule::unique('conversations', 'slug')->ignore($channel?->id)],
         ], ['name.required' => 'Give the channel a name with letters or numbers.', 'name.unique' => 'There is already a channel with that name.'])->validate();
 
-        $channel = $this->chat->createChannel($request->user(), $slug, $data['description'] ?? null);
-
-        return response()->json($channel->load('members')->toSummaryArray(), 201);
+        return [$slug, filled($data['description'] ?? null) ? trim($data['description']) : null];
     }
 
     public function join(Request $request, Conversation $conversation)

@@ -72,6 +72,7 @@ Route::middleware('auth:sanctum')->name('api.')->group(function () {
         Route::get('channels', [ConversationController::class, 'channels']);
         Route::get('gifs', [GifController::class, 'index']);
         Route::post('channels', [ConversationController::class, 'storeChannel']);
+        Route::patch('channels/{conversation}', [ConversationController::class, 'updateChannel']);
         Route::post('channels/{conversation}/join', [ConversationController::class, 'join']);
         Route::post('channels/{conversation}/leave', [ConversationController::class, 'leave']);
         Route::post('direct', [ConversationController::class, 'direct']);

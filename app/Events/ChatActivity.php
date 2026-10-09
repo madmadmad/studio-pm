@@ -9,9 +9,10 @@ use Illuminate\Foundation\Events\Dispatchable;
 
 // "Your unread counts may have changed", on each affected person's own
 // channel -- a message posted, edited or deleted where they are, or they
-// read a conversation in another tab. Carries no message content: the
-// front end asks /api/chat/unread for the real numbers, so a missed signal
-// costs nothing but a moment's delay.
+// read a conversation in another tab -- or a channel they're in was
+// renamed (the sidebar reloads its list on any of these). Carries no
+// message content: the front end asks the API for the real numbers, so a
+// missed signal costs nothing but a moment's delay.
 class ChatActivity implements ShouldBroadcastNow
 {
     use Dispatchable, InteractsWithSockets;
@@ -19,6 +20,8 @@ class ChatActivity implements ShouldBroadcastNow
     const MESSAGE = 'message';
 
     const READ = 'read';
+
+    const UPDATED = 'updated'; // a channel's name or description
 
     public function __construct(
         public array $userIds,

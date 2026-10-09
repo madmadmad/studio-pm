@@ -2,9 +2,11 @@
 
 namespace Tests\Feature;
 
+use App\Events\ChatActivity;
 use App\Models\Conversation;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Event;
 use Tests\TestCase;
 
 // Chat's channels and direct messages: making them, finding and joining
@@ -179,6 +181,57 @@ class ChatConversationTest extends TestCase
 
         $this->actingAs($outsider)->postJson("/api/chat/direct/{$dm}/close")->assertForbidden();
         $this->actingAs($me)->postJson("/api/chat/direct/{$channel}/close")->assertForbidden();
+    }
+
+    public function test_anyone_in_a_channel_can_rename_it_and_change_its_description(): void
+    {
+        $creator = User::factory()->create();
+        $member = User::factory()->teamMember()->create();
+        $id = $this->actingAs($creator)->postJson('/api/chat/channels', ['name' => 'design', 'description' => 'Old'])->json('id');
+        $this->actingAs($member)->postJson("/api/chat/channels/{$id}/join");
+        Event::fake([ChatActivity::class]);
+
+        $this->actingAs($member)->patchJson("/api/chat/channels/{$id}", ['name' => 'Design Crit', 'description' => 'Work in progress'])
+            ->assertOk()->assertJsonPath('name', 'design-crit')->assertJsonPath('description', 'Work in progress');
+
+        $this->assertSame('design-crit', Conversation::find($id)->slug);
+        // Everyone in it is told, so their sidebars catch up.
+        Event::assertDispatched(ChatActivity::class, fn (ChatActivity $e) => $e->kind === ChatActivity::UPDATED
+            && collect($e->userIds)->sort()->values()->all() === collect([$creator->id, $member->id])->sort()->values()->all());
+
+        // Blank clears the description; keeping its own name is fine.
+        $this->actingAs($member)->patchJson("/api/chat/channels/{$id}", ['name' => 'design-crit', 'description' => ''])
+            ->assertOk()->assertJsonPath('description', null);
+    }
+
+    public function test_a_rename_cannot_take_another_channels_name(): void
+    {
+        $me = User::factory()->create();
+        $this->actingAs($me)->postJson('/api/chat/channels', ['name' => 'random']);
+        $id = $this->actingAs($me)->postJson('/api/chat/channels', ['name' => 'design'])->json('id');
+
+        $this->actingAs($me)->patchJson("/api/chat/channels/{$id}", ['name' => 'Random'])->assertStatus(422)->assertJsonValidationErrors('name');
+    }
+
+    public function test_general_keeps_its_name_but_its_description_can_change(): void
+    {
+        $me = User::factory()->create();
+        $id = $this->actingAs($me)->postJson('/api/chat/channels', ['name' => 'general'])->json('id');
+
+        $this->actingAs($me)->patchJson("/api/chat/channels/{$id}", ['name' => 'everyone', 'description' => 'The whole studio'])
+            ->assertOk()->assertJsonPath('name', 'general')->assertJsonPath('description', 'The whole studio');
+    }
+
+    public function test_only_people_in_a_channel_can_edit_it_and_direct_messages_cannot_be(): void
+    {
+        $me = User::factory()->create();
+        $alex = User::factory()->teamMember()->create();
+        $outsider = User::factory()->teamMember()->create();
+        $channel = $this->actingAs($me)->postJson('/api/chat/channels', ['name' => 'design'])->json('id');
+        $dm = $this->actingAs($me)->postJson('/api/chat/direct', ['user_ids' => [$alex->id]])->json('id');
+
+        $this->actingAs($outsider)->patchJson("/api/chat/channels/{$channel}", ['name' => 'mine'])->assertForbidden();
+        $this->actingAs($me)->patchJson("/api/chat/channels/{$dm}", ['name' => 'mine'])->assertForbidden();
     }
 
     public function test_the_chat_page_renders_for_staff(): void

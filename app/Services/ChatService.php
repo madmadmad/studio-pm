@@ -57,6 +57,16 @@ class ChatService
         return $conversation;
     }
 
+    // A channel's new name and description, shown to everyone in it at once.
+    public function updateChannel(Conversation $channel, string $slug, ?string $description): Conversation
+    {
+        $channel->update(['name' => $slug, 'slug' => $slug, 'description' => $description]);
+
+        $this->announce(new ChatActivity($channel->members()->pluck('users.id')->all(), $channel->id, ChatActivity::UPDATED));
+
+        return $channel;
+    }
+
     // Joining starts you caught up: what was said before isn't unread.
     public function join(Conversation $conversation, User $user): void
     {

@@ -1,5 +1,5 @@
 import { Fragment, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { ArrowDown, Hash, SignOut, Users } from '@phosphor-icons/react';
+import { ArrowDown, Hash, PencilSimple, SignOut, Users } from '@phosphor-icons/react';
 import Avatar from '../Avatar';
 import EmptyState from '../EmptyState';
 import Lightbox from '../Lightbox';
@@ -40,7 +40,7 @@ function continues(previous, message) {
         && new Date(message.created_at) - new Date(previous.created_at) < GROUP_WITHIN_MS;
 }
 
-function MembersMenu({ conversation, me, members, online, onLeave }) {
+function MembersMenu({ conversation, me, members, online, onEdit, onLeave }) {
     const [open, setOpen] = useState(false);
     const ref = useRef(null);
 
@@ -75,9 +75,14 @@ function MembersMenu({ conversation, me, members, online, onLeave }) {
                         ))}
                     </ul>
                     {conversation.type === 'channel' && (
-                        <button type="button" className="text-action chat-header__leave" onClick={onLeave}>
-                            <SignOut /> Leave #{conversation.name}
-                        </button>
+                        <div className="chat-header__menu-actions">
+                            <button type="button" className="text-action chat-header__menu-action" onClick={() => { setOpen(false); onEdit(); }}>
+                                <PencilSimple /> Edit channel
+                            </button>
+                            <button type="button" className="text-action chat-header__menu-action" onClick={onLeave}>
+                                <SignOut /> Leave #{conversation.name}
+                            </button>
+                        </div>
                     )}
                 </div>
             )}
@@ -88,7 +93,7 @@ function MembersMenu({ conversation, me, members, online, onLeave }) {
 // The open conversation: its header, its history (older pages load as you
 // scroll up), who's typing, and the composer. Marks itself read while it's
 // on screen and scrolled to the newest message.
-export default function ChatConversation({ conversation, me, staff, staffById, online, limits, onLeave }) {
+export default function ChatConversation({ conversation, me, staff, staffById, online, limits, onEdit, onLeave }) {
     const chat = useChatConversation(conversation.id, me);
     const { messages, loading, hasMore, loadingOlder, lastReadId, typing } = chat;
     const list = useRef(null);
@@ -240,7 +245,7 @@ export default function ChatConversation({ conversation, me, staff, staffById, o
                             {title}
                         </h1>
                     )}
-                    <MembersMenu conversation={conversation} me={me} members={allMembers} online={online} onLeave={onLeave} />
+                    <MembersMenu conversation={conversation} me={me} members={allMembers} online={online} onEdit={onEdit} onLeave={onLeave} />
                 </div>
                 {conversation.description && <p className="chat-header__description">{conversation.description}</p>}
             </header>

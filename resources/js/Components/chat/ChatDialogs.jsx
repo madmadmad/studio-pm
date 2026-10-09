@@ -181,3 +181,46 @@ export function NewMessageDialog({ staff, me, online, onClose, onOpened }) {
         </Dialog>
     );
 }
+
+// A channel's name and description, for anyone in it. #general keeps its
+// name (the server holds it), so the field's locked there.
+export function EditChannelDialog({ channel, onClose, onSaved }) {
+    const [name, setName] = useState(channel.name);
+    const [description, setDescription] = useState(channel.description ?? '');
+    const [error, setError] = useState('');
+    const [busy, setBusy] = useState(false);
+    const isGeneral = channel.slug === 'general';
+
+    async function save(e) {
+        e.preventDefault();
+        setBusy(true);
+        setError('');
+        try {
+            onSaved(await api.patch(`/api/chat/channels/${channel.id}`, { name, description: description || null }));
+        } catch (err) {
+            setError(err.errors?.name?.[0] ?? err.errors?.description?.[0] ?? err.message);
+            setBusy(false);
+        }
+    }
+
+    return (
+        <Dialog title="Edit channel" onClose={onClose}>
+            <form onSubmit={save} className="form-stack">
+                <div>
+                    <label className="label" htmlFor="edit-channel-name">Name</label>
+                    <input id="edit-channel-name" className="input" value={name} onChange={(e) => setName(e.target.value)} maxLength={80} disabled={isGeneral} autoFocus={!isGeneral} required />
+                    {isGeneral && <p className="form-hint">#general is where everyone starts, so its name stays.</p>}
+                </div>
+                <div>
+                    <label className="label" htmlFor="edit-channel-description">What it's for <span className="chat-dialog__optional">(optional)</span></label>
+                    <input id="edit-channel-description" className="input" value={description} onChange={(e) => setDescription(e.target.value)} maxLength={255} autoFocus={isGeneral} />
+                </div>
+                {error && <p className="form-error" role="alert">{error}</p>}
+                <div className="form-actions">
+                    <Button type="button" variant="secondary" onClick={onClose}>Cancel</Button>
+                    <Button type="submit" disabled={busy || !name.trim()}>Save</Button>
+                </div>
+            </form>
+        </Dialog>
+    );
+}

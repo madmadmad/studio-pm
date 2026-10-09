@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import AppLayout from '../../Layouts/AppLayout';
 import ChatSidebar from '../../Components/chat/ChatSidebar';
 import ChatConversation, { conversationTitle } from '../../Components/chat/ChatConversation';
-import { BrowseChannelsDialog, NewMessageDialog } from '../../Components/chat/ChatDialogs';
+import { BrowseChannelsDialog, EditChannelDialog, NewMessageDialog } from '../../Components/chat/ChatDialogs';
 import EmptyState from '../../Components/EmptyState';
 import { api } from '../../lib/api';
 import { onActivity, useChat } from '../../lib/chatStore';
@@ -17,7 +17,7 @@ export default function ChatIndex({ conversations: initial, conversationId, staf
     const me = usePage().props.auth.user;
     const [conversations, setConversations] = useState(initial);
     const [activeId, setActiveId] = useState(conversationId);
-    const [dialog, setDialog] = useState(null); // 'channels' | 'direct'
+    const [dialog, setDialog] = useState(null); // 'channels' | 'direct' | 'edit'
     const online = useChat((s) => s.online);
     const started = useChat((s) => s.started);
     const liveCounts = useChat((s) => s.counts);
@@ -109,6 +109,7 @@ export default function ChatIndex({ conversations: initial, conversationId, staf
                         staffById={staffById}
                         online={online}
                         limits={limits}
+                        onEdit={() => setDialog('edit')}
                         onLeave={() => leave(active)}
                     />
                 ) : (
@@ -119,6 +120,16 @@ export default function ChatIndex({ conversations: initial, conversationId, staf
             </div>
 
             {dialog === 'channels' && <BrowseChannelsDialog onClose={() => setDialog(null)} onOpened={opened} />}
+            {dialog === 'edit' && active && (
+                <EditChannelDialog
+                    channel={active}
+                    onClose={() => setDialog(null)}
+                    onSaved={(summary) => {
+                        setConversations((list) => list.map((c) => (c.id === summary.id ? summary : c)));
+                        setDialog(null);
+                    }}
+                />
+            )}
             {dialog === 'direct' && <NewMessageDialog staff={staff} me={me} online={online} onClose={() => setDialog(null)} onOpened={opened} />}
         </AppLayout>
     );
