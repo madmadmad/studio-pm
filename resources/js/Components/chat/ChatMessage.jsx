@@ -14,7 +14,7 @@ function timeOf(value) {
 // The text with mentions and links as elements -- every
 // other character a plain string, which React escapes. `suffix` follows
 // the last word ("(edited)").
-export function MessageText({ body, staffById, meId, suffix }) {
+export function MessageText({ body, staffById, suffix }) {
     return (
         <div className="message__text">
             {parseMessage(body, staffById).map((part, i) => {
@@ -202,7 +202,6 @@ function ChatMessage({ message, continued, me, staffById, members, limits, onRea
                             <MessageText
                                 body={message.body}
                                 staffById={staffById}
-                                meId={me.id}
                                 suffix={message.edited_at && <span className="chat-message__edited" title={`Edited ${formatDateTime(message.edited_at)}`}>(edited)</span>}
                             />
                         )}
