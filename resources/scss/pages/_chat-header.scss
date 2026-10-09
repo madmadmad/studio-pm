@@ -28,8 +28,11 @@
         letter-spacing: var(--letter-spacing-display);
     }
 
+    // The # (or emoji), sized with the title rather than the 18px icon default.
     &__hash {
         flex-shrink: 0;
+        width: 0.8em;
+        height: 0.8em;
         color: var(--color-text-subtle);
     }
 
