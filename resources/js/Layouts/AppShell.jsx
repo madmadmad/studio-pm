@@ -7,8 +7,11 @@ import Avatar from '../Components/Avatar';
 // bell -- just above their rule). `navItems` are
 // { href, label, exact?, also? }; a link is current when the URL starts
 // with its href (or matches exactly, for `exact`), or starts with any of
-// the `also` paths (a section's detail pages living elsewhere).
-export default function AppShell({ navItems, extraNav, footerExtra, profileHref, logoutHref, logoutLabel = 'Log out', children }) {
+// the `also` paths (a section's detail pages living elsewhere), and `badge`
+// is a node shown at its far end (Chat's unread count). `flush` drops the
+// content panel's padding and holds it to the window's height, for a page
+// that scrolls its own parts (Chat).
+export default function AppShell({ navItems, extraNav, footerExtra, profileHref, logoutHref, logoutLabel = 'Log out', flush = false, children }) {
     const { url, props } = usePage();
     const user = props.auth?.user;
     const branding = props.branding;
@@ -39,6 +42,7 @@ export default function AppShell({ navItems, extraNav, footerExtra, profileHref,
                         className={`app-shell__nav-link${isActive(item) ? ' app-shell__nav-link--active' : ''}`}
                     >
                         {item.label}
+                        {item.badge}
                     </Link>
                 ))}
                 {extraNav}
@@ -59,7 +63,7 @@ export default function AppShell({ navItems, extraNav, footerExtra, profileHref,
                 </div>
             </aside>
 
-            <main className="app-shell__main">{children}</main>
+            <main className={`app-shell__main${flush ? ' app-shell__main--flush' : ''}`}>{children}</main>
         </div>
     );
 }

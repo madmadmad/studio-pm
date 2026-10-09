@@ -23,4 +23,12 @@
         color: var(--color-primary-on);
         background-color: var(--color-primary);
     }
+
+    // Chat mentions of you ("@2"): filled red like --unread, and marked by
+    // the @ it's drawn with, so it reads apart from a plain unread count
+    // without relying on color.
+    &--mention {
+        color: var(--color-primary-on);
+        background-color: var(--color-primary);
+    }
 }

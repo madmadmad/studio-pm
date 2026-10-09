@@ -7,6 +7,8 @@ import Card from '../../Components/Card';
 import Badge from '../../Components/Badge';
 import Avatar from '../../Components/Avatar';
 import AttachmentChip from '../../Components/AttachmentChip';
+import ChatCount from '../../Components/chat/ChatCount';
+import PresenceDot from '../../Components/chat/PresenceDot';
 import MetricCard from '../../Components/MetricCard';
 import PageHeader from '../../Components/PageHeader';
 
@@ -427,6 +429,15 @@ export default function StyleGuide() {
                         <Avatar name="Casey Client" id={2} size={40} />
                         <Avatar name="Robin Teammate" id={3} size={40} />
                         <Avatar name="Sam Bystander" id={4} size={40} />
+                    </div>
+                </Section>
+
+                <Section title="Chat" description="Who's online (.presence, Components/chat/PresenceDot.jsx): a green dot on the avatar's corner (--color-presence, the one hue besides the brand's), or a hollow grey ring for away. Unread counts (ChatCount.jsx): a quiet grey .count for unread messages, a red .count--mention marked @ when someone's mentioned you.">
+                    <div className="style-guide__row style-guide__row--loose">
+                        <PresenceDot online><Avatar name="Bill Sattler" id={1} size={32} /></PresenceDot>
+                        <PresenceDot online={false}><Avatar name="Robin Teammate" id={3} size={32} /></PresenceDot>
+                        <ChatCount unread={4} />
+                        <ChatCount unread={7} mentions={2} />
                     </div>
                 </Section>
 

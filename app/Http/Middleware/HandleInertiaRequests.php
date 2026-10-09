@@ -6,6 +6,7 @@ use App\Models\Contact;
 use App\Models\InvoiceCategory;
 use App\Models\StudioProfile;
 use App\Models\User;
+use App\Services\ChatUnread;
 use App\Support\BrandPalette;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -75,6 +76,9 @@ class HandleInertiaRequests extends Middleware
                 $request->user() instanceof User => $request->user()->brand_color,
                 default => null,
             }),
+            // Chat's unread and mention totals, for the nav badge's first
+            // draw (it stays current over the socket after that). Staff only.
+            'chatUnread' => fn () => $request->user() instanceof User ? ChatUnread::totals($request->user()) : null,
             // What an invoice can be categorised as, beyond project work
             // (Settings). Staff only.
             'invoiceCategories' => fn () => $request->user() instanceof Contact ? null : InvoiceCategory::orderBy('name')->get(['id', 'name']),

@@ -1,0 +1,40 @@
+// Who's online in Chat (Components/chat/PresenceDot.jsx): a green dot, or
+// a hollow grey ring for away -- different in shape as well as color. On
+// an avatar's lower-right corner, ringed in the surface color so it reads
+// against any photo; --inline for one on its own beside a name.
+
+.presence {
+    // The dot's size and the gap ringed round it.
+    --presence-size: var(--space-2-5);
+    --presence-ring: var(--border-width-thick);
+
+    position: relative;
+    display: inline-flex;
+    flex-shrink: 0;
+
+    &__dot {
+        position: absolute;
+        right: calc(var(--presence-ring) * -1);
+        bottom: calc(var(--presence-ring) * -1);
+        width: var(--presence-size);
+        height: var(--presence-size);
+        background-color: var(--color-surface);
+        border: var(--border-width-thick) solid var(--color-text-subtle);
+        border-radius: var(--radius-pill);
+        box-shadow: 0 0 0 var(--presence-ring) var(--presence-backdrop, var(--color-bg));
+
+        &--online {
+            background-color: var(--color-presence);
+            border-color: var(--color-presence);
+        }
+    }
+
+    &--inline {
+        align-items: center;
+
+        .presence__dot {
+            position: static;
+            box-shadow: none;
+        }
+    }
+}

@@ -92,7 +92,9 @@
     // pointer, and the current page in red with white text. Block and
     // left-aligned so the Alerts trigger (a <button>) matches the links.
     &__nav-link {
-        display: block;
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
         width: 100%;
         padding: var(--space-2) var(--space-3);
         font-size: var(--font-size-base);
@@ -122,6 +124,11 @@
         &:focus-visible {
             @include focus-ring;
         }
+    }
+
+    // A nav item's count (Chat's unread), at its far end.
+    &__nav-badge {
+        margin-left: auto;
     }
 
     // Above the footer's rule, pushed down with it (the alerts bell).
@@ -206,6 +213,15 @@
 
         @media (prefers-reduced-motion: reduce) {
             animation-name: overlay-fade-in;
+        }
+
+        // A page that scrolls its own parts (Chat): no padding, held to the
+        // window's height so only those parts scroll.
+        &--flush {
+            display: flex;
+            height: 100vh;
+            padding: 0;
+            overflow: hidden;
         }
     }
 }

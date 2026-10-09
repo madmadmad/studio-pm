@@ -18,7 +18,6 @@
     "dependencies": {
         "@formkit/auto-animate": "^0.10.0",
         "@inertiajs/react": "^3.7.1",
-        "@laravel/echo-react": "^2.6.1",
         "@phosphor-icons/react": "^2.1.10",
         "@tiptap/pm": "^3.31.3",
         "@tiptap/react": "^3.31.3",

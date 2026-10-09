@@ -1,12 +1,16 @@
+import { useEffect } from 'react';
 import { usePage } from '@inertiajs/react';
 import AlertsMenu from '../Components/AlertsMenu';
+import ChatNavBadge from '../Components/chat/ChatNavBadge';
 import AppShell from './AppShell';
 import { hasPermission } from '../lib/permissions';
+import { startChat } from '../lib/chatStore';
 
 const NAV_ITEMS = [
     { href: '/', label: 'Overview', exact: true },
     { href: '/clients', label: 'Clients', permission: 'clients' },
     { href: '/projects', label: 'Projects' },
+    { href: '/chat', label: 'Chat', badge: <ChatNavBadge /> },
     // Time and Timesheets (/time-entries, /timesheets) are hidden while time
     // is logged only inside projects (each project's Time tab). The pages
     // still exist; add them back here to show them again.
@@ -19,10 +23,16 @@ const NAV_ITEMS = [
     { href: '/settings', label: 'Settings', permission: 'settings' },
 ];
 
-// The staff app frame: the shared sidebar with the staff nav.
-export default function AppLayout({ children }) {
+// The staff app frame: the shared sidebar with the staff nav. Starts Chat's
+// live connection (presence, unread counts) on the first page and keeps it
+// across the rest. `flush` is AppShell's: a page that fills the window.
+export default function AppLayout({ flush = false, children }) {
     const { props } = usePage();
     const user = props.auth?.user;
+
+    useEffect(() => {
+        startChat(user, props.chatUnread);
+    }, [user?.id]);
 
     return (
         <AppShell
@@ -31,6 +41,7 @@ export default function AppLayout({ children }) {
             footerExtra={hasPermission(user, 'invoices') && <AlertsMenu />}
             profileHref="/profile"
             logoutHref="/logout"
+            flush={flush}
         >
             {children}
         </AppShell>

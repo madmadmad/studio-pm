@@ -131,6 +131,11 @@
     // Marks with no text of their own.
     --color-indicator: var(--brand-icon-dark);
 
+    // Chat's "online" dot -- the one hue outside the brand color and
+    // danger, because green-for-online is a convention people read without
+    // a legend. Away is a hollow grey ring, so the two differ in shape too.
+    --color-presence: #3CCB6E; // 3:1+ on every dark surface
+
     // The keyboard focus outline (abstracts/_mixins focus-ring). The text
     // color rather than the fill, so it stays visible against a fill.
     --color-focus-ring: var(--brand-text-dark);
@@ -380,6 +385,7 @@
     // Sizes -- fixed widths for recurring containers.
     // -----------------------------------------------------------------
     --size-sidebar: 18rem;
+    --size-chat-sidebar: 16rem; // Chat's column of conversations
     --size-panel-shadow: 128px; // the width of resources/images/panel-shadow.png, the panel's dithered shadow
     --size-popover-sm: 16rem;
     --size-popover: 18rem;
@@ -433,6 +439,7 @@
     --color-primary-quiet: var(--brand-quiet-light);
     --color-primary-quiet-on: var(--brand-quiet-light-on);
     --color-indicator: var(--brand-icon-light);
+    --color-presence: #1E8E47; // 3:1+ on white and the light cards
     --color-danger-soft: color-mix(in srgb, var(--danger) 10%, #fff);
     --color-danger-text: var(--danger-text-light);
 
