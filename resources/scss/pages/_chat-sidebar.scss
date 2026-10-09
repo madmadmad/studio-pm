@@ -14,12 +14,15 @@
     padding: var(--space-page) var(--space-panel-lg) var(--space-panel-lg);
     overflow-y: auto;
 
+    // "Channels", "Direct messages": over a thin rule (the history's day
+    // rules' line, .chat-history__day) that sets them off from the list.
     &__heading {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding-inline: var(--space-3);
-        margin-bottom: var(--space-1);
+        padding: 0 var(--space-3) var(--space-2);
+        margin-bottom: var(--space-2);
+        border-bottom: var(--border-width) solid var(--color-border);
     }
 
     &__label {
