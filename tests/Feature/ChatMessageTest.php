@@ -276,12 +276,17 @@ class ChatMessageTest extends TestCase
         Event::assertDispatched(ChatMessageChanged::class, fn (ChatMessageChanged $e) => $e->change === ChatMessageChanged::REACTIONS);
     }
 
-    public function test_reactions_are_limited_to_the_picker_and_members(): void
+    public function test_a_reaction_is_any_single_emoji_from_a_member(): void
     {
         $outsider = User::factory()->teamMember()->create();
         $id = $this->send($this->alex, ['body' => 'Hi'])->json('id');
 
-        $this->actingAs($this->sam)->postJson("/api/chat/messages/{$id}/reactions", ['emoji' => '🦄'])->assertStatus(422);
+        foreach (['🦄', '👍🏽', '🇺🇸', '👨‍👩‍👧‍👦', '1️⃣'] as $emoji) {
+            $this->actingAs($this->sam)->postJson("/api/chat/messages/{$id}/reactions", ['emoji' => $emoji])->assertOk();
+        }
+        foreach (['a', '🚀🚀', '<b>', 'ab🚀', ''] as $notOne) {
+            $this->actingAs($this->sam)->postJson("/api/chat/messages/{$id}/reactions", ['emoji' => $notOne])->assertStatus(422);
+        }
         $this->actingAs($outsider)->postJson("/api/chat/messages/{$id}/reactions", ['emoji' => '👍'])->assertForbidden();
     }
 

@@ -33,24 +33,4 @@ return [
     // Messages per history page (scrolling up loads the next page).
     'page_size' => 50,
 
-    /*
-    |--------------------------------------------------------------------------
-    | Reactions
-    |--------------------------------------------------------------------------
-    |
-    | The emoji a message can be reacted with, and a channel can take in
-    | place of its # -- the composer's set in EmojiPicker.jsx
-    | (COMPOSER_EMOJI), which must match.
-    |
-    */
-
-    'reaction_emoji' => [
-        '👍', '❤️', '😂', '🎉', '👀', '🙏', '✅', '🔥',
-        '😀', '😄', '😊', '🙂', '😉', '😍', '🤔', '😅',
-        '😬', '😮', '😢', '😎', '🥳', '🤩', '🙌', '👏',
-        '👋', '🤝', '💪', '👌', '✌️', '🤞', '👎', '💡',
-        '⭐', '✨', '💯', '⚡', '🚀', '📌', '📎', '📅',
-        '⏰', '✏️', '💬', '❗', '❓', '⚠️', '☕', '🍕',
-    ],
-
 ];

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Chat;
 use App\Http\Controllers\Controller;
 use App\Models\Conversation;
 use App\Models\User;
+use App\Rules\SingleEmoji;
 use App\Services\ChatService;
 use App\Services\ChatUnread;
 use Illuminate\Http\Request;
@@ -80,8 +81,8 @@ class ConversationController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:80'],
             'description' => ['nullable', 'string', 'max:255'],
-            // In place of its # -- one from the picker's set.
-            'emoji' => ['nullable', 'string', Rule::in(config('chat.reaction_emoji'))],
+            // In place of its #.
+            'emoji' => ['nullable', 'string', new SingleEmoji],
         ]);
         $slug = Str::slug($data['name']);
         validator(['name' => $slug], [

@@ -2,7 +2,7 @@ import { memo, useState } from 'react';
 import { ArrowClockwise, PencilSimple, Trash } from '@phosphor-icons/react';
 import Avatar from '../Avatar';
 import AttachmentChip from '../AttachmentChip';
-import EmojiPicker, { COMPOSER_EMOJI } from '../EmojiPicker';
+import EmojiPopover from './EmojiPopover';
 import MentionTextarea from './MentionTextarea';
 import { bodyForEditing, bodyForSaving, parseMessage } from '../../lib/chatText';
 import { formatDateTime, formatFileSize } from '../../lib/format';
@@ -171,7 +171,7 @@ function ChatMessage({ message, continued, me, staffById, members, limits, onRea
 
                 {live && !editing && (
                     <div className="chat-message__actions" role="toolbar" aria-label="Message actions">
-                        <EmojiPicker emojis={COMPOSER_EMOJI} onPick={(emoji) => onReact(message, emoji)} label="Add reaction" size={18} align="right" />
+                        <EmojiPopover onPick={(emoji) => onReact(message, emoji)} label="Add reaction" size={18} />
                         {mine && (
                             <>
                                 <button type="button" className="icon-btn icon-btn--edit" title="Edit" aria-label="Edit message" onClick={() => setEditing(true)}>

@@ -1,0 +1,15 @@
+// A smiley button and the full emoji picker it opens (Components/chat/
+// EmojiPopover.jsx). The panel is drawn at the page level and placed from
+// the button in JS (top/left inline), so nothing scrolling can clip it;
+// above dialogs too, for one opened inside a dialog.
+
+.emoji-popover {
+    display: inline-flex;
+
+    &__panel {
+        position: fixed;
+        z-index: var(--z-overlay-nested);
+        margin-top: 0;
+        padding: var(--space-3);
+    }
+}

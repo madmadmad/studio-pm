@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Collection;
 
-// One person's emoji on a Chat message (config/chat.php's reaction_emoji).
+// One person's emoji on a Chat message -- any single emoji (App\Rules\SingleEmoji).
 class ChatReaction extends Model
 {
     protected $table = 'chat_message_reactions';

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Check, Hash, X } from '@phosphor-icons/react';
-import { COMPOSER_EMOJI } from '../EmojiPicker';
+import EmojiGrid from './EmojiGrid';
 import ChannelIcon from './ChannelIcon';
 import Avatar from '../Avatar';
 import Button from '../Button';
@@ -29,9 +29,8 @@ function Dialog({ title, onClose, children, footer }) {
     );
 }
 
-// A channel's icon: its emoji, chosen from the composer's set in a grid
-// that opens in place (a popover would be cut off by the dialog's scroll),
-// or the plain #.
+// A channel's icon: an emoji from the full picker, opened in place below
+// the field, or the plain #.
 function ChannelEmojiField({ value, onChange }) {
     const [open, setOpen] = useState(false);
 
@@ -52,19 +51,8 @@ function ChannelEmojiField({ value, onChange }) {
                 {value && <button type="button" className="link-btn" onClick={() => { onChange(null); setOpen(false); }}>Use #</button>}
             </div>
             {open && (
-                <div className="chat-dialog__emoji-grid" role="listbox" aria-labelledby="channel-emoji-label">
-                    {COMPOSER_EMOJI.map((emoji) => (
-                        <button
-                            key={emoji}
-                            type="button"
-                            role="option"
-                            aria-selected={emoji === value}
-                            className={`emoji-picker__emoji${emoji === value ? ' chat-dialog__emoji-option--picked' : ''}`}
-                            onClick={() => { onChange(emoji); setOpen(false); }}
-                        >
-                            {emoji}
-                        </button>
-                    ))}
+                <div className="chat-dialog__emoji-grid">
+                    <EmojiGrid onPick={(emoji) => { onChange(emoji); setOpen(false); }} />
                 </div>
             )}
         </div>

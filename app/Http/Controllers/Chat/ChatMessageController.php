@@ -5,11 +5,11 @@ namespace App\Http\Controllers\Chat;
 use App\Http\Controllers\Controller;
 use App\Models\ChatMessage;
 use App\Models\Conversation;
+use App\Rules\SingleEmoji;
 use App\Services\ChatService;
 use App\Services\Giphy;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
-use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 // A conversation's messages: its history a page at a time, catching up
@@ -116,7 +116,7 @@ class ChatMessageController extends Controller
         $this->authorize('react', $message);
 
         $data = $request->validate([
-            'emoji' => ['required', 'string', Rule::in(config('chat.reaction_emoji'))],
+            'emoji' => ['required', 'string', new SingleEmoji],
         ]);
 
         return response()->json($this->chat->toggleReaction($message, $request->user(), $data['emoji'])->toChatArray());

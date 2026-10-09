@@ -204,11 +204,11 @@ class ChatConversationTest extends TestCase
             ->assertOk()->assertJsonPath('description', null);
     }
 
-    public function test_a_channel_can_have_an_emoji_from_the_picker(): void
+    public function test_a_channel_can_have_an_emoji(): void
     {
         $me = User::factory()->create();
-        $id = $this->actingAs($me)->postJson('/api/chat/channels', ['name' => 'design', 'emoji' => '🎨'])
-            ->assertStatus(422)->assertJsonValidationErrors('emoji')->json('id'); // not in the picker's set
+        $this->actingAs($me)->postJson('/api/chat/channels', ['name' => 'design', 'emoji' => 'D'])
+            ->assertStatus(422)->assertJsonValidationErrors('emoji');
 
         $id = $this->actingAs($me)->postJson('/api/chat/channels', ['name' => 'design', 'emoji' => '💡'])
             ->assertCreated()->assertJsonPath('emoji', '💡')->json('id');

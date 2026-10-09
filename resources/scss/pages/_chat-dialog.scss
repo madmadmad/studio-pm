@@ -93,17 +93,14 @@
         }
     }
 
-    // The picker's grid of emoji (.emoji-picker__emoji), opened in place.
+    // The full picker (.emoji-grid), opened in place under the field.
     &__emoji-grid {
-        display: grid;
-        grid-template-columns: repeat(12, auto);
-        justify-content: start;
-        gap: var(--space-0-5);
+        width: max-content;
         margin-top: var(--space-2);
-    }
-
-    &__emoji-option--picked {
-        background-color: var(--color-surface-muted);
+        padding: var(--space-3);
+        background-color: var(--color-surface-raised);
+        border: var(--border-width) solid var(--color-border);
+        border-radius: var(--radius-base);
     }
 
     &__optional {

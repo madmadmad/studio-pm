@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Paperclip, PaperPlaneRight, X } from '@phosphor-icons/react';
-import EmojiPicker from '../EmojiPicker';
+import EmojiPopover from './EmojiPopover';
 import GifPicker from './GifPicker';
 import { iconFor } from '../AttachmentChip';
 import MentionTextarea from './MentionTextarea';
@@ -124,7 +124,7 @@ export default function ChatComposer({ placeholder, members, limits, onSend, onT
                         <input type="file" multiple hidden onChange={(e) => { addFiles(e.target.files); e.target.value = ''; }} />
                     </label>
                     {limits.gifs && <GifPicker onPick={(gif) => onSend({ body: '', files: [], gif })} />}
-                    <EmojiPicker onPick={(emoji) => field.current?.insert(emoji)} placement="up" align="right" />
+                    <EmojiPopover onPick={(emoji) => field.current?.insert(emoji)} />
                     <button type="submit" className="icon-btn icon-btn--confirm" title="Send (Enter)" aria-label="Send" disabled={!text.trim() && files.length === 0}>
                         <PaperPlaneRight size={20} />
                     </button>
