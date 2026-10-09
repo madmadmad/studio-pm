@@ -87,10 +87,13 @@
         }
     }
 
-    // A message that mentions you: a grey bar behind it (the hover fill,
-    // kept on), square-cornered, with a primary-color edge down its left.
-    &--mentions-me {
-        background-color: var(--color-surface-subtle);
+    // A message that mentions you: a grey bar behind it, square-cornered,
+    // with a primary-color edge down its left. The muted grey, a step past
+    // the hover fill, so it shows on the dark page.
+    &--mentions-me,
+    &--mentions-me:hover,
+    &--mentions-me:focus-within {
+        background-color: var(--color-surface-muted);
         border-radius: 0;
         box-shadow: inset var(--border-width-thick) 0 0 var(--color-primary);
     }
