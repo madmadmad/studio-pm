@@ -3,8 +3,8 @@
 // Chat's are tighter: no rule down the rail, a hover fill, and the actions
 // float over the top-right corner. A follow-on from the same person
 // (--continued) drops the avatar and name, with its time in the gutter on
-// hover. Mentions are quiet grey chips; a message that mentions you takes
-// a soft brand tint.
+// hover. Mentions of others are grey chips, of you the primary color, and
+// a message that mentions you sits on a grey bar.
 @use '../abstracts' as *;
 
 .chat-message {
@@ -71,24 +71,25 @@
         }
     }
 
-    // A quiet lighter-grey chip, yours included -- the message's own tint
-    // (--mentions-me) is what says it's for you.
+    // Someone else mentioned: a quiet lighter-grey chip. You: the primary
+    // color.
     &__mention {
         padding-inline: var(--space-0-5);
         font-weight: var(--font-weight-medium);
         color: var(--color-text);
         background-color: var(--color-surface-highlight);
         border-radius: var(--radius-base);
+
+        &--me {
+            color: var(--color-primary-on);
+            background-color: var(--color-primary);
+        }
     }
 
-    // A message that mentions you: tinted in the brand color.
+    // A message that mentions you: a grey bar behind it, the hover fill
+    // kept on.
     &--mentions-me {
-        background-color: var(--color-primary-soft);
-
-        &:hover,
-        &:focus-within {
-            background-color: var(--color-primary-soft);
-        }
+        background-color: var(--color-surface-subtle);
     }
 
     &__edited {
