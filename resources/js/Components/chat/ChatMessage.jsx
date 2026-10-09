@@ -11,7 +11,7 @@ function timeOf(value) {
     return new Date(value).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
 }
 
-// The text with mentions (yours stand out) and links as elements -- every
+// The text with mentions and links as elements -- every
 // other character a plain string, which React escapes. `suffix` follows
 // the last word ("(edited)").
 export function MessageText({ body, staffById, meId, suffix }) {
@@ -20,7 +20,7 @@ export function MessageText({ body, staffById, meId, suffix }) {
             {parseMessage(body, staffById).map((part, i) => {
                 if (part.type === 'mention') {
                     return (
-                        <span key={i} className={`chat-message__mention${part.id === meId ? ' chat-message__mention--me' : ''}`}>
+                        <span key={i} className="chat-message__mention">
                             @{part.name}
                         </span>
                     );
