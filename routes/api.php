@@ -73,6 +73,7 @@ Route::middleware('auth:sanctum')->name('api.')->group(function () {
         Route::post('channels/{conversation}/join', [ConversationController::class, 'join']);
         Route::post('channels/{conversation}/leave', [ConversationController::class, 'leave']);
         Route::post('direct', [ConversationController::class, 'direct']);
+        Route::post('direct/{conversation}/close', [ConversationController::class, 'close']);
         Route::post('conversations/{conversation}/read', [ConversationController::class, 'read']);
         Route::get('conversations/{conversation}/messages', [ChatMessageController::class, 'index']);
         Route::post('conversations/{conversation}/messages', [ChatMessageController::class, 'store']);

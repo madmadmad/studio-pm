@@ -140,6 +140,47 @@ class ChatConversationTest extends TestCase
             ->assertOk()->assertJsonCount(1)->assertJsonPath('0.name', 'general');
     }
 
+    public function test_closing_a_direct_message_hides_it_until_something_new_arrives(): void
+    {
+        $me = User::factory()->create();
+        $alex = User::factory()->teamMember()->create();
+        $id = $this->actingAs($me)->postJson('/api/chat/direct', ['user_ids' => [$alex->id]])->json('id');
+        $this->actingAs($me)->postJson("/api/chat/conversations/{$id}/messages", ['body' => 'Hi']);
+
+        $this->actingAs($me)->postJson("/api/chat/direct/{$id}/close")->assertNoContent();
+        $this->actingAs($me)->getJson('/api/chat/conversations')->assertJsonCount(0);
+        // Only for the person who closed it, and the history's still there.
+        $this->actingAs($alex)->getJson('/api/chat/conversations')->assertJsonCount(1);
+        $this->actingAs($me)->getJson("/api/chat/conversations/{$id}/messages")->assertOk()->assertJsonCount(1, 'messages');
+
+        // A new message brings it back.
+        $this->actingAs($alex)->postJson("/api/chat/conversations/{$id}/messages", ['body' => 'Still there?']);
+        $this->actingAs($me)->getJson('/api/chat/conversations')->assertJsonCount(1)->assertJsonPath('0.id', $id);
+    }
+
+    public function test_starting_a_closed_direct_message_again_brings_it_back(): void
+    {
+        $me = User::factory()->create();
+        $alex = User::factory()->teamMember()->create();
+        $id = $this->actingAs($me)->postJson('/api/chat/direct', ['user_ids' => [$alex->id]])->json('id');
+        $this->actingAs($me)->postJson("/api/chat/direct/{$id}/close");
+
+        $this->actingAs($me)->postJson('/api/chat/direct', ['user_ids' => [$alex->id]])->assertOk()->assertJsonPath('id', $id);
+        $this->actingAs($me)->getJson('/api/chat/conversations')->assertJsonCount(1);
+    }
+
+    public function test_only_your_own_direct_messages_can_be_closed(): void
+    {
+        $me = User::factory()->create();
+        $alex = User::factory()->teamMember()->create();
+        $outsider = User::factory()->teamMember()->create();
+        $dm = $this->actingAs($me)->postJson('/api/chat/direct', ['user_ids' => [$alex->id]])->json('id');
+        $channel = $this->actingAs($me)->postJson('/api/chat/channels', ['name' => 'general'])->json('id');
+
+        $this->actingAs($outsider)->postJson("/api/chat/direct/{$dm}/close")->assertForbidden();
+        $this->actingAs($me)->postJson("/api/chat/direct/{$channel}/close")->assertForbidden();
+    }
+
     public function test_the_chat_page_renders_for_staff(): void
     {
         $me = User::factory()->teamMember()->create();

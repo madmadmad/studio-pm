@@ -168,7 +168,7 @@ class User extends Authenticatable
     public function conversations(): BelongsToMany
     {
         return $this->belongsToMany(Conversation::class)
-            ->withPivot(['last_read_message_id', 'joined_at', 'muted'])
+            ->withPivot(['last_read_message_id', 'joined_at', 'muted', 'hidden_at'])
             ->withTimestamps();
     }
 

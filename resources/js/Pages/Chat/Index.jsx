@@ -65,6 +65,16 @@ export default function ChatIndex({ conversations: initial, conversationId, staf
         router.visit('/chat', { preserveState: true, only: ['conversationId'] });
     }
 
+    // Out of the sidebar until something new arrives in it.
+    async function close(conversation) {
+        await api.post(`/api/chat/direct/${conversation.id}/close`);
+        setConversations((list) => list.filter((c) => c.id !== conversation.id));
+        if (conversation.id === activeId) {
+            setActiveId(null);
+            router.visit('/chat', { preserveState: true, only: ['conversationId'] });
+        }
+    }
+
     const active = conversations.find((c) => c.id === activeId);
 
     // Opening /chat on its own lands in #general (or your first conversation).
@@ -86,6 +96,7 @@ export default function ChatIndex({ conversations: initial, conversationId, staf
                     counts={counts}
                     online={online}
                     onOpen={open}
+                    onClose={close}
                     onBrowseChannels={() => setDialog('channels')}
                     onNewMessage={() => setDialog('direct')}
                 />

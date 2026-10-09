@@ -18,7 +18,8 @@ class ConversationController extends Controller
 {
     public function __construct(protected ChatService $chat) {}
 
-    // The sidebar: every conversation you're in, with your unread counts.
+    // The sidebar: every conversation you're in (but direct messages you've
+    // closed), with your unread counts.
     public function index(Request $request)
     {
         return response()->json(static::summariesFor($request->user()));
@@ -96,6 +97,15 @@ class ConversationController extends Controller
         return response()->json($conversation->load('members')->toSummaryArray($counts), $conversation->wasRecentlyCreated ? 201 : 200);
     }
 
+    // Out of your sidebar, until there's something new in it.
+    public function close(Request $request, Conversation $conversation)
+    {
+        $this->authorize('close', $conversation);
+        $this->chat->close($conversation, $request->user());
+
+        return response()->noContent();
+    }
+
     // Seen up to this message (sent while the conversation's open and the
     // tab is in view).
     public function read(Request $request, Conversation $conversation)
@@ -125,7 +135,7 @@ class ConversationController extends Controller
     {
         $counts = ChatUnread::forUser($user);
 
-        return Conversation::forMember($user)->with('members')->get()
+        return Conversation::shownTo($user)->with('members')->get()
             ->map(fn (Conversation $c) => $c->toSummaryArray($counts[$c->id] ?? []))
             ->all();
     }

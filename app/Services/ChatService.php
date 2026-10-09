@@ -49,6 +49,9 @@ class ChatService
 
         if ($conversation->wasRecentlyCreated) {
             $conversation->members()->attach(collect($ids)->mapWithKeys(fn (int $id) => [$id => ['joined_at' => now()]])->all());
+        } else {
+            // Starting it again brings it back if you'd closed it.
+            $this->reopen($conversation, [$starter->id]);
         }
 
         return $conversation;
@@ -72,6 +75,23 @@ class ChatService
         $conversation->unsetRelation('members');
     }
 
+    // A direct message out of this person's sidebar. Nothing's lost: it
+    // comes back with the next message, or when they start it again.
+    public function close(Conversation $conversation, User $user): void
+    {
+        $conversation->members()->updateExistingPivot($user->id, ['hidden_at' => now()]);
+    }
+
+    // Back in the sidebar for these people (everyone in it, by default).
+    protected function reopen(Conversation $conversation, ?array $userIds = null): void
+    {
+        DB::table('conversation_user')
+            ->where('conversation_id', $conversation->id)
+            ->when($userIds, fn ($q) => $q->whereIn('user_id', $userIds))
+            ->whereNotNull('hidden_at')
+            ->update(['hidden_at' => null, 'updated_at' => now()]);
+    }
+
     public function leave(Conversation $conversation, User $user): void
     {
         $conversation->members()->detach($user->id);
@@ -87,6 +107,8 @@ class ChatService
             $message = $conversation->messages()->create(['user_id' => $author->id, 'body' => $this->cleanBody($body)]);
             $this->syncMentions($message, $conversation);
             $this->storeAttachments($message, $files);
+            // Something new: back in the sidebar of anyone who'd closed it.
+            $this->reopen($conversation);
             $conversation->touch();
 
             return $message;

@@ -23,7 +23,7 @@ class Conversation extends Model
     public function members(): BelongsToMany
     {
         return $this->belongsToMany(User::class)
-            ->withPivot(['last_read_message_id', 'joined_at', 'muted'])
+            ->withPivot(['last_read_message_id', 'joined_at', 'muted', 'hidden_at'])
             ->withTimestamps();
     }
 
@@ -58,6 +58,13 @@ class Conversation extends Model
     public function scopeForMember(Builder $query, User $user): Builder
     {
         return $query->whereHas('members', fn ($q) => $q->whereKey($user->id));
+    }
+
+    // The ones in this person's sidebar: all of theirs but the direct
+    // messages they've closed.
+    public function scopeShownTo(Builder $query, User $user): Builder
+    {
+        return $query->whereHas('members', fn ($q) => $q->whereKey($user->id)->whereNull('conversation_user.hidden_at'));
     }
 
     public function scopeChannels(Builder $query): Builder

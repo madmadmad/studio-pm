@@ -1,10 +1,10 @@
-import { Hash, MagnifyingGlass, Plus } from '@phosphor-icons/react';
+import { Hash, MagnifyingGlass, Plus, X } from '@phosphor-icons/react';
 import Avatar from '../Avatar';
 import ChatCount from './ChatCount';
 import PresenceDot from './PresenceDot';
 import { conversationTitle } from './ChatConversation';
 
-function Item({ conversation, me, active, counts, online, onOpen }) {
+function Item({ conversation, me, active, counts, online, onOpen, onClose }) {
     const unread = counts?.unread ?? 0;
     const mentions = counts?.mentions ?? 0;
     const others = conversation.members.filter((m) => m.id !== me.id);
@@ -14,8 +14,10 @@ function Item({ conversation, me, active, counts, online, onOpen }) {
     if (active) classes.push('chat-sidebar__item--active');
     if (unread > 0) classes.push('chat-sidebar__item--unread');
 
+    const title = conversationTitle(conversation, me);
+
     return (
-        <li>
+        <li className="chat-sidebar__row">
             <a
                 href={`/chat/${conversation.id}`}
                 onClick={(e) => { e.preventDefault(); onOpen(conversation.id); }}
@@ -29,16 +31,29 @@ function Item({ conversation, me, active, counts, online, onOpen }) {
                 ) : (
                     <PresenceDot online={online.has(person.id)}><Avatar name={person.name} avatarUrl={person.avatar_url} id={person.id} size={20} /></PresenceDot>
                 )}
-                <span className="chat-sidebar__name">{conversationTitle(conversation, me)}</span>
+                <span className="chat-sidebar__name">{title}</span>
                 <ChatCount unread={unread} mentions={mentions} />
             </a>
+            {conversation.type === 'direct' && (
+                // A sibling of the link, not inside it: one control can't hold another.
+                <button
+                    type="button"
+                    className="icon-btn icon-btn--secondary chat-sidebar__close"
+                    title="Close"
+                    aria-label={`Close conversation with ${title}`}
+                    onClick={() => onClose(conversation)}
+                >
+                    <X size={14} />
+                </button>
+            )}
         </li>
     );
 }
 
 // Chat's own column: channels you're in, then your direct messages (most
-// recent first), each with its unread badge.
-export default function ChatSidebar({ conversations, activeId, me, counts, online, onOpen, onBrowseChannels, onNewMessage }) {
+// recent first), each with its unread badge. A direct message can be
+// closed (the ✕ on hover); it comes back when there's a new message in it.
+export default function ChatSidebar({ conversations, activeId, me, counts, online, onOpen, onClose, onBrowseChannels, onNewMessage }) {
     const channels = conversations.filter((c) => c.type === 'channel').sort((a, b) => a.name.localeCompare(b.name));
     const directs = conversations.filter((c) => c.type === 'direct').sort((a, b) => (b.updated_at ?? '').localeCompare(a.updated_at ?? ''));
 
@@ -50,7 +65,7 @@ export default function ChatSidebar({ conversations, activeId, me, counts, onlin
             </div>
             <ul className="chat-sidebar__list">
                 {items.map((c) => (
-                    <Item key={c.id} conversation={c} me={me} active={c.id === activeId} counts={counts[c.id]} online={online} onOpen={onOpen} />
+                    <Item key={c.id} conversation={c} me={me} active={c.id === activeId} counts={counts[c.id]} online={online} onOpen={onOpen} onClose={onClose} />
                 ))}
             </ul>
         </div>

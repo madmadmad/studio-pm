@@ -31,6 +31,30 @@
         gap: var(--space-0-5);
     }
 
+    // A row: the link, and for a direct message its close button over the
+    // link's right end -- shown on hover or focus, in the count's place.
+    &__row {
+        position: relative;
+
+        &:hover .count,
+        &:focus-within .count {
+            visibility: hidden;
+        }
+    }
+
+    &__close {
+        position: absolute;
+        top: 50%;
+        right: var(--space-3);
+        opacity: 0;
+        transform: translateY(-50%);
+
+        .chat-sidebar__row:hover &,
+        &:focus-visible {
+            opacity: 1;
+        }
+    }
+
     &__item {
         display: flex;
         align-items: center;

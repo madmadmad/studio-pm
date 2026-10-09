@@ -45,6 +45,13 @@ class ConversationPolicy
         return $user->isActive() && $conversation->isChannel();
     }
 
+    // A direct message can be closed (hidden from your sidebar); a channel
+    // is left instead.
+    public function close(User $user, Conversation $conversation): bool
+    {
+        return $conversation->isDirect() && $this->view($user, $conversation);
+    }
+
     public function leave(User $user, Conversation $conversation): bool
     {
         return $conversation->isChannel() && $conversation->hasMember($user);

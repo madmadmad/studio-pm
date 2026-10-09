@@ -66,6 +66,7 @@ class ChatAccessTest extends TestCase
             ['post', '/api/chat/channels'],
             ['post', "/api/chat/channels/{$channel->id}/join"],
             ['post', '/api/chat/direct'],
+            ['post', "/api/chat/direct/{$channel->id}/close"],
             ['get', "/api/chat/conversations/{$channel->id}/messages"],
             ['post', "/api/chat/conversations/{$channel->id}/messages"],
             ['post', "/api/chat/conversations/{$channel->id}/read"],
