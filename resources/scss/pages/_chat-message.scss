@@ -4,8 +4,7 @@
 // float over the top-right corner. A follow-on from the same person
 // (--continued) drops the avatar and name, with its time in the gutter on
 // hover. Mentions of others are grey chips, of you the primary color, and
-// a message that mentions you sits on a square grey bar with a primary
-// left edge.
+// a message that mentions you has a primary left edge.
 @use '../abstracts' as *;
 
 .chat-message {
@@ -87,13 +86,9 @@
         }
     }
 
-    // A message that mentions you: a grey bar behind it, square-cornered,
-    // with a primary-color edge down its left. The muted grey, a step past
-    // the hover fill, so it shows on the dark page.
-    &--mentions-me,
-    &--mentions-me:hover,
-    &--mentions-me:focus-within {
-        background-color: var(--color-surface-muted);
+    // A message that mentions you: a primary-color edge down its left,
+    // square-cornered so the edge runs straight.
+    &--mentions-me {
         border-radius: 0;
         box-shadow: inset var(--border-width-thick) 0 0 var(--color-primary);
     }
