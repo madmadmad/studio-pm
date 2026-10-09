@@ -1,0 +1,11 @@
+// The Chat page (Pages/Chat/Index.jsx): its column of conversations beside
+// the open one, filling the content panel (AppLayout flush). Each side
+// scrolls on its own.
+
+.chat {
+    display: grid;
+    grid-template-columns: var(--size-chat-sidebar) minmax(0, 1fr);
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+}

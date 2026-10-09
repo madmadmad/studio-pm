@@ -23,7 +23,8 @@ class ChatMessageController extends Controller
     //                    older one changed since then (edited, deleted,
     //                    reacted to) -- a reconnecting tab's catch-up.
     // Deleted messages come too, shown as "deleted". `synced_at` is the
-    // server's clock, for the next catch-up's `since`.
+    // server's clock, for the next catch-up's `since`; `last_read_message_id`
+    // is how far you'd read, for the "New" divider.
     public function index(Request $request, Conversation $conversation)
     {
         $this->authorize('view', $conversation);
@@ -56,6 +57,8 @@ class ChatMessageController extends Controller
         return response()->json([
             'messages' => $messages->map->toChatArray()->values(),
             'has_more' => $hasMore,
+            // Where "new" starts for you.
+            'last_read_message_id' => $conversation->members()->whereKey($request->user()->id)->first()?->pivot->last_read_message_id,
             'synced_at' => $syncedAt->toIso8601String(),
         ]);
     }

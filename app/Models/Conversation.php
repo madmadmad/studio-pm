@@ -67,7 +67,8 @@ class Conversation extends Model
 
     // How the Chat sidebar shows it, with this person's unread counts
     // (ChatUnread). A direct message is named by its people, so it carries
-    // them; a channel carries its name and size. Load members first.
+    // them; a channel carries its name. Both carry who's in them, by id.
+    // Load members first.
     public function toSummaryArray(array $counts = []): array
     {
         return [
@@ -79,6 +80,8 @@ class Conversation extends Model
             'members' => $this->isDirect()
                 ? $this->members->map(fn (User $m) => ['id' => $m->id, 'name' => $m->name, 'avatar_url' => $m->avatar_url, 'active' => $m->isActive()])->values()->all()
                 : [],
+            // Who can be @mentioned in it.
+            'member_ids' => $this->members->pluck('id')->values()->all(),
             'member_count' => $this->members->count(),
             'unread' => $counts['unread'] ?? 0,
             'mentions' => $counts['mentions'] ?? 0,

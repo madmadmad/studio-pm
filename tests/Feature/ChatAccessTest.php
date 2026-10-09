@@ -105,6 +105,12 @@ class ChatAccessTest extends TestCase
         (new EnsureUserIsStaff)->handle($request, fn () => response('ok'));
     }
 
+    public function test_the_client_hub_is_never_sent_chat_counts(): void
+    {
+        $this->actingAs($this->contact(), 'client')->get('/portal')
+            ->assertOk()->assertInertia(fn ($page) => $page->where('chatUnread', null));
+    }
+
     public function test_guests_are_sent_to_sign_in(): void
     {
         $this->get('/chat')->assertRedirect('/login');

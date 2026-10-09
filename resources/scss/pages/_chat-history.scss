@@ -1,0 +1,57 @@
+// A Chat conversation's scrolling history (Components/chat/
+// ChatConversation.jsx): messages oldest first, with a rule and label at
+// each new day and a red "New" rule where your unread messages start.
+@use '../abstracts' as *;
+
+.chat-history {
+    // Positioned, so a message's offsetTop is measured from the top of the
+    // history (jumping to the "New" line).
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    padding: var(--space-4) var(--space-8);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+
+    &__status {
+        padding-block: var(--space-4);
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+        color: var(--color-text-muted);
+        text-align: center;
+    }
+
+    &__start {
+        padding-block: var(--space-8) var(--space-4);
+    }
+
+    // A rule across with its label in the middle.
+    &__day,
+    &__new {
+        display: flex;
+        align-items: center;
+        gap: var(--space-3);
+        margin-block: var(--space-4);
+        font-size: var(--font-size-xs);
+        line-height: var(--line-height-xs);
+        font-weight: var(--font-weight-semibold);
+        color: var(--color-text-muted);
+
+        &::before,
+        &::after {
+            content: '';
+            flex: 1;
+            height: var(--border-width);
+            background-color: var(--color-border);
+        }
+    }
+
+    &__new {
+        color: var(--color-primary-text);
+
+        &::before,
+        &::after {
+            background-color: var(--color-primary);
+        }
+    }
+}

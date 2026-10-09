@@ -1,0 +1,63 @@
+// Chat's two dialogs (Components/chat/ChatDialogs.jsx) inside .modal:
+// browsing channels, and picking people for a new message. Rows are
+// .list-row buttons.
+@use '../abstracts' as *;
+
+.chat-dialog {
+    &__status {
+        padding-block: var(--space-4);
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+        color: var(--color-text-muted);
+    }
+
+    &__filter {
+        width: 100%;
+        margin-bottom: var(--space-3);
+    }
+
+    &__list {
+        max-height: 50vh; // one-off: the dialog keeps its buttons in view
+        margin-inline: calc(var(--space-row-x) * -1);
+        overflow-y: auto;
+        --presence-backdrop: var(--color-surface-raised);
+    }
+
+    &__row {
+        width: 100%;
+        gap: var(--space-4);
+        text-align: left;
+
+        &:focus-visible {
+            @include focus-ring;
+        }
+
+        &--picked {
+            background-color: var(--color-surface-muted);
+        }
+    }
+
+    &__meta {
+        display: block;
+    }
+
+    &__person {
+        display: flex;
+        align-items: center;
+        gap: var(--space-3);
+    }
+
+    &__action {
+        font-weight: var(--font-weight-semibold);
+        color: var(--color-text);
+    }
+
+    &__check {
+        flex-shrink: 0;
+        color: var(--color-primary-icon);
+    }
+
+    &__optional {
+        color: var(--color-text-subtle);
+    }
+}

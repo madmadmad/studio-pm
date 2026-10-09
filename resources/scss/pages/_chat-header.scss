@@ -1,0 +1,105 @@
+// The open conversation's title bar (Components/chat/ChatConversation.jsx):
+// "#name" or the people's names, a description if it has one, and who's in
+// it -- a count that opens the list, online first.
+@use '../abstracts' as *;
+
+.chat-header {
+    padding: var(--space-8) var(--space-8) var(--space-4);
+    border-bottom: var(--border-width) solid var(--color-border);
+
+    &__title-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--space-4);
+    }
+
+    &__title {
+        @include truncate;
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
+        font-family: var(--font-family-display);
+        font-size: var(--font-size-xl);
+        line-height: var(--line-height-xl);
+        font-weight: var(--font-weight-extrabold);
+        letter-spacing: var(--letter-spacing-display);
+    }
+
+    &__hash {
+        flex-shrink: 0;
+        color: var(--color-text-subtle);
+    }
+
+    &__description {
+        margin-top: var(--space-1);
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+        color: var(--color-text-muted);
+    }
+
+    &__members {
+        position: relative;
+        flex-shrink: 0;
+    }
+
+    &__members-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--space-1);
+        height: var(--size-row-action);
+        padding-inline: var(--space-2);
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+        color: var(--color-text-muted);
+        border-radius: var(--radius-base);
+
+        &:hover,
+        &[aria-expanded='true'] {
+            color: var(--color-text);
+            background-color: var(--color-surface-subtle);
+        }
+
+        &:focus-visible {
+            @include focus-ring;
+        }
+    }
+
+    &__members-menu {
+        right: 0;
+        width: var(--size-popover-sm);
+        padding: var(--space-2);
+        // The dots' ring matches the popover, not the page.
+        --presence-backdrop: var(--color-surface-raised);
+    }
+
+    &__member-list {
+        max-height: 20rem; // one-off: a long channel scrolls inside the menu
+        overflow-y: auto;
+    }
+
+    &__member {
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
+        padding: var(--space-1) var(--space-1);
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+    }
+
+    &__member-name {
+        @include truncate;
+    }
+
+    &__leave {
+        display: flex;
+        align-items: center;
+        gap: var(--space-1-5);
+        width: 100%;
+        margin-top: var(--space-2);
+        padding: var(--space-2) var(--space-1) 0;
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+        border-top: var(--border-width) solid var(--color-border);
+    }
+}

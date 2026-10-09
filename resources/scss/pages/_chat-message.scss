@@ -1,0 +1,144 @@
+// A message in a Chat conversation (Components/chat/ChatMessage.jsx), on
+// top of the shared .message (sender, text, reactions, images, files).
+// Chat's are tighter: no rule down the rail, a hover fill, and the actions
+// float over the top-right corner. A follow-on from the same person
+// (--continued) drops the avatar and name, with its time in the gutter on
+// hover. Mentions are picked out -- yours, and a message that mentions you,
+// most.
+@use '../abstracts' as *;
+
+.chat-message {
+    // The avatar column's width, so continued messages line up.
+    --chat-gutter: var(--space-10);
+
+    position: relative;
+    margin: 0 calc(var(--space-3) * -1);
+    padding: var(--space-1-5) var(--space-3);
+    border-radius: var(--radius-base);
+    transition: background-color var(--duration-fast) var(--ease-standard);
+
+    &:hover,
+    &:focus-within {
+        background-color: var(--color-surface-subtle);
+    }
+
+    &:not(&--continued) {
+        margin-top: var(--space-2);
+    }
+
+    &__rail {
+        width: var(--chat-gutter);
+        align-items: flex-start;
+    }
+
+    &__gutter-time {
+        font-size: var(--font-size-2xs);
+        line-height: var(--line-height-sm);
+        color: var(--color-text-subtle);
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+        opacity: 0;
+
+        .chat-message:hover & {
+            opacity: 1;
+        }
+    }
+
+    // React, edit, delete: over the corner, shown on hover or focus (and
+    // while the emoji grid is open).
+    &__actions {
+        position: absolute;
+        top: calc(var(--space-3) * -1);
+        right: var(--space-3);
+        z-index: 1;
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
+        padding: var(--space-1) var(--space-2);
+        background-color: var(--color-surface-raised);
+        border: var(--border-width) solid var(--color-border);
+        border-radius: var(--radius-base);
+        box-shadow: var(--shadow-popover);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity var(--duration-fast) var(--ease-standard);
+
+        .chat-message:hover &,
+        .chat-message:focus-within &,
+        &:has([aria-expanded='true']) {
+            opacity: 1;
+            pointer-events: auto;
+        }
+    }
+
+    &__mention {
+        padding-inline: var(--space-0-5);
+        font-weight: var(--font-weight-medium);
+        color: var(--color-primary-text);
+        background-color: var(--color-primary-soft);
+        border-radius: var(--radius-base);
+
+        &--me {
+            color: var(--color-primary-on);
+            background-color: var(--color-primary);
+        }
+    }
+
+    // A message that mentions you: a red edge down its left.
+    &--mentions-me {
+        background-color: var(--color-primary-soft);
+        box-shadow: inset var(--border-width-thick) 0 0 var(--color-primary);
+
+        &:hover,
+        &:focus-within {
+            background-color: var(--color-primary-soft);
+        }
+    }
+
+    &__edited {
+        margin-left: var(--space-1);
+        font-size: var(--font-size-xs);
+        line-height: var(--line-height-xs);
+        color: var(--color-text-subtle);
+    }
+
+    &__edit-hint {
+        margin-top: var(--space-1);
+        font-size: var(--font-size-xs);
+        line-height: var(--line-height-xs);
+        color: var(--color-text-muted);
+    }
+
+    // Still sending: faded until the server has it.
+    &--pending {
+        opacity: 0.6;
+    }
+
+    &--failed {
+        opacity: 1;
+    }
+
+    &__uploads {
+        margin-top: var(--space-1);
+        font-size: var(--font-size-xs);
+        line-height: var(--line-height-xs);
+        color: var(--color-text-muted);
+    }
+
+    &__progress {
+        max-width: var(--size-popover);
+        margin-top: var(--space-2);
+    }
+
+    &__failure {
+        margin-top: var(--space-1);
+        font-size: var(--font-size-xs);
+        line-height: var(--line-height-xs);
+        color: var(--color-danger-text);
+
+        &::before {
+            @include glyph(warning-circle);
+            margin-right: var(--space-1);
+        }
+    }
+}

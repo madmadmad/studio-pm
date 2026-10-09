@@ -181,6 +181,21 @@ class ChatMessageTest extends TestCase
         $this->assertSame([$ids[5], $ids[6]], collect($newer->json('messages'))->pluck('id')->all());
     }
 
+    public function test_history_says_where_you_last_read_and_the_nav_gets_your_totals(): void
+    {
+        $first = $this->send($this->alex, ['body' => 'One'])->json('id');
+        $this->send($this->alex, ['body' => "Two <@{$this->sam->id}>"]);
+        $this->actingAs($this->sam)->postJson("/api/chat/conversations/{$this->channel->id}/read", ['message_id' => $first]);
+
+        $this->actingAs($this->sam)->getJson("/api/chat/conversations/{$this->channel->id}/messages")
+            ->assertJsonPath('last_read_message_id', $first);
+
+        $this->actingAs($this->sam, 'web')->get('/projects')
+            ->assertInertia(fn ($page) => $page->where('chatUnread', ['unread' => 1, 'mentions' => 1]));
+        $this->actingAs($this->sam)->getJson('/api/chat/conversations')
+            ->assertJsonPath('0.member_ids', [$this->alex->id, $this->sam->id]);
+    }
+
     public function test_a_catch_up_includes_older_messages_changed_since(): void
     {
         $old = $this->send($this->alex, ['body' => 'Old'])->json('id');

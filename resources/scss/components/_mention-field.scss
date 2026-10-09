@@ -1,0 +1,56 @@
+// Chat's text field with @mention suggestions (Components/chat/
+// MentionTextarea.jsx): the textarea grows with what's typed, then scrolls;
+// the suggestions are a .popover opening above it.
+@use '../abstracts' as *;
+
+.mention-field {
+    position: relative;
+    flex: 1;
+    min-width: 0;
+
+    &__input {
+        display: block;
+        width: 100%;
+        max-height: 16rem; // one-off: grows with content, then scrolls (as .composer__textarea)
+        overflow-y: auto;
+        resize: none;
+        font-size: var(--font-size-editor);
+        line-height: var(--line-height-editor);
+    }
+
+    &__menu {
+        bottom: 100%;
+        left: 0;
+        width: var(--size-popover);
+        margin-bottom: var(--space-1);
+        padding: var(--space-1);
+    }
+
+    &__option {
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
+        padding: var(--space-1-5) var(--space-2);
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+        border-radius: var(--radius-base);
+        cursor: pointer;
+
+        &--active {
+            background-color: var(--color-surface-muted);
+        }
+    }
+
+    &__name {
+        @include truncate;
+        font-weight: var(--font-weight-medium);
+    }
+
+    &__meta {
+        @include truncate;
+        margin-left: auto;
+        font-size: var(--font-size-xs);
+        line-height: var(--line-height-xs);
+        color: var(--color-text-muted);
+    }
+}

@@ -1,0 +1,42 @@
+// Writing a Chat message (Components/chat/ChatComposer.jsx): files waiting
+// to go (.pending-attachments) above one bordered box holding the growing
+// text field and its attach / emoji / send tools.
+@use '../abstracts' as *;
+
+.chat-composer {
+    &__box {
+        display: flex;
+        align-items: flex-end;
+        gap: var(--space-2);
+        padding: var(--space-1-5);
+        background-color: var(--color-field);
+        border: var(--border-width) solid var(--color-border);
+        border-radius: var(--radius-base);
+        transition: border-color var(--duration-fast) var(--ease-standard);
+
+        &:focus-within {
+            border-color: var(--color-border-strong);
+        }
+    }
+
+    // The field sits inside the box's own fill and edge.
+    &__input {
+        background-color: transparent;
+        border-color: transparent;
+        box-shadow: none;
+
+        &:focus,
+        &:focus-visible {
+            outline: none;
+        }
+    }
+
+    &__tools {
+        display: flex;
+        flex-shrink: 0;
+        align-items: center;
+        gap: var(--space-2);
+        height: var(--size-control);
+        padding-inline: var(--space-1);
+    }
+}
