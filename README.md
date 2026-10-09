@@ -116,14 +116,18 @@ This app deploys to [Laravel Forge](https://forge.laravel.com).
    php artisan config:cache
    php artisan route:cache
    php artisan view:cache
+   php artisan reverb:restart
    ```
 4. Point the site's queue worker (Forge → **Queue**) at the `database`
    queue connection so invite/notification/mail jobs process in the
    background.
-5. Enable Forge's SSL (Let's Encrypt) for the site domain — proposal/invoice
+5. Run Chat's WebSocket server (Laravel Reverb) as a Forge daemon, with
+   its Nginx proxy, and set its `REVERB_*` variables before the build. See
+   [docs/chat.md](docs/chat.md), which also covers Laravel Cloud.
+6. Enable Forge's SSL (Let's Encrypt) for the site domain — proposal/invoice
    public links and Stripe redirect back to `APP_URL`, so it should be the
    final HTTPS domain.
-6. Push to the connected branch to trigger a deploy (or deploy manually
+7. Push to the connected branch to trigger a deploy (or deploy manually
    from the Forge dashboard).
 
 ## Project structure
