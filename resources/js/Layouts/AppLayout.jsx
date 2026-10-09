@@ -8,9 +8,9 @@ import { startChat } from '../lib/chatStore';
 
 const NAV_ITEMS = [
     { href: '/', label: 'Overview', exact: true },
+    { href: '/chat', label: 'Chat', badge: <ChatNavBadge /> },
     { href: '/clients', label: 'Clients', permission: 'clients' },
     { href: '/projects', label: 'Projects' },
-    { href: '/chat', label: 'Chat', badge: <ChatNavBadge /> },
     // Time and Timesheets (/time-entries, /timesheets) are hidden while time
     // is logged only inside projects (each project's Time tab). The pages
     // still exist; add them back here to show them again.
