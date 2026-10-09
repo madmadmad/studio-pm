@@ -4,8 +4,9 @@
 @use '../abstracts' as *;
 
 .chat-header {
-    // A drawer body's top and sides (.drawer__body).
-    padding: var(--space-8) var(--space-page) var(--space-4);
+    // Every page's padding above and at the sides (.app-shell__main), and
+    // a page header's gap below (.page-header).
+    padding: var(--space-page) var(--space-page) var(--space-section);
 
     &__title-row {
         display: flex;
@@ -14,14 +15,15 @@
         gap: var(--space-4);
     }
 
+    // A page title's style (.page-header__title).
     &__title {
         @include truncate;
         display: flex;
         align-items: center;
         gap: var(--space-2);
         font-family: var(--font-family-display);
-        font-size: var(--font-size-xl);
-        line-height: var(--line-height-xl);
+        font-size: var(--font-size-2xl);
+        line-height: var(--line-height-2xl);
         font-weight: var(--font-weight-extrabold);
         letter-spacing: var(--letter-spacing-display);
     }
