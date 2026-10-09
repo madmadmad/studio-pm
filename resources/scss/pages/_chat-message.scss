@@ -11,8 +11,10 @@
     // The avatar column's width, so continued messages line up.
     --chat-gutter: var(--space-10);
 
+    // Its box (hover fill, mention edge) spans exactly the history's
+    // column, lined up with the day rules and the composer; the padding
+    // insets the content within it.
     position: relative;
-    margin: 0 calc(var(--space-3) * -1);
     padding: var(--space-1-5) var(--space-3);
     border-radius: var(--radius-base);
     transition: background-color var(--duration-fast) var(--ease-standard);
