@@ -17,8 +17,8 @@
 
     // A page title's style (.page-header__title).
     &__title {
-        @include truncate;
         display: flex;
+        min-width: 0;
         align-items: center;
         gap: var(--space-2);
         font-family: var(--font-family-display);
@@ -26,6 +26,16 @@
         line-height: var(--line-height-2xl);
         font-weight: var(--font-weight-extrabold);
         letter-spacing: var(--letter-spacing-display);
+    }
+
+    // One line, cut short with "…" when it's too long -- clipped side to
+    // side only (overflow-x: clip), so the descenders below the line ("g")
+    // still show.
+    &__name {
+        min-width: 0;
+        overflow-x: clip;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
     // The # (or emoji). The # glyph is sized with the title rather than

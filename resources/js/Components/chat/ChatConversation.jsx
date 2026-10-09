@@ -239,11 +239,11 @@ export default function ChatConversation({ conversation, me, staff, staffById, o
             <header className="chat-header">
                 <div className="chat-header__title-row">
                     {conversation.type === 'channel' ? (
-                        <h1 className="chat-header__title"><ChannelIcon channel={conversation} className="chat-header__hash" />{title}</h1>
+                        <h1 className="chat-header__title"><ChannelIcon channel={conversation} className="chat-header__hash" /><span className="chat-header__name">{title}</span></h1>
                     ) : (
                         <h1 className="chat-header__title">
                             {others.length === 1 && <PresenceDot online={online.has(others[0].id)} />}
-                            {title}
+                            <span className="chat-header__name">{title}</span>
                         </h1>
                     )}
                     <MembersMenu conversation={conversation} me={me} members={allMembers} online={online} onEdit={onEdit} onLeave={onLeave} />
