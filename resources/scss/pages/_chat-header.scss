@@ -28,12 +28,16 @@
         letter-spacing: var(--letter-spacing-display);
     }
 
-    // The # (or emoji), sized with the title rather than the 18px icon default.
+    // The # (or emoji). The # glyph is sized with the title rather than
+    // the 18px icon default; an emoji already is.
     &__hash {
         flex-shrink: 0;
+        color: var(--color-text-subtle);
+    }
+
+    svg#{&}__hash {
         width: 0.8em;
         height: 0.8em;
-        color: var(--color-text-subtle);
     }
 
     &__description {
