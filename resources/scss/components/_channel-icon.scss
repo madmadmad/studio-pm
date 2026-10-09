@@ -1,0 +1,9 @@
+// A channel's emoji in place of its # (Components/chat/ChannelIcon.jsx):
+// sized and centered like the glyph it replaces.
+
+.channel-icon {
+    display: inline-block;
+    font-size: 1em;
+    line-height: 1;
+    text-align: center;
+}

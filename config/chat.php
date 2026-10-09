@@ -38,8 +38,9 @@ return [
     | Reactions
     |--------------------------------------------------------------------------
     |
-    | The emoji a message can be reacted with -- the composer's set in
-    | EmojiPicker.jsx (COMPOSER_EMOJI), which must match.
+    | The emoji a message can be reacted with, and a channel can take in
+    | place of its # -- the composer's set in EmojiPicker.jsx
+    | (COMPOSER_EMOJI), which must match.
     |
     */
 

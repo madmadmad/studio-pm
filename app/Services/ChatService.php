@@ -21,13 +21,14 @@ use Illuminate\Support\Str;
 // clients catch up from the API when they reconnect or come back to the tab.
 class ChatService
 {
-    public function createChannel(User $creator, string $name, ?string $description): Conversation
+    public function createChannel(User $creator, string $name, ?string $description, ?string $emoji = null): Conversation
     {
         $channel = Conversation::create([
             'type' => Conversation::TYPE_CHANNEL,
             'name' => $name,
             'slug' => Str::slug($name),
             'description' => $description,
+            'emoji' => $emoji,
             'created_by' => $creator->id,
         ]);
         $this->join($channel, $creator);
@@ -57,10 +58,11 @@ class ChatService
         return $conversation;
     }
 
-    // A channel's new name and description, shown to everyone in it at once.
-    public function updateChannel(Conversation $channel, string $slug, ?string $description): Conversation
+    // A channel's new name, description and emoji, shown to everyone in it
+    // at once.
+    public function updateChannel(Conversation $channel, string $slug, ?string $description, ?string $emoji): Conversation
     {
-        $channel->update(['name' => $slug, 'slug' => $slug, 'description' => $description]);
+        $channel->update(['name' => $slug, 'slug' => $slug, 'description' => $description, 'emoji' => $emoji]);
 
         $this->announce(new ChatActivity($channel->members()->pluck('users.id')->all(), $channel->id, ChatActivity::UPDATED));
 

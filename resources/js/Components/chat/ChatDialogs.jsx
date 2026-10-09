@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Check, Hash, X } from '@phosphor-icons/react';
+import { COMPOSER_EMOJI } from '../EmojiPicker';
+import ChannelIcon from './ChannelIcon';
 import Avatar from '../Avatar';
 import Button from '../Button';
 import PresenceDot from './PresenceDot';
@@ -27,12 +29,55 @@ function Dialog({ title, onClose, children, footer }) {
     );
 }
 
+// A channel's icon: its emoji, chosen from the composer's set in a grid
+// that opens in place (a popover would be cut off by the dialog's scroll),
+// or the plain #.
+function ChannelEmojiField({ value, onChange }) {
+    const [open, setOpen] = useState(false);
+
+    return (
+        <div>
+            <span className="label" id="channel-emoji-label">Icon</span>
+            <div className="chat-dialog__emoji-row">
+                <button
+                    type="button"
+                    className="chat-dialog__emoji-current"
+                    onClick={() => setOpen((o) => !o)}
+                    aria-expanded={open}
+                    aria-labelledby="channel-emoji-label"
+                    title="Choose an emoji"
+                >
+                    {value || <Hash />}
+                </button>
+                {value && <button type="button" className="link-btn" onClick={() => { onChange(null); setOpen(false); }}>Use #</button>}
+            </div>
+            {open && (
+                <div className="chat-dialog__emoji-grid" role="listbox" aria-labelledby="channel-emoji-label">
+                    {COMPOSER_EMOJI.map((emoji) => (
+                        <button
+                            key={emoji}
+                            type="button"
+                            role="option"
+                            aria-selected={emoji === value}
+                            className={`emoji-picker__emoji${emoji === value ? ' chat-dialog__emoji-option--picked' : ''}`}
+                            onClick={() => { onChange(emoji); setOpen(false); }}
+                        >
+                            {emoji}
+                        </button>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+}
+
 // Every channel in the studio, to open or join -- and a new one.
 export function BrowseChannelsDialog({ onClose, onOpened }) {
     const [channels, setChannels] = useState(null);
     const [creating, setCreating] = useState(false);
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
+    const [emoji, setEmoji] = useState(null);
     const [error, setError] = useState('');
     const [busy, setBusy] = useState(false);
 
@@ -56,7 +101,7 @@ export function BrowseChannelsDialog({ onClose, onOpened }) {
         setBusy(true);
         setError('');
         try {
-            const summary = await api.post('/api/chat/channels', { name, description: description || null });
+            const summary = await api.post('/api/chat/channels', { name, description: description || null, emoji });
             onOpened(summary.id, summary);
         } catch (err) {
             setError(err.errors?.name?.[0] ?? err.message);
@@ -76,6 +121,7 @@ export function BrowseChannelsDialog({ onClose, onOpened }) {
                         <label className="label" htmlFor="channel-description">What it's for <span className="chat-dialog__optional">(optional)</span></label>
                         <input id="channel-description" className="input" value={description} onChange={(e) => setDescription(e.target.value)} maxLength={255} />
                     </div>
+                    <ChannelEmojiField value={emoji} onChange={setEmoji} />
                     {error && <p className="form-error" role="alert">{error}</p>}
                     <div className="form-actions">
                         <Button type="button" variant="secondary" onClick={() => setCreating(false)}>Back</Button>
@@ -103,7 +149,7 @@ export function BrowseChannelsDialog({ onClose, onOpened }) {
                         <li key={channel.id}>
                             <button type="button" className="list-row chat-dialog__row" onClick={() => open(channel)} disabled={busy}>
                                 <span>
-                                    <span className="list-row__title"><Hash size={14} /> {channel.name}</span>
+                                    <span className="list-row__title chat-dialog__channel-name"><ChannelIcon channel={channel} size={14} /> {channel.name}</span>
                                     {channel.description && <span className="list-row__meta chat-dialog__meta">{channel.description}</span>}
                                 </span>
                                 <span className="list-row__aside list-row__meta">
@@ -182,11 +228,12 @@ export function NewMessageDialog({ staff, me, online, onClose, onOpened }) {
     );
 }
 
-// A channel's name and description, for anyone in it. #general keeps its
+// A channel's name, description and emoji, for anyone in it. #general keeps its
 // name (the server holds it), so the field's locked there.
 export function EditChannelDialog({ channel, onClose, onSaved }) {
     const [name, setName] = useState(channel.name);
     const [description, setDescription] = useState(channel.description ?? '');
+    const [emoji, setEmoji] = useState(channel.emoji ?? null);
     const [error, setError] = useState('');
     const [busy, setBusy] = useState(false);
     const isGeneral = channel.slug === 'general';
@@ -196,7 +243,7 @@ export function EditChannelDialog({ channel, onClose, onSaved }) {
         setBusy(true);
         setError('');
         try {
-            onSaved(await api.patch(`/api/chat/channels/${channel.id}`, { name, description: description || null }));
+            onSaved(await api.patch(`/api/chat/channels/${channel.id}`, { name, description: description || null, emoji }));
         } catch (err) {
             setError(err.errors?.name?.[0] ?? err.errors?.description?.[0] ?? err.message);
             setBusy(false);
@@ -215,6 +262,7 @@ export function EditChannelDialog({ channel, onClose, onSaved }) {
                     <label className="label" htmlFor="edit-channel-description">What it's for <span className="chat-dialog__optional">(optional)</span></label>
                     <input id="edit-channel-description" className="input" value={description} onChange={(e) => setDescription(e.target.value)} maxLength={255} autoFocus={isGeneral} />
                 </div>
+                <ChannelEmojiField value={emoji} onChange={setEmoji} />
                 {error && <p className="form-error" role="alert">{error}</p>}
                 <div className="form-actions">
                     <Button type="button" variant="secondary" onClick={onClose}>Cancel</Button>

@@ -57,6 +57,55 @@
         color: var(--color-primary-icon);
     }
 
+    &__channel-name {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--space-1);
+    }
+
+    &__emoji-row {
+        display: flex;
+        align-items: center;
+        gap: var(--space-3);
+    }
+
+    // The chosen emoji (or #) as a square button, a control's height.
+    &__emoji-current {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: var(--size-control);
+        height: var(--size-control);
+        font-size: var(--font-size-lg);
+        line-height: 1;
+        color: var(--color-text-muted);
+        background-color: var(--color-field);
+        border: var(--border-width) solid var(--color-field-border);
+        border-radius: var(--radius-base);
+
+        &:hover,
+        &[aria-expanded='true'] {
+            background-color: var(--color-surface-muted);
+        }
+
+        &:focus-visible {
+            @include focus-ring;
+        }
+    }
+
+    // The picker's grid of emoji (.emoji-picker__emoji), opened in place.
+    &__emoji-grid {
+        display: grid;
+        grid-template-columns: repeat(12, auto);
+        justify-content: start;
+        gap: var(--space-0-5);
+        margin-top: var(--space-2);
+    }
+
+    &__emoji-option--picked {
+        background-color: var(--color-surface-muted);
+    }
+
     &__optional {
         color: var(--color-text-subtle);
     }

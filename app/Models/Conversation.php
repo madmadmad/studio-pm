@@ -17,7 +17,7 @@ class Conversation extends Model
 
     const TYPE_DIRECT = 'direct';
 
-    protected $fillable = ['type', 'name', 'slug', 'description', 'direct_key', 'created_by'];
+    protected $fillable = ['type', 'name', 'slug', 'description', 'emoji', 'direct_key', 'created_by'];
 
     // Who's in it, with how far each has read.
     public function members(): BelongsToMany
@@ -84,6 +84,8 @@ class Conversation extends Model
             'name' => $this->name,
             'slug' => $this->slug,
             'description' => $this->description,
+            // A channel's emoji, in place of its # (null: the #).
+            'emoji' => $this->emoji,
             'members' => $this->isDirect()
                 ? $this->members->map(fn (User $m) => ['id' => $m->id, 'name' => $m->name, 'avatar_url' => $m->avatar_url, 'active' => $m->isActive()])->values()->all()
                 : [],

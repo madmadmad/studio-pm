@@ -1,8 +1,9 @@
 import { Fragment, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { ArrowDown, Hash, PencilSimple, SignOut, Users } from '@phosphor-icons/react';
+import { ArrowDown, PencilSimple, SignOut, Users } from '@phosphor-icons/react';
 import Avatar from '../Avatar';
 import EmptyState from '../EmptyState';
 import Lightbox from '../Lightbox';
+import ChannelIcon from './ChannelIcon';
 import ChatComposer from './ChatComposer';
 import ChatMessage from './ChatMessage';
 import PresenceDot from './PresenceDot';
@@ -238,7 +239,7 @@ export default function ChatConversation({ conversation, me, staff, staffById, o
             <header className="chat-header">
                 <div className="chat-header__title-row">
                     {conversation.type === 'channel' ? (
-                        <h1 className="chat-header__title"><Hash className="chat-header__hash" />{title}</h1>
+                        <h1 className="chat-header__title"><ChannelIcon channel={conversation} className="chat-header__hash" />{title}</h1>
                     ) : (
                         <h1 className="chat-header__title">
                             {others.length === 1 && <PresenceDot online={online.has(others[0].id)} />}

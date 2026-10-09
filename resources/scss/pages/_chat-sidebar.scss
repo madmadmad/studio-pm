@@ -89,10 +89,12 @@
         }
     }
 
+    // The # or the channel's emoji, in the same width so names line up.
     &__icon {
         flex-shrink: 0;
         width: var(--space-5);
         color: var(--color-text-subtle);
+        text-align: center;
     }
 
     // A group message: how many others, in a small grey circle the size of

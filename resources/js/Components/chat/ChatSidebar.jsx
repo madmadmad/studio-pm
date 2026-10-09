@@ -1,5 +1,6 @@
-import { Hash, MagnifyingGlass, Plus, X } from '@phosphor-icons/react';
+import { MagnifyingGlass, Plus, X } from '@phosphor-icons/react';
 import Avatar from '../Avatar';
+import ChannelIcon from './ChannelIcon';
 import ChatCount from './ChatCount';
 import PresenceDot from './PresenceDot';
 import { conversationTitle } from './ChatConversation';
@@ -25,7 +26,7 @@ function Item({ conversation, me, active, counts, online, onOpen, onClose }) {
                 className={classes.join(' ')}
             >
                 {conversation.type === 'channel' ? (
-                    <Hash className="chat-sidebar__icon" />
+                    <ChannelIcon channel={conversation} className="chat-sidebar__icon" />
                 ) : others.length > 1 ? (
                     <span className="chat-sidebar__group" aria-hidden="true">{others.length}</span>
                 ) : (

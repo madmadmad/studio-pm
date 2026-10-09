@@ -39,6 +39,7 @@ class ConversationController extends Controller
                     'id' => $c->id,
                     'name' => $c->name,
                     'description' => $c->description,
+                    'emoji' => $c->emoji,
                     'member_count' => $c->members_count,
                     'is_member' => (bool) $c->is_member,
                 ])
@@ -49,13 +50,13 @@ class ConversationController extends Controller
     {
         $this->authorize('create', Conversation::class);
 
-        [$slug, $description] = $this->validatedChannel($request);
-        $channel = $this->chat->createChannel($request->user(), $slug, $description);
+        [$slug, $description, $emoji] = $this->validatedChannel($request);
+        $channel = $this->chat->createChannel($request->user(), $slug, $description, $emoji);
 
         return response()->json($channel->load('members')->toSummaryArray(), 201);
     }
 
-    // A new name or description. #general keeps its name -- it's where
+    // A new name, description or emoji. #general keeps its name -- it's where
     // everyone starts (ChatSeeder) -- but its description can change.
     public function updateChannel(Request $request, Conversation $conversation)
     {
@@ -64,8 +65,8 @@ class ConversationController extends Controller
         if ($conversation->slug === 'general') {
             $request->merge(['name' => 'general']);
         }
-        [$slug, $description] = $this->validatedChannel($request, $conversation);
-        $this->chat->updateChannel($conversation, $slug, $description);
+        [$slug, $description, $emoji] = $this->validatedChannel($request, $conversation);
+        $this->chat->updateChannel($conversation, $slug, $description, $emoji);
 
         $counts = ChatUnread::forUser($request->user())[$conversation->id] ?? [];
 
@@ -79,13 +80,15 @@ class ConversationController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:80'],
             'description' => ['nullable', 'string', 'max:255'],
+            // In place of its # -- one from the picker's set.
+            'emoji' => ['nullable', 'string', Rule::in(config('chat.reaction_emoji'))],
         ]);
         $slug = Str::slug($data['name']);
         validator(['name' => $slug], [
             'name' => ['required', Rule::unique('conversations', 'slug')->ignore($channel?->id)],
         ], ['name.required' => 'Give the channel a name with letters or numbers.', 'name.unique' => 'There is already a channel with that name.'])->validate();
 
-        return [$slug, filled($data['description'] ?? null) ? trim($data['description']) : null];
+        return [$slug, filled($data['description'] ?? null) ? trim($data['description']) : null, $data['emoji'] ?? null];
     }
 
     public function join(Request $request, Conversation $conversation)
