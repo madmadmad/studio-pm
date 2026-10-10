@@ -111,9 +111,11 @@ class ExpensesByMonth
             ->whereDate('journal_entries.entry_date', '>=', "{$year}-01-01")
             ->whereDate('journal_entries.entry_date', '<=', "{$year}-12-31")
             ->groupBy('month')
-            ->selectRaw('cast(substr(journal_entries.entry_date, 6, 2) as integer) as month, sum(journal_lines.debit_cents) - sum(journal_lines.credit_cents) as cents')
+            // The month as text ("05"), made a number here: "cast(... as
+            // integer)" isn't SQL that MySQL takes.
+            ->selectRaw('substr(journal_entries.entry_date, 6, 2) as month, sum(journal_lines.debit_cents) - sum(journal_lines.credit_cents) as cents')
             ->pluck('cents', 'month')
-            ->map(fn ($cents) => (int) $cents)
+            ->mapWithKeys(fn ($cents, $month) => [(int) $month => (int) $cents])
             ->all();
     }
 

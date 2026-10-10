@@ -175,7 +175,7 @@ function TaskDrawer({ task, isNew, onClose }) {
                                     <div className="task-files__size">{formatFileSize(file.size)}</div>
                                 </div>
                                 <div className="task-files__actions">
-                                    <a href={file.url} download={file.filename} title="Download" className="icon-btn icon-btn--secondary task-files__action">
+                                    <a href={file.portal_url} download={file.filename} title="Download" className="icon-btn icon-btn--secondary task-files__action">
                                         <DownloadSimple />
                                     </a>
                                 </div>

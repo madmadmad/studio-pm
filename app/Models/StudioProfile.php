@@ -43,7 +43,7 @@ class StudioProfile extends Model
     // The logo for light backgrounds, as a URL path.
     public function logoUrl(): string
     {
-        return $this->logo_path ? Storage::disk('public')->url($this->logo_path) : self::DEFAULT_LOGO;
+        return $this->logo_path ? Storage::disk(config('filesystems.public_disk'))->url($this->logo_path) : self::DEFAULT_LOGO;
     }
 
     // For dark backgrounds: the uploaded reversed one; else, with a custom
@@ -52,7 +52,7 @@ class StudioProfile extends Model
     public function logoDarkUrl(): string
     {
         return match (true) {
-            (bool) $this->logo_dark_path => Storage::disk('public')->url($this->logo_dark_path),
+            (bool) $this->logo_dark_path => Storage::disk(config('filesystems.public_disk'))->url($this->logo_dark_path),
             (bool) $this->logo_path => $this->logoUrl(),
             default => self::DEFAULT_LOGO_DARK,
         };
@@ -61,13 +61,20 @@ class StudioProfile extends Model
     // The PNG for emails (an absolute URL) ...
     public function logoPngUrl(): string
     {
-        return $this->logo_png_path ? url(Storage::disk('public')->url($this->logo_png_path)) : url(self::DEFAULT_LOGO_PNG);
+        return $this->logo_png_path ? url(Storage::disk(config('filesystems.public_disk'))->url($this->logo_png_path)) : url(self::DEFAULT_LOGO_PNG);
     }
 
-    // ... and for PDFs (a file on disk).
-    public function logoPngFile(): string
+    // ... and for PDFs: the image itself, as a data URI -- the logo may be
+    // in a bucket, not on this server's disk, and the PDF renderer doesn't
+    // fetch over the network.
+    public function logoPngSrc(): string
     {
-        return $this->logo_png_path ? Storage::disk('public')->path($this->logo_png_path) : public_path(ltrim(self::DEFAULT_LOGO_PNG, '/'));
+        $png = $this->logo_png_path
+            ? Storage::disk(config('filesystems.public_disk'))->get($this->logo_png_path)
+            : null;
+        $png ??= file_get_contents(public_path(ltrim(self::DEFAULT_LOGO_PNG, '/')));
+
+        return 'data:image/png;base64,'.base64_encode($png);
     }
 
     // The studio's name for correspondence (email subjects, the mail

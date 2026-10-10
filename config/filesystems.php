@@ -32,6 +32,20 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Public Uploads Disk
+    |--------------------------------------------------------------------------
+    |
+    | Where the studio's logos live: files anyone may load (the app's header,
+    | emails). "public" (storage/app/public, linked into public/storage) in
+    | development and on a server with a disk; on Laravel Cloud, a public
+    | bucket's disk, since its servers keep nothing between deploys.
+    |
+    */
+
+    'public_disk' => env('FILESYSTEM_PUBLIC_DISK', 'public'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Filesystem Disks
     |--------------------------------------------------------------------------
     |
