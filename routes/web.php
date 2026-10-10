@@ -4,7 +4,9 @@ use App\Http\Controllers\AvatarController;
 use App\Http\Controllers\Chat\ChatAttachmentController;
 use App\Http\Controllers\Dev\NotificationPreviewController;
 use App\Http\Controllers\InvoiceController;
+use App\Http\Controllers\Portal\TaskFileController as PortalTaskFileController;
 use App\Http\Controllers\ProposalController;
+use App\Http\Controllers\TaskFileController;
 use App\Http\Controllers\Web\AcceptInvitationController;
 use App\Http\Controllers\Web\BookkeepingPageController;
 use App\Http\Controllers\Web\ChatPageController;
@@ -80,6 +82,10 @@ Route::middleware('auth')->group(function () {
         Route::get('/chat/attachments/{attachment}/thumbnail', [ChatAttachmentController::class, 'thumbnail'])->name('chat.attachments.thumbnail');
         Route::get('/chat/attachments/{attachment}/display', [ChatAttachmentController::class, 'display'])->name('chat.attachments.display');
     });
+
+    // A task's file, for staff who can see the task. The web guard by
+    // name: clients have their own door (portal.task-files.show).
+    Route::get('/task-files/{file}', [TaskFileController::class, 'show'])->middleware('auth:web')->name('task-files.show');
 
     // Each part of the studio behind its permission (config/permissions.php).
     // A super admin has them all; settings and team are theirs alone.
@@ -171,6 +177,7 @@ Route::prefix('portal')->name('portal.')->group(function () {
         Route::get('/invoices', [PortalPageController::class, 'invoices'])->name('invoices.index');
         Route::get('/contacts', [PortalPageController::class, 'contacts'])->name('contacts.index');
         Route::get('/projects/{project}', [PortalPageController::class, 'show'])->name('projects.show');
+        Route::get('/task-files/{file}', [PortalTaskFileController::class, 'show'])->name('task-files.show');
         Route::get('/profile', [PortalProfilePageController::class, 'index'])->name('profile.index');
     });
 });

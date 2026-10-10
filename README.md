@@ -34,7 +34,7 @@ Two kinds of users, on two separate auth guards:
   mail).
 - **Frontend:** React 19 via Inertia, Tailwind CSS 4, Tiptap (rich text),
   Phosphor icons, Vite.
-- **Database:** SQLite by default locally; MySQL in production (Forge).
+- **Database:** SQLite by default locally; MySQL in production (Laravel Cloud).
 
 ## Local development (Valet)
 
@@ -95,40 +95,15 @@ grab the links while developing.
 php artisan test
 ```
 
-## Deploying (Laravel Forge)
+## Deploying (Laravel Cloud)
 
-This app deploys to [Laravel Forge](https://forge.laravel.com).
+The app runs on [Laravel Cloud](https://cloud.laravel.com) at
+madmadmad.studio: MySQL, two object storage buckets (private and public),
+the scheduler and a queue worker. Setup, settings and the first sign-in are
+in [docs/laravel-cloud.md](docs/laravel-cloud.md).
 
-1. Create a new site in Forge pointed at this repository/branch, with PHP
-   8.3+ and MySQL.
-2. Set the environment variables in Forge's **Environment** tab (copy from
-   `.env.example` as a starting point) — in particular `APP_KEY` (or let it
-   generate on first deploy), `APP_URL`, `DB_*`, mail credentials
-   (Postmark), and `STRIPE_KEY` / `STRIPE_SECRET` / `STRIPE_WEBHOOK_SECRET`
-   for invoice checkout.
-3. Forge's default Laravel deploy script covers most of this; make sure
-   the deploy script includes:
-   ```bash
-   composer install --no-dev --optimize-autoloader
-   npm ci
-   npm run build
-   php artisan migrate --force
-   php artisan config:cache
-   php artisan route:cache
-   php artisan view:cache
-   php artisan reverb:restart
-   ```
-4. Point the site's queue worker (Forge → **Queue**) at the `database`
-   queue connection so invite/notification/mail jobs process in the
-   background.
-5. Run Chat's WebSocket server (Laravel Reverb) as a Forge daemon, with
-   its Nginx proxy, and set its `REVERB_*` variables before the build. See
-   [docs/chat.md](docs/chat.md), which also covers Laravel Cloud.
-6. Enable Forge's SSL (Let's Encrypt) for the site domain — proposal/invoice
-   public links and Stripe redirect back to `APP_URL`, so it should be the
-   final HTTPS domain.
-7. Push to the connected branch to trigger a deploy (or deploy manually
-   from the Forge dashboard).
+Chat's live updates use Laravel Reverb: on Cloud, an attached WebSocket
+cluster. See [docs/chat.md](docs/chat.md).
 
 ## Project structure
 

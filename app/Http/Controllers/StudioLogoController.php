@@ -29,7 +29,7 @@ class StudioLogoController extends Controller
 
         $profile = StudioProfile::current();
         $column = self::VARIANTS[$variant];
-        $path = $file->storeAs('branding', "logo-{$variant}-".Str::random(8).($isSvg ? '.svg' : '.png'), 'public');
+        $path = $file->storeAs('branding', "logo-{$variant}-".Str::random(8).($isSvg ? '.svg' : '.png'), config('filesystems.public_disk'));
         $this->forget($profile->{$column});
         $profile->{$column} = $path;
 
@@ -103,11 +103,11 @@ class StudioLogoController extends Controller
             $image = new \Imagick;
             $image->setBackgroundColor(new \ImagickPixel('transparent'));
             $image->setResolution(300, 300);
-            $image->readImageBlob(Storage::disk('public')->get($svgPath));
+            $image->readImageBlob(Storage::disk(config('filesystems.public_disk'))->get($svgPath));
             $image->setImageFormat('png32');
             $image->resizeImage(900, 0, \Imagick::FILTER_LANCZOS, 1);
             $png = preg_replace('/\.svg$/', '.png', $svgPath);
-            Storage::disk('public')->put($png, $image->getImageBlob());
+            Storage::disk(config('filesystems.public_disk'))->put($png, $image->getImageBlob());
 
             return $png;
         } catch (\Throwable) {
@@ -118,7 +118,7 @@ class StudioLogoController extends Controller
     private function forget(?string $path): void
     {
         if ($path && str_starts_with($path, 'branding/')) {
-            Storage::disk('public')->delete($path);
+            Storage::disk(config('filesystems.public_disk'))->delete($path);
         }
     }
 }

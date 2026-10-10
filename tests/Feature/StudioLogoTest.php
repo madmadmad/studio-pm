@@ -30,6 +30,9 @@ class StudioLogoTest extends TestCase
         Storage::disk('public')->assertExists($profile->logo_path);
         $this->assertSame($profile->logo_path, $profile->logo_png_path);
         $this->assertStringContainsString('/storage/branding/', $profile->logoPngUrl());
+        // PDFs get the image itself, so it needn't be on this server's disk.
+        $this->assertStringStartsWith('data:image/png;base64,', $profile->logoPngSrc());
+        $this->assertSame(Storage::disk('public')->get($profile->logo_png_path), base64_decode(substr($profile->logoPngSrc(), strlen('data:image/png;base64,'))));
         // No dark version yet: dark backgrounds use the uploaded logo.
         $this->assertSame($profile->logoUrl(), $profile->logoDarkUrl());
     }

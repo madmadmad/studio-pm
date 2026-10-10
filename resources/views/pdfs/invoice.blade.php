@@ -14,7 +14,7 @@
     </style>
 </head>
 <body>
-    <img class="logo" src="{{ $studio->logoPngFile() }}" alt="{{ $studio->name }}">
+    <img class="logo" src="{{ $studio->logoPngSrc() }}" alt="{{ $studio->name }}">
 
     <h1><span class="title-prefix">Invoice</span>{{ $invoice->documentTitle() }}</h1>
 
