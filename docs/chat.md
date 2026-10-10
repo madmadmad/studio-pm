@@ -17,11 +17,11 @@ The code is the same on every environment. Only these settings differ.
 | `REVERB_HOST` | The hostname browsers connect to, e.g. `staging.example.com` |
 | `REVERB_PORT` | The port browsers connect to: `443` behind TLS, `8080` locally |
 | `REVERB_SCHEME` | `https` behind TLS, `http` locally |
-| `REVERB_SERVER_HOST`, `REVERB_SERVER_PORT` | Where the Reverb process itself listens. Defaults: `0.0.0.0` and `8080`. Only matters on Forge. |
+| `REVERB_SERVER_HOST`, `REVERB_SERVER_PORT` | Where the Reverb process itself listens. Defaults: `0.0.0.0` and `8080`. Only matters when you run Reverb yourself (locally). |
 | `REVERB_ALLOWED_ORIGINS` | Optional. Comma-separated hosts allowed to open a socket, e.g. `staging.example.com`. Defaults to any. Every channel requires a signed-in staff member either way. |
 | `VITE_REVERB_APP_KEY`, `VITE_REVERB_HOST`, `VITE_REVERB_PORT`, `VITE_REVERB_SCHEME` | The browser's copy of the values above. `.env.example` points them at the `REVERB_*` values. |
 
-**The `VITE_REVERB_*` values are compiled into the JavaScript at build time.** After setting or changing them, run `npm run build` again (on Forge, redeploy). Without them, Chat still works but nothing is live.
+**The `VITE_REVERB_*` values are compiled into the JavaScript at build time.** After setting or changing them, run `npm run build` again (on Cloud, redeploy). Without them, Chat still works but nothing is live.
 
 ### Attachments (S3 or Cloudflare R2)
 
@@ -29,7 +29,7 @@ Chat files go on a private disk and are only ever handed out through an authoriz
 
 | Variable | What it is |
 |---|---|
-| `CHAT_ATTACHMENTS_DISK` | The disk for Chat files. Defaults to `FILESYSTEM_PRIVATE_DISK`, which is also used for message attachments and avatars. Use `s3` in production. |
+| `CHAT_ATTACHMENTS_DISK` | Optional. The disk for Chat files. Defaults to `FILESYSTEM_PRIVATE_DISK` (`private` on Cloud), which is also used for message attachments and avatars. |
 | `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_BUCKET`, `AWS_DEFAULT_REGION` | The bucket's credentials |
 | `AWS_ENDPOINT` | R2 only: `https://<account-id>.r2.cloudflarestorage.com` |
 | `AWS_DEFAULT_REGION` | R2 only: `auto` |
@@ -39,7 +39,7 @@ Chat files go on a private disk and are only ever handed out through an authoriz
 
 Keep the bucket private, with public access off. Allowed file types are the same list as project messages (`config/message_attachments.php`), checked against each file's actual contents rather than its name.
 
-PHP and the web server must accept an upload as large as the limit. On Forge, set `upload_max_filesize` and `post_max_size` to at least `26M` (PHP settings) and `client_max_body_size` to at least `26M` (Nginx). Laravel Cloud's defaults are already above this.
+The `AWS_*` lines are only for a server that isn't on Laravel Cloud, where you'd point the s3 disk at a bucket yourself. On Cloud, the attached buckets are set up as disks with no variables to add.
 
 ### GIFs (GIPHY)
 
@@ -71,60 +71,16 @@ Real-time delivery does not use the queue: messages, edits, deletes and reaction
 
 Locally, Reverb listens on `ws://localhost:8080`, using `REVERB_HOST="localhost"`, `REVERB_PORT=8080` and `REVERB_SCHEME=http`.
 
-## Staging on Laravel Forge
-
-Reverb runs as a long-lived process on the server, kept alive by a Forge daemon. Browsers reach it through Nginx on the site's normal HTTPS domain.
-
-1. **Environment** (site → Environment):
-   ```env
-   BROADCAST_CONNECTION=reverb
-   REVERB_APP_ID=...
-   REVERB_APP_KEY=...
-   REVERB_APP_SECRET=...
-   REVERB_HOST=staging.example.com
-   REVERB_PORT=443
-   REVERB_SCHEME=https
-   REVERB_SERVER_HOST=0.0.0.0
-   REVERB_SERVER_PORT=8080
-   ```
-   Keep the `VITE_REVERB_*` lines from `.env.example`.
-2. **Daemon.** Either turn on Forge's Laravel Reverb integration for the site, which creates the daemon and the Nginx proxy for you, or add a daemon by hand (server → Daemons):
-   - Command: `php artisan reverb:start --no-interaction`
-   - Directory: the site's directory, e.g. `/home/forge/staging.example.com/current`, or the site root without zero-downtime deploys
-   - User: `forge`
-3. **Nginx.** Skip this if Forge's Reverb integration set it up. Otherwise add this to the site's Nginx config, inside the `server` block for the HTTPS domain, so `wss://staging.example.com/app/...` reaches Reverb:
-   ```nginx
-   location ~ ^/(app|apps)/ {
-       proxy_http_version 1.1;
-       proxy_set_header Host $http_host;
-       proxy_set_header Scheme $scheme;
-       proxy_set_header SERVER_PORT $server_port;
-       proxy_set_header REMOTE_ADDR $remote_addr;
-       proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-       proxy_set_header Upgrade $http_upgrade;
-       proxy_set_header Connection "Upgrade";
-       proxy_pass http://127.0.0.1:8080;
-   }
-   ```
-4. **Deploy script.** Add this after the build, so the daemon runs the new code:
-   ```bash
-   php artisan reverb:restart
-   ```
-   `npm run build` must run after the environment has the `VITE_REVERB_*` values. Forge's deploy script reads the site's environment.
-5. Deploy, seed #general (above), and check in two browsers.
-
-Port 8080 doesn't need to be open in the firewall. Only Nginx talks to it.
-
 ## Production on Laravel Cloud
 
-Cloud runs Reverb for you as a managed WebSocket cluster. Nothing in the code changes.
+studio-pm runs on Laravel Cloud (docs/laravel-cloud.md). Cloud runs Reverb for you as a managed WebSocket cluster, so nothing in the code changes:
 
-1. In the environment, add a **WebSockets** cluster (Reverb) and attach it. Cloud then injects the `REVERB_*` and `VITE_REVERB_*` variables and sets `BROADCAST_CONNECTION=reverb`. Don't set them by hand.
-2. Attach a private **object storage** bucket. Cloud injects the `AWS_*` variables. Set `FILESYSTEM_PRIVATE_DISK=s3`, or `CHAT_ATTACHMENTS_DISK=s3` for Chat alone. R2 instead: set the `AWS_*` values from the table above yourself.
-3. Redeploy, so the build compiles in the `VITE_REVERB_*` values Cloud just injected.
-4. Seed #general (`php artisan db:seed --class=ChatSeeder --force` from Cloud's command runner), and check in two browsers.
+1. Add a **WebSockets** cluster (Reverb) and a WebSocket application in it, attached to the production environment. Cloud injects the `REVERB_*` and `VITE_REVERB_*` variables and sets `BROADCAST_CONNECTION=reverb`. Don't set them by hand.
+2. Deploy, so the build compiles in the `VITE_REVERB_*` values. A push to `main` deploys on its own.
+3. Seed #general once: `php artisan db:seed --class=ChatSeeder --force` from Cloud's command runner.
+4. Check in two browsers, signed in as two people.
 
-A worker for the queue (thumbnails) is a separate Cloud setting, the same as for invoices.
+Chat's files use the private bucket that's already attached for the rest of the app (disk `private`, through `FILESYSTEM_PRIVATE_DISK`), so there's nothing extra to set up for them. The queue worker that already runs makes Chat's image thumbnails too.
 
 ## How it's kept staff only
 
@@ -151,7 +107,7 @@ Message bodies are stored as plain text, with each mention as a `<@user_id>` tok
 
 ## Troubleshooting
 
-- **Nothing is live, but messages appear after a refresh.** Reverb isn't reachable, or the build has no `VITE_REVERB_*` values. Look in the browser console for a failed `wss://` connection, check the daemon is running (Forge) or the cluster is attached (Cloud), then rebuild.
+- **Nothing is live, but messages appear after a refresh.** Reverb isn't reachable, or the build has no `VITE_REVERB_*` values. Look in the browser console for a failed `wss://` connection, check the WebSocket application is attached to the environment, then redeploy.
 - **The socket connects, but channels fail with 403.** The person isn't an active staff member in that conversation, or the session expired. Clients always get this, by design.
 - **Uploads fail with "too large".** Raise PHP's and Nginx's upload limits (see above).
 - **Images stay as full-size copies.** The queue worker isn't running, so thumbnails aren't being made.
