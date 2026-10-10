@@ -85,7 +85,7 @@ GIPHY_API_KEY=               # Chat's GIFs; once Chat is merged
 ```
 
 - **`APP_KEY`:** make a new one for this install with `php artisan key:generate --show` on your Mac, and paste the output (`base64:...`). Keep it: changing it later signs everyone out and makes stored two-factor secrets unreadable.
-- **`APP_TIMEZONE`:** the scheduler times (reminders at 9 AM, and so on) are New York time either way. This only sets how the app reads plain dates.
+- **`APP_TIMEZONE`:** the app works in New York time, as it does locally. Dates like an invoice's issue date are New York days; the few exact moments, like a scheduled send, are stored in UTC on their own (`App\Casts\UtcDateTime`). Keep it as it is.
 
 ## 7. Deploy
 
