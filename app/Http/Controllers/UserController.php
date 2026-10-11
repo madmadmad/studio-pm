@@ -163,6 +163,26 @@ class UserController extends Controller
         return $user->replaceBioPhoto(null);
     }
 
+    // Lost phone and recovery codes: their authenticator and passkeys are
+    // cleared, they're signed out everywhere, and the next time they sign
+    // in (with their password) they set two-factor up again. Remembered
+    // devices stop working too (App\Support\TrustedDevice).
+    public function resetTwoFactor(Request $request, User $user)
+    {
+        $this->authorize('update', $user);
+        abort_if($user->id === $request->user()->id, 422, "You can't reset your own two-factor here -- use Profile.");
+
+        $user->forceFill([
+            'two_factor_secret' => null,
+            'two_factor_recovery_codes' => null,
+            'two_factor_confirmed_at' => null,
+        ])->save();
+        $user->passkeys()->delete();
+        DB::table('sessions')->where('user_id', $user->id)->delete();
+
+        return $user->fresh();
+    }
+
     protected function createInvitedUser(array $data, User $invitedBy): User
     {
         $user = new User([

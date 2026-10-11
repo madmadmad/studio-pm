@@ -10,4 +10,9 @@
     &--spaced {
         margin-top: var(--space-4);
     }
+
+    // Actions that aren't a form's Save: lined up from the left.
+    &--start {
+        justify-content: flex-start;
+    }
 }

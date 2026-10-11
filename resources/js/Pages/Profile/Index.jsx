@@ -14,9 +14,10 @@ import AppearanceSetting from '../../Components/AppearanceSetting';
 import BrandColorSetting from '../../Components/BrandColorSetting';
 import { useRememberedTab } from '../../lib/useRememberedTab';
 import BioForm from '../../Components/BioForm';
+import SecuritySettings from '../../Components/SecuritySettings';
 import { shrinkImage } from '../../lib/shrinkImage';
 
-const TABS = ['Timesheet', 'Projects', 'Account'];
+const TABS = ['Timesheet', 'Projects', 'Account', 'Security'];
 
 // Their starred projects as a board, as on the Projects page: drag a card
 // to change its status, or unstar it to take it off here.
@@ -147,8 +148,9 @@ function flatErrors(err) {
 }
 
 // Your own page: your week's time (Timesheet), the projects you've
-// starred (Projects), and your photo, details and password (Account).
-export default function ProfileIndex({ profileUser, passwordHint, timesheet, timeProjects, timeCompanies, timeServices, starredProjects }) {
+// starred (Projects), your photo, details and password (Account), and
+// two-factor and passkeys (Security).
+export default function ProfileIndex({ profileUser, passwordHint, security, timesheet, timeProjects, timeCompanies, timeServices, starredProjects }) {
     const [tab, setTab] = useRememberedTab('profile-page-tab', TABS);
     const [user, setUser] = useState(profileUser);
     const [saving, setSaving] = useState(false);
@@ -211,6 +213,8 @@ export default function ProfileIndex({ profileUser, passwordHint, timesheet, tim
             )}
 
             {tab === 'Projects' && <StarredProjects projects={starredProjects} />}
+
+            {tab === 'Security' && <SecuritySettings security={security} />}
 
             {tab === 'Account' && (
                 <div className="profile-page">

@@ -162,15 +162,16 @@ return [
     */
 
     // No self-registration -- staff only ever get in via a Manager's invite.
-    // Two-factor/passkeys are left off for now (deliberate fast-follow, not
-    // an oversight) but the underlying columns/table are already migrated
-    // so turning them on later is just uncommenting these two lines.
+    // Two-factor (an authenticator app's codes) is required of all staff
+    // (auth.require_two_factor, RequireTwoFactor); passkeys are an optional
+    // quicker way in. Changing either needs the password confirmed (signing
+    // in counts, for a while -- auth.password_timeout).
     'features' => [
         Features::resetPasswords(),
         Features::updateProfileInformation(),
         Features::updatePasswords(),
-        // Features::twoFactorAuthentication(['confirm' => true, 'confirmPassword' => true]),
-        // Features::passkeys(['confirmPassword' => true]),
+        Features::twoFactorAuthentication(['confirm' => true, 'confirmPassword' => true]),
+        Features::passkeys(['confirmPassword' => true]),
     ],
 
 ];

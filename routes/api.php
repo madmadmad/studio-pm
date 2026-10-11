@@ -43,7 +43,7 @@ use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth:sanctum', 'accountant.restrict'])->name('api.')->group(function () {
+Route::middleware(['auth:sanctum', 'accountant.restrict', 'two-factor.required'])->name('api.')->group(function () {
     // Projects/tasks/time entries are open to both roles -- each controller
     // scopes what a Team Member actually sees/touches via the Policies.
     Route::apiResource('companies.projects', ProjectController::class)->shallow();
@@ -189,6 +189,7 @@ Route::middleware(['auth:sanctum', 'accountant.restrict'])->name('api.')->group(
     Route::middleware('permission:team')->group(function () {
         Route::apiResource('users', UserController::class)->only(['index', 'store', 'update', 'destroy']);
         Route::post('users/{user}/resend-invite', [UserController::class, 'resendInvite']);
+        Route::post('users/{user}/reset-two-factor', [UserController::class, 'resetTwoFactor']);
         Route::post('users/{user}/reactivate', [UserController::class, 'reactivate']);
         Route::delete('users/{user}/permanent', [UserController::class, 'forceDestroy']);
         Route::post('users/{user}/avatar', [UserController::class, 'updateAvatar']);

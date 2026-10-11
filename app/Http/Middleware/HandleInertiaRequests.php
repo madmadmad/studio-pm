@@ -110,6 +110,11 @@ class HandleInertiaRequests extends Middleware
 
         // Staff: with what they're allowed to do (config/permissions.php),
         // for the sidebar, tabs and buttons -- the server enforces it too.
-        return $user ? [...$user->toArray(), 'permissions' => $user->effectivePermissions()] : null;
+        return $user ? [
+            ...$user->toArray(),
+            'permissions' => $user->effectivePermissions(),
+            // For Profile's Security section and the Team list.
+            'two_factor_enabled' => $user->two_factor_confirmed_at !== null,
+        ] : null;
     }
 }

@@ -127,4 +127,17 @@ return [
 
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Two-factor sign-in
+    |--------------------------------------------------------------------------
+    |
+    | Whether every staff member must set up an authenticator app before
+    | using the app (RequireTwoFactor). The accountant, who signs in by an
+    | emailed link, isn't asked.
+    |
+    */
+
+    'require_two_factor' => env('AUTH_REQUIRE_TWO_FACTOR', true),
+
 ];

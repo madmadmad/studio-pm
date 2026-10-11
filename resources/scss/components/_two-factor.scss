@@ -1,0 +1,103 @@
+// Setting up two-factor (Components/TwoFactorSetup.jsx), the sign-in code
+// field, and the list of passkeys (Components/Passkeys.jsx).
+@use '../abstracts' as *;
+
+.two-factor {
+    // The QR code Fortify draws, on white whatever the theme so phones
+    // can read it.
+    &__qr {
+        width: fit-content;
+        padding: var(--space-3);
+        background-color: #fff; // one-off: QR codes need a light ground
+        border-radius: var(--radius-base);
+        line-height: 0;
+
+        svg {
+            width: 176px; // one-off: QR display size
+            height: auto;
+        }
+    }
+
+    &__key {
+        display: flex;
+        align-items: center;
+        gap: var(--space-3);
+
+        code {
+            font-family: var(--font-family-mono);
+            font-size: var(--font-size-sm);
+            word-break: break-all;
+        }
+    }
+
+    &__code {
+        font-family: var(--font-family-mono);
+        letter-spacing: 0.2em;
+    }
+
+    &__recovery {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--space-2);
+    }
+
+    &__codes {
+        display: grid;
+        // One column in the narrow setup card, two on Profile.
+        grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
+        gap: var(--space-1) var(--space-4);
+        width: 100%;
+        padding: var(--space-3);
+        background-color: var(--color-surface-muted);
+        border-radius: var(--radius-base);
+        font-family: var(--font-family-mono);
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+    }
+}
+
+.passkeys {
+    display: flex;
+    flex-direction: column;
+
+    &__item {
+        display: flex;
+        align-items: center;
+        gap: var(--space-3);
+        padding-block: var(--space-2);
+
+        & + & {
+            border-top: var(--border-width) solid var(--color-border);
+        }
+    }
+
+    &__icon {
+        flex-shrink: 0;
+        color: var(--color-text-muted);
+    }
+
+    &__text {
+        flex: 1;
+        min-width: 0;
+    }
+
+    &__name {
+        font-weight: var(--font-weight-medium);
+    }
+
+    &__meta {
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+        color: var(--color-text-muted);
+    }
+
+    &__add {
+        display: flex;
+        gap: var(--space-2);
+
+        .input {
+            flex: 1;
+        }
+    }
+}

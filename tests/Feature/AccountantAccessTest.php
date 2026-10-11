@@ -114,7 +114,7 @@ class AccountantAccessTest extends TestCase
     public function test_the_accountant_cannot_sign_in_with_a_password(): void
     {
         $this->accountant(['password' => 'a-known-password']);
-        $staff = User::factory()->teamMember()->create(['email' => 'sam@studio.example', 'password' => 'a-known-password']);
+        $staff = User::factory()->teamMember()->withoutTwoFactor()->create(['email' => 'sam@studio.example', 'password' => 'a-known-password']);
 
         $this->post('/login', ['email' => 'casey@cpa.example', 'password' => 'a-known-password']);
         $this->assertGuest('web');

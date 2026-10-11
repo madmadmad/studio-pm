@@ -1,4 +1,5 @@
 import { Link, useForm } from '@inertiajs/react';
+import { Passkeys } from '@laravel/passkeys';
 import { useState } from 'react';
 import Button from '../../Components/Button';
 import Toggle from '../../Components/Toggle';
@@ -6,7 +7,8 @@ import AuthLayout from '../../Layouts/AuthLayout';
 
 // Staff sign in with their email and password. The studio's accountant has
 // no password: they ask for a sign-in link by email instead
-// (AccountantSignInController), from the second view here.
+// (AccountantSignInController), from the second view here. Staff with a
+// passkey can sign in with it alone -- no password, no code.
 export default function Login({ status }) {
     const { data, setData, post, processing, errors } = useForm({
         email: '',
@@ -21,6 +23,21 @@ export default function Login({ status }) {
     function submit(e) {
         e.preventDefault();
         post('/login');
+    }
+
+    const [passkeyError, setPasskeyError] = useState(null);
+    const [passkeyBusy, setPasskeyBusy] = useState(false);
+
+    async function signInWithPasskey() {
+        setPasskeyBusy(true);
+        setPasskeyError(null);
+        try {
+            const response = await Passkeys.verify({ remember: data.remember });
+            window.location.href = response.redirect || '/';
+        } catch (err) {
+            if (err.name !== 'UserCancelledError') setPasskeyError(err.message);
+            setPasskeyBusy(false);
+        }
     }
 
     function requestLink(e) {
@@ -99,6 +116,12 @@ export default function Login({ status }) {
                 <Button type="submit" disabled={processing} className="btn--lg auth-shell__submit">
                     Sign in
                 </Button>
+                {Passkeys.isSupported() && (
+                    <Button type="button" variant="secondary" onClick={signInWithPasskey} disabled={passkeyBusy} className="btn--lg">
+                        Sign in with a passkey
+                    </Button>
+                )}
+                {passkeyError && <div className="form-error">{passkeyError}</div>}
                 <button type="button" onClick={() => setByLink(true)} className="text-action text-action--sm auth-shell__back">
                     Accountant? Email me a sign-in link
                 </button>

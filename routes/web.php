@@ -26,6 +26,7 @@ use App\Http\Controllers\Web\ProjectPageController;
 use App\Http\Controllers\Web\ProposalPageController;
 use App\Http\Controllers\Web\PublicInvoiceController;
 use App\Http\Controllers\Web\PublicProposalController;
+use App\Http\Controllers\Web\SecurityPageController;
 use App\Http\Controllers\Web\ServicePageController;
 use App\Http\Controllers\Web\SettingsPageController;
 use App\Http\Controllers\Web\TimePageController;
@@ -67,8 +68,12 @@ Route::get('/i/{token}/pdf', [PublicInvoiceController::class, 'pdf'])->name('inv
 
 // The staff app. The accountant reaches only the corner of it that's
 // theirs (RestrictAccountant).
-Route::middleware(['auth', 'accountant.restrict'])->group(function () {
+Route::middleware(['auth', 'accountant.restrict', 'two-factor.required'])->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+
+    // Two-factor, required of all staff: where they're sent until it's set
+    // up (RequireTwoFactor), and where it's managed from then on is Profile.
+    Route::get('/security/setup', [SecurityPageController::class, 'setup'])->name('security.setup');
 
     // Open to all staff -- each page controller scopes its own data by
     // permission (assigned projects only, without all_projects).

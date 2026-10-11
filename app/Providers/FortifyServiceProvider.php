@@ -3,19 +3,25 @@
 namespace App\Providers;
 
 use App\Actions\Fortify\CreateNewUser;
+use App\Actions\Fortify\RedirectIfTwoFactorAuthenticatable;
 use App\Actions\Fortify\ResetUserPassword;
 use App\Actions\Fortify\UpdateUserPassword;
 use App\Actions\Fortify\UpdateUserProfileInformation;
 use App\Models\User;
+use App\Support\TrustedDevice;
+use Illuminate\Auth\Events\Login;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
-use Laravel\Fortify\Actions\RedirectIfTwoFactorAuthenticatable;
+use Laravel\Fortify\Events\RecoveryCodeReplaced;
+use Laravel\Fortify\Events\ValidTwoFactorAuthenticationCodeProvided;
 use Laravel\Fortify\Fortify;
+use Laravel\Passkeys\Passkeys;
 
 class FortifyServiceProvider extends ServiceProvider
 {
@@ -36,7 +42,34 @@ class FortifyServiceProvider extends ServiceProvider
         Fortify::updateUserProfileInformationUsing(UpdateUserProfileInformation::class);
         Fortify::updateUserPasswordsUsing(UpdateUserPassword::class);
         Fortify::resetUserPasswordsUsing(ResetUserPassword::class);
+        // Asks for the two-factor code after the password -- except on a
+        // device remembered for 30 days (App\Support\TrustedDevice).
         Fortify::redirectUserForTwoFactorAuthenticationUsing(RedirectIfTwoFactorAuthenticatable::class);
+        Fortify::twoFactorChallengeView(fn () => Inertia::render('Auth/TwoFactorChallenge'));
+        Fortify::confirmPasswordView(fn () => Inertia::render('Auth/ConfirmPassword'));
+
+        // A good code with "Remember this device" ticked: no code here for
+        // 30 days. A recovery code counts as a good code.
+        $rememberDevice = function ($event) {
+            if (request()->boolean('remember_device')) {
+                TrustedDevice::remember($event->user);
+            }
+        };
+        Event::listen(ValidTwoFactorAuthenticationCodeProvided::class, $rememberDevice);
+        Event::listen(RecoveryCodeReplaced::class, $rememberDevice);
+
+        // Signing in confirms the password for a while (auth.password_timeout),
+        // so setting up two-factor straight after doesn't ask for it again.
+        // Staff only: the accountant has no password to have confirmed.
+        Event::listen(Login::class, function (Login $event) {
+            if (request()->hasSession() && $event->user instanceof User && $event->user->isStaff()) {
+                request()->session()->put('auth.password_confirmed_at', time());
+            }
+        });
+
+        // A passkey signs staff in on its own (it's both factors at once) --
+        // never a deactivated account.
+        Passkeys::authorizeLoginUsing(fn (Request $request, $user) => $user instanceof User && $user->isStaff() && $user->isActive());
 
         Fortify::loginView(fn () => Inertia::render('Auth/Login'));
 

@@ -1,6 +1,6 @@
 import { Head, usePage } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
-import { ArrowCounterClockwise, EnvelopeSimple, Trash, UserMinus } from '@phosphor-icons/react';
+import { ArrowCounterClockwise, EnvelopeSimple, ShieldSlash, Trash, UserMinus } from '@phosphor-icons/react';
 import AppLayout from '../../Layouts/AppLayout';
 import Badge from '../../Components/Badge';
 import Button from '../../Components/Button';
@@ -25,6 +25,10 @@ function StatusBadge({ user }) {
     }
     if (user.has_pending_invite) {
         return <Badge tone="accent" label="Invite pending" />;
+    }
+    // Staff set it up at their next sign-in (RequireTwoFactor).
+    if (user.role !== 'accountant' && !user.two_factor_enabled) {
+        return <Badge tone="warning" label="Two-factor not set up" />;
     }
     return <Badge tone="success" label="Active" />;
 }
@@ -224,6 +228,21 @@ export default function UsersIndex({ users: usersProp, permissionOptions = {} })
         }
     }
 
+    // Lost phone and recovery codes: they sign in with their password and
+    // set two-factor up again.
+    async function resetTwoFactor(user) {
+        if (!confirm(`Reset two-factor for ${user.name}? Their authenticator and passkeys stop working and they're signed out; next time they sign in, they'll set it up again.`)) return;
+        setBusyId(user.id);
+        try {
+            const updated = await api.post(`/api/users/${user.id}/reset-two-factor`);
+            setUsers((current) => current.map((u) => (u.id === user.id ? updated : u)));
+        } catch (err) {
+            alert(err.message || "Could not reset this user's two-factor.");
+        } finally {
+            setBusyId(null);
+        }
+    }
+
     async function resendInvite(user) {
         setBusyId(user.id);
         try {
@@ -325,6 +344,11 @@ export default function UsersIndex({ users: usersProp, permissionOptions = {} })
                                             {(user.has_pending_invite || user.role === 'accountant') && !user.deactivated_at && (
                                                 <button onClick={() => resendInvite(user)} disabled={busyId === user.id} title={user.role === 'accountant' ? 'Send a sign-in link' : 'Resend invite'} className="icon-btn icon-btn--secondary">
                                                     <EnvelopeSimple />
+                                                </button>
+                                            )}
+                                            {user.two_factor_enabled && user.role !== 'accountant' && user.id !== currentUserId && !user.deactivated_at && (
+                                                <button onClick={() => resetTwoFactor(user)} disabled={busyId === user.id} title="Reset two-factor" className="icon-btn icon-btn--secondary">
+                                                    <ShieldSlash />
                                                 </button>
                                             )}
                                             {user.deactivated_at ? (

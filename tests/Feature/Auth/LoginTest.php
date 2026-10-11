@@ -17,7 +17,8 @@ class LoginTest extends TestCase
 
     public function test_a_user_can_log_in_with_correct_credentials(): void
     {
-        $user = User::factory()->create(['password' => bcrypt('secret-password')]);
+        // Not yet set up for two-factor: signed in, then sent to set it up.
+        $user = User::factory()->withoutTwoFactor()->create(['password' => bcrypt('secret-password')]);
 
         $response = $this->post('/login', [
             'email' => $user->email,

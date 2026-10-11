@@ -32,7 +32,21 @@ class UserFactory extends Factory
             'remember_token' => Str::random(10),
             // Super admin by default -- most factory-made users in tests/seeds
             'role' => User::ROLE_SUPER_ADMIN,
+            // Two-factor is required of staff (RequireTwoFactor): set up.
+            'two_factor_secret' => encrypt('JBSWY3DPEHPK3PXP'),
+            'two_factor_recovery_codes' => encrypt(json_encode(['recovery-code-1', 'recovery-code-2'])),
+            'two_factor_confirmed_at' => now(),
         ];
+    }
+
+    // Not set up yet: sent to set it up before anything else.
+    public function withoutTwoFactor(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'two_factor_secret' => null,
+            'two_factor_recovery_codes' => null,
+            'two_factor_confirmed_at' => null,
+        ]);
     }
 
     /**

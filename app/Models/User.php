@@ -14,14 +14,17 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Fortify\TwoFactorAuthenticatable;
+use Laravel\Passkeys\Contracts\PasskeyUser;
+use Laravel\Passkeys\PasskeyAuthenticatable;
 use Laravel\Sanctum\HasApiTokens;
 
 #[Fillable(['name', 'job_title', 'bio', 'bio_photo_path', 'email', 'password', 'role', 'avatar_path'])]
-#[Hidden(['password', 'remember_token', 'invite_token', 'login_token', 'avatar_path', 'bio_photo_path'])]
-class User extends Authenticatable
+#[Hidden(['password', 'remember_token', 'invite_token', 'login_token', 'two_factor_secret', 'two_factor_recovery_codes', 'avatar_path', 'bio_photo_path'])]
+class User extends Authenticatable implements PasskeyUser
 {
     /** @use HasFactory<UserFactory> */
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable;
 
     // Everything, including Settings and the team (config/permissions.php).
     const ROLE_SUPER_ADMIN = 'super_admin';
@@ -42,7 +45,7 @@ class User extends Authenticatable
     // The raw invite_token is hidden from JSON entirely -- this exposes just
     // enough for the Team admin UI to show an "invite pending" state and
     // offer a resend, without ever leaking the token value itself.
-    protected $appends = ['has_pending_invite', 'avatar_url', 'bio_photo_url'];
+    protected $appends = ['has_pending_invite', 'avatar_url', 'bio_photo_url', 'two_factor_enabled'];
 
     /**
      * Get the attributes that should be cast.
@@ -57,9 +60,16 @@ class User extends Authenticatable
             'invite_expires_at' => 'datetime',
             'deactivated_at' => 'datetime',
             'login_token_expires_at' => 'datetime',
+            'two_factor_confirmed_at' => 'datetime',
             'password' => 'hashed',
             'permissions' => 'array',
         ];
+    }
+
+    // Two-factor set up (required of staff) -- the Team list shows it.
+    protected function getTwoFactorEnabledAttribute(): bool
+    {
+        return $this->two_factor_confirmed_at !== null;
     }
 
     protected function getHasPendingInviteAttribute(): bool
