@@ -1,4 +1,4 @@
-import { useForm } from '@inertiajs/react';
+import { Head, useForm } from '@inertiajs/react';
 import Button from '../../Components/Button';
 import AuthLayout from '../../Layouts/AuthLayout';
 
@@ -17,6 +17,7 @@ export default function AcceptInvitation({ token, email, valid }) {
     if (!valid) {
         return (
             <AuthLayout logo>
+                <Head title="Accept invitation" />
                 <div className="card auth-shell__card auth-shell__card--message">
                     <p className="auth-shell__text">
                         This invite link is invalid or has expired. Ask the studio to resend your invite.
@@ -28,6 +29,7 @@ export default function AcceptInvitation({ token, email, valid }) {
 
     return (
         <AuthLayout logo>
+            <Head title="Accept invitation" />
             <form onSubmit={submit} className="card auth-shell__card">
                 <div>
                     <label className="label">Email</label>

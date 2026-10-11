@@ -1,4 +1,4 @@
-import { useForm, usePage } from '@inertiajs/react';
+import { Head, useForm, usePage } from '@inertiajs/react';
 import Button from '../../../Components/Button';
 import AuthLayout from '../../../Layouts/AuthLayout';
 
@@ -14,6 +14,7 @@ export default function RequestLink() {
 
     return (
         <AuthLayout title="Client Hub" subtitle="Sign in to follow your project">
+            <Head title="Sign in" />
             <form onSubmit={submit} className="card auth-shell__card">
                 {status && <div className="form-message form-message--success">{status}</div>}
                 <p className="auth-shell__text">

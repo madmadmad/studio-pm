@@ -26,7 +26,12 @@ router.on('location', (event) => {
 // or a public page's client) -- keep <html> on it as pages change.
 router.on('navigate', (event) => applyBrand(event.detail.page.props.brand));
 
+// "Madhouse Studio | Invoices": the studio's name (Settings, from the page's
+// <meta name="application-name">), then the page's own <Head title>.
+const siteName = document.querySelector('meta[name="application-name"]')?.content || 'Madhouse Studio';
+
 createInertiaApp({
+    title: (title) => (title ? `${siteName} | ${title}` : siteName),
     resolve: (name) => {
         const page = pages[`./Pages/${name}.jsx`];
         if (!page) {

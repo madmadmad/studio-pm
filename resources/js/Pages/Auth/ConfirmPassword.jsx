@@ -1,4 +1,4 @@
-import { useForm } from '@inertiajs/react';
+import { Head, useForm } from '@inertiajs/react';
 import Button from '../../Components/Button';
 import AuthLayout from '../../Layouts/AuthLayout';
 
@@ -15,6 +15,7 @@ export default function ConfirmPassword() {
 
     return (
         <AuthLayout logo>
+            <Head title="Confirm password" />
             <form onSubmit={submit} className="card auth-shell__card">
                 <p className="auth-shell__text">Please enter your password to go on.</p>
                 <div>

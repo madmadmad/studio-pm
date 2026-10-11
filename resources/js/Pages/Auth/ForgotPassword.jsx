@@ -1,4 +1,4 @@
-import { Link, useForm } from '@inertiajs/react';
+import { Head, Link, useForm } from '@inertiajs/react';
 import Button from '../../Components/Button';
 import AuthLayout from '../../Layouts/AuthLayout';
 
@@ -12,6 +12,7 @@ export default function ForgotPassword({ status }) {
 
     return (
         <AuthLayout logo>
+            <Head title="Forgot password" />
             <form onSubmit={submit} className="card auth-shell__card">
                 <p className="auth-shell__text">
                     Enter your email and we&rsquo;ll send you a link to reset your password.

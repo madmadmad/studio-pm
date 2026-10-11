@@ -1,4 +1,4 @@
-import { Link } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import AuthLayout from '../../../Layouts/AuthLayout';
 
 const MESSAGES = {
@@ -10,6 +10,7 @@ const MESSAGES = {
 export default function LinkInvalid({ reason }) {
     return (
         <AuthLayout title="Client Hub">
+            <Head title="Link expired" />
             <div className="card auth-shell__card auth-shell__card--message">
                 <p className="auth-shell__text">{MESSAGES[reason] ?? MESSAGES.invalid}</p>
                 <Link href="/portal/login" className="btn btn--primary btn--lg">

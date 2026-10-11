@@ -10,6 +10,12 @@ class LoginTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_no_page_is_for_search_engines(): void
+    {
+        $this->get('/login')->assertHeader('X-Robots-Tag', 'noindex, nofollow');
+        $this->getJson('/api/users')->assertHeader('X-Robots-Tag', 'noindex, nofollow');
+    }
+
     public function test_guests_are_redirected_to_login(): void
     {
         $this->get('/')->assertRedirect('/login');

@@ -1,4 +1,4 @@
-import { Link, useForm } from '@inertiajs/react';
+import { Head, Link, useForm } from '@inertiajs/react';
 import { Passkeys } from '@laravel/passkeys';
 import { useState } from 'react';
 import Button from '../../Components/Button';
@@ -48,6 +48,7 @@ export default function Login({ status }) {
     if (byLink) {
         return (
             <AuthLayout logo>
+                <Head title="Sign in" />
                 <form onSubmit={requestLink} className="card auth-shell__card">
                     <p className="auth-shell__text">
                         Enter your email and we&rsquo;ll send you a link to sign in. It works once, for 20 minutes.
@@ -78,6 +79,7 @@ export default function Login({ status }) {
 
     return (
         <AuthLayout logo>
+            <Head title="Sign in" />
             <form onSubmit={submit} className="card auth-shell__card">
                 <div>
                     <label className="label">Email</label>

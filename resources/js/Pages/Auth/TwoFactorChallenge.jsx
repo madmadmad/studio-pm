@@ -1,4 +1,4 @@
-import { useForm } from '@inertiajs/react';
+import { Head, useForm } from '@inertiajs/react';
 import { useState } from 'react';
 import Button from '../../Components/Button';
 import Toggle from '../../Components/Toggle';
@@ -27,6 +27,7 @@ export default function TwoFactorChallenge() {
 
     return (
         <AuthLayout logo>
+            <Head title="Two-factor code" />
             <form onSubmit={submit} className="card auth-shell__card">
                 <p className="auth-shell__text">
                     {recovery

@@ -1,4 +1,4 @@
-import { useForm } from '@inertiajs/react';
+import { Head, useForm } from '@inertiajs/react';
 import Button from '../../Components/Button';
 import AuthLayout from '../../Layouts/AuthLayout';
 
@@ -17,6 +17,7 @@ export default function ResetPassword({ email, token }) {
 
     return (
         <AuthLayout logo>
+            <Head title="Reset password" />
             <form onSubmit={submit} className="card auth-shell__card">
                 <div>
                     <label className="label">Email</label>

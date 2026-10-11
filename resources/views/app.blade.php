@@ -8,7 +8,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title inertia>{{ config('app.name', 'Studio PM') }}</title>
+    {{-- The studio's name (Settings), which heads every page's title (app.jsx). --}}
+    <meta name="application-name" content="{{ \App\Models\StudioProfile::brandName() }}">
+    <title inertia>{{ \App\Models\StudioProfile::brandName() }}</title>
 
     @routes
     @viteReactRefresh
