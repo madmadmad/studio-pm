@@ -322,6 +322,12 @@
             padding: 0;
             overflow: hidden;
 
+            // Stacked under the bar, a flex item would otherwise grow to
+            // its content's height and the page would scroll, not its parts.
+            @include respond-below('lg') {
+                flex: none;
+            }
+
             @include respond-to('lg') {
                 height: 100vh;
             }

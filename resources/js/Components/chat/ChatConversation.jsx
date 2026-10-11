@@ -1,5 +1,5 @@
 import { Fragment, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { ArrowDown, PencilSimple, SignOut, Users } from '@phosphor-icons/react';
+import { ArrowDown, ArrowLeft, PencilSimple, SignOut, Users } from '@phosphor-icons/react';
 import Avatar from '../Avatar';
 import EmptyState from '../EmptyState';
 import Lightbox from '../Lightbox';
@@ -94,7 +94,7 @@ function MembersMenu({ conversation, me, members, online, onEdit, onLeave }) {
 // The open conversation: its header, its history (older pages load as you
 // scroll up), who's typing, and the composer. Marks itself read while it's
 // on screen and scrolled to the newest message.
-export default function ChatConversation({ conversation, me, staff, staffById, online, limits, onEdit, onLeave }) {
+export default function ChatConversation({ conversation, me, staff, staffById, online, limits, onEdit, onLeave, onBack }) {
     const chat = useChatConversation(conversation.id, me);
     const { messages, loading, hasMore, loadingOlder, lastReadId, typing } = chat;
     const list = useRef(null);
@@ -238,6 +238,10 @@ export default function ChatConversation({ conversation, me, staff, staffById, o
         >
             <header className="chat-header">
                 <div className="chat-header__title-row">
+                    {/* A phone's way back to the list (Pages/Chat/Index). */}
+                    <button type="button" onClick={onBack} aria-label="All conversations" className="chat-header__back">
+                        <ArrowLeft />
+                    </button>
                     {conversation.type === 'channel' ? (
                         <h1 className="chat-header__title"><ChannelIcon channel={conversation} className="chat-header__hash" /><span className="chat-header__name">{title}</span></h1>
                     ) : (

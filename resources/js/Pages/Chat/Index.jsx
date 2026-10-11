@@ -7,12 +7,16 @@ import { BrowseChannelsDialog, EditChannelDialog, NewMessageDialog } from '../..
 import EmptyState from '../../Components/EmptyState';
 import { api } from '../../lib/api';
 import { onActivity, useChat } from '../../lib/chatStore';
+import { useMediaQuery } from '../../lib/useMediaQuery';
 
 // Chat: the studio's own channels and direct messages, staff only. The
 // conversation list comes with the page; switching conversations swaps the
 // URL without reloading it. Everything live -- messages, typing, who's
 // online, unread counts -- comes over the socket (lib/chatStore,
 // lib/useChatConversation), with the API as the record behind it.
+//
+// On a phone there's room for one side at a time: /chat is the list, and
+// a conversation fills the screen with a back arrow to it (.chat--open).
 export default function ChatIndex({ conversations: initial, conversationId, staff, limits }) {
     const me = usePage().props.auth.user;
     const [conversations, setConversations] = useState(initial);
@@ -22,6 +26,8 @@ export default function ChatIndex({ conversations: initial, conversationId, staf
     const started = useChat((s) => s.started);
     const liveCounts = useChat((s) => s.counts);
     const staffById = useMemo(() => new Map(staff.map((s) => [s.id, s])), [staff]);
+    // The list beside the conversation (md up), or one at a time (a phone).
+    const sideBySide = useMediaQuery('(min-width: 48rem)');
 
     // Until the live counts arrive, the page's own.
     const counts = useMemo(() => (started ? liveCounts : Object.fromEntries(initial.map((c) => [c.id, { unread: c.unread, mentions: c.mentions }]))), [started, liveCounts, initial]);
@@ -77,18 +83,25 @@ export default function ChatIndex({ conversations: initial, conversationId, staf
 
     const active = conversations.find((c) => c.id === activeId);
 
-    // Opening /chat on its own lands in #general (or your first conversation).
+    // Opening /chat on its own lands in #general (or your first
+    // conversation) -- beside the list. On a phone /chat is the list.
     useEffect(() => {
-        if (!activeId && conversations.length) {
+        if (sideBySide && !activeId && conversations.length) {
             const first = conversations.find((c) => c.slug === 'general') ?? conversations[0];
             open(first.id);
         }
-    }, [activeId, conversations.length]);
+    }, [sideBySide, activeId, conversations.length]);
+
+    // A phone's back arrow: from the conversation to the list.
+    function back() {
+        setActiveId(null);
+        router.visit('/chat', { preserveState: true, only: ['conversationId'] });
+    }
 
     return (
         <AppLayout flush>
             <Head title={active ? `${active.type === 'channel' ? '#' : ''}${conversationTitle(active, me)} · Chat` : 'Chat'} />
-            <div className="chat">
+            <div className={`chat${active ? ' chat--open' : ''}`}>
                 <ChatSidebar
                     conversations={conversations}
                     activeId={activeId}
@@ -111,6 +124,7 @@ export default function ChatIndex({ conversations: initial, conversationId, staf
                         limits={limits}
                         onEdit={() => setDialog('edit')}
                         onLeave={() => leave(active)}
+                        onBack={back}
                     />
                 ) : (
                     <div className="chat-pane chat-pane--empty">

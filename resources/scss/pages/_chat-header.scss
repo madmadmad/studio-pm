@@ -12,12 +12,37 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: var(--space-4);
+        gap: var(--space-2);
+
+        @include respond-to('md') {
+            gap: var(--space-4);
+        }
+    }
+
+    // Back to the list, on a phone (Pages/Chat/Index), before the title.
+    &__back {
+        display: inline-flex;
+        flex-shrink: 0;
+        align-items: center;
+        justify-content: center;
+        width: 2.75rem; // one-off: a comfortable touch target
+        height: 2.75rem;
+        margin-left: calc(var(--space-3) * -1);
+        border-radius: var(--radius-base);
+
+        &:hover {
+            background-color: var(--color-neutral-fill-hover);
+        }
+
+        @include respond-to('md') {
+            display: none;
+        }
     }
 
     // A page title's style (.page-header__title).
     &__title {
         display: flex;
+        flex: 1;
         min-width: 0;
         align-items: center;
         gap: var(--space-2);

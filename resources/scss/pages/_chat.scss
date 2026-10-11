@@ -1,11 +1,26 @@
 // The Chat page (Pages/Chat/Index.jsx): its column of conversations beside
 // the open one, filling the content panel (AppLayout flush). Each side
 // scrolls on its own.
+//
+// Below md there's room for one: the list, or -- with one open
+// (--open) -- the conversation, which has a back arrow to the list.
+@use '../abstracts' as *;
 
 .chat {
     display: grid;
-    grid-template-columns: var(--size-chat-sidebar) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr);
     flex: 1;
     min-width: 0;
     height: 100%;
+
+    @include respond-to('md') {
+        grid-template-columns: var(--size-chat-sidebar) minmax(0, 1fr);
+    }
+
+    @include respond-below('md') {
+        &:not(.chat--open) > .chat-pane,
+        &--open > .chat-sidebar {
+            display: none;
+        }
+    }
 }
