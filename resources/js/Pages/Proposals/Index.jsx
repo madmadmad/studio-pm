@@ -164,9 +164,9 @@ export default function ProposalsIndex({ proposals: proposalsProp, companies, se
                         <thead>
                             <tr>
                                 <th>Client</th>
-                                <th>Project</th>
+                                <th className="table__secondary">Project</th>
                                 <th>Title</th>
-                                <th>Estimate</th>
+                                <th className="table__secondary">Estimate</th>
                                 <th>Status</th>
                                 <th></th>
                             </tr>
@@ -177,7 +177,7 @@ export default function ProposalsIndex({ proposals: proposalsProp, companies, se
                                     <td className="table__cell--strong">
                                         <div>{proposal.company.name}</div>
                                     </td>
-                                    <td>
+                                    <td className="table__secondary">
                                         {proposal.project ? (
                                             <Link href={`/projects/${proposal.project.id}`} className="link">
                                                 {proposal.project.name}
@@ -185,7 +185,7 @@ export default function ProposalsIndex({ proposals: proposalsProp, companies, se
                                         ) : '—'}
                                     </td>
                                     <td>{proposal.title}</td>
-                                    <td className="table__cell--numeric">
+                                    <td className="table__cell--numeric table__secondary">
                                         {proposal.estimate_amount ? formatCurrency(proposal.estimate_amount) : '—'}
                                     </td>
                                     <td><ProposalStatusBadge proposal={proposal} /></td>

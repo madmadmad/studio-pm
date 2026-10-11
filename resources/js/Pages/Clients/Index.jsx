@@ -123,7 +123,7 @@ export default function ClientsIndex({ companies }) {
                         <thead>
                             <tr>
                                 <th>Client</th>
-                                <th>Contact</th>
+                                <th className="table__secondary">Contact</th>
                                 <th>Status</th>
                                 <th></th>
                             </tr>
@@ -132,7 +132,7 @@ export default function ClientsIndex({ companies }) {
                             {visibleCompanies.map((c) => (
                                 <tr key={c.id} onClick={(e) => visitRow(e, `/clients/${c.id}`)} className="table__row--link">
                                     <td className="table__cell--strong">{c.name}</td>
-                                    <td className="table__cell--muted">
+                                    <td className="table__cell--muted table__secondary">
                                         {c.contacts?.[0] ? `${c.contacts[0].name} · ${c.contacts[0].email ?? ''}` : '—'}
                                     </td>
                                     <td>

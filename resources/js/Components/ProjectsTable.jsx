@@ -51,8 +51,8 @@ export default function ProjectsTable({ projects, showClient = true, hrefFor = (
             <thead>
                 <tr>
                     <th>Project</th>
-                    {showClient && <th>Client</th>}
-                    <th>Tasks</th>
+                    {showClient && <th className="table__secondary">Client</th>}
+                    <th className="table__secondary">Tasks</th>
                     <th>Status</th>
                 </tr>
             </thead>
@@ -65,15 +65,16 @@ export default function ProjectsTable({ projects, showClient = true, hrefFor = (
                                 <Link href={hrefFor(project)} className="link">{project.name}</Link>
                                 <UnreadCount count={project.unread_messages} />
                             </div>
+                            {showClient && <div className="table__meta table__phone-only">{project.company.name}</div>}
                         </td>
                         {showClient && (
-                            <td>
+                            <td className="table__secondary">
                                 <Link href={`/clients/${project.company.id}`} className="link link--muted">
                                     {project.company.name}
                                 </Link>
                             </td>
                         )}
-                        <td className="table__cell--muted">{taskProgress(project)}</td>
+                        <td className="table__cell--muted table__secondary">{taskProgress(project)}</td>
                         <td>
                             <div className="table__group">
                                 <ProjectStatusBadge project={project} />
@@ -82,7 +83,7 @@ export default function ProjectsTable({ projects, showClient = true, hrefFor = (
                                         value={project.status}
                                         disabled={pendingStatus[project.id]}
                                         onChange={(e) => changeStatus(project, e.target.value)}
-                                        className="input input--micro input--inline"
+                                        className="input input--micro input--inline table__secondary"
                                     >
                                         {PROJECT_STATUS_OPTIONS.map((s) => (
                                             <option key={s.value} value={s.value}>{s.label}</option>

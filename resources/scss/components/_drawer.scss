@@ -7,6 +7,8 @@
 // opened over another would dim that one the same way, via its own
 // backdrop.
 
+@use '../abstracts' as *;
+
 .drawer {
     position: fixed;
     inset: 0;
@@ -36,19 +38,36 @@
         right: 0;
         display: flex;
         flex-direction: column;
-        width: var(--size-drawer);
-        max-width: 95vw; // one-off: always leave a sliver of page visible
+        // The whole screen on a phone; on a tablet, a comfortable fixed
+        // width (a share of so little window is too narrow); from lg, its
+        // share of the window, always leaving a sliver of page visible.
+        width: 100%;
         height: 100%;
         // The content panel's color: the scrim darkens the page behind, so
         // the drawer reads as another sheet of the same panel.
         background-color: var(--color-panel);
-        border-radius: var(--radius-drawer) 0 0 var(--radius-drawer);
         box-shadow: var(--shadow-drawer);
         animation: panel-slide-in var(--duration-drawer) var(--ease-enter);
 
+        @include respond-to('sm') {
+            width: 40rem; // one-off: a tablet's drawer
+            max-width: 95vw; // one-off: always leave a sliver of page visible
+            border-radius: var(--radius-drawer) 0 0 var(--radius-drawer);
+        }
+
+        @include respond-to('lg') {
+            width: var(--size-drawer);
+        }
+
         // Drawer size="wide": proposals and invoices.
         .drawer--wide & {
-            width: var(--size-drawer-wide);
+            @include respond-to('sm') {
+                width: 48rem; // one-off: a tablet's wide drawer
+            }
+
+            @include respond-to('lg') {
+                width: var(--size-drawer-wide);
+            }
         }
 
         @media (prefers-reduced-motion: reduce) {

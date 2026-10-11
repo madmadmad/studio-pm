@@ -16,8 +16,10 @@
     // Holds an edge-to-edge table or list. Square, so list rows (and their
     // hover fill) run straight to the corners. Flat -- no fill or shadow:
     // a list sits on the page, divided by its row rules alone.
+    // A table wider than the screen (a phone) scrolls sideways inside it
+    // rather than being cut off.
     &--flush {
-        overflow: hidden;
+        overflow-x: auto;
         background-color: transparent;
         border-radius: 0;
         box-shadow: none;

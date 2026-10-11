@@ -24,10 +24,15 @@
         max-width: 28rem;
     }
 
+    // One group that drops below the search when it doesn't fit beside
+    // it, and wraps within itself when even a row of its own is too narrow
+    // (a phone).
     &__pills {
         display: flex;
+        flex-wrap: wrap;
         flex-shrink: 0;
         gap: var(--filter-gap);
+        max-width: 100%;
     }
 
     // Grey like any unchosen button, the chosen one red (as the send

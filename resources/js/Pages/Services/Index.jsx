@@ -176,7 +176,7 @@ export default function ServicesIndex({ services: servicesProp }) {
                             <tr>
                                 <th>Name</th>
                                 <th>Rate</th>
-                                <th>Billed</th>
+                                <th className="table__secondary">Billed</th>
                                 <th>Time</th>
                                 <th></th>
                             </tr>
@@ -188,7 +188,7 @@ export default function ServicesIndex({ services: servicesProp }) {
                                     <td className="table__cell--numeric">
                                         {formatCurrency(service.default_rate)}{service.unit === 'fixed' ? '' : ' / hr'}
                                     </td>
-                                    <td className="table__cell--muted">{service.unit === 'fixed' ? 'Flat fee' : 'Hourly'}</td>
+                                    <td className="table__cell--muted table__secondary">{service.unit === 'fixed' ? 'Flat fee' : 'Hourly'}</td>
                                     <td>
                                         {service.billable
                                             ? <Badge tone="success" label="Billable" />

@@ -291,9 +291,9 @@ export default function UsersIndex({ users: usersProp, permissionOptions = {} })
                         <thead>
                             <tr>
                                 <th>Name</th>
-                                <th>Email</th>
-                                <th>Role</th>
-                                <th>Access</th>
+                                <th className="table__secondary">Email</th>
+                                <th className="table__secondary">Role</th>
+                                <th className="table__secondary">Access</th>
                                 <th>Status</th>
                                 <th></th>
                             </tr>
@@ -305,8 +305,8 @@ export default function UsersIndex({ users: usersProp, permissionOptions = {} })
                                         {user.name}
                                         {user.job_title && <div className="table__meta">{user.job_title}</div>}
                                     </td>
-                                    <td className="table__cell--muted">{user.email}</td>
-                                    <td>
+                                    <td className="table__cell--muted table__secondary">{user.email}</td>
+                                    <td className="table__secondary">
                                         <select
                                             value={user.role}
                                             // Nobody changes their own role.
@@ -319,7 +319,7 @@ export default function UsersIndex({ users: usersProp, permissionOptions = {} })
                                             <option value="accountant">Accountant</option>
                                         </select>
                                     </td>
-                                    <td>
+                                    <td className="table__secondary">
                                         {user.role === 'super_admin' ? (
                                             <span className="users__access">Everything</span>
                                         ) : user.role === 'accountant' ? (

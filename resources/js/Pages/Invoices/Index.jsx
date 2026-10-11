@@ -448,8 +448,8 @@ export default function InvoicesIndex({ invoices: invoicesProp, filters, hasEarl
                             <tr>
                                 <th>#</th>
                                 <th>Client</th>
-                                <th>Issued</th>
-                                <th>
+                                <th className="table__secondary">Issued</th>
+                                <th className="table__secondary">
                                     {canSortByDue ? (
                                         <button onClick={toggleDueSort} className="table__sort">
                                             Due
@@ -459,7 +459,7 @@ export default function InvoicesIndex({ invoices: invoicesProp, filters, hasEarl
                                 </th>
                                 <th>Total</th>
                                 <th>Status</th>
-                                <th></th>
+                                <th className="table__secondary"></th>
                             </tr>
                         </thead>
                         <tbody ref={rowsRef}>
@@ -473,15 +473,16 @@ export default function InvoicesIndex({ invoices: invoicesProp, filters, hasEarl
                                         <td className="table__cell--strong">
                                             <div className="table__group">
                                                 {invoice.company?.name}
-                                                <InvoiceCategoryBadge invoice={invoice} />
+                                                <span className="table__secondary"><InvoiceCategoryBadge invoice={invoice} /></span>
                                                 <RepeatIcon invoice={invoice} />
                                             </div>
                                         </td>
-                                        <td className="table__cell--muted">{formatDate(invoice.issued_on)}</td>
-                                        <td className="table__cell--muted">{formatDate(invoice.due_on)}</td>
+                                        <td className="table__cell--muted table__secondary">{formatDate(invoice.issued_on)}</td>
+                                        <td className="table__cell--muted table__secondary">{formatDate(invoice.due_on)}</td>
                                         <td className="table__cell--numeric">{formatCurrency(invoiceTotal(invoice.items, invoice.surcharge, invoice.tax_rate))}</td>
                                         <td><InvoiceStatusBadge invoice={invoice} /></td>
-                                        <td className="table__cell--end">
+                                        {/* On a phone the row opens the drawer, which has them all. */}
+                                        <td className="table__cell--end table__secondary">
                                             <div className="table__actions">
                                                 <a href={`/i/${invoice.public_token}`} target="_blank" rel="noopener noreferrer" title="Preview" className="icon-btn icon-btn--secondary">
                                                     <Eye />

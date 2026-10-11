@@ -191,4 +191,22 @@
             padding-block: var(--space-2);
         }
     }
+
+    // A column, or a control in a cell, that a phone can do without
+    // (dates, secondary details, row actions the drawer also has): hidden
+    // below md, on the <th> and every <td> of the column alike.
+    .table__secondary {
+        @include respond-below('md') {
+            display: none;
+        }
+    }
+
+    // The other way round: shown only on a phone -- what a hidden column
+    // held, folded into the cell beside it (a project's client under its
+    // name, as .table__meta).
+    .table__phone-only {
+        @include respond-to('md') {
+            display: none;
+        }
+    }
 }

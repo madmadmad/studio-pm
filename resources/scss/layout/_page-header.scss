@@ -5,10 +5,14 @@
 .page-header {
     margin-bottom: var(--space-section);
 
+    // When the actions don't fit beside the title (a phone), they drop
+    // below it.
     &__row {
         display: flex;
+        flex-wrap: wrap;
         align-items: center;
         justify-content: space-between;
+        gap: var(--space-3);
     }
 
     &__title {
@@ -28,6 +32,7 @@
 
     &__actions {
         display: flex;
+        flex-wrap: wrap;
         align-items: center;
         gap: var(--space-3);
     }

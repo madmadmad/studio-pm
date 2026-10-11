@@ -729,12 +729,12 @@ export default function ExpensesIndex({ expenses: expensesProp, filters, hasEarl
                         <thead>
                             <tr>
                                 <th>Name</th>
-                                <th>Project</th>
-                                <th>Date</th>
-                                <th>Category</th>
+                                <th className="table__secondary">Project</th>
+                                <th className="table__secondary">Date</th>
+                                <th className="table__secondary">Category</th>
                                 <th>Status</th>
                                 <th className="table__cell--end">Amount</th>
-                                <th></th>
+                                <th className="table__secondary"></th>
                             </tr>
                         </thead>
                         <tbody ref={rowsRef}>
@@ -766,12 +766,13 @@ export default function ExpensesIndex({ expenses: expensesProp, filters, hasEarl
                                                     {expense.source_label ? ` · ${expense.source_label}` : ''}
                                                 </div>
                                             </td>
-                                            <td className="table__cell--muted">{projectById[expense.project_id]?.name ?? '—'}</td>
-                                            <td>{formatDate(expense.date)}</td>
-                                            <td><CategoryPill category={expense.category} /></td>
+                                            <td className="table__cell--muted table__secondary">{projectById[expense.project_id]?.name ?? '—'}</td>
+                                            <td className="table__secondary">{formatDate(expense.date)}</td>
+                                            <td className="table__secondary"><CategoryPill category={expense.category} /></td>
                                             <td><ExpenseStatusBadge expense={expense} /></td>
                                             <td className="table__cell--end table__cell--numeric">{formatCurrency(expense.amount)}</td>
-                                            <td className="table__cell--end">
+                                            {/* On a phone the row opens the drawer instead. */}
+                                            <td className="table__cell--end table__secondary">
                                                 {/* Controls in the row act on their own, without opening the drawer. */}
                                                 <div className="table__actions" onClick={(e) => e.stopPropagation()}>
                                                     {!readOnly && expense.billing_status === 'unbilled' && expense.is_billable && projectDraftInvoices.length > 0 && (

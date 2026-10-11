@@ -2,13 +2,20 @@
 // Responsive on its own: as many columns as fit at --size-metric-card-min
 // or wider, stretching to fill the row, so it wraps as space runs out.
 // min() lets a single card shrink below the minimum on a very narrow screen
-// instead of overflowing.
+// instead of overflowing. On a phone, two to a row, so a page's figures
+// don't fill the screen before its content.
+@use '../abstracts' as *;
 
 .metric-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(var(--size-metric-card-min), 100%), 1fr));
-    gap: var(--space-4);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-3);
     margin-bottom: var(--space-section);
+
+    @include respond-to('sm') {
+        grid-template-columns: repeat(auto-fit, minmax(min(var(--size-metric-card-min), 100%), 1fr));
+        gap: var(--space-4);
+    }
 
     // Same as .page-section--loose.
     &--loose {

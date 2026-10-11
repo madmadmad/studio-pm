@@ -21,3 +21,17 @@ $breakpoints: (
         @content;
     }
 }
+
+// The other way: styles inside apply only below the named breakpoint.
+// For hiding or reshaping something on small screens without restating
+// how it looks above.
+//   @include respond-below('md') { ... }
+@mixin respond-below($name) {
+    @if not map.has-key($breakpoints, $name) {
+        @error 'Unknown breakpoint `#{$name}`. Expected one of: #{map.keys($breakpoints)}.';
+    }
+
+    @media (max-width: calc(#{map.get($breakpoints, $name)} - 0.02rem)) {
+        @content;
+    }
+}
