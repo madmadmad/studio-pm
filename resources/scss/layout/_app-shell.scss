@@ -1,12 +1,19 @@
 // The staff app frame: the sidebar (brand, nav, account) sits directly on
 // the dark canvas; each page sits in one light content panel that runs
 // flush to the top, right and bottom, rounded on its left edge. The page
-// itself scrolls, not the panel. Used by Layouts/AppLayout.jsx.
+// itself scrolls, not the panel. Used by Layouts/AppShell.jsx.
+//
+// Below lg (phones, tablets) there's no room for the sidebar alongside:
+// a slim bar across the top holds a menu button and the logo, and the
+// sidebar slides in over the page from the left (--menu-open), over a
+// scrim. The panel takes the full width. Mobile first: the sidebar-beside
+// layout is what respond-to('lg') adds.
 @use '../abstracts' as *;
 
 .app-shell {
     position: relative;
     display: flex;
+    flex-direction: column;
     min-height: 100vh;
     background-color: var(--color-canvas);
     animation: shell-clip-x var(--duration-panel);
@@ -31,6 +38,7 @@
     // corners.
     &::after {
         content: '';
+        display: none;
         position: absolute;
         z-index: 0;
         top: 0;
@@ -45,6 +53,10 @@
         background-repeat: repeat-y, no-repeat;
         pointer-events: none;
 
+        @include respond-to('lg') {
+            display: block;
+        }
+
         // The image is dithered against the dark canvas; on the light one
         // the panel casts an ordinary shadow instead (below).
         @include light-mode {
@@ -52,25 +64,140 @@
         }
     }
 
+    @include respond-to('lg') {
+        flex-direction: row;
+    }
+
+    // The bar across the top, below lg: the menu button and the logo, on
+    // the canvas, held in view as the page scrolls.
+    &__topbar {
+        position: sticky;
+        top: 0;
+        z-index: var(--z-dropdown);
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
+        height: var(--size-topbar);
+        padding-inline: var(--space-2) var(--space-4);
+        background-color: var(--color-canvas);
+
+        @include respond-to('lg') {
+            display: none;
+        }
+
+    }
+
+    &__topbar-brand {
+        @include truncate;
+
+        font-size: var(--font-size-lg);
+        line-height: var(--line-height-lg);
+        font-weight: var(--font-weight-semibold);
+        color: var(--color-on-canvas);
+    }
+
+    &__menu-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 2.75rem; // one-off: a comfortable touch target
+        height: 2.75rem;
+        color: var(--color-on-canvas);
+        border-radius: var(--radius-base);
+
+        &:hover {
+            background-color: var(--color-on-canvas-fill-hover);
+        }
+
+        &:focus-visible {
+            @include focus-ring;
+        }
+
+        svg {
+            width: var(--size-icon-lg);
+            height: var(--size-icon-lg);
+        }
+    }
+
+    // Behind the open menu, below lg: dims the page and closes the menu
+    // when tapped.
+    &__scrim {
+        position: fixed;
+        inset: 0;
+        z-index: var(--z-overlay);
+        background-color: var(--color-scrim);
+        animation: overlay-fade-in var(--duration-drawer) var(--ease-enter);
+
+        @include respond-to('lg') {
+            display: none;
+        }
+    }
+
     // No background of its own -- the canvas shows through. Held in view
     // as the page scrolls -- the window's height, the account menu at its
     // foot -- and scrolling on its own if a short window can't fit it.
+    //
+    // Below lg it's off to the left until the menu opens, then over the
+    // page, on the canvas.
     &__sidebar {
-        position: sticky;
+        position: fixed;
         top: 0;
+        bottom: 0;
+        left: 0;
+        z-index: var(--z-overlay);
         display: flex;
-        align-self: flex-start;
-        height: 100vh;
         overflow-y: auto;
         flex-direction: column;
         flex-shrink: 0;
         gap: var(--space-1);
         width: var(--size-sidebar);
+        max-width: 85vw; // one-off: a sliver of page stays visible beside it
+        height: 100dvh;
         padding: var(--space-panel-lg);
+        background-color: var(--color-canvas);
+        transform: translateX(-100%);
+        visibility: hidden;
+        transition:
+            transform var(--duration-drawer) var(--ease-enter),
+            visibility 0s linear var(--duration-drawer);
+
+        .app-shell--menu-open & {
+            transform: translateX(0);
+            visibility: visible;
+            transition: transform var(--duration-drawer) var(--ease-enter);
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            transition: none;
+        }
+
+        @include respond-to('lg') {
+            position: sticky;
+            z-index: auto;
+            align-self: flex-start;
+            max-width: none;
+            height: 100vh;
+            background-color: transparent;
+            transform: none;
+            visibility: visible;
+            transition: none;
+        }
     }
 
     &__brand {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
         margin-bottom: var(--space-8);
+    }
+
+    // Closes the menu, below lg.
+    &__close {
+        margin: calc(var(--space-2) * -1) calc(var(--space-2) * -1) 0 0;
+
+        @include respond-to('lg') {
+            display: none;
+        }
     }
 
     // The studio lockup: reversed (light-on-dark) on the dark canvas, the
@@ -169,7 +296,12 @@
         min-width: 0;
         padding: var(--space-page);
         background-color: var(--color-panel);
-        border-radius: var(--radius-panel) 0 0 var(--radius-panel);
+        // Squared off below lg, where it runs edge to edge under the bar.
+        border-radius: var(--radius-panel) var(--radius-panel) 0 0;
+
+        @include respond-to('lg') {
+            border-radius: var(--radius-panel) 0 0 var(--radius-panel);
+        }
         // No border: the dithered shadow (.app-shell::after) separates the
         // panel from the canvas.
         animation: shell-panel-enter var(--duration-panel) var(--ease-enter);
@@ -186,9 +318,13 @@
         // window's height so only those parts scroll.
         &--flush {
             display: flex;
-            height: 100vh;
+            height: calc(100dvh - var(--size-topbar));
             padding: 0;
             overflow: hidden;
+
+            @include respond-to('lg') {
+                height: 100vh;
+            }
         }
     }
 }

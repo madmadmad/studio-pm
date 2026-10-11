@@ -1,6 +1,7 @@
 // DESIGN TOKENS -- the knobs. Change a value here and it applies app-wide.
 // Nothing here renders on its own; every other partial consumes these via
 // var(--...). Breakpoints are the one exception -- see abstracts/_breakpoints.
+@use '../abstracts' as *;
 
 :root {
     // Dark by default: native controls, scrollbars and a <select>'s open
@@ -290,7 +291,7 @@
     --space-panel-lg: var(--space-8); // modal, drawer, auth card padding
     --space-section: var(--space-6); // gap below a page section
     --space-section-lg: var(--space-10); // between a page's major blocks (header, metrics, tabs)
-    --space-page: var(--space-16); // main content padding
+    --space-page: var(--space-4); // main content padding: a phone's gutter, wider below
 
     // -----------------------------------------------------------------
     // Borders and radii
@@ -418,6 +419,21 @@
     // Sizes here override that from CSS, for an icon given a class.
     --size-icon-sm: 0.875rem; // 14px: inline with small meta text
     --size-icon-lg: 1.5rem; // 24px: a tab's primary add action (.icon-btn--lg)
+
+    // The phone and tablet bar that stands in for the sidebar (app-shell).
+    --size-topbar: 3.5rem;
+}
+
+// Page padding opens up with the screen: 16px on a phone, 32px on a
+// tablet, 64px with the sidebar alongside (lg up).
+:root {
+    @include respond-to('md') {
+        --space-page: var(--space-8);
+    }
+
+    @include respond-to('lg') {
+        --space-page: var(--space-16);
+    }
 }
 
 // -----------------------------------------------------------------------
