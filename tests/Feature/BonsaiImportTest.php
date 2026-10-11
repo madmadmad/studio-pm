@@ -11,6 +11,7 @@ use App\Models\Payment;
 use App\Models\Transaction;
 use App\Services\BonsaiImport\BonsaiImport;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 // bonsai:import against a small sample of Bonsai's exports
@@ -190,5 +191,30 @@ class BonsaiImportTest extends TestCase
     public function test_the_command_needs_its_files(): void
     {
         $this->artisan('bonsai:import --expenses=/nope.csv')->assertFailed();
+    }
+
+    // Laravel Cloud has no files of its own: the exports go to the private
+    // bucket and --disk reads them from there, report saved alongside.
+    public function test_the_files_can_come_from_a_storage_disk(): void
+    {
+        Storage::fake('private');
+        $dir = base_path('tests/Fixtures/bonsai');
+        foreach (['expenses.csv', 'invoices.csv', 'items.jsonl', 'checking.csv', 'card.csv'] as $file) {
+            Storage::disk('private')->put("bonsai/{$file}", file_get_contents("{$dir}/{$file}"));
+        }
+
+        $this->artisan('bonsai:import', [
+            '--disk' => 'private',
+            '--expenses' => 'bonsai/expenses.csv',
+            '--invoices' => 'bonsai/invoices.csv',
+            '--items' => 'bonsai/items.jsonl',
+            '--bank' => 'bonsai/checking.csv',
+            '--card' => ['bonsai/card.csv'],
+            '--force' => true,
+        ])->expectsOutputToContain('on the private disk')->assertSuccessful();
+
+        $this->assertSame(1, Company::count());
+        $this->assertCount(1, Storage::disk('private')->files('bonsai-import'));
+        $this->artisan('bonsai:import', ['--disk' => 'private', '--expenses' => 'bonsai/missing.csv', '--invoices' => 'bonsai/invoices.csv', '--items' => 'bonsai/items.jsonl'])->assertFailed();
     }
 }
