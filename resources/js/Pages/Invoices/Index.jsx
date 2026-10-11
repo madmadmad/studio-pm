@@ -1,15 +1,15 @@
 import { Head, router } from '@inertiajs/react';
-import { Fragment, useEffect, useState } from 'react';
+import { Fragment, useEffect, useRef, useState } from 'react';
 import { CaretRight, Check, CheckCircle, Copy, DownloadSimple, Eye, PaperPlaneTilt, Trash } from '@phosphor-icons/react';
 import AppLayout from '../../Layouts/AppLayout';
 import Button from '../../Components/Button';
 import InvoiceLineItems from '../../Components/InvoiceLineItems';
 import EmptyState from '../../Components/EmptyState';
 import { TaxRow, TaxToggle, useSalesTax } from '../../Components/InvoiceTax';
-import { InvoiceCategoryBadge, InvoiceCategorySelect, PROJECT_WORK, RepeatIcon, categoryName, useInvoiceCategories } from '../../Components/InvoiceCategory';
+import { InvoiceCategoryBadge, InvoiceCategorySelect, PROJECT_WORK, RepeatIcon, useInvoiceCategories } from '../../Components/InvoiceCategory';
 import InvoiceDateFields, { useInvoiceDateFields } from '../../Components/InvoiceDateFields';
 import { InvoiceStatusBadge } from '../../Components/StatusBadges';
-import { displayInvoiceStatus, formatCurrency, formatDate, formatMonth, invoiceSubtotal, invoiceTotal, monthInAppTimezone, todayInAppTimezone } from '../../lib/format';
+import { formatCurrency, formatDate, formatMonth, invoiceSubtotal, invoiceTotal } from '../../lib/format';
 import MetricCard from '../../Components/MetricCard';
 import { calculateDueDate, todayLocal } from '../../lib/paymentTerms';
 import { api } from '../../lib/api';
@@ -21,37 +21,36 @@ import { useSendAfterCreate } from '../../Components/SendInvoiceModal';
 import { useInvoiceDrawer } from '../../Components/InvoiceDrawer';
 import { useListMotion } from '../../lib/listMotion';
 import TabToolbar from '../../Components/TabToolbar';
+import LoadMore from '../../Components/LoadMore';
 
 // The list's filter pills, by the status each row's badge shows: drafts
 // include ones with a send scheduled; outstanding is sent and unpaid,
-// overdue or not.
+// overdue or not. The server does the filtering (App\Services\InvoiceList);
+// All and Paid list a few months at a time, the rest everything -- so only
+// those can be sorted by due date.
 const STATUS_FILTERS = [
-    { value: 'all', label: 'All', statuses: null },
-    { value: 'draft', label: 'Draft', statuses: ['draft', 'scheduled'] },
-    { value: 'outstanding', label: 'Outstanding', statuses: ['sent', 'overdue'] },
-    { value: 'overdue', label: 'Overdue', statuses: ['overdue'] },
-    { value: 'paid', label: 'Paid', statuses: ['paid'] },
+    { value: 'all', label: 'All' },
+    { value: 'draft', label: 'Draft' },
+    { value: 'outstanding', label: 'Outstanding' },
+    { value: 'overdue', label: 'Overdue' },
+    { value: 'paid', label: 'Paid' },
 ];
+const UNWINDOWED = ['draft', 'outstanding', 'overdue'];
+const MONTHS_STEP = 3;
+const SEARCH_DELAY_MS = 300;
 
-// The figures across the top: what's owed (sent and unpaid, overdue
-// included), what's overdue, and this month's payments and sends -- each
-// a count and an amount. Months are the firm's (Eastern).
-function invoiceMetrics(invoices) {
-    const thisMonth = todayInAppTimezone().slice(0, 7);
-    const owed = (invoice) => invoiceTotal(invoice.items, invoice.surcharge, invoice.tax_rate);
-    const figure = (list, amount = owed) => ({ count: list.length, amount: list.reduce((s, item) => s + amount(item), 0) });
+// The list's props, which every reload after a change brings back fresh.
+const LIST_PROPS = ['invoices', 'filters', 'hasEarlier', 'metrics', 'hasInvoices'];
 
-    const unpaid = invoices.filter((i) => i.status === 'sent');
-    const payments = invoices
-        .flatMap((i) => i.payments || [])
-        .filter((payment) => payment.paid_at && monthInAppTimezone(payment.paid_at) === thisMonth);
-
-    return {
-        outstanding: figure(unpaid),
-        overdue: figure(unpaid.filter((i) => displayInvoiceStatus(i) === 'overdue')),
-        paid: figure(payments, (payment) => parseFloat(payment.amount) || 0),
-        sent: figure(invoices.filter((i) => i.sent_at && monthInAppTimezone(i.sent_at) === thisMonth)),
-    };
+// The filters as the page's address: defaults left out, so /invoices is
+// the plain list.
+function addressFor({ status, q, category, months }) {
+    const params = {};
+    if (status && status !== 'all') params.status = status;
+    if (q) params.q = q;
+    if (category && category !== 'all') params.category = category;
+    if (months && months > MONTHS_STEP) params.months = months;
+    return params;
 }
 
 // The 'YYYY-MM' an invoice was issued in ('' with no issue date).
@@ -109,7 +108,7 @@ function emptyDraft() {
     };
 }
 
-export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
+export default function InvoicesIndex({ invoices: invoicesProp, filters, hasEarlier, metrics, hasInvoices, companies }) {
     const [invoices, setInvoices] = useState(invoicesProp);
     const [showForm, setShowForm] = useState(false);
     const [draft, setDraft] = useState(emptyDraft());
@@ -118,13 +117,45 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
     const [copiedId, setCopiedId] = useState(null);
     const [deletingId, setDeletingId] = useState(null);
     const [dueSort, setDueSort] = useState(null); // null | 'asc' | 'desc'
-    const [search, setSearch] = useState('');
+    const [search, setSearch] = useState(filters.q ?? '');
+    const [loading, setLoading] = useState(false);
     const rowsRef = useListMotion();
-    const [filter, setFilter] = useState('all');
-    const [categoryFilter, setCategoryFilter] = useState('all');
+    const filter = filters.status;
+    const categoryFilter = filters.category;
     const categories = useInvoiceCategories();
     // Invoices open in the wide drawer, as on a project or client.
-    const { openInvoice, drawer: invoiceDrawer } = useInvoiceDrawer(() => router.reload({ only: ['invoices'] }));
+    const { openInvoice, drawer: invoiceDrawer } = useInvoiceDrawer(() => reloadList());
+
+    // A new view of the list: the filters into the address, and the list
+    // (only) fetched for it. Keeps everything else on the page as it is.
+    function showList(changes) {
+        const next = { ...filters, ...changes };
+        router.get('/invoices', addressFor(next), {
+            only: LIST_PROPS,
+            preserveState: true,
+            preserveScroll: true,
+            replace: true,
+            onStart: () => setLoading(true),
+            onFinish: () => setLoading(false),
+        });
+    }
+
+    // The same view, fresh -- after a save, send, payment or delete.
+    function reloadList() {
+        router.reload({ only: LIST_PROPS });
+    }
+
+    // Search as you type, a moment after the typing stops.
+    const firstSearch = useRef(true);
+    useEffect(() => {
+        if (firstSearch.current) {
+            firstSearch.current = false;
+            return undefined;
+        }
+        const timer = setTimeout(() => showList({ q: search.trim(), months: MONTHS_STEP }), SEARCH_DELAY_MS);
+        return () => clearTimeout(timer);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [search]);
 
     // Keeps local state in sync whenever a router.reload() elsewhere in this
     // component brings in a fresh copy of the prop.
@@ -194,29 +225,20 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
     const subtotal = invoiceSubtotal(draft.items);
     const total = invoiceTotal(draft.items, draft.surcharge, draft.tax_rate);
     const salesTax = useSalesTax();
-    const metrics = invoiceMetrics(invoices);
 
-    // Search matches the invoice number, client or project; the pills
-    // filter by status. Same bar as the Projects and Clients lists.
-    const query = search.trim().toLowerCase();
-    const statuses = STATUS_FILTERS.find((f) => f.value === filter).statuses;
-    const filteredInvoices = invoices.filter((invoice) => {
-        if (statuses && !statuses.includes(displayInvoiceStatus(invoice))) return false;
-        if (categoryFilter !== 'all' && categoryName(invoice) !== categoryFilter) return false;
-        if (!query) return true;
-        return String(invoice.invoice_number).includes(query)
-            || invoice.company?.name.toLowerCase().includes(query)
-            || invoice.project?.name.toLowerCase().includes(query);
-    });
-
-    // Newest first by issue date, under a divider per month -- unless
-    // they're sorted by due date, which runs across months.
-    const visibleInvoices = dueSort
-        ? [...filteredInvoices].sort((a, b) => (dueSort === 'asc' ? 1 : -1) * (new Date(a.due_on) - new Date(b.due_on)))
-        : [...filteredInvoices].sort((a, b) => issuedMonth(b).localeCompare(issuedMonth(a))
+    // The server's already filtered them (status, category, search -- the
+    // invoice number, client or project). Newest first by issue date, under
+    // a divider per month -- unless they're sorted by due date, which runs
+    // across months (only where the whole list is here to sort).
+    const query = (filters.q ?? '').trim();
+    const canSortByDue = UNWINDOWED.includes(filter);
+    const sortByDue = canSortByDue ? dueSort : null;
+    const visibleInvoices = sortByDue
+        ? [...invoices].sort((a, b) => (sortByDue === 'asc' ? 1 : -1) * (new Date(a.due_on) - new Date(b.due_on)))
+        : [...invoices].sort((a, b) => issuedMonth(b).localeCompare(issuedMonth(a))
             || String(b.issued_on).localeCompare(String(a.issued_on))
             || b.invoice_number - a.invoice_number);
-    const monthTotals = dueSort ? {} : totalsByMonth(visibleInvoices);
+    const monthTotals = sortByDue ? {} : totalsByMonth(visibleInvoices);
 
     function toggleDueSort() {
         setDueSort((current) => (current === 'asc' ? 'desc' : current === 'desc' ? null : 'asc'));
@@ -233,8 +255,8 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
     // way it ends, the form closes (the invoice is already on the list).
     const { openFor: openSendDialog, modal: sendDialog } = useSendAfterCreate(() => {
         setShowForm(false);
-        router.reload({ only: ['invoices'] });
-    }, () => router.reload({ only: ['invoices'] }));
+        reloadList();
+    }, () => reloadList());
 
     async function saveInvoice(status) {
         if (!draft.company_id) {
@@ -260,7 +282,7 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
                 items: validItems,
             });
             clearTray();
-            router.reload({ only: ['invoices'] });
+            reloadList();
             // Send goes through the Send Invoice dialog (method, timing, the
             // email itself) rather than straight out.
             if (status === 'sent') {
@@ -277,8 +299,7 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
 
     // A draft row's Send icon opens the Send Invoice dialog, as sending does
     // everywhere else.
-    const reloadInvoices = () => router.reload({ only: ['invoices'] });
-    const { openFor: openRowSendDialog, modal: rowSendDialog } = useSendAfterCreate(reloadInvoices, reloadInvoices);
+    const { openFor: openRowSendDialog, modal: rowSendDialog } = useSendAfterCreate(reloadList, reloadList);
 
     function sendInvoice(invoice) {
         openRowSendDialog(invoice.id, { justCreated: false });
@@ -288,7 +309,7 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
     // (e.g. "other") is recorded from the invoice detail page instead.
     async function markPaid(invoice) {
         await api.post(`/api/invoices/${invoice.id}/mark-paid`, { method: 'check' });
-        router.reload({ only: ['invoices'] });
+        reloadList();
     }
 
     async function deleteInvoice(invoice) {
@@ -302,6 +323,7 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
             // Remove it from local state directly rather than waiting on a
             // router.reload() round-trip to reflect the change.
             setInvoices((current) => current.filter((i) => i.id !== invoice.id));
+            reloadList();
         } catch (err) {
             alert(err.message || 'Could not delete this invoice.');
         } finally {
@@ -390,7 +412,7 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
                 </div>
             )}
 
-            {invoices.length > 0 && (
+            {hasInvoices && (
                 <div className="filter-bar">
                     <input
                         type="search"
@@ -401,17 +423,17 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
                         className="input filter-bar__search"
                     />
                     {categories.length > 0 && (
-                        <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)} aria-label="Category" className="input input--inline">
+                        <select value={categoryFilter} onChange={(e) => showList({ category: e.target.value, months: MONTHS_STEP })} aria-label="Category" className="input input--inline">
                             <option value="all">All categories</option>
-                            <option value={PROJECT_WORK}>{PROJECT_WORK}</option>
-                            {categories.map((c) => <option key={c.id} value={c.name}>{c.name}</option>)}
+                            <option value="project">{PROJECT_WORK}</option>
+                            {categories.map((c) => <option key={c.id} value={String(c.id)}>{c.name}</option>)}
                         </select>
                     )}
                     <div className="filter-bar__pills">
                         {STATUS_FILTERS.map((f) => (
                             <button
                                 key={f.value}
-                                onClick={() => setFilter(f.value)}
+                                onClick={() => showList({ status: f.value, months: MONTHS_STEP })}
                                 className={`filter-bar__pill${filter === f.value ? ' filter-bar__pill--active' : ''}`}
                             >
                                 {f.label}
@@ -424,10 +446,10 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
             {/* The add action, directly above the list it adds to. */}
             <TabToolbar addLabel="New invoice" onAdd={openNewInvoice} />
             <div className="card card--flush">
-                {invoices.length === 0 ? (
+                {!hasInvoices ? (
                     <EmptyState text="No invoices yet." />
                 ) : visibleInvoices.length === 0 ? (
-                    <EmptyState text={query ? `No invoices match "${search.trim()}".` : 'No invoices match this filter.'} />
+                    <EmptyState text={query ? `No invoices match "${query}".` : 'No invoices match this filter.'} />
                 ) : (
                     <table className="table">
                         <thead>
@@ -436,10 +458,12 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
                                 <th>Client</th>
                                 <th>Issued</th>
                                 <th>
-                                    <button onClick={toggleDueSort} className="table__sort">
-                                        Due
-                                        {dueSort && <span className="table__sort-indicator">{dueSort === 'asc' ? '↑' : '↓'}</span>}
-                                    </button>
+                                    {canSortByDue ? (
+                                        <button onClick={toggleDueSort} className="table__sort">
+                                            Due
+                                            {sortByDue && <span className="table__sort-indicator">{sortByDue === 'asc' ? '↑' : '↓'}</span>}
+                                        </button>
+                                    ) : 'Due'}
                                 </th>
                                 <th>Total</th>
                                 <th>Status</th>
@@ -449,7 +473,7 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
                         <tbody ref={rowsRef}>
                             {visibleInvoices.map((invoice, index) => (
                                 <Fragment key={invoice.id}>
-                                    {!dueSort && (index === 0 || issuedMonth(visibleInvoices[index - 1]) !== issuedMonth(invoice)) && (
+                                    {!sortByDue && (index === 0 || issuedMonth(visibleInvoices[index - 1]) !== issuedMonth(invoice)) && (
                                         <MonthDivider key={`month-${issuedMonth(invoice)}`} month={issuedMonth(invoice)} totals={monthTotals[issuedMonth(invoice)]} />
                                     )}
                                     <tr onClick={(e) => visitRow(e, null, { onOpen: () => openInvoice(invoice.id) })} className="table__row--link">
@@ -513,6 +537,9 @@ export default function InvoicesIndex({ invoices: invoicesProp, companies }) {
                     </table>
                 )}
             </div>
+            {hasEarlier && !sortByDue && (
+                <LoadMore label="Show earlier months" loading={loading} onClick={() => showList({ months: filters.months + MONTHS_STEP })} />
+            )}
 
             {invoiceDrawer}
             {sendDialog}

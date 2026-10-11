@@ -5,21 +5,30 @@ namespace App\Http\Controllers\Web;
 use App\Http\Controllers\Controller;
 use App\Models\Company;
 use App\Models\Invoice;
+use App\Services\InvoiceList;
 use App\Services\InvoicePdfRenderer;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\Response as HttpResponse;
 
 class InvoicePageController extends Controller
 {
-    public function index(): Response
+    // The list a window of months at a time (InvoiceList): the filters,
+    // search and "Show earlier months" are in the address, so reloading,
+    // going back, or a link keeps the view.
+    public function index(Request $request): Response
     {
-        $invoices = Invoice::with(['items', 'company', 'project:id,name', 'payments:id,invoice_id,amount,paid_at'])
-            ->withExists(['invoiceSends as has_pending_scheduled_send' => fn ($query) => $query->where('type', 'email')->where('status', 'scheduled')])
-            ->latest()->get();
+        $list = InvoiceList::fromRequest($request);
+        $page = $list->page();
 
         return Inertia::render('Invoices/Index', [
-            'invoices' => $invoices,
+            'invoices' => $page['invoices'],
+            'filters' => $list->toArray(),
+            'hasEarlier' => $page['hasEarlier'],
+            'metrics' => fn () => InvoiceList::metrics(),
+            // Whether there are any at all, for "No invoices yet".
+            'hasInvoices' => fn () => Invoice::exists(),
             // default_payment_terms has to be selected explicitly -- it
             // backs the effective_payment_terms appended accessor the
             // new-invoice form's client picker relies on.

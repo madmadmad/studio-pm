@@ -1,0 +1,9 @@
+// The button under a list that comes a few months at a time -- "Show
+// earlier months" on Invoices and Expenses (Components/LoadMore.jsx):
+// centered, a section's gap below the list.
+
+.load-more {
+    display: flex;
+    justify-content: center;
+    margin-top: var(--space-section);
+}
