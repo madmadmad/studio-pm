@@ -38,7 +38,7 @@ class McpServerTest extends McpTestCase
 
         $this->assertEqualsCanonicalizing([
             'list_projects', 'get_project', 'list_companies', 'list_contacts', 'list_tasks',
-            'list_unbilled_time', 'create_task', 'update_task', 'log_time', 'create_proposal_draft',
+            'list_unbilled_time', 'create_task', 'update_task', 'create_subtask', 'update_subtask', 'log_time', 'create_proposal_draft',
         ], $names->all());
         $this->assertTrue($names->every(fn ($name) => ! preg_match('/send|accept|email|delete|destroy|remove/', $name)));
     }

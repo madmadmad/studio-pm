@@ -30,7 +30,7 @@ class GetProjectTool extends StudioTool
         $project = Project::with(['company:id,name', 'contact:id,name,email', 'activeUsers:id,name'])->findOrFail($data['project_id']);
         Gate::forUser($user)->authorize('view', $project);
 
-        $openTasks = $project->tasks()->where('status', '!=', 'done')->orderBy('due_date')->orderBy('id')->limit(50)->get()->each->setRelation('project', $project);
+        $openTasks = $project->tasks()->with('subtasks')->where('status', '!=', 'done')->orderBy('due_date')->orderBy('id')->limit(50)->get()->each->setRelation('project', $project);
         $proposals = $user->hasPermission('proposals')
             ? $project->proposals()->latest()->get(['id', 'title', 'status', 'estimate_amount'])->map(fn ($p) => [
                 'id' => $p->id,

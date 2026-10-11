@@ -48,6 +48,13 @@ abstract class StudioTool extends Tool
             'due_date' => $task->due_date?->toDateString(),
             'visible_to_client' => (bool) $task->visible_to_client,
             'project' => $task->project ? ['id' => $task->project->id, 'name' => $task->project->name] : null,
+            // Its checklist, when loaded (in order).
+            ...($task->relationLoaded('subtasks') ? ['subtasks' => $task->subtasks->map(fn ($s) => [
+                'id' => $s->id,
+                'title' => $s->title,
+                'status' => $s->status ?? 'todo',
+                'assignee' => $s->assignee,
+            ])->all()] : []),
             // Tasks open in a drawer on their project's Tasks tab.
             'url' => $this->link("/projects/{$task->project_id}?tab=Tasks"),
         ];

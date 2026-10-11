@@ -41,4 +41,20 @@ class CreateTaskToolTest extends McpTestCase
     {
         $this->as($this->sam)->tool(CreateTaskTool::class, ['project_id' => $this->mine->id])->assertHasErrors(['title']);
     }
+
+    public function test_it_can_add_a_checklist_with_the_task(): void
+    {
+        $this->as($this->sam)->tool(CreateTaskTool::class, [
+            'project_id' => $this->mine->id,
+            'title' => 'Launch',
+            'subtasks' => [['title' => 'Test forms'], ['title' => 'Point DNS']],
+        ])
+            ->assertOk()
+            ->assertStructuredContent(fn (AssertableJson $json) => $json
+                ->where('task.subtasks.0.title', 'Test forms')
+                ->where('task.subtasks.1.title', 'Point DNS')
+                ->etc());
+
+        $this->assertSame(['Test forms', 'Point DNS'], Task::sole()->subtasks()->pluck('title')->all());
+    }
 }

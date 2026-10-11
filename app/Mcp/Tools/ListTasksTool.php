@@ -17,7 +17,7 @@ use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
 
 #[Name('list_tasks')]
 #[Title('List tasks')]
-#[Description('Lists tasks on the projects you can see — by default the open ones (to do and in progress), soonest due first. Filter by project, status, assignee or due date. Use it to find a task ID before update_task, or to answer "what\'s on my plate".')]
+#[Description('Lists tasks on the projects you can see — by default the open ones (to do and in progress), soonest due first. Filter by project, status, assignee or due date. Each task includes its subtasks. Use it to find a task or subtask ID before update_task or update_subtask, or to answer "what\'s on my plate".')]
 #[IsReadOnly]
 #[IsIdempotent]
 class ListTasksTool extends StudioTool
@@ -38,7 +38,7 @@ class ListTasksTool extends StudioTool
         }
 
         $status = $data['status'] ?? 'open';
-        $tasks = Task::with('project:id,name')
+        $tasks = Task::with('project:id,name', 'subtasks')
             ->whereHas('project', fn ($q) => $q->visibleTo($user, current: false))
             ->when($data['project_id'] ?? null, fn ($q, $id) => $q->where('project_id', $id))
             ->when($status === 'open', fn ($q) => $q->where('status', '!=', 'done'))

@@ -3,6 +3,7 @@
 namespace App\Mcp\Servers;
 
 use App\Mcp\Tools\CreateProposalDraftTool;
+use App\Mcp\Tools\CreateSubtaskTool;
 use App\Mcp\Tools\CreateTaskTool;
 use App\Mcp\Tools\GetProjectTool;
 use App\Mcp\Tools\ListCompaniesTool;
@@ -11,6 +12,7 @@ use App\Mcp\Tools\ListProjectsTool;
 use App\Mcp\Tools\ListTasksTool;
 use App\Mcp\Tools\ListUnbilledTimeTool;
 use App\Mcp\Tools\LogTimeTool;
+use App\Mcp\Tools\UpdateSubtaskTool;
 use App\Mcp\Tools\UpdateTaskTool;
 use Laravel\Mcp\Server;
 use Laravel\Mcp\Server\Attributes\Instructions;
@@ -26,7 +28,7 @@ use Laravel\Mcp\Server\Attributes\Version;
 #[Instructions(<<<'TEXT'
 The studio's project-management app: clients (companies) and their contacts, projects, tasks, time tracking and proposals. You act as the signed-in staff member and see only what they can.
 - Look things up first: list_projects / get_project, list_companies, list_contacts, list_tasks. Use the IDs they return.
-- create_task, update_task and log_time change the app straight away; confirm details with the user when unsure (which project, how many hours, which day).
+- create_task (optionally with subtasks), create_subtask, update_task, update_subtask and log_time change the app straight away; confirm details with the user when unsure (which project, how many hours, which day).
 - create_proposal_draft only saves a draft for the team to review and send in the app. Nothing here sends, accepts or emails proposals or invoices, or deletes anything.
 - Every result has a url back into the app; share it.
 TEXT)]
@@ -41,6 +43,8 @@ class StudioServer extends Server
         ListUnbilledTimeTool::class,
         CreateTaskTool::class,
         UpdateTaskTool::class,
+        CreateSubtaskTool::class,
+        UpdateSubtaskTool::class,
         LogTimeTool::class,
         CreateProposalDraftTool::class,
     ];

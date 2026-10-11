@@ -2,40 +2,26 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\CreateSubtask;
+use App\Actions\UpdateSubtask;
 use App\Models\Subtask;
 use App\Models\Task;
 use Illuminate\Http\Request;
 
 class SubtaskController extends Controller
 {
-    public function store(Request $request, Task $task)
+    public function store(Request $request, Task $task, CreateSubtask $createSubtask)
     {
         $this->authorize('update', $task);
 
-        $data = $request->validate([
-            'title' => ['required', 'string', 'max:255'],
-            'assignee' => ['nullable', 'string', 'max:255'],
-        ]);
-
-        $data['position'] = $task->subtasks()->count();
-
-        return $task->subtasks()->create($data);
+        return $createSubtask->handle($request->user(), $task, $request->validate(CreateSubtask::rules()));
     }
 
-    public function update(Request $request, Subtask $subtask)
+    public function update(Request $request, Subtask $subtask, UpdateSubtask $updateSubtask)
     {
         $this->authorize('update', $subtask->task);
 
-        $data = $request->validate([
-            'title' => ['sometimes', 'string', 'max:255'],
-            'assignee' => ['nullable', 'string', 'max:255'],
-            'status' => ['sometimes', 'in:todo,in_progress,done'],
-            'position' => ['sometimes', 'integer', 'min:0'],
-        ]);
-
-        $subtask->update($data);
-
-        return $subtask;
+        return $updateSubtask->handle($request->user(), $subtask, $request->validate(UpdateSubtask::rules()));
     }
 
     public function destroy(Subtask $subtask)

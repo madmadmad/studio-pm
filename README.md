@@ -109,7 +109,7 @@ cluster. See [docs/chat.md](docs/chat.md).
 
 The app is a remote MCP server, so Claude can work in it as a staff member:
 read projects, clients, contacts, tasks and unbilled time; create and update
-tasks; log time; save proposal **drafts**. Nothing sends, accepts or emails
+tasks and their subtasks; log time; save proposal **drafts**. Nothing sends, accepts or emails
 a proposal or invoice, or deletes anything.
 
 - **Connect:** in Claude, Settings → Connectors → Add custom connector, URL
