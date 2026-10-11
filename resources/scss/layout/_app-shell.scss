@@ -52,10 +52,16 @@
         }
     }
 
-    // No background of its own -- the canvas shows through.
+    // No background of its own -- the canvas shows through. Held in view
+    // as the page scrolls -- the window's height, the account menu at its
+    // foot -- and scrolling on its own if a short window can't fit it.
     &__sidebar {
-
+        position: sticky;
+        top: 0;
         display: flex;
+        align-self: flex-start;
+        height: 100vh;
+        overflow-y: auto;
         flex-direction: column;
         flex-shrink: 0;
         gap: var(--space-1);
@@ -145,45 +151,6 @@
         margin-top: auto;
         padding-top: var(--space-4);
         border-top: var(--border-width) solid var(--color-on-canvas-border);
-    }
-
-    &__user {
-        display: flex;
-        align-items: center;
-        gap: var(--space-2);
-        margin-bottom: var(--space-3);
-    }
-
-    &__user-details {
-        min-width: 0;
-    }
-
-    &__user-name {
-        @include truncate;
-        font-size: var(--font-size-sm);
-        line-height: var(--line-height-sm);
-        color: var(--color-on-canvas-muted);
-
-        .app-shell__user:hover & {
-            color: var(--color-on-canvas);
-        }
-    }
-
-    &__user-email {
-        @include truncate;
-        font-size: var(--font-size-xs);
-        line-height: var(--line-height-xs);
-        color: var(--color-on-canvas-subtle);
-    }
-
-    &__logout {
-        font-size: var(--font-size-sm);
-        line-height: var(--line-height-sm);
-        color: var(--color-on-canvas-subtle);
-
-        &:hover {
-            color: var(--color-on-canvas);
-        }
     }
 
     // The content panel. The shell's flex stretch makes it at least full

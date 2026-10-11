@@ -16,7 +16,7 @@ export default function PortalLayout({ children }) {
     ];
 
     return (
-        <AppShell navItems={navItems} profileHref="/portal/profile" logoutHref="/portal/logout" logoutLabel="Sign out">
+        <AppShell navItems={navItems} profileHref="/portal/profile" logoutHref="/portal/logout" logoutLabel="Sign out" appearanceEndpoint="/api/portal/profile/appearance">
             {/* A manager's read-only look (PortalPreviewController). */}
             {portalPreview && (
                 <div role="status" className="preview-banner">

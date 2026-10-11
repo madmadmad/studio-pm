@@ -41,6 +41,7 @@ export default function AppLayout({ flush = false, children }) {
             footerExtra={hasPermission(user, 'invoices') && <AlertsMenu />}
             profileHref="/profile"
             logoutHref="/logout"
+            appearanceEndpoint="/api/profile/appearance"
             flush={flush}
         >
             {children}

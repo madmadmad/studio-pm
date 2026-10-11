@@ -1,0 +1,124 @@
+// The signed-in person at the foot of the sidebar, and their menu
+// (Components/AccountMenu.jsx): avatar, name and email as the button, on
+// the canvas; Profile, Appearance and log out in a .popover that opens
+// upward over the nav, the sidebar's width.
+@use '../abstracts' as *;
+
+.account-menu {
+    position: relative;
+
+    &__trigger {
+        // The hover fill reaches a little past the avatar and text, which
+        // stay lined up with the sidebar's edge.
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
+        width: calc(100% + var(--space-1-5) * 2);
+        padding: var(--space-1-5);
+        margin-inline: calc(var(--space-1-5) * -1);
+        text-align: left;
+        border-radius: var(--radius-base);
+        transition: background-color var(--duration-fast) var(--ease-standard);
+
+        &:hover,
+        &[aria-expanded='true'] {
+            background-color: var(--color-on-canvas-fill-hover);
+        }
+
+        &:focus-visible {
+            @include focus-ring;
+        }
+    }
+
+    &__details {
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        min-width: 0;
+    }
+
+    &__name {
+        @include truncate;
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+        color: var(--color-on-canvas-muted);
+
+        .account-menu__trigger:hover & {
+            color: var(--color-on-canvas);
+        }
+    }
+
+    &__email {
+        @include truncate;
+        font-size: var(--font-size-xs);
+        line-height: var(--line-height-xs);
+        color: var(--color-on-canvas-subtle);
+    }
+
+    &__caret {
+        flex-shrink: 0;
+        color: var(--color-on-canvas-subtle);
+    }
+
+    &__panel {
+        right: 0;
+        bottom: 100%;
+        left: 0;
+        display: flex;
+        flex-direction: column;
+        margin-top: 0;
+        margin-bottom: var(--space-2);
+        padding: var(--space-1);
+    }
+
+    &__item {
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
+        width: 100%;
+        padding: var(--space-1-5) var(--space-2);
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+        color: var(--color-text);
+        text-align: left;
+        border-radius: var(--radius-base);
+
+        &:hover {
+            background-color: var(--color-surface-muted);
+        }
+
+        &:focus-visible {
+            @include focus-ring;
+        }
+
+        // Log out, set off below the rest.
+        &--ruled {
+            margin-top: var(--space-1);
+            border-top: var(--border-width) solid var(--color-border);
+            border-radius: 0 0 var(--radius-base) var(--radius-base);
+            padding-top: var(--space-2);
+        }
+    }
+
+    &__group {
+        display: flex;
+        flex-direction: column;
+        margin-top: var(--space-1);
+        padding-top: var(--space-1);
+        border-top: var(--border-width) solid var(--color-border);
+    }
+
+    &__label {
+        @include subhead;
+        padding: var(--space-1) var(--space-2) var(--space-0-5);
+    }
+
+    &__check {
+        margin-left: auto;
+        color: var(--color-primary-icon);
+    }
+
+    &__error {
+        padding-inline: var(--space-2);
+    }
+}

@@ -1,17 +1,19 @@
-import { Link, router, usePage } from '@inertiajs/react';
-import Avatar from '../Components/Avatar';
+import { Link, usePage } from '@inertiajs/react';
+import AccountMenu from '../Components/AccountMenu';
 
 // The sidebar frame shared by the staff app (AppLayout) and the Client Hub
 // (PortalLayout): brand, nav links, anything extra after them, then the
-// signed-in person and sign-out at the bottom (`footerExtra` -- the alerts
-// bell -- just above their rule). `navItems` are
+// signed-in person's menu -- Profile, Appearance, log out (AccountMenu) --
+// at the bottom (`footerExtra` -- the alerts bell -- just above its rule).
+// The sidebar stays in view as the page scrolls, so that menu is always at
+// hand. `appearanceEndpoint` saves the person's Appearance (staff or client). `navItems` are
 // { href, label, exact?, also? }; a link is current when the URL starts
 // with its href (or matches exactly, for `exact`), or starts with any of
 // the `also` paths (a section's detail pages living elsewhere), and `badge`
 // is a node shown at its far end (Chat's unread count). `flush` drops the
 // content panel's padding and holds it to the window's height, for a page
 // that scrolls its own parts (Chat).
-export default function AppShell({ navItems, extraNav, footerExtra, profileHref, logoutHref, logoutLabel = 'Log out', flush = false, children }) {
+export default function AppShell({ navItems, extraNav, footerExtra, profileHref, logoutHref, logoutLabel = 'Log out', appearanceEndpoint, flush = false, children }) {
     const { url, props } = usePage();
     const user = props.auth?.user;
     const branding = props.branding;
@@ -20,11 +22,6 @@ export default function AppShell({ navItems, extraNav, footerExtra, profileHref,
         const path = url.split('?')[0];
         if (item.also?.some((prefix) => path.startsWith(prefix))) return true;
         return item.exact ? path === item.href : path.startsWith(item.href);
-    }
-
-    function handleLogout(e) {
-        e.preventDefault();
-        router.post(logoutHref);
     }
 
     return (
@@ -49,17 +46,14 @@ export default function AppShell({ navItems, extraNav, footerExtra, profileHref,
                 {footerExtra && <div className="app-shell__footer-extra">{footerExtra}</div>}
                 <div className="app-shell__footer">
                     {user && (
-                        <Link href={profileHref} className="app-shell__user">
-                            <Avatar name={user.name} avatarUrl={user.avatar_url} id={user.id} size={28} />
-                            <div className="app-shell__user-details">
-                                <div className="app-shell__user-name">{user.name}</div>
-                                <div className="app-shell__user-email">{user.email}</div>
-                            </div>
-                        </Link>
+                        <AccountMenu
+                            user={user}
+                            profileHref={profileHref}
+                            logoutHref={logoutHref}
+                            logoutLabel={logoutLabel}
+                            appearanceEndpoint={appearanceEndpoint}
+                        />
                     )}
-                    <a href={logoutHref} onClick={handleLogout} className="app-shell__logout">
-                        {logoutLabel}
-                    </a>
                 </div>
             </aside>
 
