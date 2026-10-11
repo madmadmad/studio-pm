@@ -10,12 +10,15 @@ import PageHeader from '../../Components/PageHeader';
 import YearChart from '../../Components/YearChart';
 import FinancialReports from '../../Components/FinancialReports';
 import { todayLocal } from '../../lib/paymentTerms';
+import { useReadOnly } from '../../lib/permissions';
 
 function emptyForm() {
     return { amount: '', tax_amount: '', category: '', occurred_on: todayLocal(), description: '' };
 }
 
 export default function BookkeepingIndex({ transactions, summary, year, reportYears = [] }) {
+    // The accountant looks, never removes.
+    const readOnly = useReadOnly();
     const [showForm, setShowForm] = useState(false);
     const [form, setForm] = useState(emptyForm());
     const [saving, setSaving] = useState(false);
@@ -113,7 +116,7 @@ export default function BookkeepingIndex({ transactions, summary, year, reportYe
                                         )}
                                     </td>
                                     <td className="table__cell--end">
-                                        <button onClick={() => remove(t)} className="text-action text-action--danger text-action--xs">Remove</button>
+                                        {!readOnly && <button onClick={() => remove(t)} className="text-action text-action--danger text-action--xs">Remove</button>}
                                     </td>
                                 </tr>
                             ))}

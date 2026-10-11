@@ -23,6 +23,7 @@ import { useListMotion } from '../../lib/listMotion';
 import TabToolbar from '../../Components/TabToolbar';
 import LoadMore from '../../Components/LoadMore';
 import MonthDivider from '../../Components/MonthDivider';
+import { useReadOnly } from '../../lib/permissions';
 
 // The list's filter pills, by the status each row's badge shows: drafts
 // include ones with a send scheduled; outstanding is sent and unpaid,
@@ -112,6 +113,8 @@ export default function InvoicesIndex({ invoices: invoicesProp, filters, hasEarl
     const filter = filters.status;
     const categoryFilter = filters.category;
     const categories = useInvoiceCategories();
+    // The accountant looks, never changes.
+    const readOnly = useReadOnly();
     // Invoices open in the wide drawer, as on a project or client.
     const { openInvoice, drawer: invoiceDrawer } = useInvoiceDrawer(() => reloadList());
 
@@ -433,7 +436,7 @@ export default function InvoicesIndex({ invoices: invoicesProp, filters, hasEarl
             )}
 
             {/* The add action, directly above the list it adds to. */}
-            <TabToolbar addLabel="New invoice" onAdd={openNewInvoice} />
+            {!readOnly && <TabToolbar addLabel="New invoice" onAdd={openNewInvoice} />}
             <div className="card card--flush">
                 {!hasInvoices ? (
                     <EmptyState text="No invoices yet." />
@@ -483,7 +486,7 @@ export default function InvoicesIndex({ invoices: invoicesProp, filters, hasEarl
                                                 <a href={`/i/${invoice.public_token}`} target="_blank" rel="noopener noreferrer" title="Preview" className="icon-btn icon-btn--secondary">
                                                     <Eye />
                                                 </a>
-                                                {invoice.status === 'draft' && (
+                                                {!readOnly && invoice.status === 'draft' && (
                                                     <button onClick={() => sendInvoice(invoice)} title="Send" className="icon-btn icon-btn--accent">
                                                         <PaperPlaneTilt />
                                                     </button>
@@ -498,12 +501,12 @@ export default function InvoicesIndex({ invoices: invoicesProp, filters, hasEarl
                                                         <DownloadSimple />
                                                     </a>
                                                 )}
-                                                {invoice.status === 'sent' && (
+                                                {!readOnly && invoice.status === 'sent' && (
                                                     <button onClick={() => markPaid(invoice)} title="Mark paid (check)" className="icon-btn icon-btn--confirm">
                                                         <CheckCircle />
                                                     </button>
                                                 )}
-                                                {invoice.status !== 'paid' && (
+                                                {!readOnly && invoice.status !== 'paid' && (
                                                     <button
                                                         onClick={() => deleteInvoice(invoice)}
                                                         disabled={deletingId === invoice.id}

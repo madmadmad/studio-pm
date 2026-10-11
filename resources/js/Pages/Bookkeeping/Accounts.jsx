@@ -6,6 +6,7 @@ import EmptyState from '../../Components/EmptyState';
 import PageHeader from '../../Components/PageHeader';
 import TabBar from '../../Components/TabBar';
 import TabToolbar from '../../Components/TabToolbar';
+import { useReadOnly } from '../../lib/permissions';
 import Toggle from '../../Components/Toggle';
 import AccountDrawer from '../../Components/ledger/AccountDrawer';
 import AccountSelect, { groupAccounts } from '../../Components/ledger/AccountSelect';
@@ -16,12 +17,14 @@ const TABS = ['Accounts', 'Mappings'];
 
 // Every account of the chart, a table per group heading. A row opens the
 // account to edit; accounts are added under a heading.
+// The accountant sees the chart and its mappings, changing neither.
 function AccountsTab({ accounts, onOpen, onAdd }) {
+    const readOnly = useReadOnly();
     const placeholders = accounts.some((a) => a.code_is_placeholder);
 
     return (
         <>
-            <TabToolbar addLabel="Add account" onAdd={onAdd} />
+            {!readOnly && <TabToolbar addLabel="Add account" onAdd={onAdd} />}
             {placeholders && (
                 <p className="form-hint page-section page-section--tight">
                     Account codes are placeholders until our CPA supplies a chart of accounts.
@@ -74,6 +77,7 @@ function AccountsTab({ accounts, onOpen, onAdd }) {
 // changes. `columns` are [field, heading, account type, blank label] for
 // an account picker, or [field, heading, 'toggle'] for an on/off.
 function MappingTable({ title, hint, rows, columns, accounts, endpoint, onSaved }) {
+    const readOnly = useReadOnly();
     const [error, setError] = useState('');
 
     async function save(row, field, value) {
@@ -112,7 +116,7 @@ function MappingTable({ title, hint, rows, columns, accounts, endpoint, onSaved 
                                     {columns.map(([field, heading, type, blankLabel]) => (
                                         <td key={field} className="table__cell--tight">
                                             {type === 'toggle' ? (
-                                                <Toggle checked={Boolean(row[field])} ariaLabel={`${row.name}: ${heading}`} onChange={(value) => save(row, field, value)} />
+                                                <Toggle checked={Boolean(row[field])} ariaLabel={`${row.name}: ${heading}`} onChange={(value) => save(row, field, value)} disabled={readOnly} />
                                             ) : (
                                             <AccountSelect
                                                 accounts={accounts}
@@ -121,6 +125,7 @@ function MappingTable({ title, hint, rows, columns, accounts, endpoint, onSaved 
                                                 blankLabel={blankLabel}
                                                 label={`${row.name}: ${heading}`}
                                                 onChange={(value) => save(row, field, value)}
+                                                disabled={readOnly}
                                             />
                                             )}
                                         </td>
@@ -188,6 +193,7 @@ function MappingsTab({ accounts, fallbacks, ...props }) {
 // renamed and deactivated here (never deleted). Built by
 // App\Http\Controllers\Web\LedgerPageController.
 export default function Accounts(props) {
+    const readOnly = useReadOnly();
     const [tab, setTab] = useRememberedTab('bookkeeping.accounts.tab', TABS, { param: 'tab' });
     const [accounts, setAccounts] = useState(props.accounts);
     // 'new' while adding, an account while editing, null when closed.
@@ -203,7 +209,7 @@ export default function Accounts(props) {
             <PageHeader back={{ href: '/bookkeeping', label: 'Bookkeeping' }} title="Chart of accounts" />
             <TabBar tabs={TABS} tab={tab} setTab={setTab} />
             {tab === 'Accounts'
-                ? <AccountsTab accounts={accounts} onOpen={setEditing} onAdd={() => setEditing('new')} />
+                ? <AccountsTab accounts={accounts} onOpen={readOnly ? () => {} : setEditing} onAdd={() => setEditing('new')} />
                 : <MappingsTab {...props} accounts={accounts} />}
             {editing && (
                 <AccountDrawer

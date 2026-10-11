@@ -35,7 +35,7 @@ class ChatPageController extends Controller
             'conversations' => ConversationController::summariesFor($request->user()),
             'conversationId' => $conversation?->id,
             // Who you can message and mention.
-            'staff' => User::whereNull('deactivated_at')->orderBy('name')->get(['id', 'name', 'avatar_path', 'job_title'])
+            'staff' => User::staff()->orderBy('name')->get(['id', 'name', 'avatar_path', 'job_title'])
                 ->map(fn (User $u) => ['id' => $u->id, 'name' => $u->name, 'avatar_url' => $u->avatar_url, 'job_title' => $u->job_title]),
             'limits' => [
                 'maxFiles' => (int) config('chat.max_files_per_message'),

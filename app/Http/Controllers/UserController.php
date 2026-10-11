@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Notifications\StaffInvitation;
+use App\Services\AccountantSignIn;
 use App\Support\AvatarProcessor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -28,7 +29,7 @@ class UserController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'unique:users,email'],
-            'role' => ['required', 'in:super_admin,team_member'],
+            'role' => ['required', 'in:super_admin,team_member,accountant'],
             ...$this->permissionRules(),
         ]);
 
@@ -41,7 +42,7 @@ class UserController extends Controller
     {
         $data = $request->validate([
             'name' => ['sometimes', 'string', 'max:255'],
-            'role' => ['sometimes', 'in:super_admin,team_member'],
+            'role' => ['sometimes', 'in:super_admin,team_member,accountant'],
             ...$this->permissionRules(),
             // Their position and bio, for proposals' team sections.
             'job_title' => ['sometimes', 'nullable', 'string', 'max:255'],
@@ -57,6 +58,11 @@ class UserController extends Controller
         abort_if($changesAccess && $user->id === $request->user()->id, 422, "You can't change your own role or permissions.");
 
         $user->update(collect($data)->except('permissions')->all());
+        // The accountant never sets a password, so a staff invite's
+        // set-your-password link is no use to them.
+        if ($user->isAccountant() && $user->invite_token) {
+            $user->forceFill(['invite_token' => null, 'invite_expires_at' => null])->save();
+        }
         if (array_key_exists('permissions', $data) || isset($data['role'])) {
             $this->setPermissions($user, $data['permissions'] ?? $user->permissions);
         }
@@ -99,9 +105,18 @@ class UserController extends Controller
         return $user;
     }
 
-    public function resendInvite(User $user)
+    // A staff member's invitation again -- or, for the accountant, a fresh
+    // sign-in link (good for 7 days), whenever they need one.
+    public function resendInvite(User $user, AccountantSignIn $signIn)
     {
         $this->authorize('update', $user);
+
+        if ($user->isAccountant()) {
+            $signIn->send($user, invitation: true);
+
+            return $user->fresh();
+        }
+
         abort_unless($user->hasPendingInvite(), 422, 'This user has already accepted their invite.');
 
         $rawToken = $this->issueInviteToken($user);
@@ -161,6 +176,13 @@ class UserController extends Controller
         $user->invited_at = now();
         $user->save();
 
+        // The accountant gets a sign-in link, not a set-your-password invite.
+        if ($user->isAccountant()) {
+            app(AccountantSignIn::class)->send($user, invitation: true);
+
+            return $user;
+        }
+
         $rawToken = $this->issueInviteToken($user);
         $user->notify(new StaffInvitation($rawToken));
 
@@ -180,7 +202,8 @@ class UserController extends Controller
     protected function setPermissions(User $user, ?array $permissions): void
     {
         $user->forceFill([
-            'permissions' => $user->isSuperAdmin() ? null : (array_values(array_unique($permissions ?? [])) ?: null),
+            // A super admin has them all, the accountant a fixed few (User::ACCOUNTANT_PERMISSIONS).
+            'permissions' => $user->isSuperAdmin() || $user->isAccountant() ? null : (array_values(array_unique($permissions ?? [])) ?: null),
         ]);
         if ($user->exists) {
             $user->save();

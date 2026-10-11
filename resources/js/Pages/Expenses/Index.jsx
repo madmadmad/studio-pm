@@ -20,6 +20,7 @@ import TabToolbar from '../../Components/TabToolbar';
 import YearChart from '../../Components/YearChart';
 import LoadMore from '../../Components/LoadMore';
 import MonthDivider from '../../Components/MonthDivider';
+import { useReadOnly } from '../../lib/permissions';
 
 // `paidFrom` is the account a new expense starts out paid from (the
 // Capital One card).
@@ -376,8 +377,10 @@ export default function ExpensesIndex({ expenses: expensesProp, filters, hasEarl
     // The expense open in the drawer (null while creating).
     const [editing, setEditing] = useState(null);
     const editingId = editing?.id ?? null;
-    // Billed expenses can't be changed (the API refuses) -- they open read-only.
-    const editable = !editing || editing.billing_status === 'unbilled';
+    // Billed expenses can't be changed (the API refuses) -- they open
+    // read-only -- and nothing can be changed by the accountant.
+    const readOnly = useReadOnly();
+    const editable = !readOnly && (!editing || editing.billing_status === 'unbilled');
     const [form, setForm] = useState(emptyForm(defaultPaymentAccountId));
     const [receiptFile, setReceiptFile] = useState(null);
     const [showAdditional, setShowAdditional] = useState(false);
@@ -555,7 +558,7 @@ export default function ExpensesIndex({ expenses: expensesProp, filters, hasEarl
             <Head title="Expenses" />
             <PageHeader
                 title="Expenses"
-                actions={(
+                actions={!readOnly && (
                     <Button variant="secondary" onClick={() => setManaging(true)}>
                         Categories &amp; taxes
                     </Button>
@@ -626,7 +629,7 @@ export default function ExpensesIndex({ expenses: expensesProp, filters, hasEarl
                         </DrawerByline>
                     )}
                     <h2 className="drawer__title">{editing ? editing.name : 'New expense'}</h2>
-                    {!editable && (
+                    {!editable && !readOnly && (
                         <p className="form-hint drawer__section">
                             Billed expenses can't be edited. Detach it from its invoice first.
                         </p>
@@ -717,7 +720,7 @@ export default function ExpensesIndex({ expenses: expensesProp, filters, hasEarl
             )}
 
             {/* The add action, directly above the list it adds to. */}
-            <TabToolbar addLabel="New expense" onAdd={startCreate} />
+            {!readOnly && <TabToolbar addLabel="New expense" onAdd={startCreate} />}
             <div className="card card--flush">
                 {filtered.length === 0 ? (
                     <EmptyState text={!hasExpenses ? 'No expenses yet.' : 'No expenses match these filters.'} />
@@ -771,7 +774,7 @@ export default function ExpensesIndex({ expenses: expensesProp, filters, hasEarl
                                             <td className="table__cell--end">
                                                 {/* Controls in the row act on their own, without opening the drawer. */}
                                                 <div className="table__actions" onClick={(e) => e.stopPropagation()}>
-                                                    {expense.billing_status === 'unbilled' && expense.is_billable && projectDraftInvoices.length > 0 && (
+                                                    {!readOnly && expense.billing_status === 'unbilled' && expense.is_billable && projectDraftInvoices.length > 0 && (
                                                         <select
                                                             disabled={attachingId === expense.id}
                                                             defaultValue=""
@@ -784,10 +787,10 @@ export default function ExpensesIndex({ expenses: expensesProp, filters, hasEarl
                                                             ))}
                                                         </select>
                                                     )}
-                                                    {expense.billing_status === 'billed' && (
+                                                    {!readOnly && expense.billing_status === 'billed' && (
                                                         <button onClick={() => detach(expense)} className="text-action text-action--xs text-action--underline">Detach</button>
                                                     )}
-                                                    {expense.billing_status === 'unbilled' && (
+                                                    {!readOnly && expense.billing_status === 'unbilled' && (
                                                         <button onClick={() => remove(expense)} title="Delete" className="icon-btn icon-btn--danger">
                                                             <Trash />
                                                         </button>

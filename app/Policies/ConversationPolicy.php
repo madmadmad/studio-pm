@@ -13,7 +13,7 @@ class ConversationPolicy
 {
     public function before(mixed $actor): ?bool
     {
-        return $actor instanceof User ? null : false;
+        return $actor instanceof User && $actor->isStaff() ? null : false;
     }
 
     // Browse channels, start a channel or a direct message.

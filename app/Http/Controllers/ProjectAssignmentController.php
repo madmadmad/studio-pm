@@ -19,7 +19,7 @@ class ProjectAssignmentController extends Controller
         $data = $request->validate([
             // Any active staff account is assignable -- super admins
             // included, not just team members.
-            'user_id' => ['required', Rule::exists('users', 'id')->whereNull('deactivated_at')],
+            'user_id' => ['required', Rule::exists('users', 'id')->whereNull('deactivated_at')->whereNot('role', User::ROLE_ACCOUNTANT)],
         ]);
 
         $project->users()->syncWithoutDetaching([

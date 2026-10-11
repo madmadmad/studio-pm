@@ -15,6 +15,7 @@ import TransferDrawer from '../../Components/ledger/TransferDrawer';
 import { api } from '../../lib/api';
 import { formatCurrency, formatDate } from '../../lib/format';
 import { useRememberedTab } from '../../lib/useRememberedTab';
+import { useReadOnly } from '../../lib/permissions';
 
 // The year's entries, newest first. A row opens the entry.
 function EntriesTab({ entries, year, years, onOpen }) {
@@ -159,6 +160,9 @@ export default function Journal({ entries, year, years, accounts, companies, cle
     const [open, setOpen] = useState(null);
     const [creating, setCreating] = useState(null);
     const Form = creating ? FORMS[creating] : null;
+    // The accountant posts adjustments (a general entry) and reverses; the
+    // day-to-day forms -- transfer, payout, payroll -- are the studio's.
+    const readOnly = useReadOnly();
 
     function refresh() {
         router.reload({ only: ['entries', 'years', 'clearingCents'] });
@@ -172,9 +176,13 @@ export default function Journal({ entries, year, years, accounts, companies, cle
                 title="Journal"
                 actions={(
                     <>
-                        <Button variant="secondary" onClick={() => setCreating('transfer')}>Transfer</Button>
-                        <Button variant="secondary" onClick={() => setCreating('payout')}>Stripe payout</Button>
-                        <Button variant="secondary" onClick={() => setCreating('payroll')}>Payroll</Button>
+                        {!readOnly && (
+                            <>
+                                <Button variant="secondary" onClick={() => setCreating('transfer')}>Transfer</Button>
+                                <Button variant="secondary" onClick={() => setCreating('payout')}>Stripe payout</Button>
+                                <Button variant="secondary" onClick={() => setCreating('payroll')}>Payroll</Button>
+                            </>
+                        )}
                         <Button onClick={() => setCreating('entry')}>Journal entry</Button>
                     </>
                 )}

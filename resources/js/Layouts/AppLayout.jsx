@@ -3,14 +3,16 @@ import { usePage } from '@inertiajs/react';
 import AlertsMenu from '../Components/AlertsMenu';
 import ChatNavBadge from '../Components/chat/ChatNavBadge';
 import AppShell from './AppShell';
-import { hasPermission } from '../lib/permissions';
+import { hasPermission, isAccountant } from '../lib/permissions';
 import { startChat } from '../lib/chatStore';
 
+// `staffOnly`: never for the accountant, who has Bookkeeping, Invoices and
+// Expenses alone (User::ACCOUNTANT_PERMISSIONS).
 const NAV_ITEMS = [
-    { href: '/', label: 'Overview', exact: true },
-    { href: '/chat', label: 'Chat', badge: <ChatNavBadge /> },
+    { href: '/', label: 'Overview', exact: true, staffOnly: true },
+    { href: '/chat', label: 'Chat', badge: <ChatNavBadge />, staffOnly: true },
     { href: '/clients', label: 'Clients', permission: 'clients' },
-    { href: '/projects', label: 'Projects' },
+    { href: '/projects', label: 'Projects', staffOnly: true },
     // Time and Timesheets (/time-entries, /timesheets) are hidden while time
     // is logged only inside projects (each project's Time tab). The pages
     // still exist; add them back here to show them again.
@@ -30,16 +32,20 @@ export default function AppLayout({ flush = false, children }) {
     const { props } = usePage();
     const user = props.auth?.user;
 
+    const accountant = isAccountant(user);
+
+    // Chat is the staff's; the accountant never connects to it.
     useEffect(() => {
-        startChat(user, props.chatUnread);
+        if (!accountant) startChat(user, props.chatUnread);
     }, [user?.id]);
 
     return (
         <AppShell
-            navItems={NAV_ITEMS.filter((item) => !item.permission || hasPermission(user, item.permission))}
+            navItems={NAV_ITEMS.filter((item) => (item.permission ? hasPermission(user, item.permission) : !(accountant && item.staffOnly)))}
             // Alerts are failed or skipped invoice sends.
             footerExtra={hasPermission(user, 'invoices') && <AlertsMenu />}
-            profileHref="/profile"
+            // The accountant has no Profile page; their menu has Appearance and sign-out.
+            profileHref={accountant ? null : '/profile'}
             logoutHref="/logout"
             appearanceEndpoint="/api/profile/appearance"
             flush={flush}

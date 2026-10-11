@@ -248,8 +248,13 @@ export default function UsersIndex({ users: usersProp, permissionOptions = {} })
                     <select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })} className="input form-grid__full">
                         <option value="team_member">Team member</option>
                         <option value="super_admin">Super admin</option>
+                        <option value="accountant">Accountant</option>
                     </select>
-                    <p className="form-hint form-grid__full">They'll get an email with a link to set their own password. A team member starts with just their assigned projects; give them more from Access once they're added.</p>
+                    <p className="form-hint form-grid__full">
+                        {form.role === 'accountant'
+                            ? "Your CPA. They'll get an email with a link to sign in (there's no password) and see Bookkeeping, plus invoices and expenses to look at. They can post journal entries, and change nothing else."
+                            : "They'll get an email with a link to set their own password. A team member starts with just their assigned projects; give them more from Access once they're added."}
+                    </p>
                     <div className="form-actions form-grid__full">
                         <Button type="button" variant="secondary" onClick={() => setShowForm(false)}>Cancel</Button>
                         <Button type="submit" variant="confirm" disabled={saving}>Send invite</Button>
@@ -292,11 +297,14 @@ export default function UsersIndex({ users: usersProp, permissionOptions = {} })
                                         >
                                             <option value="team_member">Team member</option>
                                             <option value="super_admin">Super admin</option>
+                                            <option value="accountant">Accountant</option>
                                         </select>
                                     </td>
                                     <td>
                                         {user.role === 'super_admin' ? (
                                             <span className="users__access">Everything</span>
+                                        ) : user.role === 'accountant' ? (
+                                            <span className="users__access">Bookkeeping, invoices &amp; expenses</span>
                                         ) : (
                                             <button
                                                 type="button"
@@ -313,8 +321,9 @@ export default function UsersIndex({ users: usersProp, permissionOptions = {} })
                                     </td>
                                     <td className="table__cell--end">
                                         <div className="table__actions">
-                                            {user.has_pending_invite && !user.deactivated_at && (
-                                                <button onClick={() => resendInvite(user)} disabled={busyId === user.id} title="Resend invite" className="icon-btn icon-btn--secondary">
+                                            {/* The accountant can be sent a fresh sign-in link any time. */}
+                                            {(user.has_pending_invite || user.role === 'accountant') && !user.deactivated_at && (
+                                                <button onClick={() => resendInvite(user)} disabled={busyId === user.id} title={user.role === 'accountant' ? 'Send a sign-in link' : 'Resend invite'} className="icon-btn icon-btn--secondary">
                                                     <EnvelopeSimple />
                                                 </button>
                                             )}

@@ -44,9 +44,11 @@ export default function AccountMenu({ user, profileHref, logoutHref, logoutLabel
         <div ref={ref} className="account-menu">
             {open && (
                 <div className="popover account-menu__panel" role="menu" aria-label="Account">
-                    <Link href={profileHref} role="menuitem" onClick={() => setOpen(false)} className="account-menu__item">
-                        <UserCircle /> Profile
-                    </Link>
+                    {profileHref && (
+                        <Link href={profileHref} role="menuitem" onClick={() => setOpen(false)} className="account-menu__item">
+                            <UserCircle /> Profile
+                        </Link>
+                    )}
                     {/* Appearance as rows, to fit the sidebar's width. */}
                     <div role="group" aria-labelledby="account-appearance" className="account-menu__group">
                         <span className="account-menu__label" id="account-appearance">Appearance</span>

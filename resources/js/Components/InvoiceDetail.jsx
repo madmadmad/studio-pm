@@ -12,6 +12,7 @@ import { reminderRows } from '../lib/reminders';
 import { paymentTermsLabel } from '../lib/paymentTerms';
 import { api } from '../lib/api';
 import { copyToClipboard } from '../lib/clipboard';
+import { useReadOnly } from '../lib/permissions';
 import { hasQueuedEmail, waitForQueuedSend } from '../lib/invoiceSends';
 
 // The invoice detail, shared by the standalone page (Pages/Invoices/Show)
@@ -58,6 +59,8 @@ export function InvoiceDueLine({ invoice }) {
 export default function InvoiceDetail({ invoice: initialInvoice, studio, invoicingDefaults, onChange, renderFrame, bare = false, openInEdit = false, onDone }) {
     const [invoice, setInvoice] = useState(initialInvoice);
     useEffect(() => setInvoice(initialInvoice), [initialInvoice]);
+    // The accountant looks, never changes (no send, edit or payment).
+    const readOnly = useReadOnly();
 
     // A draft opened with `openInEdit` goes straight to its edit form.
     const editsInPlace = openInEdit && initialInvoice.status === 'draft';
@@ -235,7 +238,7 @@ export default function InvoiceDetail({ invoice: initialInvoice, studio, invoici
                     <DownloadSimple />
                 </a>
             )}
-            {invoice.status !== 'paid' && (
+            {!readOnly && invoice.status !== 'paid' && (
                 <button
                     // While editing, it saves the edits first.
                     onClick={() => (editing ? save({ send: true }) : setSendModalOpen(true))}
@@ -247,7 +250,7 @@ export default function InvoiceDetail({ invoice: initialInvoice, studio, invoici
                 </button>
             )}
             {/* Drafts and sent invoices can be edited; paid ones are locked. */}
-            {invoice.status !== 'paid' && !editing && (
+            {!readOnly && invoice.status !== 'paid' && !editing && (
                 <button onClick={startEditing} title="Edit invoice" aria-label="Edit invoice" className="icon-btn icon-btn--edit">
                     <PencilSimple />
                 </button>
@@ -387,9 +390,11 @@ export default function InvoiceDetail({ invoice: initialInvoice, studio, invoici
                                 Repeats {invoice.repeat === 'yearly' ? 'every year' : 'every month'}
                                 {invoice.next_repeat_on && <> &middot; next copy <strong>{formatDate(invoice.next_repeat_on.slice(0, 10))}</strong>, sent at 9:00 AM</>}
                             </span>
-                            <div className="invoice-detail__schedule-actions">
-                                <Button variant="link-accent" onClick={stopRepeating}>Stop repeating</Button>
-                            </div>
+                            {!readOnly && (
+                                <div className="invoice-detail__schedule-actions">
+                                    <Button variant="link-accent" onClick={stopRepeating}>Stop repeating</Button>
+                                </div>
+                            )}
                         </div>
                     </div>
                 )}
@@ -408,11 +413,13 @@ export default function InvoiceDetail({ invoice: initialInvoice, studio, invoici
                             <span className="invoice-detail__schedule-text">
                                 Scheduled for <strong>{formatDateTimeEastern(pendingScheduledSend.scheduled_for)}</strong>
                             </span>
-                            <div className="invoice-detail__schedule-actions">
-                                <Button variant="link" onClick={() => sendScheduledNow(pendingScheduledSend)}>Send now</Button>
-                                <Button variant="link" onClick={() => startRescheduling(pendingScheduledSend)}>Reschedule</Button>
-                                <Button variant="link-accent" onClick={() => cancelScheduledSend(pendingScheduledSend)}>Cancel</Button>
-                            </div>
+                            {!readOnly && (
+                                <div className="invoice-detail__schedule-actions">
+                                    <Button variant="link" onClick={() => sendScheduledNow(pendingScheduledSend)}>Send now</Button>
+                                    <Button variant="link" onClick={() => startRescheduling(pendingScheduledSend)}>Reschedule</Button>
+                                    <Button variant="link-accent" onClick={() => cancelScheduledSend(pendingScheduledSend)}>Cancel</Button>
+                                </div>
+                            )}
                         </div>
                         {reschedulingId === pendingScheduledSend.id && (
                             <div className="invoice-detail__reschedule">
@@ -437,7 +444,7 @@ export default function InvoiceDetail({ invoice: initialInvoice, studio, invoici
                                         {row.status === 'cancelled' && <span className="detail-list__status--muted"> &middot; Skipped</span>}
                                         {row.status === 'failed' && <span className="detail-list__status--error"> &middot; Failed</span>}
                                     </span>
-                                    {row.status === 'upcoming' && (
+                                    {!readOnly && row.status === 'upcoming' && (
                                         <Button variant="link-accent" onClick={() => skipReminder(row.rule)}>Skip</Button>
                                     )}
                                 </li>
@@ -468,7 +475,7 @@ export default function InvoiceDetail({ invoice: initialInvoice, studio, invoici
 
                 {!editing && error && <div className="form-message form-message--error form-message--spaced">{error}</div>}
 
-                {!editing && invoice.status === 'sent' && (
+                {!readOnly && !editing && invoice.status === 'sent' && (
                     <div className={bare ? 'form-panel' : undefined}>
                         {bare && heading('Record payment')}
                         <div className="invoice-detail__payment">

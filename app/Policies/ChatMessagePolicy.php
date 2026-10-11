@@ -13,7 +13,7 @@ class ChatMessagePolicy
     // Staff only (as ConversationPolicy).
     public function before(mixed $actor): ?bool
     {
-        return $actor instanceof User ? null : false;
+        return $actor instanceof User && $actor->isStaff() ? null : false;
     }
 
     public function update(User $user, ChatMessage $message): bool

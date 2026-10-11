@@ -17,7 +17,7 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
 #[Fillable(['name', 'job_title', 'bio', 'bio_photo_path', 'email', 'password', 'role', 'avatar_path'])]
-#[Hidden(['password', 'remember_token', 'invite_token', 'avatar_path', 'bio_photo_path'])]
+#[Hidden(['password', 'remember_token', 'invite_token', 'login_token', 'avatar_path', 'bio_photo_path'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
@@ -28,6 +28,16 @@ class User extends Authenticatable
 
     // Assigned projects, plus whatever permissions they've been given.
     const ROLE_TEAM_MEMBER = 'team_member';
+
+    // The studio's outside accountant (CPA): not staff. Bookkeeping, and
+    // invoices and expenses to look at -- read-only, except that they may
+    // post and reverse journal entries (adjustments). Signs in by emailed
+    // link, never a password; everything else is closed to them
+    // (RestrictAccountant).
+    const ROLE_ACCOUNTANT = 'accountant';
+
+    // What an accountant sees, whatever their permissions column says.
+    const ACCOUNTANT_PERMISSIONS = ['bookkeeping', 'invoices', 'expenses'];
 
     // The raw invite_token is hidden from JSON entirely -- this exposes just
     // enough for the Team admin UI to show an "invite pending" state and
@@ -46,6 +56,7 @@ class User extends Authenticatable
             'invited_at' => 'datetime',
             'invite_expires_at' => 'datetime',
             'deactivated_at' => 'datetime',
+            'login_token_expires_at' => 'datetime',
             'password' => 'hashed',
             'permissions' => 'array',
         ];
@@ -104,15 +115,21 @@ class User extends Authenticatable
             return true;
         }
 
+        if ($this->isAccountant()) {
+            return in_array($permission, self::ACCOUNTANT_PERMISSIONS, true);
+        }
+
         return ! in_array($permission, config('permissions.super_admin_only'), true)
             && in_array($permission, $this->permissions ?? [], true);
     }
 
     // Active staff who have a permission: super admins, and team members
     // it's been granted to (who to alert about a failed invoice send, ...).
+    // Never the accountant, who isn't staff.
     public static function withPermission(string $permission)
     {
         return static::whereNull('deactivated_at')
+            ->where('role', '!=', self::ROLE_ACCOUNTANT)
             ->where(fn ($q) => $q->where('role', self::ROLE_SUPER_ADMIN)
                 ->when(! in_array($permission, config('permissions.super_admin_only'), true), fn ($q) => $q
                     ->orWhereJsonContains('permissions', $permission)))
@@ -130,6 +147,25 @@ class User extends Authenticatable
     public function isTeamMember(): bool
     {
         return $this->role === self::ROLE_TEAM_MEMBER;
+    }
+
+    public function isAccountant(): bool
+    {
+        return $this->role === self::ROLE_ACCOUNTANT;
+    }
+
+    // Active staff: the studio's own people, still here -- for every list
+    // of people to pick from (assignments, Chat, a proposal's team).
+    public function scopeStaff($query)
+    {
+        return $query->whereNull('deactivated_at')->where('role', '!=', self::ROLE_ACCOUNTANT);
+    }
+
+    // The studio's own people -- everyone but the accountant. Chat, the
+    // team list and the rest of the staff app are theirs.
+    public function isStaff(): bool
+    {
+        return ! $this->isAccountant();
     }
 
     public function isActive(): bool

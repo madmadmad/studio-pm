@@ -8,6 +8,7 @@ use App\Http\Controllers\Portal\TaskFileController as PortalTaskFileController;
 use App\Http\Controllers\ProposalController;
 use App\Http\Controllers\TaskFileController;
 use App\Http\Controllers\Web\AcceptInvitationController;
+use App\Http\Controllers\Web\AccountantSignInController;
 use App\Http\Controllers\Web\BookkeepingPageController;
 use App\Http\Controllers\Web\ChatPageController;
 use App\Http\Controllers\Web\ClientPageController;
@@ -47,9 +48,15 @@ Route::get('/bio-photos/users/{user}', [AvatarController::class, 'userBioPhoto']
 // etc. rather than its default Blade views.
 
 Route::middleware('guest')->group(function () {
+    // The accountant's emailed sign-in link: asked for on the sign-in page.
+    Route::post('/login/link', [AccountantSignInController::class, 'request'])->middleware('throttle:magic-link')->name('login.link');
     Route::get('/invite/{token}', [AcceptInvitationController::class, 'show'])->name('invite.show');
     Route::post('/invite/{token}', [AcceptInvitationController::class, 'store'])->name('invite.store');
 });
+
+// Signed, not guest-gated -- a link may be opened while an older session
+// is still around; the signature and its one-time token are the real gate.
+Route::get('/login/link/{user}/{token}', [AccountantSignInController::class, 'verify'])->middleware('signed')->name('login.link.verify');
 
 Route::get('/p/{token}', [PublicProposalController::class, 'show'])->name('proposals.public');
 Route::get('/p/{token}/pdf', [PublicProposalController::class, 'pdf'])->name('proposals.public.pdf');
@@ -58,7 +65,9 @@ Route::get('/p/{token}/team/{user}/photo', [PublicProposalController::class, 'te
 Route::get('/i/{token}', [PublicInvoiceController::class, 'show'])->name('invoices.public');
 Route::get('/i/{token}/pdf', [PublicInvoiceController::class, 'pdf'])->name('invoices.public.pdf');
 
-Route::middleware('auth')->group(function () {
+// The staff app. The accountant reaches only the corner of it that's
+// theirs (RestrictAccountant).
+Route::middleware(['auth', 'accountant.restrict'])->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
     // Open to all staff -- each page controller scopes its own data by

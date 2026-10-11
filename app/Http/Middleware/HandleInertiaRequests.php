@@ -78,7 +78,7 @@ class HandleInertiaRequests extends Middleware
             }),
             // Chat's unread and mention totals, for the nav badge's first
             // draw (it stays current over the socket after that). Staff only.
-            'chatUnread' => fn () => $request->user() instanceof User ? ChatUnread::totals($request->user()) : null,
+            'chatUnread' => fn () => $request->user() instanceof User && $request->user()->isStaff() ? ChatUnread::totals($request->user()) : null,
             // What an invoice can be categorised as, beyond project work
             // (Settings). Staff only.
             'invoiceCategories' => fn () => $request->user() instanceof Contact ? null : InvoiceCategory::orderBy('name')->get(['id', 'name']),

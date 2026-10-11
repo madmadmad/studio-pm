@@ -43,7 +43,7 @@ use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware('auth:sanctum')->name('api.')->group(function () {
+Route::middleware(['auth:sanctum', 'accountant.restrict'])->name('api.')->group(function () {
     // Projects/tasks/time entries are open to both roles -- each controller
     // scopes what a Team Member actually sees/touches via the Policies.
     Route::apiResource('companies.projects', ProjectController::class)->shallow();

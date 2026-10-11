@@ -7,10 +7,10 @@ use App\Models\Company;
 use App\Models\Message;
 use App\Models\Project;
 use App\Models\Proposal;
-use App\Services\MessageVersion;
-use App\Services\UnreadMessages;
 use App\Models\Service;
 use App\Models\User;
+use App\Services\MessageVersion;
+use App\Services\UnreadMessages;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Inertia\Inertia;
@@ -133,7 +133,7 @@ class ProjectPageController extends Controller
             // a manager can be put on a project's roster too (for messaging,
             // visibility, etc.), not just team members.
             'assignableStaff' => $request->user()->can('manage', $project)
-                ? User::whereNull('deactivated_at')->orderBy('name')->get(['id', 'name'])
+                ? User::staff()->orderBy('name')->get(['id', 'name'])
                 : [],
             // Line-item presets for the proposal drawer (with the Proposals
             // permission, like writing them).

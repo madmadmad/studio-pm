@@ -116,7 +116,7 @@ class ConversationController extends Controller
 
         $data = $request->validate([
             'user_ids' => ['required', 'array', 'min:1', 'max:8'],
-            'user_ids.*' => ['integer', 'distinct', Rule::exists('users', 'id')->whereNull('deactivated_at')],
+            'user_ids.*' => ['integer', 'distinct', Rule::exists('users', 'id')->whereNull('deactivated_at')->whereNot('role', User::ROLE_ACCOUNTANT)],
         ]);
 
         $conversation = $this->chat->findOrCreateDirect($request->user(), $data['user_ids']);

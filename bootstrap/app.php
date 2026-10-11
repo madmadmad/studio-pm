@@ -7,6 +7,7 @@ use App\Http\Middleware\EnsureUserIsActive;
 use App\Http\Middleware\EnsureUserIsStaff;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\PortalPreviewReadOnly;
+use App\Http\Middleware\RestrictAccountant;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -38,7 +39,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             HandleInertiaRequests::class,
         ]);
-        $middleware->alias(['permission' => EnsureUserHasPermission::class, 'portal.preview' => PortalPreviewReadOnly::class, 'portal.access' => EnsureContactHasPortalAccess::class, 'staff' => EnsureUserIsStaff::class]);
+        $middleware->alias(['permission' => EnsureUserHasPermission::class, 'portal.preview' => PortalPreviewReadOnly::class, 'portal.access' => EnsureContactHasPortalAccess::class, 'staff' => EnsureUserIsStaff::class, 'accountant.restrict' => RestrictAccountant::class]);
         // Global, not just the web group -- a deactivated user's existing
         // session cookie could otherwise still hit the API guard directly.
         $middleware->append(EnsureUserIsActive::class);

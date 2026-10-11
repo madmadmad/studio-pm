@@ -15,7 +15,7 @@ class ChatSeeder extends Seeder
 {
     public function run(ChatService $chat): void
     {
-        $staff = User::whereNull('deactivated_at')->orderBy('id')->get();
+        $staff = User::staff()->orderBy('id')->get();
         if ($staff->isEmpty()) {
             return;
         }

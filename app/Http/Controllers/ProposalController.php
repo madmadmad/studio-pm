@@ -313,7 +313,7 @@ class ProposalController extends Controller
     {
         return [
             'team_user_ids' => ['sometimes', 'nullable', 'array'],
-            'team_user_ids.*' => ['integer', 'distinct', Rule::exists('users', 'id')],
+            'team_user_ids.*' => ['integer', 'distinct', Rule::exists('users', 'id')->whereNot('role', User::ROLE_ACCOUNTANT)],
             'team_heading' => ['sometimes', 'nullable', 'string', 'max:255'],
             'show_about' => ['sometimes', 'boolean'],
         ];
@@ -335,7 +335,7 @@ class ProposalController extends Controller
     // position, bio photo, and whether they've a bio yet.
     public function teamOptions()
     {
-        return User::whereNull('deactivated_at')->orderBy('name')->get()
+        return User::staff()->orderBy('name')->get()
             ->map(fn (User $user) => [
                 'id' => $user->id,
                 'name' => $user->name,
