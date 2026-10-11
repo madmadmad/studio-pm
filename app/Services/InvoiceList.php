@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Invoice;
 use App\Models\Payment;
+use App\Support\MonthWindow;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -16,9 +17,6 @@ use Illuminate\Support\Carbon;
 // across the top are over every invoice, whatever's listed.
 class InvoiceList
 {
-    // Months listed at first, and added by each "Show earlier months".
-    public const MONTHS_STEP = 3;
-
     public const STATUSES = ['all', 'draft', 'outstanding', 'overdue', 'paid'];
 
     // The views that list everything rather than a window of months.
@@ -38,9 +36,7 @@ class InvoiceList
         $this->status = in_array($filters['status'] ?? null, self::STATUSES, true) ? $filters['status'] : 'all';
         $this->search = trim((string) ($filters['q'] ?? ''));
         $this->category = (string) ($filters['category'] ?? 'all');
-        $months = (int) ($filters['months'] ?? self::MONTHS_STEP);
-        // Whole steps, at least one.
-        $this->months = max(self::MONTHS_STEP, (int) ceil($months / self::MONTHS_STEP) * self::MONTHS_STEP);
+        $this->months = MonthWindow::months($filters['months'] ?? MonthWindow::STEP);
     }
 
     public static function fromRequest(Request $request): self
@@ -93,24 +89,8 @@ class InvoiceList
         return $query;
     }
 
-    // The 'YYYY-MM' months with matching invoices, newest first -- one more
-    // than the window holds, to tell whether there are earlier ones.
-    protected function recentMonths(): array
-    {
-        return $this->filtered()
-            ->whereNotNull('issued_on')
-            ->toBase()
-            ->selectRaw('substr(issued_on, 1, 7) as month')
-            ->distinct()
-            ->orderByDesc('month')
-            ->limit($this->months + 1)
-            ->pluck('month')
-            ->all();
-    }
-
-    // What the page lists, and whether earlier months are left to show.
-    // Within the window a month is always whole, so its divider's totals
-    // add up. Invoices with no issue date are always listed.
+    // What the page lists, and whether earlier months are left to show
+    // (App\Support\MonthWindow: whole months, so a divider's totals add up).
     public function page(): array
     {
         $query = $this->filtered()
@@ -119,16 +99,8 @@ class InvoiceList
             ->orderByDesc('issued_on')
             ->orderByDesc('invoice_number');
 
-        $hasEarlier = false;
-        if ($this->windowed()) {
-            $months = $this->recentMonths();
-            $hasEarlier = count($months) > $this->months;
-            $window = array_slice($months, 0, $this->months);
-
-            $query->where(fn (Builder $q) => $q
-                ->whereNull('issued_on')
-                ->when($window, fn (Builder $q) => $q->orWhere('issued_on', '>=', end($window).'-01')));
-        }
+        $hasEarlier = $this->windowed()
+            && MonthWindow::apply($query, $this->filtered(), 'issued_on', $this->months);
 
         return ['invoices' => $query->get(), 'hasEarlier' => $hasEarlier];
     }

@@ -1,8 +1,8 @@
-// The Invoices list's month dividers (Pages/Invoices/Index.jsx): the month
-// on the left, what was invoiced in it on the right, on the subtle fill --
-// like a timesheet's day headings.
+// A month's heading row in a list grouped by month -- Invoices, Expenses
+// (Components/MonthDivider.jsx): the month on the left, its figures on the
+// right, on the subtle fill -- like a timesheet's day headings.
 
-.invoice-month {
+.month-divider {
     td {
         padding: 0;
     }

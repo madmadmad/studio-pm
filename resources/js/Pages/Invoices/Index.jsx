@@ -9,7 +9,7 @@ import { TaxRow, TaxToggle, useSalesTax } from '../../Components/InvoiceTax';
 import { InvoiceCategoryBadge, InvoiceCategorySelect, PROJECT_WORK, RepeatIcon, useInvoiceCategories } from '../../Components/InvoiceCategory';
 import InvoiceDateFields, { useInvoiceDateFields } from '../../Components/InvoiceDateFields';
 import { InvoiceStatusBadge } from '../../Components/StatusBadges';
-import { formatCurrency, formatDate, formatMonth, invoiceSubtotal, invoiceTotal } from '../../lib/format';
+import { formatCurrency, formatDate, invoiceSubtotal, invoiceTotal } from '../../lib/format';
 import MetricCard from '../../Components/MetricCard';
 import { calculateDueDate, todayLocal } from '../../lib/paymentTerms';
 import { api } from '../../lib/api';
@@ -22,6 +22,7 @@ import { useInvoiceDrawer } from '../../Components/InvoiceDrawer';
 import { useListMotion } from '../../lib/listMotion';
 import TabToolbar from '../../Components/TabToolbar';
 import LoadMore from '../../Components/LoadMore';
+import MonthDivider from '../../Components/MonthDivider';
 
 // The list's filter pills, by the status each row's badge shows: drafts
 // include ones with a send scheduled; outstanding is sent and unpaid,
@@ -78,25 +79,13 @@ function totalsByMonth(invoices) {
     return months;
 }
 
-// "October 2026"
-function monthLabel(key) {
-    return key ? formatMonth(key) : 'No issue date';
-}
-
 // The divider above a month's invoices, with what was invoiced in it.
-function MonthDivider({ month, totals }) {
+function InvoiceMonth({ month, totals }) {
     return (
-        <tr className="invoice-month">
-            <td colSpan={7}>
-                <div className="invoice-month__bar">
-                    <span className="invoice-month__label">{monthLabel(month)}</span>
-                    <span className="invoice-month__figures">
-                        {totals.count} invoiced &middot; <strong>{formatCurrency(totals.invoiced)}</strong>
-                        {totals.draftCount > 0 && <span className="invoice-month__drafts"> &middot; {formatCurrency(totals.drafts)} in {totals.draftCount === 1 ? 'a draft' : `${totals.draftCount} drafts`}</span>}
-                    </span>
-                </div>
-            </td>
-        </tr>
+        <MonthDivider month={month} colSpan={7} emptyLabel="No issue date">
+            {totals.count} invoiced &middot; <strong>{formatCurrency(totals.invoiced)}</strong>
+            {totals.draftCount > 0 && <span> &middot; {formatCurrency(totals.drafts)} in {totals.draftCount === 1 ? 'a draft' : `${totals.draftCount} drafts`}</span>}
+        </MonthDivider>
     );
 }
 
@@ -474,7 +463,7 @@ export default function InvoicesIndex({ invoices: invoicesProp, filters, hasEarl
                             {visibleInvoices.map((invoice, index) => (
                                 <Fragment key={invoice.id}>
                                     {!sortByDue && (index === 0 || issuedMonth(visibleInvoices[index - 1]) !== issuedMonth(invoice)) && (
-                                        <MonthDivider key={`month-${issuedMonth(invoice)}`} month={issuedMonth(invoice)} totals={monthTotals[issuedMonth(invoice)]} />
+                                        <InvoiceMonth key={`month-${issuedMonth(invoice)}`} month={issuedMonth(invoice)} totals={monthTotals[issuedMonth(invoice)]} />
                                     )}
                                     <tr onClick={(e) => visitRow(e, null, { onOpen: () => openInvoice(invoice.id) })} className="table__row--link">
                                         <td className="table__cell--numeric table__cell--muted">{invoice.invoice_number}</td>

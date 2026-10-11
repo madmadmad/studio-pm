@@ -1,12 +1,12 @@
-import { Head } from '@inertiajs/react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { Head, router } from '@inertiajs/react';
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import { CaretDown, CaretRight, DownloadSimple, Paperclip, PaperclipHorizontal, Trash, X } from '@phosphor-icons/react';
 import AppLayout from '../../Layouts/AppLayout';
 import Button from '../../Components/Button';
 import EmptyState from '../../Components/EmptyState';
 import Badge from '../../Components/Badge';
 import { ExpenseStatusBadge } from '../../Components/StatusBadges';
-import { formatCurrency, formatDate, formatFileSize, todayInAppTimezone } from '../../lib/format';
+import { formatCurrency, formatDate, formatFileSize } from '../../lib/format';
 import MetricCard from '../../Components/MetricCard';
 import { useListMotion } from '../../lib/listMotion';
 import { expenseCategoryIcon } from '../../lib/expenseCategoryIcon';
@@ -18,6 +18,8 @@ import Toggle from '../../Components/Toggle';
 import CurrencyInput from '../../Components/CurrencyInput';
 import TabToolbar from '../../Components/TabToolbar';
 import YearChart from '../../Components/YearChart';
+import LoadMore from '../../Components/LoadMore';
+import MonthDivider from '../../Components/MonthDivider';
 
 // `paidFrom` is the account a new expense starts out paid from (the
 // Capital One card).
@@ -310,26 +312,47 @@ const STATUS_FILTERS = [
     { value: 'billed_and_paid', label: 'Paid' },
 ];
 
-// The figures across the top, as on the Invoices page: what's been spent
-// this month and this year, billable costs not yet on an invoice, and
-// ones invoiced but not yet paid -- each a count and an amount. Months
-// are calendar ones (an expense's date is a plain date).
-function expenseMetrics(expenses) {
-    const today = todayInAppTimezone();
-    const figure = (list) => ({ count: list.length, amount: list.reduce((s, e) => s + (parseFloat(e.amount) || 0), 0) });
-    const dated = (prefix) => expenses.filter((e) => e.date?.slice(0, prefix.length) === prefix);
+// The list's views. The server does the filtering (App\Services\ExpenseList):
+// All, Unbilled and Paid list a few months at a time; Billed -- invoiced,
+// waiting on the client -- lists everything.
+const MONTHS_STEP = 3;
+const SEARCH_DELAY_MS = 300;
 
-    return {
-        month: figure(dated(today.slice(0, 7))),
-        year: figure(dated(today.slice(0, 4))),
-        ready: figure(expenses.filter((e) => e.is_billable && e.billing_status === 'unbilled')),
-        billed: figure(expenses.filter((e) => e.billing_status === 'billed')),
-    };
+// The list's props, which every reload after a change brings back fresh:
+// the figures and the chart count every expense.
+const LIST_PROPS = ['expenses', 'filters', 'hasEarlier', 'metrics', 'spend', 'hasExpenses'];
+
+// The filters as the page's address: defaults left out.
+function addressFor({ status, q, category, months }) {
+    const params = {};
+    if (status && status !== 'all') params.status = status;
+    if (q) params.q = q;
+    if (category && category !== 'all') params.category = category;
+    if (months && months > MONTHS_STEP) params.months = months;
+    return params;
 }
 
-// The year's spending by month for the chart, split by who carries it:
-// billed to clients (a billable expense, or the clients' shares of a split
-// one) and the studio's own cost (the rest, a Not billed share included). Months still to come are null.
+// The 'YYYY-MM' an expense is dated in ('' with no date).
+function expenseMonth(expense) {
+    return expense.date ? String(expense.date).slice(0, 7) : '';
+}
+
+// Each month's count and total, over the expenses listed (the server
+// lists whole months, so these add up).
+function totalsByMonth(expenses) {
+    const months = {};
+    for (const expense of expenses) {
+        const key = expenseMonth(expense);
+        months[key] ??= { count: 0, amount: 0 };
+        months[key].count += 1;
+        months[key].amount += parseFloat(expense.amount) || 0;
+    }
+    return months;
+}
+
+// The year's spending by month for the chart (worked out on the server,
+// ExpenseList::yearSpend), split by who carries it: billed to clients and
+// the studio's own cost.
 const SPEND_SERIES = {
     bars: [
         { key: 'billable', label: 'Billed to clients', tone: 'primary' },
@@ -339,38 +362,14 @@ const SPEND_SERIES = {
     ariaLabel: 'Expenses by month',
 };
 
-function yearSpend(expenses, today) {
-    const year = today.slice(0, 4);
-    const currentMonth = Number(today.slice(5, 7));
-    const months = Array.from({ length: 12 }, (_, i) => (
-        i + 1 > currentMonth
-            ? { month: i + 1, billable: null, studio: null, total: null }
-            : { month: i + 1, billable: 0, studio: 0, total: 0 }
-    ));
-
-    expenses.filter((e) => e.date?.slice(0, 4) === year).forEach((e) => {
-        const m = months[Number(e.date.slice(5, 7)) - 1];
-        if (m.total === null) return;
-        const amount = parseFloat(e.amount) || 0;
-        const billable = e.is_billable
-            ? amount
-            : Math.min(amount, (e.splits ?? []).filter((s) => s.company_id !== null).reduce((sum, s) => sum + (parseFloat(s.amount) || 0), 0));
-        m.billable += billable;
-        m.studio += amount - billable;
-        m.total += amount;
-    });
-
-    const round = (n) => (n === null ? null : Math.round(n * 100) / 100);
-    return { year, months: months.map((m) => ({ month: m.month, billable: round(m.billable), studio: round(m.studio), total: round(m.total) })) };
-}
-
-export default function ExpensesIndex({ expenses: expensesProp, categories: categoriesProp, taxes: taxesProp, projects, draftInvoices, companies = [], lastSplits = [], paymentAccounts = [], defaultPaymentAccountId = '' }) {
+export default function ExpensesIndex({ expenses: expensesProp, filters, hasEarlier, metrics, spend, hasExpenses, categories: categoriesProp, taxes: taxesProp, projects, draftInvoices, companies = [], lastSplits = [], paymentAccounts = [], defaultPaymentAccountId = '' }) {
     const [expenses, setExpenses] = useState(expensesProp);
     const [categories, setCategories] = useState(categoriesProp);
     const [taxes, setTaxes] = useState(taxesProp);
-    const [search, setSearch] = useState('');
-    const [categoryFilter, setCategoryFilter] = useState('');
-    const [statusFilter, setStatusFilter] = useState('all');
+    const [search, setSearch] = useState(filters.q ?? '');
+    const [loading, setLoading] = useState(false);
+    const categoryFilter = filters.category;
+    const statusFilter = filters.status;
     const [managing, setManaging] = useState(false);
     const rowsRef = useListMotion();
     const [showForm, setShowForm] = useState(false);
@@ -390,18 +389,39 @@ export default function ExpensesIndex({ expenses: expensesProp, categories: cate
     useEffect(() => setCategories(categoriesProp), [categoriesProp]);
     useEffect(() => setTaxes(taxesProp), [taxesProp]);
 
-    const filtered = useMemo(() => {
-        const q = search.trim().toLowerCase();
-        return expenses.filter((e) => {
-            if (q && !e.name.toLowerCase().includes(q)) return false;
-            if (categoryFilter === 'uncategorized' && e.category_id) return false;
-            if (categoryFilter && categoryFilter !== 'uncategorized' && String(e.category_id) !== categoryFilter) return false;
-            if (statusFilter !== 'all' && e.billing_status !== statusFilter) return false;
-            return true;
+    // A new view of the list: the filters into the address, and the list
+    // (only) fetched for it.
+    function showList(changes) {
+        router.get('/expenses', addressFor({ ...filters, ...changes }), {
+            only: LIST_PROPS,
+            preserveState: true,
+            preserveScroll: true,
+            replace: true,
+            onStart: () => setLoading(true),
+            onFinish: () => setLoading(false),
         });
-    }, [expenses, search, categoryFilter, statusFilter]);
-    const metrics = expenseMetrics(expenses);
-    const spend = yearSpend(expenses, todayInAppTimezone());
+    }
+
+    // The same view, fresh -- the figures and chart too -- after a change.
+    function reloadList() {
+        router.reload({ only: LIST_PROPS });
+    }
+
+    // Search as you type, a moment after the typing stops.
+    const firstSearch = useRef(true);
+    useEffect(() => {
+        if (firstSearch.current) {
+            firstSearch.current = false;
+            return undefined;
+        }
+        const timer = setTimeout(() => showList({ q: search.trim(), months: MONTHS_STEP }), SEARCH_DELAY_MS);
+        return () => clearTimeout(timer);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [search]);
+
+    // Already filtered by the server; newest first, under a heading per month.
+    const filtered = expenses;
+    const monthTotals = useMemo(() => totalsByMonth(filtered), [filtered]);
 
     // The open expense's split across clients (null: not split).
     const [split, setSplit] = useState(null);
@@ -483,6 +503,7 @@ export default function ExpensesIndex({ expenses: expensesProp, categories: cate
                 setExpenses((current) => [created, ...current]);
             }
             cancel();
+            reloadList();
         } catch (err) {
             setError(err.message || 'Could not save this expense.');
         } finally {
@@ -496,6 +517,7 @@ export default function ExpensesIndex({ expenses: expensesProp, categories: cate
             await api.delete(`/api/expenses/${expense.id}`);
             setExpenses((current) => current.filter((x) => x.id !== expense.id));
             if (expense.id === editingId) cancel();
+            reloadList();
         } catch (err) {
             alert(err.message || 'Could not delete this expense.');
         }
@@ -507,6 +529,7 @@ export default function ExpensesIndex({ expenses: expensesProp, categories: cate
         try {
             const updated = await api.post(`/api/expenses/${expense.id}/attach-to-invoice`, { invoice_id: invoiceId });
             setExpenses((current) => current.map((x) => (x.id === expense.id ? updated : x)));
+            reloadList();
         } catch (err) {
             alert(err.message || 'Could not attach this expense.');
         } finally {
@@ -519,6 +542,7 @@ export default function ExpensesIndex({ expenses: expensesProp, categories: cate
         try {
             const updated = await api.post(`/api/expenses/${expense.id}/detach-from-invoice`);
             setExpenses((current) => current.map((x) => (x.id === expense.id ? updated : x)));
+            reloadList();
         } catch (err) {
             alert(err.message || 'Could not detach this expense.');
         }
@@ -558,19 +582,19 @@ export default function ExpensesIndex({ expenses: expensesProp, categories: cate
                 />
                 <select
                     value={categoryFilter}
-                    onChange={(e) => setCategoryFilter(e.target.value)}
+                    onChange={(e) => showList({ category: e.target.value, months: MONTHS_STEP })}
                     aria-label="Category"
                     className="input input--inline"
                 >
-                    <option value="">All categories</option>
+                    <option value="all">All categories</option>
                     <option value="uncategorized">Uncategorized</option>
-                    {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    {categories.map((c) => <option key={c.id} value={String(c.id)}>{c.name}</option>)}
                 </select>
                 <div className="filter-bar__pills">
                     {STATUS_FILTERS.map((f) => (
                         <button
                             key={f.value}
-                            onClick={() => setStatusFilter(f.value)}
+                            onClick={() => showList({ status: f.value, months: MONTHS_STEP })}
                             className={`filter-bar__pill${statusFilter === f.value ? ' filter-bar__pill--active' : ''}`}
                         >
                             {f.label}
@@ -696,7 +720,7 @@ export default function ExpensesIndex({ expenses: expensesProp, categories: cate
             <TabToolbar addLabel="New expense" onAdd={startCreate} />
             <div className="card card--flush">
                 {filtered.length === 0 ? (
-                    <EmptyState text={expenses.length === 0 ? 'No expenses yet.' : 'No expenses match these filters.'} />
+                    <EmptyState text={!hasExpenses ? 'No expenses yet.' : 'No expenses match these filters.'} />
                 ) : (
                     <table className="table">
                         <thead>
@@ -711,68 +735,80 @@ export default function ExpensesIndex({ expenses: expensesProp, categories: cate
                             </tr>
                         </thead>
                         <tbody ref={rowsRef}>
-                            {filtered.map((expense) => {
+                            {filtered.map((expense, index) => {
                                 const projectDraftInvoices = draftInvoices.filter((inv) => inv.project_id === expense.project_id);
+                                const month = expenseMonth(expense);
+                                const newMonth = index === 0 || expenseMonth(filtered[index - 1]) !== month;
                                 return (
-                                    <tr key={expense.id} onClick={() => startEdit(expense)} className="table__row--top table__row--link">
-                                        <td>
-                                            <div className="expenses__name">
-                                                {expense.name}
-                                                {expense.receipt_url && (
-                                                    <a href={expense.receipt_url} target="_blank" rel="noreferrer" title="View receipt" onClick={(e) => e.stopPropagation()} className="icon-btn icon-btn--secondary">
-                                                        <PaperclipHorizontal />
-                                                    </a>
-                                                )}
-                                            </div>
-                                            <div className="table__note">
-                                                {expense.splits?.length
-                                                    ? `Split across ${expense.splits.length} client${expense.splits.length === 1 ? '' : 's'}`
-                                                    : expense.is_billable ? 'Billable' : 'Not billable'}
-                                                {expense.source_label ? ` · ${expense.source_label}` : ''}
-                                            </div>
-                                        </td>
-                                        <td className="table__cell--muted">{projectById[expense.project_id]?.name ?? '—'}</td>
-                                        <td>{formatDate(expense.date)}</td>
-                                        <td><CategoryPill category={expense.category} /></td>
-                                        <td><ExpenseStatusBadge expense={expense} /></td>
-                                        <td className="table__cell--end table__cell--numeric">{formatCurrency(expense.amount)}</td>
-                                        <td className="table__cell--end">
-                                            {/* Controls in the row act on their own, without opening the drawer. */}
-                                            <div className="table__actions" onClick={(e) => e.stopPropagation()}>
-                                                {expense.billing_status === 'unbilled' && expense.is_billable && projectDraftInvoices.length > 0 && (
-                                                    <select
-                                                        disabled={attachingId === expense.id}
-                                                        defaultValue=""
-                                                        onChange={(e) => attach(expense, e.target.value)}
-                                                        className="expenses__attach"
-                                                    >
-                                                        <option value="" disabled>Attach to invoice&hellip;</option>
-                                                        {projectDraftInvoices.map((inv) => (
-                                                            <option key={inv.id} value={inv.id}>Invoice #{inv.invoice_number}</option>
-                                                        ))}
-                                                    </select>
-                                                )}
-                                                {expense.billing_status === 'billed' && (
-                                                    <button onClick={() => detach(expense)} className="text-action text-action--xs text-action--underline">Detach</button>
-                                                )}
-                                                {expense.billing_status === 'unbilled' && (
-                                                    <button onClick={() => remove(expense)} title="Delete" className="icon-btn icon-btn--danger">
-                                                        <Trash />
+                                    <Fragment key={expense.id}>
+                                        {newMonth && (
+                                            <MonthDivider month={month} colSpan={7}>
+                                                {monthTotals[month].count} {monthTotals[month].count === 1 ? 'expense' : 'expenses'} &middot; <strong>{formatCurrency(monthTotals[month].amount)}</strong>
+                                            </MonthDivider>
+                                        )}
+                                        <tr onClick={() => startEdit(expense)} className="table__row--top table__row--link">
+                                            <td>
+                                                <div className="expenses__name">
+                                                    {expense.name}
+                                                    {expense.receipt_url && (
+                                                        <a href={expense.receipt_url} target="_blank" rel="noreferrer" title="View receipt" onClick={(e) => e.stopPropagation()} className="icon-btn icon-btn--secondary">
+                                                            <PaperclipHorizontal />
+                                                        </a>
+                                                    )}
+                                                </div>
+                                                <div className="table__note">
+                                                    {expense.splits?.length
+                                                        ? `Split across ${expense.splits.length} client${expense.splits.length === 1 ? '' : 's'}`
+                                                        : expense.is_billable ? 'Billable' : 'Not billable'}
+                                                    {expense.source_label ? ` · ${expense.source_label}` : ''}
+                                                </div>
+                                            </td>
+                                            <td className="table__cell--muted">{projectById[expense.project_id]?.name ?? '—'}</td>
+                                            <td>{formatDate(expense.date)}</td>
+                                            <td><CategoryPill category={expense.category} /></td>
+                                            <td><ExpenseStatusBadge expense={expense} /></td>
+                                            <td className="table__cell--end table__cell--numeric">{formatCurrency(expense.amount)}</td>
+                                            <td className="table__cell--end">
+                                                {/* Controls in the row act on their own, without opening the drawer. */}
+                                                <div className="table__actions" onClick={(e) => e.stopPropagation()}>
+                                                    {expense.billing_status === 'unbilled' && expense.is_billable && projectDraftInvoices.length > 0 && (
+                                                        <select
+                                                            disabled={attachingId === expense.id}
+                                                            defaultValue=""
+                                                            onChange={(e) => attach(expense, e.target.value)}
+                                                            className="expenses__attach"
+                                                        >
+                                                            <option value="" disabled>Attach to invoice&hellip;</option>
+                                                            {projectDraftInvoices.map((inv) => (
+                                                                <option key={inv.id} value={inv.id}>Invoice #{inv.invoice_number}</option>
+                                                            ))}
+                                                        </select>
+                                                    )}
+                                                    {expense.billing_status === 'billed' && (
+                                                        <button onClick={() => detach(expense)} className="text-action text-action--xs text-action--underline">Detach</button>
+                                                    )}
+                                                    {expense.billing_status === 'unbilled' && (
+                                                        <button onClick={() => remove(expense)} title="Delete" className="icon-btn icon-btn--danger">
+                                                            <Trash />
+                                                        </button>
+                                                    )}
+                                                    {/* The keyboard way in; the row's own click does the same. */}
+                                                    <button onClick={() => startEdit(expense)} title="Open expense" aria-label="Open expense" className="row-action">
+                                                        <CaretRight size={14} weight="bold" />
                                                     </button>
-                                                )}
-                                                {/* The keyboard way in; the row's own click does the same. */}
-                                                <button onClick={() => startEdit(expense)} title="Open expense" aria-label="Open expense" className="row-action">
-                                                    <CaretRight size={14} weight="bold" />
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </Fragment>
                                 );
                             })}
                         </tbody>
                     </table>
                 )}
             </div>
+            {hasEarlier && (
+                <LoadMore label="Show earlier months" loading={loading} onClick={() => showList({ months: filters.months + MONTHS_STEP })} />
+            )}
         </AppLayout>
     );
 }

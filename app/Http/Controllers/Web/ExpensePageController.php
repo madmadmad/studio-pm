@@ -10,15 +10,28 @@ use App\Models\ExpenseCategory;
 use App\Models\Invoice;
 use App\Models\Project;
 use App\Models\Tax;
+use App\Services\ExpenseList;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class ExpensePageController extends Controller
 {
-    public function index(): Response
+    // The list a window of months at a time (ExpenseList), with the
+    // filters, search and "Show earlier months" in the address.
+    public function index(Request $request): Response
     {
+        $list = ExpenseList::fromRequest($request);
+        $page = $list->page();
+
         return Inertia::render('Expenses/Index', [
-            'expenses' => Expense::with(['category', 'project', 'tax', 'splits.company:id,name'])->orderByDesc('date')->get(),
+            'expenses' => $page['expenses'],
+            'filters' => $list->toArray(),
+            'hasEarlier' => $page['hasEarlier'],
+            'metrics' => fn () => ExpenseList::metrics(),
+            'spend' => fn () => ExpenseList::yearSpend(),
+            // Whether there are any at all, for "No expenses yet".
+            'hasExpenses' => fn () => Expense::exists(),
             // For splitting a shared cost: the clients, and the recent
             // splits -- a new bill starts from the one with its name and
             // the nearest total (two Linode accounts bill under one name).
