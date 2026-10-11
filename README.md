@@ -105,6 +105,52 @@ in [docs/laravel-cloud.md](docs/laravel-cloud.md).
 Chat's live updates use Laravel Reverb: on Cloud, an attached WebSocket
 cluster. See [docs/chat.md](docs/chat.md).
 
+## MCP server (Claude)
+
+The app is a remote MCP server, so Claude can work in it as a staff member:
+read projects, clients, contacts, tasks and unbilled time; create and update
+tasks; log time; save proposal **drafts**. Nothing sends, accepts or emails
+a proposal or invoice, or deletes anything.
+
+- **Connect:** in Claude, Settings → Connectors → Add custom connector, URL
+  `https://madmadmad.studio/mcp/studio`. Claude registers itself, then you
+  sign in (with two-factor) and approve it on the consent screen.
+- **Who:** active staff with two-factor set up, within their own permissions
+  (the same policies as the app). The accountant can't connect.
+  Access tokens last a day and renew for 30 days.
+- **Code:** `routes/ai.php` (OAuth routes and the server, behind `auth:api`),
+  `app/Mcp/Servers/StudioServer.php`, one tool per class in `app/Mcp/Tools/`,
+  shared logic in `app/Actions/`. The consent screen is
+  `resources/views/mcp/authorize.blade.php`. Only Claude's redirect domains
+  (plus localhost) may register as a client: `config/mcp.php`.
+- **Tests:** `tests/Feature/Mcp/`.
+
+### Deploying it (Laravel Cloud)
+
+1. **Passport keys, once.** Cloud servers keep no files, so the keys go in
+   environment variables, not `storage/`. Make a pair for production (not
+   your local one):
+   ```bash
+   openssl genrsa -out oauth-private.key 4096
+   openssl rsa -in oauth-private.key -pubout -out oauth-public.key
+   ```
+   Set `PASSPORT_PRIVATE_KEY` and `PASSPORT_PUBLIC_KEY` on the environment to
+   the files' full contents (including the `-----BEGIN…` lines), then delete
+   the files. Changing the keys later signs every connected Claude out.
+2. **Migrations** (Passport's `oauth_*` tables) run with the deploy's
+   `php artisan migrate --force`; nothing else to do.
+3. No other variables are needed: the OAuth URLs come from `APP_URL`.
+
+### Trying it locally
+
+```bash
+php artisan mcp:inspector mcp/studio
+```
+
+The inspector opens in your browser; choose OAuth, connect, sign in and
+approve, then call the tools. `php artisan install:api --passport` has
+already made local keys in `storage/` (ignored by git).
+
 ## Project structure
 
 - `app/Models/` — Eloquent models: `Company`/`Contact` (clients),

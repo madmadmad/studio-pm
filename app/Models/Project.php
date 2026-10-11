@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -52,6 +53,21 @@ class Project extends Model
         return $this->relationLoaded('users')
             ? $this->users->contains('id', $user->id)
             : $this->users()->whereKey($user->id)->exists();
+    }
+
+    // The projects someone works with: every project with All projects,
+    // otherwise the ones they're on -- `$current` false also counts ones
+    // they've been taken off (read-only past work, as everHadUser). The one
+    // place the lists, the time screens and the MCP tools take this from.
+    public function scopeVisibleTo(Builder $query, User $user, bool $current = true): Builder
+    {
+        if ($user->hasPermission('all_projects')) {
+            return $query;
+        }
+
+        return $query->whereHas('users', fn ($q) => $q
+            ->where('users.id', $user->id)
+            ->when($current, fn ($q) => $q->whereNull('project_user.unassigned_at')));
     }
 
     public function currentlyHasUser(User $user): bool

@@ -50,6 +50,13 @@ return [
             'driver' => 'session',
             'provider' => 'contacts',
         ],
+
+        // The MCP server (routes/ai.php): OAuth access tokens issued by
+        // Passport to Claude and other MCP clients, acting as a staff member.
+        'api' => [
+            'driver' => 'passport',
+            'provider' => 'users',
+        ],
     ],
 
     /*

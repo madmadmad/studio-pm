@@ -181,10 +181,6 @@ class ProjectPageController extends Controller
 
     protected function scopeToRole(Request $request, $query): void
     {
-        if (! $request->user()->hasPermission('all_projects')) {
-            $query->whereHas('users', fn ($q) => $q
-                ->where('users.id', $request->user()->id)
-                ->whereNull('project_user.unassigned_at'));
-        }
+        $query->visibleTo($request->user());
     }
 }

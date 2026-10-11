@@ -17,11 +17,15 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Passkeys\Contracts\PasskeyUser;
 use Laravel\Passkeys\PasskeyAuthenticatable;
-use Laravel\Sanctum\HasApiTokens;
+use Laravel\Passport\Contracts\OAuthenticatable;
+use Laravel\Passport\HasApiTokens;
 
 #[Fillable(['name', 'job_title', 'bio', 'bio_photo_path', 'email', 'password', 'role', 'avatar_path'])]
 #[Hidden(['password', 'remember_token', 'invite_token', 'login_token', 'two_factor_secret', 'two_factor_recovery_codes', 'avatar_path', 'bio_photo_path'])]
-class User extends Authenticatable implements PasskeyUser
+// Passport's HasApiTokens, not Sanctum's (the two can't share a model): the
+// MCP server's OAuth tokens (routes/ai.php). Sanctum still signs the app's
+// own pages in to /api by session cookie, which needs no tokens.
+class User extends Authenticatable implements OAuthenticatable, PasskeyUser
 {
     /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable;

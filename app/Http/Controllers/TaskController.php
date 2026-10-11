@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\CreateTask;
+use App\Actions\UpdateTask;
 use App\Models\Project;
 use App\Models\Task;
 use Illuminate\Http\Request;
@@ -15,37 +17,18 @@ class TaskController extends Controller
         return $project->tasks;
     }
 
-    public function store(Request $request, Project $project)
+    public function store(Request $request, Project $project, CreateTask $createTask)
     {
         $this->authorize('create', [Task::class, $project]);
 
-        $data = $request->validate([
-            'title' => ['required', 'string', 'max:255'],
-            'assignee' => ['nullable', 'string', 'max:255'],
-            'description' => ['nullable', 'string'],
-            'due_date' => ['nullable', 'date'],
-            'visible_to_client' => ['sometimes', 'boolean'],
-        ]);
-
-        return $project->tasks()->create($data);
+        return $createTask->handle($request->user(), $project, $request->validate(CreateTask::rules()));
     }
 
-    public function update(Request $request, Task $task)
+    public function update(Request $request, Task $task, UpdateTask $updateTask)
     {
         $this->authorize('update', $task);
 
-        $data = $request->validate([
-            'title' => ['sometimes', 'string', 'max:255'],
-            'assignee' => ['nullable', 'string', 'max:255'],
-            'description' => ['nullable', 'string'],
-            'status' => ['sometimes', 'in:todo,in_progress,done'],
-            'due_date' => ['nullable', 'date'],
-            'visible_to_client' => ['sometimes', 'boolean'],
-        ]);
-
-        $task->update($data);
-
-        return $task;
+        return $updateTask->handle($request->user(), $task, $request->validate(UpdateTask::rules()));
     }
 
     public function destroy(Task $task)

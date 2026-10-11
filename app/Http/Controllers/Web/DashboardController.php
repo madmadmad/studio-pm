@@ -59,7 +59,7 @@ class DashboardController extends Controller
             'outstanding' => ['count' => $open->count(), 'amount' => round($open->sum(fn (Invoice $i) => $i->remainingBalance()), 2)],
             'overdue' => ['count' => $overdue->count(), 'amount' => round($overdue->sum(fn (Invoice $i) => $i->remainingBalance()), 2)],
             'paid_this_month' => round((float) Payment::whereBetween('paid_at', [now()->startOfMonth(), now()->endOfMonth()])->sum('amount'), 2),
-            'unbilled_hours' => round((float) TimeEntry::where('billable', true)->where('billed', false)->sum('hours'), 2),
+            'unbilled_hours' => round((float) TimeEntry::unbilled()->sum('hours'), 2),
         ];
     }
 

@@ -16,15 +16,7 @@ class ProjectController extends Controller
 
     public function index(Request $request, Company $company)
     {
-        $projects = $company->projects()->with('tasks');
-
-        if (! $request->user()->hasPermission('all_projects')) {
-            $projects->whereHas('users', fn ($q) => $q
-                ->where('users.id', $request->user()->id)
-                ->whereNull('project_user.unassigned_at'));
-        }
-
-        return $projects->get();
+        return $company->projects()->with('tasks')->visibleTo($request->user())->get();
     }
 
     public function store(Request $request, Company $company)

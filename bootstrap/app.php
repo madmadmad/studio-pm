@@ -5,6 +5,7 @@ use App\Http\Middleware\EnsureContactHasPortalAccess;
 use App\Http\Middleware\EnsureUserHasPermission;
 use App\Http\Middleware\EnsureUserIsActive;
 use App\Http\Middleware\EnsureUserIsStaff;
+use App\Http\Middleware\FullPageOAuthRedirect;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\NoIndex;
 use App\Http\Middleware\PortalPreviewReadOnly;
@@ -40,6 +41,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->statefulApi();
         $middleware->web(append: [
             HandleInertiaRequests::class,
+            FullPageOAuthRedirect::class,
         ]);
         $middleware->alias(['permission' => EnsureUserHasPermission::class, 'portal.preview' => PortalPreviewReadOnly::class, 'portal.access' => EnsureContactHasPortalAccess::class, 'staff' => EnsureUserIsStaff::class, 'accountant.restrict' => RestrictAccountant::class, 'two-factor.required' => RequireTwoFactor::class]);
         // Global, not just the web group -- a deactivated user's existing

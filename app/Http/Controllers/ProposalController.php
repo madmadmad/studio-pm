@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\CreateProposalDraft;
 use App\Mail\ProposalEmail;
 use App\Models\Company;
 use App\Models\Contact;
@@ -26,69 +27,20 @@ class ProposalController extends Controller
 
     protected function itemRules(): array
     {
-        return [
-            'items' => ['nullable', 'array'],
-            'items.*.description' => ['required_with:items', 'string'],
-            'items.*.details' => ['nullable', 'string'],
-            'items.*.quantity' => ['required_with:items', 'numeric', 'min:0.01'],
-            'items.*.rate' => ['required_with:items', 'numeric', 'min:0'],
-            'items.*.service_id' => ['nullable', 'exists:services,id'],
-        ];
+        return CreateProposalDraft::itemRules();
     }
 
     // A proposal's estimate: its services' total, or empty with none.
     private function estimateFor(Proposal $proposal): ?float
     {
-        $proposal->load('items');
-
-        return $proposal->items->isEmpty() ? null : $proposal->itemsTotal();
+        return CreateProposalDraft::estimateFor($proposal);
     }
 
-    public function store(Request $request, Company $company)
+    public function store(Request $request, Company $company, CreateProposalDraft $createDraft)
     {
-        $data = $request->validate([
-            'title' => ['required', 'string', 'max:255'],
-            'body' => ['required', 'string'], // rich text HTML from the editor
-            'disclaimer' => ['nullable', 'string'],
-            'contact_id' => ['nullable', Rule::exists('contacts', 'id')->where('company_id', $company->id)],
-            'project_id' => ['required_without:new_project_name', 'nullable', Rule::exists('projects', 'id')->where('company_id', $company->id)],
-            'new_project_name' => ['required_without:project_id', 'nullable', 'string', 'max:255'],
-            ...$this->itemRules(),
-            ...$this->teamRules(),
-        ]);
+        $data = $request->validate(CreateProposalDraft::rules($company));
 
-        $proposal = DB::transaction(function () use ($data, $company) {
-            $projectId = $data['project_id'] ?? null;
-
-            if (! $projectId && ! empty($data['new_project_name'])) {
-                $projectId = $company->projects()->create([
-                    'name' => $data['new_project_name'],
-                    'contact_id' => $data['contact_id'] ?? null,
-                ])->id;
-            }
-
-            $proposal = $company->proposals()->create([
-                'project_id' => $projectId,
-                'contact_id' => $data['contact_id'] ?? null,
-                'title' => $data['title'],
-                'body' => $data['body'],
-                // A new proposal starts from the default unless one's sent.
-                'disclaimer' => array_key_exists('disclaimer', $data) ? $data['disclaimer'] : StudioProfile::current()->proposal_disclaimer,
-                ...$this->teamFields($data),
-                'status' => 'draft',
-            ]);
-
-            // The estimate is always what the services add up to -- never
-            // entered by hand -- and empty until there are any.
-            if (! empty($data['items'])) {
-                $proposal->items()->createMany($data['items']);
-            }
-            $proposal->update(['estimate_amount' => $this->estimateFor($proposal)]);
-
-            return $proposal;
-        });
-
-        return $proposal->load('items', 'project');
+        return $createDraft->handle($request->user(), $company, $data)->load('items', 'project');
     }
 
     public function update(Request $request, Proposal $proposal)
@@ -312,24 +264,12 @@ class ProposalController extends Controller
     // The team section: staff, in the order picked, under an optional heading.
     private function teamRules(): array
     {
-        return [
-            'team_user_ids' => ['sometimes', 'nullable', 'array'],
-            'team_user_ids.*' => ['integer', 'distinct', Rule::exists('users', 'id')->whereNot('role', User::ROLE_ACCOUNTANT)],
-            'team_heading' => ['sometimes', 'nullable', 'string', 'max:255'],
-            'show_about' => ['sometimes', 'boolean'],
-        ];
+        return CreateProposalDraft::teamRules();
     }
 
     private function teamFields(array $data): array
     {
-        return collect(['team_user_ids', 'team_heading', 'show_about'])
-            ->filter(fn ($key) => array_key_exists($key, $data))
-            ->mapWithKeys(fn ($key) => [$key => match ($key) {
-                'team_user_ids' => array_map('intval', array_values($data[$key] ?? [])) ?: null,
-                'show_about' => (bool) $data[$key],
-                default => $data[$key] ?: null,
-            }])
-            ->all();
+        return CreateProposalDraft::teamFields($data);
     }
 
     // Who can go in a proposal's team section: active staff, with their
