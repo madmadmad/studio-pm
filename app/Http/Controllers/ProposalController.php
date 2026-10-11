@@ -204,9 +204,9 @@ class ProposalController extends Controller
 
             // Queued (ProposalEmail is ShouldQueue), like invoice emails.
             Mail::to($recipient->email)->send(new ProposalEmail($proposal, $data['subject'], $data['message'], array_values(array_unique($cc))));
-            $this->markSent($proposal);
+            $this->markSent($proposal, $request->user());
         } elseif ($data['mark_as_sent'] ?? false) {
-            $this->markSent($proposal);
+            $this->markSent($proposal, $request->user());
         }
 
         return $proposal->fresh()->load('items', 'project');
@@ -215,12 +215,13 @@ class ProposalController extends Controller
     // A draft (or re-sent proposal) becomes sent and its project estimated.
     // An accepted one is left as it is -- sharing its link again changes
     // nothing, and its project is already active.
-    private function markSent(Proposal $proposal): void
+    private function markSent(Proposal $proposal, User $sender): void
     {
         if ($proposal->status === 'accepted') {
             return;
         }
 
+        $proposal->forceFill(['sent_by_user_id' => $sender->id]);
         $proposal->update(['status' => 'sent', 'sent_at' => $proposal->sent_at ?? now()]);
 
         if ($proposal->project_id) {

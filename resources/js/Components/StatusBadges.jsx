@@ -1,29 +1,61 @@
+import { Eye } from '@phosphor-icons/react';
 import Badge from './Badge';
 import { displayInvoiceStatus } from '../lib/format';
+import { formatDateTimeEastern } from '../lib/datetime';
+
+// When the client last opened a sent invoice's or proposal's link
+// (App\Support\DocumentViews): "Oct 11, 2:14 PM ET · 3 views".
+function whenOpened(doc) {
+    const views = doc.view_count > 1 ? ` · ${doc.view_count} views` : '';
+    return `${formatDateTimeEastern(doc.last_viewed_at || doc.first_viewed_at)}${views}`;
+}
+
+// The Opened badge's tooltip.
+export function openedSummary(doc) {
+    return doc?.first_viewed_at ? `Opened ${whenOpened(doc)}` : null;
+}
+
+// For a drawer's byline, beside the Opened badge: the eye and when --
+// nothing until it's been opened.
+export function OpenedNote({ doc }) {
+    if (!doc?.first_viewed_at) return null;
+    const summary = whenOpened(doc);
+    return (
+        <span className="drawer__date">
+            <Eye className="drawer__date-icon" aria-hidden="true" />
+            {summary}
+        </span>
+    );
+}
 
 const INVOICE_STATUS = {
     draft: { tone: 'neutral', label: 'Draft' },
     scheduled: { tone: 'neutral', label: 'Scheduled' },
     sent: { tone: 'accent', label: 'Sent' },
+    opened: { tone: 'info', label: 'Opened' },
     paid: { tone: 'success', label: 'Paid' },
     overdue: { tone: 'danger', label: 'Overdue' },
 };
 
 export function InvoiceStatusBadge({ invoice }) {
-    const status = displayInvoiceStatus(invoice);
+    // Sent and not yet overdue: whether the client has opened it.
+    let status = displayInvoiceStatus(invoice);
+    if (status === 'sent' && invoice.first_viewed_at) status = 'opened';
     const m = INVOICE_STATUS[status] || INVOICE_STATUS.draft;
-    return <Badge tone={m.tone} label={m.label} />;
+    return <Badge tone={m.tone} label={m.label} title={openedSummary(invoice) ?? undefined} />;
 }
 
 const PROPOSAL_STATUS = {
     draft: { tone: 'neutral', label: 'Draft' },
     sent: { tone: 'accent', label: 'Sent' },
+    opened: { tone: 'info', label: 'Opened' },
     accepted: { tone: 'success', label: 'Accepted' },
 };
 
 export function ProposalStatusBadge({ proposal }) {
-    const m = PROPOSAL_STATUS[proposal.status] || PROPOSAL_STATUS.draft;
-    return <Badge tone={m.tone} label={m.label} />;
+    const status = proposal.status === 'sent' && proposal.first_viewed_at ? 'opened' : proposal.status;
+    const m = PROPOSAL_STATUS[status] || PROPOSAL_STATUS.draft;
+    return <Badge tone={m.tone} label={m.label} title={openedSummary(proposal) ?? undefined} />;
 }
 
 export function CompanyStatusBadge({ company }) {

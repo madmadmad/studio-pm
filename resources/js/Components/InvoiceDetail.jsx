@@ -453,10 +453,17 @@ export default function InvoiceDetail({ invoice: initialInvoice, studio, invoici
                     </div>
                 )}
 
-                {invoice.invoice_sends?.length > 0 && (
+                {(invoice.invoice_sends?.length > 0 || invoice.first_viewed_at) && (
                     <div className={section}>
                         {heading('History')}
                         <ul className="detail-list">
+                            {/* The client opening its link (App\Support\DocumentViews). */}
+                            {invoice.first_viewed_at && (
+                                <li className="detail-list__item">
+                                    First opened by the client {formatDateTimeEastern(invoice.first_viewed_at)}
+                                    {invoice.view_count > 1 && <> &middot; {invoice.view_count} views, last {formatDateTimeEastern(invoice.last_viewed_at)}</>}
+                                </li>
+                            )}
                             {invoice.invoice_sends.map((send) => (
                                 <li key={send.id} className="detail-list__item">
                                     {send.type === 'link' && <>Link copied{send.sent_by ? ` by ${send.sent_by.name}` : ''}, {formatDateTimeEastern(send.sent_at)}</>}

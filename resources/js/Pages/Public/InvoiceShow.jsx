@@ -6,6 +6,7 @@ import { formatCurrency, formatDate, invoiceSubtotal, invoiceTax, invoiceTotal, 
 import { paymentTermsLabel } from '../../lib/paymentTerms';
 import { api } from '../../lib/api';
 import DetailField from '../../Components/DocumentDetailField';
+import { useReportOpened } from '../../lib/reportOpened';
 
 // No card-fee row here on purpose -- that fee only exists between the
 // client and Stripe if they choose to pay by card, broken out on Stripe's
@@ -64,6 +65,7 @@ function companyAddressLines(company) {
 }
 
 export default function InvoiceShow({ invoice, studio }) {
+    useReportOpened();
     const { branding } = usePage().props;
     const paidAt = invoice.payments[0]?.paid_at;
     const [paying, setPaying] = useState(null); // null | 'card' | 'ach'

@@ -155,6 +155,10 @@ class PortalPageController extends Controller
                 : $q->whereRaw('1 = 0'),
         ]);
 
+        // Whether they've been opened, and who sent them, are the studio's to know.
+        $project->proposals->each->makeHidden(['first_viewed_at', 'last_viewed_at', 'view_count', 'sent_by_user_id']);
+        $project->invoices->each->makeHidden(['first_viewed_at', 'last_viewed_at', 'view_count']);
+
         UnreadMessages::mark($project->messages, $request->user());
 
         return Inertia::render('Portal/Projects/Show', [

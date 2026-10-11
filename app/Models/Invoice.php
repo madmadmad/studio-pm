@@ -28,6 +28,9 @@ class Invoice extends Model
         'due_on' => 'date',
         'payment_terms' => PaymentTerms::class,
         'sent_at' => UtcDateTime::class,
+        // When the client opened its link (App\Support\DocumentViews).
+        'first_viewed_at' => UtcDateTime::class,
+        'last_viewed_at' => UtcDateTime::class,
         'reminders_enabled' => 'boolean',
         'next_repeat_on' => 'date',
         'repeat_cc' => 'array',

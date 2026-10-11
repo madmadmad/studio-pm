@@ -7,6 +7,8 @@ use App\Models\Invoice;
 use App\Models\StudioProfile;
 use App\Services\InvoicePdfRenderer;
 use App\Support\BrandPalette;
+use App\Support\DocumentViews;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\Response as HttpResponse;
@@ -20,11 +22,20 @@ class PublicInvoiceController extends Controller
             ->firstOrFail();
 
         return Inertia::render('Public/InvoiceShow', [
-            'invoice' => $invoice->setAttribute('document_title', $invoice->documentTitle()),
+            // Not whether it's been opened -- that's the studio's to know.
+            'invoice' => $invoice->setAttribute('document_title', $invoice->documentTitle())->makeHidden(['first_viewed_at', 'last_viewed_at', 'view_count']),
             'studio' => StudioProfile::current(),
             // In the client's own color, whoever opens the link.
             'brand' => BrandPalette::for($invoice->company?->brand_color),
         ]);
+    }
+
+    // The page, once loaded, saying the client has it open.
+    public function viewed(Request $request, string $token): HttpResponse
+    {
+        DocumentViews::record($request, Invoice::where('public_token', $token)->firstOrFail());
+
+        return response()->noContent();
     }
 
     // The download icon on the public page: the same PDF the studio

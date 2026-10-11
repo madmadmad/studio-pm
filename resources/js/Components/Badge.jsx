@@ -1,9 +1,9 @@
 // Intents, as in the color tokens (base/_tokens.scss).
 const TONES = ['neutral', 'primary', 'secondary', 'accent', 'success', 'danger', 'warning', 'info'];
 
-export default function Badge({ tone = 'neutral', label }) {
+export default function Badge({ tone = 'neutral', label, title }) {
     return (
-        <span className={`badge badge--${TONES.includes(tone) ? tone : 'neutral'}`}>
+        <span className={`badge badge--${TONES.includes(tone) ? tone : 'neutral'}`} title={title}>
             {label}
         </span>
     );

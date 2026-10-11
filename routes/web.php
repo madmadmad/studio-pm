@@ -64,6 +64,9 @@ Route::get('/p/{token}/pdf', [PublicProposalController::class, 'pdf'])->name('pr
 // A team section photo, only for someone in that proposal's team.
 Route::get('/p/{token}/team/{user}/photo', [PublicProposalController::class, 'teamPhoto'])->name('proposals.public.team-photo');
 Route::get('/i/{token}', [PublicInvoiceController::class, 'show'])->name('invoices.public');
+// The public pages report that they've been opened (App\Support\DocumentViews).
+Route::post('/i/{token}/viewed', [PublicInvoiceController::class, 'viewed'])->middleware('throttle:30,1')->name('invoices.public.viewed');
+Route::post('/p/{token}/viewed', [PublicProposalController::class, 'viewed'])->middleware('throttle:30,1')->name('proposals.public.viewed');
 Route::get('/i/{token}/pdf', [PublicInvoiceController::class, 'pdf'])->name('invoices.public.pdf');
 
 // The staff app. The accountant reaches only the corner of it that's

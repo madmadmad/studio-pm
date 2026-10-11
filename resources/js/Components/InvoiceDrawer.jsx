@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Trash } from '@phosphor-icons/react';
 import Drawer, { DrawerByline, DrawerDate } from './Drawer';
 import InvoiceDetail, { InvoiceDueLine } from './InvoiceDetail';
-import { InvoiceStatusBadge } from './StatusBadges';
+import { InvoiceStatusBadge, OpenedNote } from './StatusBadges';
 import { formatCurrency, invoiceTotal } from '../lib/format';
 import { api } from '../lib/api';
 
@@ -56,6 +56,7 @@ export default function InvoiceDrawer({ detail, onRefresh, onChange, onClose }) 
                     <DrawerByline>
                         <DrawerDate label="Issued" date={invoice.issued_on} />
                         <InvoiceStatusBadge invoice={invoice} />
+                        {invoice.first_viewed_at && <OpenedNote doc={invoice} />}
                     </DrawerByline>
                     <h2 className="drawer__title">Invoice #{invoice.invoice_number}</h2>
                     <p className="drawer__meta drawer__section">

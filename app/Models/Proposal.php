@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\UtcDateTime;
 use App\Support\AvatarProcessor;
 use App\Support\RichText;
 use Illuminate\Database\Eloquent\Model;
@@ -18,6 +19,9 @@ class Proposal extends Model
     protected $casts = [
         'sent_at' => 'datetime',
         'accepted_at' => 'datetime',
+        // When the client opened its link (App\Support\DocumentViews).
+        'first_viewed_at' => UtcDateTime::class,
+        'last_viewed_at' => UtcDateTime::class,
         'team_user_ids' => 'array',
         'show_about' => 'boolean',
     ];
@@ -30,6 +34,12 @@ class Proposal extends Model
         static::creating(function (Proposal $proposal) {
             $proposal->accept_token ??= Str::random(40);
         });
+    }
+
+    // Who last sent it -- told when the client first opens it.
+    public function sentBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'sent_by_user_id');
     }
 
     public function company(): BelongsTo

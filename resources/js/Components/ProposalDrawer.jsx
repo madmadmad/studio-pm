@@ -1,6 +1,6 @@
 import Drawer, { DrawerByline, DrawerDate } from './Drawer';
 import ProposalEditor from './ProposalEditor';
-import { ProposalStatusBadge } from './StatusBadges';
+import { OpenedNote, ProposalStatusBadge } from './StatusBadges';
 
 // A proposal in the wide drawer, with the same editor the standalone page
 // uses -- opened from a project's Proposals tab or a client's. `proposal`
@@ -22,6 +22,7 @@ export default function ProposalDrawer({ proposal, companies, services, presetCo
                 <DrawerByline>
                     <DrawerDate label="Created" date={proposal.created_at} />
                     <ProposalStatusBadge proposal={proposal} />
+                    {proposal.first_viewed_at && <OpenedNote doc={proposal} />}
                 </DrawerByline>
             )}
             <h2 className="drawer__title">{proposal ? proposal.title : 'New proposal'}</h2>

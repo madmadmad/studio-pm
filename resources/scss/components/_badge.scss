@@ -23,12 +23,22 @@
     //   neutral             grey fill, muted text      (Draft, Inactive, To do)
     //   accent/warn/info,   grey fill, light text      (Sent, In progress, Queued;
     //   primary, secondary                              the Primary contact label)
+    //   info                + an eye glyph             (Opened -- by the client)
     //   success             solid red, white text      (Paid, Active, Accepted, Done)
     //   danger              solid red + warning glyph  (Overdue)
     @each $intent in secondary, accent, warning, info, primary {
         &--#{$intent} {
             background-color: var(--color-surface-muted);
             color: var(--color-text);
+        }
+    }
+
+    // Opened: Sent, and the client has looked -- the eye tells it apart.
+    &--info {
+        gap: var(--space-1);
+
+        &::before {
+            @include glyph(eye, var(--size-icon-sm));
         }
     }
 

@@ -56,6 +56,7 @@ class User extends Authenticatable implements PasskeyUser
     {
         return [
             'email_verified_at' => 'datetime',
+            'notify_on_document_open' => 'boolean',
             'invited_at' => 'datetime',
             'invite_expires_at' => 'datetime',
             'deactivated_at' => 'datetime',

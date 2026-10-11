@@ -55,4 +55,15 @@ class ProfileController extends Controller
     {
         return $request->user()->replaceBioPhoto(null);
     }
+
+    // Which alerts you get (Profile → Account): for now, the client
+    // opening an invoice or proposal you sent (App\Support\DocumentViews).
+    public function updateAlerts(Request $request)
+    {
+        $data = $request->validate(['notify_on_document_open' => ['required', 'boolean']]);
+
+        $request->user()->forceFill($data)->save();
+
+        return $request->user()->fresh();
+    }
 }

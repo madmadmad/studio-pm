@@ -1,3 +1,4 @@
+import { router } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import { Bell, BellRinging } from '@phosphor-icons/react';
 import { api } from '../lib/api';
@@ -36,11 +37,18 @@ export default function AlertsMenu() {
         if (next) await load();
     }
 
+    // Read, and -- for an alert about something (a client opening an
+    // invoice) -- off to it.
     async function markRead(notification) {
-        if (notification.read_at) return;
-        const updated = await api.post(`/api/notifications/${notification.id}/read`);
-        setNotifications((current) => current.map((n) => (n.id === updated.id ? updated : n)));
-        setUnreadCount((count) => Math.max(0, count - 1));
+        if (!notification.read_at) {
+            const updated = await api.post(`/api/notifications/${notification.id}/read`);
+            setNotifications((current) => current.map((n) => (n.id === updated.id ? updated : n)));
+            setUnreadCount((count) => Math.max(0, count - 1));
+        }
+        if (notification.data.url) {
+            setOpen(false);
+            router.visit(notification.data.url);
+        }
     }
 
     return (

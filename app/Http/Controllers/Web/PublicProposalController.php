@@ -9,6 +9,7 @@ use App\Models\StudioProfile;
 use App\Models\User;
 use App\Services\ProposalPdfRenderer;
 use App\Support\BrandPalette;
+use App\Support\DocumentViews;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -26,12 +27,21 @@ class PublicProposalController extends Controller
             ->firstOrFail();
 
         return Inertia::render('Public/ProposalShow', [
-            'proposal' => $proposal->setAttribute('team', $proposal->teamSection($token))->setAttribute('about', $proposal->aboutSection())->setAttribute('dates', $proposal->documentDates()),
+            // Not whether it's been opened, nor who sent it -- the studio's to know.
+            'proposal' => $proposal->setAttribute('team', $proposal->teamSection($token))->setAttribute('about', $proposal->aboutSection())->setAttribute('dates', $proposal->documentDates())->makeHidden(['first_viewed_at', 'last_viewed_at', 'view_count', 'sent_by_user_id']),
             'token' => $token,
             'studio' => StudioProfile::current(),
             // In the client's own color, whoever opens the link.
             'brand' => BrandPalette::for($proposal->company?->brand_color),
         ]);
+    }
+
+    // The page, once loaded, saying the client has it open.
+    public function viewed(Request $request, string $token): HttpResponse
+    {
+        DocumentViews::record($request, Proposal::where('accept_token', $token)->firstOrFail());
+
+        return response()->noContent();
     }
 
     // The download icon on the public page, gated by the same token.

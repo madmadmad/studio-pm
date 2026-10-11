@@ -90,6 +90,7 @@ Route::middleware(['auth:sanctum', 'accountant.restrict', 'two-factor.required']
     Route::patch('profile/brand-color', [BrandColorController::class, 'update']);
     Route::delete('profile/avatar', [ProfileController::class, 'destroyAvatar']);
     Route::patch('profile/bio', [ProfileController::class, 'updateBio']);
+    Route::patch('profile/alerts', [ProfileController::class, 'updateAlerts']);
     Route::post('profile/bio-photo', [ProfileController::class, 'updateBioPhoto']);
     Route::delete('profile/bio-photo', [ProfileController::class, 'destroyBioPhoto']);
 

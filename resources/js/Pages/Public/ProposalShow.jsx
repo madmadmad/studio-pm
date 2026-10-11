@@ -8,8 +8,10 @@ import ProposalTeam from '../../Components/ProposalTeam';
 import ProposalAbout from '../../Components/ProposalAbout';
 import ProposalFeeSummary from '../../Components/ProposalFeeSummary';
 import DetailField from '../../Components/DocumentDetailField';
+import { useReportOpened } from '../../lib/reportOpened';
 
 export default function ProposalShow({ proposal, token, studio }) {
+    useReportOpened();
     const { branding } = usePage().props;
     const [status, setStatus] = useState(proposal.status);
     const [accepting, setAccepting] = useState(false);
