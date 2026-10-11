@@ -43,7 +43,10 @@ class StatementMatch
         $ledger = JournalLine::query()
             ->with('entry')
             ->where('account_id', $account->id)
-            ->whereHas('entry', fn ($q) => $q->whereBetween('entry_date', [$from, $until]))
+            // By date, not as text: SQLite keeps entry_date with a time
+            // ("2026-10-05 00:00:00"), which as text sorts after the last
+            // day and would leave that day's entries out.
+            ->whereHas('entry', fn ($q) => $q->whereDate('entry_date', '>=', $from)->whereDate('entry_date', '<=', $until))
             ->get()
             ->map(fn (JournalLine $line) => [
                 'date' => $line->entry->entry_date->toDateString(),
