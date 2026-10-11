@@ -3,7 +3,12 @@
 // right, on the subtle fill -- like a timesheet's day headings.
 
 .month-divider {
-    td {
+    // The bar fills the row edge to edge and pads itself, so its label
+    // lines up with the rows' text. As specific as .table's first- and
+    // last-cell padding, and later, so it wins.
+    td,
+    td:first-child,
+    td:last-child {
         padding: 0;
     }
 
