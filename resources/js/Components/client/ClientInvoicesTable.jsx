@@ -28,8 +28,8 @@ export default function ClientInvoicesTable({ invoices, hrefFor, clientView = fa
                     <tr>
                         <th>#</th>
                         <th>Project</th>
-                        <th>Issued</th>
-                        <th>Due</th>
+                        <th className="table__secondary">Issued</th>
+                        <th className="table__secondary">Due</th>
                         <th>Total</th>
                         <th>Status</th>
                         {onOpen && <th />}
@@ -48,8 +48,8 @@ export default function ClientInvoicesTable({ invoices, hrefFor, clientView = fa
                             <td className="table__cell--muted">
                                 {invoice.project?.name ?? (invoice.category ? <Badge tone="neutral" label={invoice.category.name} /> : '—')}
                             </td>
-                            <td className="table__cell--muted">{formatDate(invoice.issued_on)}</td>
-                            <td className="table__cell--muted">{formatDate(invoice.due_on)}</td>
+                            <td className="table__cell--muted table__secondary">{formatDate(invoice.issued_on)}</td>
+                            <td className="table__cell--muted table__secondary">{formatDate(invoice.due_on)}</td>
                             <td className="table__cell--numeric">
                                 {formatCurrency(invoice.total ?? invoiceTotal(invoice.items, invoice.surcharge, invoice.tax_rate))}
                             </td>
