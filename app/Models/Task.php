@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Task extends Model
 {
-    protected $fillable = ['project_id', 'title', 'assignee', 'description', 'status', 'due_date', 'visible_to_client'];
+    protected $fillable = ['project_id', 'schedule_item_id', 'title', 'assignee', 'description', 'status', 'due_date', 'visible_to_client'];
 
     protected $casts = [
         'due_date' => 'date',
@@ -24,6 +24,12 @@ class Task extends Model
     public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class);
+    }
+
+    // The schedule item (phase) the task is part of, if any.
+    public function scheduleItem(): BelongsTo
+    {
+        return $this->belongsTo(ScheduleItem::class);
     }
 
     public function timeEntries(): HasMany

@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Company;
 use App\Models\Project;
+use App\Models\Service;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -117,5 +118,74 @@ class ScheduleItemTest extends TestCase
         $this->actingAs($outsider)->postJson("/api/projects/{$project->id}/schedule-items", [
             'title' => 'Nope', 'starts_on' => '2026-10-01', 'ends_on' => '2026-10-02',
         ])->assertForbidden();
+    }
+
+    public function test_phases_can_be_built_back_to_back_from_services(): void
+    {
+        $user = User::factory()->create();
+        $project = $this->project();
+        $project->scheduleItems()->create(['title' => 'Kickoff', 'starts_on' => '2026-10-01', 'ends_on' => '2026-10-01', 'position' => 0]);
+        $discovery = Service::create(['name' => 'Discovery', 'default_rate' => 140]);
+        $design = Service::create(['name' => 'Design', 'default_rate' => 140]);
+
+        $response = $this->actingAs($user)->postJson("/api/projects/{$project->id}/schedule-items/from-services", [
+            'starts_on' => '2026-10-05',
+            'phases' => [
+                ['service_id' => $discovery->id, 'days' => 7],
+                ['service_id' => $design->id, 'days' => 14],
+            ],
+        ])->assertOk();
+
+        $items = collect($response->json());
+        $this->assertEquals(['Kickoff', 'Discovery', 'Design'], $items->pluck('title')->all());
+        $this->assertEquals([null, $discovery->id, $design->id], $items->pluck('service_id')->all());
+        $this->assertEquals(['2026-10-05', '2026-10-11'], [$items[1]['starts_on'], $items[1]['ends_on']]);
+        $this->assertEquals(['2026-10-12', '2026-10-25'], [$items[2]['starts_on'], $items[2]['ends_on']]);
+
+        // They're ordinary items afterwards.
+        $this->actingAs($user)->patchJson("/api/schedule-items/{$items[2]['id']}", ['starts_on' => '2026-10-14', 'ends_on' => '2026-10-30'])
+            ->assertOk()
+            ->assertJsonPath('service_id', $design->id);
+    }
+
+    public function test_building_from_services_needs_real_services_and_lengths(): void
+    {
+        $user = User::factory()->create();
+        $project = $this->project();
+
+        $this->actingAs($user)->postJson("/api/projects/{$project->id}/schedule-items/from-services", [
+            'starts_on' => '2026-10-05',
+            'phases' => [['service_id' => 999, 'days' => 0]],
+        ])->assertUnprocessable()->assertJsonValidationErrors(['phases.0.service_id', 'phases.0.days']);
+
+        $outsider = User::factory()->teamMember()->create();
+        $this->actingAs($outsider)->postJson("/api/projects/{$project->id}/schedule-items/from-services", [
+            'starts_on' => '2026-10-05',
+            'phases' => [['service_id' => Service::create(['name' => 'Design', 'default_rate' => 140])->id, 'days' => 7]],
+        ])->assertForbidden();
+    }
+
+    public function test_a_task_can_be_put_in_one_of_its_projects_phases(): void
+    {
+        $user = User::factory()->create();
+        $project = $this->project();
+        $phase = $project->scheduleItems()->create(['title' => 'Design', 'starts_on' => '2026-10-01', 'ends_on' => '2026-10-14']);
+        $elsewhere = $this->project()->scheduleItems()->create(['title' => 'Other', 'starts_on' => '2026-10-01', 'ends_on' => '2026-10-02']);
+        $task = $project->tasks()->create(['title' => 'Homepage comps', 'due_date' => '2026-10-09']);
+
+        $this->actingAs($user)->patchJson("/api/tasks/{$task->id}", ['schedule_item_id' => $phase->id])
+            ->assertOk()
+            ->assertJsonPath('schedule_item_id', $phase->id);
+
+        $this->actingAs($user)->patchJson("/api/tasks/{$task->id}", ['schedule_item_id' => $elsewhere->id])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('schedule_item_id');
+
+        $this->actingAs($user)->postJson("/api/projects/{$project->id}/tasks", ['title' => 'Wireframes', 'schedule_item_id' => $elsewhere->id])
+            ->assertUnprocessable();
+
+        // Removing the phase leaves the task, out of any phase.
+        $this->actingAs($user)->deleteJson("/api/schedule-items/{$phase->id}")->assertNoContent();
+        $this->assertNull($task->fresh()->schedule_item_id);
     }
 }

@@ -1,6 +1,6 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Check, DotsSixVertical, Eye, GearSix, DownloadSimple, Paperclip, PencilSimple, Plus, Trash, Users, X } from '@phosphor-icons/react';
+import { ArrowDown, ArrowUp, Check, DotsSixVertical, Eye, GearSix, DownloadSimple, Paperclip, PencilSimple, Plus, Trash, Users, X } from '@phosphor-icons/react';
 import AppLayout from '../../Layouts/AppLayout';
 import Button from '../../Components/Button';
 import EmptyState from '../../Components/EmptyState';
@@ -495,7 +495,7 @@ function FilesSection({ task, onChange }) {
 
 // The description works like a note's body: formatted text with a pencil
 // to open the editor, or straight into the editor while it's empty.
-function TaskDrawer({ task, teamNames, isNew, onClose, onChange }) {
+function TaskDrawer({ task, teamNames, scheduleItems = [], isNew, onClose, onChange }) {
     const [title, setTitle] = useState(task.title);
     const [description, setDescription] = useState(() => toRichText(task.description));
     const titleRef = useRef(null);
@@ -579,7 +579,7 @@ function TaskDrawer({ task, teamNames, isNew, onClose, onChange }) {
                             {teamNames.map((name) => <option key={name} value={name}>{name}</option>)}
                         </select>
                     </div>
-                    <div className="form-grid__full">
+                    <div className={scheduleItems.length > 0 ? '' : 'form-grid__full'}>
                         <label className="label">Due date</label>
                         <input
                             type="date"
@@ -588,6 +588,20 @@ function TaskDrawer({ task, teamNames, isNew, onClose, onChange }) {
                             className="input input--xs"
                         />
                     </div>
+                    {/* The schedule item it's part of: its marker goes on that row of the Schedule chart. */}
+                    {scheduleItems.length > 0 && (
+                        <div>
+                            <label className="label">Phase</label>
+                            <select
+                                value={task.schedule_item_id ?? ''}
+                                onChange={(e) => updateField('schedule_item_id', e.target.value)}
+                                className="input input--xs"
+                            >
+                                <option value="">None</option>
+                                {scheduleItems.map((i) => <option key={i.id} value={i.id}>{i.title}</option>)}
+                            </select>
+                        </div>
+                    )}
                     <div className="form-grid__full">
                         <Toggle
                             checked={task.visible_to_client}
@@ -707,6 +721,7 @@ function TasksTab({ project }) {
                 <TaskDrawer
                     task={selectedTask}
                     teamNames={teamNames}
+                    scheduleItems={project.schedule_items || []}
                     isNew={selectedTask.id === newTaskId}
                     onClose={closeTask}
                     onChange={reload}
@@ -716,14 +731,168 @@ function TasksTab({ project }) {
     );
 }
 
+// Where a new schedule item starts: the day after the schedule ends, or
+// today on an empty one.
+function nextScheduleStart(project) {
+    const lastEnd = (project.schedule_items || []).reduce((max, i) => (i.ends_on > max ? i.ends_on : max), '');
+    return lastEnd ? addDays(lastEnd, 1) : todayInAppTimezone();
+}
+
+// "Build from services": lays the project's services out as back-to-back
+// phases. It starts from the services on the accepted proposals (in the
+// order they're written there), less any already on the schedule; the
+// list can be reordered, lengthened, trimmed or added to before building.
+// Each phase starts at the default length. The phases are ordinary
+// schedule items once built.
+function BuildScheduleDrawer({ project, onClose }) {
+    const services = usePage().props.timeServices || [];
+    const scheduled = new Set((project.schedule_items || []).map((i) => i.service_id).filter(Boolean));
+    const proposed = [...new Set((project.proposals || [])
+        .filter((p) => p.status === 'accepted')
+        .flatMap((p) => (p.items || []).map((i) => i.service_id))
+        .filter(Boolean))];
+    const nameOf = (id) => services.find((sv) => sv.id === id)?.name ?? 'Service';
+
+    const [startsOn, setStartsOn] = useState(() => nextScheduleStart(project));
+    const [defaultWeeks, setDefaultWeeks] = useState(1);
+    const [phases, setPhases] = useState(() => proposed.filter((id) => !scheduled.has(id)).map((id) => ({ service_id: id, weeks: 1 })));
+    const [saving, setSaving] = useState(false);
+    const [error, setError] = useState('');
+
+    const available = services.filter((sv) => !phases.some((p) => p.service_id === sv.id));
+    const weeksValid = (w) => Number(w) > 0;
+    const totalDays = phases.reduce((sum, p) => sum + (weeksValid(p.weeks) ? Math.round(p.weeks * 7) : 0), 0);
+
+    function setDefault(value) {
+        // Phases still at the old default follow it.
+        setPhases(phases.map((p) => (p.weeks === defaultWeeks ? { ...p, weeks: value } : p)));
+        setDefaultWeeks(value);
+    }
+
+    function move(index, by) {
+        const next = [...phases];
+        const [moved] = next.splice(index, 1);
+        next.splice(index + by, 0, moved);
+        setPhases(next);
+    }
+
+    async function build(e) {
+        e.preventDefault();
+        setSaving(true);
+        setError('');
+        try {
+            await api.post(`/api/projects/${project.id}/schedule-items/from-services`, {
+                starts_on: startsOn,
+                phases: phases.map((p) => ({ service_id: p.service_id, days: Math.round(p.weeks * 7) })),
+            });
+            reload();
+            onClose();
+        } catch (err) {
+            setError(err.message || 'Could not build the schedule.');
+        } finally {
+            setSaving(false);
+        }
+    }
+
+    return (
+        <Drawer onClose={onClose}>
+            <h2 className="drawer__title">Build from services</h2>
+            <form onSubmit={build}>
+                <div className="form-grid drawer__section drawer__section--divided">
+                    <div>
+                        <div className="section-label section-label--tight">Start</div>
+                        <input required type="date" value={startsOn} onChange={(e) => setStartsOn(e.target.value)} className="input input--xs" />
+                    </div>
+                    <div>
+                        <div className="section-label section-label--tight">Default length (weeks)</div>
+                        <input
+                            required
+                            type="number"
+                            min="0.5"
+                            step="0.5"
+                            value={defaultWeeks}
+                            onChange={(e) => setDefault(e.target.value === '' ? '' : Number(e.target.value))}
+                            className="input input--xs"
+                        />
+                    </div>
+                </div>
+
+                <div className="drawer__section">
+                    <div className="section-label">Phases</div>
+                    {phases.length === 0 ? (
+                        <p className="drawer__empty">
+                            {proposed.length === 0
+                                ? 'No accepted proposal with services on this project. Add services below.'
+                                : 'Every proposed service is already on the schedule. Add services below.'}
+                        </p>
+                    ) : (
+                        <div className="schedule-builder">
+                            {phases.map((phase, index) => (
+                                <div key={phase.service_id} className="schedule-builder__phase">
+                                    <span className="schedule-builder__name u-truncate">{nameOf(phase.service_id)}</span>
+                                    <input
+                                        required
+                                        type="number"
+                                        min="0.5"
+                                        step="0.5"
+                                        value={phase.weeks}
+                                        onChange={(e) => setPhases(phases.map((p, i) => (i === index ? { ...p, weeks: e.target.value === '' ? '' : Number(e.target.value) } : p)))}
+                                        aria-label={`${nameOf(phase.service_id)} length in weeks`}
+                                        className="input input--xs schedule-builder__weeks"
+                                    />
+                                    <span className="schedule-builder__unit">wk</span>
+                                    <button type="button" onClick={() => move(index, -1)} disabled={index === 0} title="Move up" aria-label={`Move ${nameOf(phase.service_id)} up`} className="icon-btn">
+                                        <ArrowUp />
+                                    </button>
+                                    <button type="button" onClick={() => move(index, 1)} disabled={index === phases.length - 1} title="Move down" aria-label={`Move ${nameOf(phase.service_id)} down`} className="icon-btn">
+                                        <ArrowDown />
+                                    </button>
+                                    <button type="button" onClick={() => setPhases(phases.filter((_, i) => i !== index))} title="Remove" aria-label={`Remove ${nameOf(phase.service_id)}`} className="icon-btn icon-btn--danger">
+                                        <X />
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                    {available.length > 0 && (
+                        <select
+                            value=""
+                            onChange={(e) => e.target.value && setPhases([...phases, { service_id: Number(e.target.value), weeks: defaultWeeks || 1 }])}
+                            aria-label="Add a service"
+                            className="input input--xs schedule-builder__add"
+                        >
+                            <option value="">Add a service…</option>
+                            {available.map((sv) => <option key={sv.id} value={sv.id}>{sv.name}</option>)}
+                        </select>
+                    )}
+                    {phases.length > 0 && startsOn && totalDays > 0 && (
+                        <div className="form-hint">
+                            {formatRange(startsOn, addDays(startsOn, totalDays - 1))} · {formatLength(startsOn, addDays(startsOn, totalDays - 1))}
+                        </div>
+                    )}
+                </div>
+
+                {error && <div className="form-message form-message--error drawer__section">{error}</div>}
+
+                <div className="form-actions">
+                    <Button type="submit" variant="confirm" disabled={saving || phases.length === 0 || !phases.every((p) => weeksValid(p.weeks))}>
+                        Add {phases.length || ''} phase{phases.length === 1 ? '' : 's'}
+                    </Button>
+                </div>
+            </form>
+        </Drawer>
+    );
+}
+
 // A schedule item in the drawer: create (no `item`) or edit. Saves on the
 // button rather than per field, since the two dates are checked together.
-function ScheduleItemDrawer({ project, item, onClose }) {
-    const lastEnd = (project.schedule_items || []).reduce((max, i) => (i.ends_on > max ? i.ends_on : max), '');
-    const defaultStart = lastEnd ? addDays(lastEnd, 1) : todayInAppTimezone();
+function ScheduleItemDrawer({ project, item, onClose, onOpenTask }) {
+    const services = usePage().props.timeServices || [];
+    const defaultStart = nextScheduleStart(project);
     const [form, setForm] = useState(() => (item
-        ? { title: item.title, description: item.description ?? '', starts_on: item.starts_on, ends_on: item.ends_on }
-        : { title: '', description: '', starts_on: defaultStart, ends_on: addDays(defaultStart, 6) }));
+        ? { title: item.title, description: item.description ?? '', service_id: item.service_id ?? '', starts_on: item.starts_on, ends_on: item.ends_on }
+        : { title: '', description: '', service_id: '', starts_on: defaultStart, ends_on: addDays(defaultStart, 6) }));
+    const phaseTasks = item ? project.tasks.filter((t) => t.schedule_item_id === item.id) : [];
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
 
@@ -738,7 +907,7 @@ function ScheduleItemDrawer({ project, item, onClose }) {
         setSaving(true);
         setError('');
         try {
-            const payload = { ...form, description: form.description || null };
+            const payload = { ...form, description: form.description || null, service_id: form.service_id || null };
             if (item) {
                 await api.patch(`/api/schedule-items/${item.id}`, payload);
             } else {
@@ -797,6 +966,41 @@ function ScheduleItemDrawer({ project, item, onClose }) {
                         className="input"
                     />
                 </div>
+                <div className="drawer__section">
+                    <div className="section-label section-label--tight">Service</div>
+                    <select
+                        value={form.service_id}
+                        onChange={(e) => {
+                            const service = services.find((sv) => String(sv.id) === e.target.value);
+                            // A blank title takes the service's name.
+                            setForm({ ...form, service_id: e.target.value, title: form.title || service?.name || '' });
+                        }}
+                        className="input input--xs"
+                    >
+                        <option value="">None</option>
+                        {services.map((sv) => <option key={sv.id} value={sv.id}>{sv.name}</option>)}
+                    </select>
+                </div>
+                {item && (
+                    <div className="drawer__section">
+                        <div className="section-label">Tasks</div>
+                        {phaseTasks.length === 0 ? (
+                            <p className="drawer__empty">No tasks in this phase. Pick it as a task's phase on the Tasks tab.</p>
+                        ) : (
+                            <div className="schedule-phase-tasks">
+                                {phaseTasks.map((task) => (
+                                    <button key={task.id} type="button" onClick={() => onOpenTask(task)} className="schedule-phase-tasks__task">
+                                        <span className="u-truncate">{task.title}</span>
+                                        <span className="schedule-phase-tasks__meta">
+                                            {task.due_date ? formatDate(task.due_date) : 'No due date'}
+                                            <TaskStatusBadge task={task} />
+                                        </span>
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )}
 
                 {error && <div className="form-message form-message--error drawer__section">{error}</div>}
 
@@ -855,12 +1059,35 @@ function ScheduleRow({ item, onOpen, drag }) {
 // as a list. A bar, a chart label or a list row opens the item's drawer;
 // the + adds one.
 function ScheduleTab({ project }) {
-    // A local copy so a drag shows its new order immediately; re-synced
-    // when the page reloads.
+    // A local copy so a drag shows its new order or dates immediately;
+    // re-synced when the page reloads.
     const [items, setItems] = useState(project.schedule_items || []);
     useEffect(() => setItems(project.schedule_items || []), [project.schedule_items]);
     // 'new' while adding, an item while editing, null when closed.
     const [editing, setEditing] = useState(null);
+    const [building, setBuilding] = useState(false);
+    // A task opened from its marker on the chart, or from a phase's drawer.
+    const [taskId, setTaskId] = useState(null);
+    const openTask = project.tasks.find((t) => t.id === taskId) || null;
+    const teamNames = [...new Set([
+        ...(project.active_users || []).map((u) => u.name),
+        ...(project.team_names || []),
+    ])];
+
+    // A bar dragged on the chart.
+    async function changeDates(item, startsOn, endsOn) {
+        setItems((current) => current.map((i) => (i.id === item.id ? { ...i, starts_on: startsOn, ends_on: endsOn } : i)));
+        try {
+            await api.patch(`/api/schedule-items/${item.id}`, { starts_on: startsOn, ends_on: endsOn });
+        } finally {
+            reload();
+        }
+    }
+
+    function openTaskFromPhase(task) {
+        setEditing(null);
+        setTaskId(task.id);
+    }
     const [armedId, setArmedId] = useState(null);
     const [dragId, setDragId] = useState(null);
 
@@ -905,18 +1132,19 @@ function ScheduleTab({ project }) {
                         {formatLength(first, last)}
                     </div>
                 )}
+                actions={<Button variant="secondary" onClick={() => setBuilding(true)}>Build from services</Button>}
                 addLabel="New schedule item"
                 onAdd={() => setEditing('new')}
             />
 
             {items.length === 0 ? (
                 <div className="card card--flush">
-                    <EmptyState text="No schedule yet. Add the project's phases or milestones to build the timeline." />
+                    <EmptyState text="No schedule yet. Build it from the project's services, or add phases and milestones one at a time." />
                 </div>
             ) : (
                 <>
                     <div className="card card--flush page-section">
-                        <ScheduleChart items={items} onOpen={setEditing} />
+                        <ScheduleChart items={items} tasks={project.tasks} onOpen={setEditing} onOpenTask={(task) => setTaskId(task.id)} onChangeDates={changeDates} />
                     </div>
                     <div className="card card--flush">
                         <div className="grid-row grid-row--action grid-row--head">
@@ -936,6 +1164,19 @@ function ScheduleTab({ project }) {
                     project={project}
                     item={editing === 'new' ? null : editing}
                     onClose={() => setEditing(null)}
+                    onOpenTask={openTaskFromPhase}
+                />
+            )}
+
+            {building && <BuildScheduleDrawer project={project} onClose={() => setBuilding(false)} />}
+
+            {openTask && (
+                <TaskDrawer
+                    task={openTask}
+                    teamNames={teamNames}
+                    scheduleItems={project.schedule_items || []}
+                    onClose={() => setTaskId(null)}
+                    onChange={reload}
                 />
             )}
         </div>

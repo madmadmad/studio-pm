@@ -51,6 +51,7 @@ Route::middleware(['auth:sanctum', 'accountant.restrict', 'two-factor.required']
     Route::apiResource('tasks.subtasks', SubtaskController::class)->shallow()->only(['store', 'update', 'destroy']);
     Route::apiResource('tasks.files', TaskFileController::class)->shallow()->only(['store', 'destroy']);
     Route::apiResource('projects.notes', NoteController::class)->shallow()->only(['index', 'store', 'update', 'destroy']);
+    Route::post('projects/{project}/schedule-items/from-services', [ScheduleItemController::class, 'storeFromServices']);
     Route::put('projects/{project}/schedule-items/order', [ScheduleItemController::class, 'reorder']);
     Route::apiResource('projects.schedule-items', ScheduleItemController::class)->shallow()->only(['index', 'store', 'update', 'destroy']);
     Route::get('projects/{project}/messages/version', [MessageController::class, 'version']);

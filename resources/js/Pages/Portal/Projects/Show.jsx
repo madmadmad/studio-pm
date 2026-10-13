@@ -377,8 +377,9 @@ function MessagesTab({ project, unread }) {
 }
 
 // The project's schedule, read-only: the same gantt chart and list as the
-// staff Schedule tab, in the studio's order. A bar or row opens the item's
-// dates and description in the drawer.
+// staff Schedule tab, in the studio's order, with the tasks shown to the
+// client as markers. A bar or row opens the item's dates and description
+// in the drawer.
 function ScheduleTab({ project }) {
     const items = project.schedule_items || [];
     const [openId, setOpenId] = useState(null);
@@ -407,7 +408,7 @@ function ScheduleTab({ project }) {
                 }
             />
             <div className="card card--flush page-section">
-                <ScheduleChart items={items} onOpen={(item) => setOpenId(item.id)} />
+                <ScheduleChart items={items} tasks={project.tasks} onOpen={(item) => setOpenId(item.id)} />
             </div>
             <div className="card card--flush">
                 <div className="grid-row grid-row--action grid-row--head">

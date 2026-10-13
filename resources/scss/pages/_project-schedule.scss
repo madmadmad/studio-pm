@@ -1,5 +1,6 @@
 // Projects/Show Schedule tab: the item rows under the gantt chart (a
-// .grid-row list, reordered by dragging a row's handle). The chart itself
+// .grid-row list, reordered by dragging a row's handle), plus the
+// "Build from services" drawer and a phase's task list. The chart itself
 // is components/_schedule-chart.scss.
 
 .project-schedule {
@@ -44,6 +45,79 @@
 
     &__length {
         grid-column: span 2;
+        color: var(--color-text-muted);
+    }
+}
+
+// "Build from services" drawer: one row per phase -- the service, its
+// length in weeks, and move up / down / remove.
+.schedule-builder {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    margin-bottom: var(--space-3);
+
+    &__phase {
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
+    }
+
+    &__name {
+        flex: 1;
+        min-width: 0;
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+        font-weight: var(--font-weight-medium);
+    }
+
+    &__weeks {
+        width: 4.5rem; // one-off: fits "10.5"
+        text-align: right;
+    }
+
+    &__unit {
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+        color: var(--color-text-muted);
+    }
+
+    &__add {
+        margin-bottom: var(--space-2);
+    }
+}
+
+// A schedule item's drawer: the tasks in that phase, each opening its own
+// drawer.
+.schedule-phase-tasks {
+    display: flex;
+    flex-direction: column;
+
+    &__task {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--space-3);
+        padding-block: var(--space-2);
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+        text-align: left;
+        border-bottom: var(--border-width) solid var(--color-border);
+
+        &:last-child {
+            border-bottom: none;
+        }
+
+        &:hover {
+            color: var(--color-primary-text);
+        }
+    }
+
+    &__meta {
+        display: flex;
+        flex-shrink: 0;
+        align-items: center;
+        gap: var(--space-2);
         color: var(--color-text-muted);
     }
 }

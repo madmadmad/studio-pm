@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Project;
 use App\Models\ScheduleItem;
+use App\Models\Service;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 // A project's schedule items. Same access as the rest of a project's
@@ -27,6 +29,43 @@ class ScheduleItemController extends Controller
         $position = ($project->scheduleItems()->max('position') ?? -1) + 1;
 
         return $project->scheduleItems()->create([...$this->validated($request), 'position' => $position]);
+    }
+
+    // Builds phases from services ("Build from services"): one item per
+    // service, in the order given, each starting the day after the one
+    // before ends, from `starts_on`. They're ordinary items afterwards --
+    // added to the end of the list, with dates to change freely.
+    public function storeFromServices(Request $request, Project $project)
+    {
+        $this->authorize('update', $project);
+
+        $data = $request->validate([
+            'starts_on' => ['required', 'date'],
+            'phases' => ['required', 'array', 'min:1'],
+            'phases.*.service_id' => ['required', 'integer', 'exists:services,id'],
+            'phases.*.days' => ['required', 'integer', 'min:1', 'max:365'],
+        ]);
+
+        $services = Service::whereKey(collect($data['phases'])->pluck('service_id'))->get()->keyBy('id');
+
+        DB::transaction(function () use ($data, $project, $services) {
+            $position = ($project->scheduleItems()->max('position') ?? -1) + 1;
+            $start = Carbon::parse($data['starts_on'])->startOfDay();
+
+            foreach ($data['phases'] as $phase) {
+                $end = $start->copy()->addDays($phase['days'] - 1);
+                $project->scheduleItems()->create([
+                    'service_id' => $phase['service_id'],
+                    'title' => $services[$phase['service_id']]->name,
+                    'starts_on' => $start->toDateString(),
+                    'ends_on' => $end->toDateString(),
+                    'position' => $position++,
+                ]);
+                $start = $end->copy()->addDay();
+            }
+        });
+
+        return $project->scheduleItems()->get();
     }
 
     // Saves the order after a drag: `ids` is every item on the project, top
@@ -79,6 +118,7 @@ class ScheduleItemController extends Controller
         return $request->validate([
             'title' => [$required, 'string', 'max:255'],
             'description' => ['nullable', 'string'],
+            'service_id' => ['nullable', 'integer', 'exists:services,id'],
             'starts_on' => [$required, 'date'],
             'ends_on' => [$required, 'date', ...($startsOn ? ['after_or_equal:'.$startsOn] : [])],
         ], [
