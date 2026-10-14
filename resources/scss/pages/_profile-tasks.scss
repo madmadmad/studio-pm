@@ -1,5 +1,5 @@
-// Profile's Tasks tab: the person's starred tasks across projects (a
-// .grid-row list), each opening on its project.
+// Profile's Tasks tab: the person's tasks across projects, assigned or
+// starred (a .grid-row list), each opening on its project.
 
 .profile-tasks {
     &__title {
@@ -9,6 +9,15 @@
         gap: var(--space-2);
         min-width: 0;
         font-weight: var(--font-weight-medium);
+    }
+
+    // Marks a task assigned to them (as .task-list__client marks one shown
+    // to the client).
+    &__assigned {
+        flex-shrink: 0;
+        width: var(--size-icon-sm);
+        height: var(--size-icon-sm);
+        color: var(--color-text-muted);
     }
 
     // The project, with its client under it.

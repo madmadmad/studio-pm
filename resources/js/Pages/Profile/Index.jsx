@@ -10,6 +10,7 @@ import Timesheet from '../../Components/Timesheet';
 import ProjectBoard from '../../Components/ProjectBoard';
 import EmptyState from '../../Components/EmptyState';
 import StarButton, { useFavorites } from '../../Components/StarButton';
+import { UserCircle } from '@phosphor-icons/react';
 import RowActions from '../../Components/RowActions';
 import { TaskStatusBadge } from '../../Components/StatusBadges';
 import { formatDate, todayInAppTimezone } from '../../lib/format';
@@ -45,27 +46,28 @@ function StarredProjects({ projects }) {
 
 const STATUS_ORDER = ['todo', 'in_progress', 'done'];
 
-// Their starred tasks across every project, open ones first by due date.
-// A row opens the task on its project; the status badge cycles it (when
-// they can change it); unstarring takes it off here.
-function StarredTasks({ tasks }) {
+// Their tasks across every project -- assigned to them or starred -- open
+// ones first by due date. A row opens the task on its project; the status
+// badge cycles it (when they can change it). Unstarring takes a task off
+// here unless it's assigned to them.
+function MyTasks({ tasks }) {
     const favorites = useFavorites(tasks, 'tasks');
-    const starred = tasks.filter((t) => favorites.isStarred(t));
+    const shown = tasks.filter((t) => t.is_assigned || favorites.isStarred(t));
     const today = todayInAppTimezone();
 
     async function cycleStatus(e, task) {
         e.stopPropagation();
         const next = STATUS_ORDER[(STATUS_ORDER.indexOf(task.status) + 1) % STATUS_ORDER.length];
         await api.patch(`/api/tasks/${task.id}`, { status: next });
-        router.reload({ only: ['starredTasks'] });
+        router.reload({ only: ['myTasks'] });
     }
 
-    if (starred.length === 0) {
+    if (shown.length === 0) {
         return (
             <div className="card card--flush">
-                <EmptyState text="No starred tasks yet." />
+                <EmptyState text="No tasks yet." />
                 <p className="form-hint profile-page__hint">
-                    Star the tasks you&rsquo;re working on from a project&rsquo;s Tasks tab.
+                    Tasks assigned to you show up here. Star others you&rsquo;re working on from a project&rsquo;s Tasks tab.
                 </p>
             </div>
         );
@@ -80,7 +82,7 @@ function StarredTasks({ tasks }) {
                 <div className="profile-tasks__status">Status</div>
                 <div />
             </div>
-            {starred.map((task) => {
+            {shown.map((task) => {
                 const overdue = task.due_date && task.status !== 'done' && task.due_date.slice(0, 10) < today;
                 return (
                     <div
@@ -89,8 +91,11 @@ function StarredTasks({ tasks }) {
                         className="grid-row grid-row--action grid-row--link"
                     >
                         <div className="profile-tasks__title">
-                            <StarButton starred onToggle={() => favorites.toggle(task)} size={14} noun="task" />
+                            <StarButton starred={favorites.isStarred(task)} onToggle={() => favorites.toggle(task)} size={14} noun="task" />
                             <span className="u-truncate">{task.title}</span>
+                            {task.is_assigned && (
+                                <UserCircle className="profile-tasks__assigned" aria-label="Assigned to you" title="Assigned to you" />
+                            )}
                         </div>
                         <div className="profile-tasks__project">
                             <span className="u-truncate">{task.project?.name}</span>
@@ -225,9 +230,10 @@ function flatErrors(err) {
 }
 
 // Your own page: your week's time (Timesheet), the projects you've
-// starred (Projects), your photo, details and password (Account), and
+// starred (Projects), the tasks assigned to you or starred (Tasks), your
+// photo, details and password (Account), and
 // two-factor and passkeys (Security).
-export default function ProfileIndex({ profileUser, passwordHint, security, timesheet, timeProjects, timeCompanies, timeServices, starredProjects, starredTasks }) {
+export default function ProfileIndex({ profileUser, passwordHint, security, timesheet, timeProjects, timeCompanies, timeServices, starredProjects, myTasks }) {
     const [tab, setTab] = useRememberedTab('profile-page-tab', TABS);
     const [user, setUser] = useState(profileUser);
     const [saving, setSaving] = useState(false);
@@ -291,7 +297,7 @@ export default function ProfileIndex({ profileUser, passwordHint, security, time
 
             {tab === 'Projects' && <StarredProjects projects={starredProjects} />}
 
-            {tab === 'Tasks' && <StarredTasks tasks={starredTasks} />}
+            {tab === 'Tasks' && <MyTasks tasks={myTasks} />}
 
             {tab === 'Security' && <SecuritySettings security={security} />}
 

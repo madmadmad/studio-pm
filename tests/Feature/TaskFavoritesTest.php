@@ -64,14 +64,45 @@ class TaskFavoritesTest extends TestCase
         $teammate->favoriteTasks()->attach($hidden->id);
 
         $this->actingAs($teammate)->get('/profile')->assertInertia(fn ($page) => $page
-            ->has('starredTasks', 4)
-            ->where('starredTasks.0.title', 'Wireframes')
-            ->where('starredTasks.0.project.name', 'Brand refresh')
-            ->where('starredTasks.0.project.company.name', 'Alder & Finch Design')
-            ->where('starredTasks.0.can_edit', true)
-            ->where('starredTasks.1.title', 'Comps')
-            ->where('starredTasks.2.title', 'Style guide')
-            ->where('starredTasks.3.title', 'Kickoff'));
+            ->has('myTasks', 4)
+            ->where('myTasks.0.title', 'Wireframes')
+            ->where('myTasks.0.project.name', 'Brand refresh')
+            ->where('myTasks.0.project.company.name', 'Alder & Finch Design')
+            ->where('myTasks.0.can_edit', true)
+            ->where('myTasks.0.is_favorite', true)
+            ->where('myTasks.1.title', 'Comps')
+            ->where('myTasks.2.title', 'Style guide')
+            ->where('myTasks.3.title', 'Kickoff'));
+    }
+
+    public function test_the_profile_also_lists_tasks_assigned_to_them_by_name(): void
+    {
+        $company = Company::create(['name' => 'Alder & Finch Design']);
+        $project = $company->projects()->create(['name' => 'Brand refresh', 'status' => 'active']);
+        $teammate = User::factory()->teamMember()->create(['name' => 'Maya Ortiz']);
+        $project->users()->attach($teammate->id, ['assigned_at' => now()]);
+
+        $project->tasks()->create(['title' => 'Wireframes', 'assignee' => 'Maya Ortiz', 'due_date' => '2026-10-15']);
+        $starredToo = $project->tasks()->create(['title' => 'Comps', 'assignee' => 'Maya Ortiz', 'due_date' => '2026-10-30']);
+        $teammate->favoriteTasks()->attach($starredToo->id);
+        $project->tasks()->create(['title' => 'Someone else\'s', 'assignee' => 'Sam Lee']);
+        $project->tasks()->create(['title' => 'Just finished', 'assignee' => 'Maya Ortiz', 'status' => 'done']);
+        $oldDone = $project->tasks()->create(['title' => 'Long done', 'assignee' => 'Maya Ortiz', 'status' => 'done']);
+        $oldDone->forceFill(['updated_at' => now()->subWeeks(2)])->saveQuietly();
+        $company->projects()->create(['name' => 'Old site', 'status' => 'archived'])
+            ->tasks()->create(['title' => 'Archived', 'assignee' => 'Maya Ortiz']);
+        // Assigned on a project they're not on: not theirs to see.
+        $company->projects()->create(['name' => 'Website', 'status' => 'active'])
+            ->tasks()->create(['title' => 'Elsewhere', 'assignee' => 'Maya Ortiz']);
+
+        $this->actingAs($teammate)->get('/profile')->assertInertia(fn ($page) => $page
+            ->has('myTasks', 3)
+            ->where('myTasks.0.title', 'Wireframes')
+            ->where('myTasks.0.is_assigned', true)
+            ->where('myTasks.0.is_favorite', false)
+            ->where('myTasks.1.title', 'Comps')
+            ->where('myTasks.1.is_favorite', true)
+            ->where('myTasks.2.title', 'Just finished'));
     }
 
     public function test_a_deleted_task_drops_its_stars(): void

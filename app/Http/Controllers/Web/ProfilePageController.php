@@ -35,8 +35,8 @@ class ProfilePageController extends Controller
             'timesheet' => fn () => $this->timesheet($request),
             // The Projects tab's board: the projects they've starred.
             'starredProjects' => fn () => ProjectPageController::boardProjects($request, starredOnly: true),
-            // The Tasks tab: the tasks they've starred.
-            'starredTasks' => fn () => $this->starredTasks($request),
+            // The Tasks tab: the tasks assigned to them and those they've starred.
+            'myTasks' => fn () => $this->myTasks($request),
             // For logging time: the projects this person can log against
             // (with their tasks), their clients, and the services.
             'timeProjects' => fn () => $this->loggableProjects($request),
@@ -85,21 +85,34 @@ class ProfilePageController extends Controller
         ];
     }
 
-    // The tasks this person has starred and can still see (off a project
-    // they've left, a star stays but the task drops out): open ones first,
-    // soonest due first (undated last), then the done ones. Each says
-    // whether they can change its status here (TaskPolicy).
-    protected function starredTasks(Request $request)
+    // The Tasks tab: the tasks assigned to this person (a task's assignee
+    // is a name, so by their name) and the ones they've starred, that they
+    // can still see. Assigned tasks on archived projects drop out, and done
+    // ones after a week; starred ones stay until unstarred. Open ones come
+    // first, soonest due first (undated last), then the done ones. Each
+    // says whether it's starred, whether it's theirs, and whether they can
+    // change its status here (TaskPolicy).
+    protected function myTasks(Request $request)
     {
         $user = $request->user();
+        $starredIds = $user->favoriteTasks()->pluck('tasks.id');
 
-        return $user->favoriteTasks()
+        return Task::query()
+            ->where(fn ($q) => $q
+                ->whereIn('id', $starredIds)
+                ->orWhere(fn ($q) => $q
+                    ->where('assignee', $user->name)
+                    ->whereHas('project', fn ($q) => $q->where('status', '!=', 'archived'))
+                    ->where(fn ($q) => $q->where('status', '!=', 'done')->orWhere('updated_at', '>=', now()->subWeek()))))
             ->with('project:id,name,company_id,status', 'project.company:id,name')
-            ->get(['tasks.id', 'tasks.project_id', 'tasks.title', 'tasks.status', 'tasks.due_date', 'tasks.assignee'])
+            ->get(['id', 'project_id', 'title', 'status', 'due_date', 'assignee'])
             ->filter(fn (Task $task) => $user->can('view', $task))
             ->sortBy(fn (Task $task) => [$task->status === 'done' ? 1 : 0, $task->due_date ? 0 : 1, $task->due_date?->toDateString() ?? '', $task->id])
             ->values()
-            ->each(fn (Task $task) => $task->setAttribute('is_favorite', true)->setAttribute('can_edit', $user->can('update', $task))->makeHidden('pivot'));
+            ->each(fn (Task $task) => $task
+                ->setAttribute('is_favorite', $starredIds->contains($task->id))
+                ->setAttribute('is_assigned', $task->assignee === $user->name)
+                ->setAttribute('can_edit', $user->can('update', $task)));
     }
 
     // A team member logs time on projects they're on now; a manager on any
