@@ -1,7 +1,15 @@
-// Profile's Tasks tab: the person's tasks across projects, assigned or
-// starred (a .grid-row list), each opening on its project.
+// My Work: the person's tasks across projects, assigned or starred, and
+// the projects they've worked on lately (.grid-row lists), each opening
+// on its project.
 
-.profile-tasks {
+// Under an empty list: where the items come from.
+.my-work__hint {
+    margin-top: calc(var(--space-4) * -1);
+    padding: 0 var(--space-4) var(--space-8);
+    text-align: center;
+}
+
+.my-work-tasks {
     &__title {
         display: flex;
         grid-column: span 5;
@@ -51,5 +59,39 @@
     // No due date ("—").
     &__empty {
         color: var(--color-text-muted);
+    }
+}
+
+.my-work-projects {
+    // The project, with its client under it.
+    &__name {
+        display: flex;
+        flex-direction: column;
+        grid-column: span 6;
+        min-width: 0;
+        font-weight: var(--font-weight-medium);
+    }
+
+    &__client {
+        font-size: var(--font-size-xs);
+        line-height: var(--line-height-xs);
+        font-weight: var(--font-weight-normal);
+        color: var(--color-text-muted);
+    }
+
+    &__last {
+        grid-column: span 2;
+        font-variant-numeric: tabular-nums;
+    }
+
+    // Their hours on it over the 30 days.
+    &__hours {
+        grid-column: span 2;
+        font-variant-numeric: tabular-nums;
+    }
+
+    &__status {
+        grid-column: span 2;
+        text-align: right;
     }
 }

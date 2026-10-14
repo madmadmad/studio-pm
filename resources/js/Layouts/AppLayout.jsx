@@ -9,7 +9,8 @@ import { startChat } from '../lib/chatStore';
 // `staffOnly`: never for the accountant, who has Bookkeeping, Invoices and
 // Expenses alone (User::ACCOUNTANT_PERMISSIONS).
 const NAV_ITEMS = [
-    { href: '/', label: 'Overview', exact: true, staffOnly: true },
+    // The Overview (/overview) is off the sidebar for now; My Work is home.
+    { href: '/my-work', label: 'My Work', staffOnly: true },
     { href: '/chat', label: 'Chat', badge: <ChatNavBadge />, staffOnly: true },
     { href: '/clients', label: 'Clients', permission: 'clients' },
     { href: '/projects', label: 'Projects', staffOnly: true },

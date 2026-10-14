@@ -141,7 +141,7 @@ class AccountantAccessTest extends TestCase
         $company = Company::create(['name' => 'Acme']);
         $project = $company->projects()->create(['name' => 'Rebrand']);
 
-        foreach (['/', '/projects', "/projects/{$project->id}", '/clients', '/proposals', '/chat', '/users', '/settings', '/profile', '/services', '/time-entries'] as $url) {
+        foreach (['/', '/my-work', '/overview', '/projects', "/projects/{$project->id}", '/clients', '/proposals', '/chat', '/users', '/settings', '/profile', '/services', '/time-entries'] as $url) {
             $this->actingAs($casey, 'web')->get($url)->assertRedirect('/bookkeeping');
         }
         foreach ([['get', '/api/chat/unread'], ['get', "/api/projects/{$project->id}/messages"], ['post', "/api/companies/{$company->id}/projects"], ['get', '/api/users']] as [$method, $url]) {

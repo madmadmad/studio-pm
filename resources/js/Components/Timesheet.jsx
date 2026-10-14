@@ -32,7 +32,7 @@ const hoursText = (hours) => `${parseFloat(hours) || 0}h`;
 
 // Moves to another week, reloading only the timesheet.
 function goToWeek(week) {
-    router.get('/profile', week ? { week } : {}, { only: ['timesheet'], preserveState: true, preserveScroll: true, replace: true });
+    router.get('/my-work', week ? { week } : {}, { only: ['timesheet'], preserveState: true, preserveScroll: true, replace: true });
 }
 
 function reloadTimesheet() {

@@ -141,7 +141,7 @@ class PermissionsTest extends TestCase
 
     public function test_the_sidebar_knows_what_each_person_can_do(): void
     {
-        $this->actingAs($this->member(['clients']))->get('/')
+        $this->actingAs($this->member(['clients']))->get('/overview')
             ->assertInertia(fn (Assert $page) => $page->where('auth.user.permissions', ['clients']));
     }
 }

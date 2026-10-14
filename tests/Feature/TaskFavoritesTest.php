@@ -63,7 +63,7 @@ class TaskFavoritesTest extends TestCase
         $hidden = $company->projects()->create(['name' => 'Website'])->tasks()->create(['title' => 'Elsewhere']);
         $teammate->favoriteTasks()->attach($hidden->id);
 
-        $this->actingAs($teammate)->get('/profile')->assertInertia(fn ($page) => $page
+        $this->actingAs($teammate)->get('/my-work')->assertInertia(fn ($page) => $page
             ->has('myTasks', 4)
             ->where('myTasks.0.title', 'Wireframes')
             ->where('myTasks.0.project.name', 'Brand refresh')
@@ -95,7 +95,7 @@ class TaskFavoritesTest extends TestCase
         $company->projects()->create(['name' => 'Website', 'status' => 'active'])
             ->tasks()->create(['title' => 'Elsewhere', 'assignee' => 'Maya Ortiz']);
 
-        $this->actingAs($teammate)->get('/profile')->assertInertia(fn ($page) => $page
+        $this->actingAs($teammate)->get('/my-work')->assertInertia(fn ($page) => $page
             ->has('myTasks', 3)
             ->where('myTasks.0.title', 'Wireframes')
             ->where('myTasks.0.is_assigned', true)

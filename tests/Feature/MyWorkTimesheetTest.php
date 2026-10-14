@@ -8,7 +8,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
-class ProfileTimesheetTest extends TestCase
+class MyWorkTimesheetTest extends TestCase
 {
     use RefreshDatabase;
 
@@ -30,7 +30,7 @@ class ProfileTimesheetTest extends TestCase
         $log($me, '2026-09-27', 4); // the Sunday before -- last week
         $log($colleague, '2026-09-29', 8); // someone else's
 
-        $this->actingAs($me)->get('/profile')->assertOk()->assertInertia(fn ($page) => $page
+        $this->actingAs($me)->get('/my-work')->assertOk()->assertInertia(fn ($page) => $page
             ->where('timesheet.week_start', '2026-09-28')
             ->where('timesheet.week_end', '2026-10-04')
             ->where('timesheet.is_this_week', true)
@@ -43,7 +43,7 @@ class ProfileTimesheetTest extends TestCase
             ->where('timesheet.totals.billable', 2.5)
             ->has('timeProjects', 1));
 
-        $this->actingAs($me)->get('/profile?week=2026-09-23')->assertInertia(fn ($page) => $page
+        $this->actingAs($me)->get('/my-work?week=2026-09-23')->assertInertia(fn ($page) => $page
             ->where('timesheet.week_start', '2026-09-21')
             ->where('timesheet.is_this_week', false)
             ->where('timesheet.totals.hours', 4));
@@ -53,7 +53,7 @@ class ProfileTimesheetTest extends TestCase
     {
         $this->travelTo('2026-10-01 10:00:00');
 
-        $this->actingAs(User::factory()->teamMember()->create())->get('/profile?week=not-a-date')
+        $this->actingAs(User::factory()->teamMember()->create())->get('/my-work?week=not-a-date')
             ->assertOk()
             ->assertInertia(fn ($page) => $page->where('timesheet.week_start', '2026-09-28'));
     }
@@ -67,12 +67,12 @@ class ProfileTimesheetTest extends TestCase
         $me = User::factory()->create();
         $me->favoriteProjects()->attach([$starred->id, $archived->id]);
 
-        $this->actingAs($me)->get('/profile')->assertInertia(fn ($page) => $page
+        $this->actingAs($me)->get('/my-work')->assertInertia(fn ($page) => $page
             ->has('starredProjects', 1)
             ->where('starredProjects.0.name', 'Brand refresh')
             ->where('starredProjects.0.is_favorite', true));
 
         // Someone else's stars aren't yours.
-        $this->actingAs(User::factory()->create())->get('/profile')->assertInertia(fn ($page) => $page->has('starredProjects', 0));
+        $this->actingAs(User::factory()->create())->get('/my-work')->assertInertia(fn ($page) => $page->has('starredProjects', 0));
     }
 }

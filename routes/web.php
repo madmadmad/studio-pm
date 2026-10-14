@@ -17,6 +17,7 @@ use App\Http\Controllers\Web\ExpensePageController;
 use App\Http\Controllers\Web\InvoicePageController;
 use App\Http\Controllers\Web\LedgerPageController;
 use App\Http\Controllers\Web\LedgerReportPageController;
+use App\Http\Controllers\Web\MyWorkPageController;
 use App\Http\Controllers\Web\PortalAuthController;
 use App\Http\Controllers\Web\PortalPageController;
 use App\Http\Controllers\Web\PortalPreviewController;
@@ -72,7 +73,11 @@ Route::get('/i/{token}/pdf', [PublicInvoiceController::class, 'pdf'])->name('inv
 // The staff app. The accountant reaches only the corner of it that's
 // theirs (RestrictAccountant).
 Route::middleware(['auth', 'accountant.restrict', 'two-factor.required'])->group(function () {
-    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+    // Home (and where signing in lands) is My Work. The Overview is off
+    // the sidebar for now but still at /overview.
+    Route::redirect('/', '/my-work')->name('home');
+    Route::get('/my-work', [MyWorkPageController::class, 'index'])->name('my-work.index');
+    Route::get('/overview', [DashboardController::class, 'index'])->name('dashboard');
 
     // Two-factor, required of all staff: where they're sent until it's set
     // up (RequireTwoFactor), and where it's managed from then on is Profile.

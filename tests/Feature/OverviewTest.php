@@ -36,7 +36,7 @@ class OverviewTest extends TestCase
 
     public function test_managers_see_every_project_and_the_money(): void
     {
-        $this->actingAs(User::factory()->create(['role' => 'super_admin']))->get('/')
+        $this->actingAs(User::factory()->create(['role' => 'super_admin']))->get('/overview')
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Dashboard/Index')
                 ->where('can.invoices', true)
@@ -52,7 +52,7 @@ class OverviewTest extends TestCase
     {
         $this->mine->company->proposals()->create(['title' => 'Logo', 'body' => '<p>Scope</p>', 'status' => 'accepted', 'accepted_at' => now(), 'project_id' => $this->mine->id]);
 
-        $this->actingAs(User::factory()->create(['role' => 'super_admin']))->get('/')
+        $this->actingAs(User::factory()->create(['role' => 'super_admin']))->get('/overview')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page->where('activity', fn ($events) => collect($events)->pluck('type')->contains('proposal_accepted')));
     }
@@ -62,7 +62,7 @@ class OverviewTest extends TestCase
         $member = User::factory()->create(['role' => 'team_member']);
         $member->projects()->attach($this->mine->id, ['assigned_at' => now()]);
 
-        $this->actingAs($member)->get('/')
+        $this->actingAs($member)->get('/overview')
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Dashboard/Index')
                 ->where('can.invoices', false)
