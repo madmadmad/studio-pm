@@ -37,6 +37,7 @@ use App\Http\Controllers\StudioProfileController;
 use App\Http\Controllers\SubtaskController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TaskFavoriteController;
+use App\Http\Controllers\TodoController;
 use App\Http\Controllers\TaskFileController;
 use App\Http\Controllers\TaxController;
 use App\Http\Controllers\TimeEntryController;
@@ -109,6 +110,11 @@ Route::middleware(['auth:sanctum', 'accountant.restrict', 'two-factor.required']
     Route::delete('projects/{project}/favorite', [ProjectFavoriteController::class, 'destroy']);
     Route::post('tasks/{task}/favorite', [TaskFavoriteController::class, 'store']);
     Route::delete('tasks/{task}/favorite', [TaskFavoriteController::class, 'destroy']);
+
+    // Each person's own to-do list (My Work → To-do).
+    Route::put('todos/order', [TodoController::class, 'reorder']);
+    Route::delete('todos/done', [TodoController::class, 'clearDone']);
+    Route::apiResource('todos', TodoController::class)->only(['index', 'store', 'update', 'destroy']);
 
     Route::post('projects/{project}/assignments', [ProjectAssignmentController::class, 'store']);
     Route::delete('projects/{project}/assignments/{user}', [ProjectAssignmentController::class, 'destroy']);

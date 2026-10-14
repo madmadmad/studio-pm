@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\TodoController;
 use App\Models\Company;
 use App\Models\Project;
 use App\Models\Service;
@@ -14,8 +15,8 @@ use Inertia\Inertia;
 use Inertia\Response;
 
 // My Work: the signed-in person's own work, where they land after signing
-// in -- their tasks (assigned or starred), their projects (recently worked
-// on, and starred), and their week's time.
+// in -- their tasks (assigned or starred), their private to-do list, their
+// projects (recently worked on, and starred), and their week's time.
 class MyWorkPageController extends Controller
 {
     // How far back "Recently worked on" looks.
@@ -25,6 +26,8 @@ class MyWorkPageController extends Controller
     {
         return Inertia::render('MyWork/Index', [
             'myTasks' => fn () => $this->myTasks($request),
+            // Their own to-do list: open ones in order, then those ticked.
+            'todos' => fn () => TodoController::listFor($request->user()->id),
             'recentProjects' => fn () => $this->recentProjects($request),
             // The Projects tab's board: the projects they've starred.
             'starredProjects' => fn () => ProjectPageController::boardProjects($request, starredOnly: true),
