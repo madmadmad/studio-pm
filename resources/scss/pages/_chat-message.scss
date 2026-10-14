@@ -15,7 +15,10 @@
     // column, lined up with the day rules and the composer; the padding
     // insets the content within it.
     position: relative;
-    padding: var(--space-1-5) var(--space-3);
+    // Tighter than a client thread's .message: no space below (the shared
+    // margin), a little padding, so a run of messages reads as one.
+    margin-bottom: 0;
+    padding: var(--space-1) var(--space-3);
     border-radius: var(--radius-base);
     transition: background-color var(--duration-fast) var(--ease-standard);
 
@@ -24,8 +27,14 @@
         background-color: var(--color-surface-subtle);
     }
 
+    // A new sender gets a little room above; their name sits right on
+    // the text.
     &:not(&--continued) {
         margin-top: var(--space-2);
+    }
+
+    .message__header {
+        margin-bottom: 0;
     }
 
     &__rail {
