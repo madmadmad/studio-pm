@@ -50,7 +50,7 @@ class ExpensePageController extends Controller
                 ->whereNotNull('parent_id')
                 ->where(fn ($q) => $q->whereNull('system_key')->orWhereNotIn('system_key', ['stripe_clearing', 'sales_tax_payable']))
                 ->orderBy('code')
-                ->get(['id', 'name']),
+                ->get(['id', 'name', 'system_key']),
             'defaultPaymentAccountId' => Account::forKey('capital_one_card')->id,
         ]);
     }

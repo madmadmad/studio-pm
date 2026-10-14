@@ -90,9 +90,15 @@ class JournalEntryController extends Controller
         ])), ($data['memo'] ?? null) ?: 'Stripe payout'));
     }
 
-    // One pay period, entered from the payroll provider's report: each
-    // cost to its account, and the total out of checking (the provider
-    // draws it all from there, so there are no withholding payables).
+    // One pay run, entered from the payroll provider's report: each cost
+    // to its account, and what actually left checking -- Data Service's
+    // debit (net pay, withholdings, employer taxes) and American Funds'
+    // (retirement deferrals and match), each its own line to match the
+    // bank statement. The provider draws it all, so there are no
+    // withholding payables. What the costs come to beyond those debits is
+    // the employees' health insurance deduction, which stayed in checking:
+    // it's credited back to Health & Life Insurance, as their share of the
+    // premiums.
     public function payroll(Request $request)
     {
         $parts = ['officer_compensation', 'wages', 'payroll_taxes', 'retirement_expense'];
@@ -100,6 +106,11 @@ class JournalEntryController extends Controller
             'entry_date' => ['required', 'date'],
             'memo' => ['nullable', 'string', 'max:255'],
             ...array_fill_keys($parts, ['nullable', 'numeric', 'min:0']),
+            'payroll_debit' => ['required', 'numeric', 'min:0.01'],
+            'retirement_debit' => ['nullable', 'numeric', 'min:0'],
+        ], [
+            'payroll_debit.required' => 'Enter what Data Service took from checking.',
+            'payroll_debit.min' => 'Enter what Data Service took from checking.',
         ]);
 
         $lines = collect($parts)
@@ -108,7 +119,20 @@ class JournalEntryController extends Controller
             ->values()
             ->all();
         abort_if($lines === [], 422, 'Enter at least one payroll amount.');
-        $lines[] = ['account' => 'checking', 'credit_cents' => array_sum(array_column($lines, 'debit_cents'))];
+
+        $costs = array_sum(array_column($lines, 'debit_cents'));
+        $payrollDebit = Money::toCents($data['payroll_debit']);
+        $retirementDebit = Money::toCents($data['retirement_debit'] ?? null);
+        $deduction = $costs - $payrollDebit - $retirementDebit;
+        abort_if($deduction < 0, 422, 'More came out of checking than the pay run\'s costs. Check the amounts against the payroll report.');
+
+        $lines[] = ['account' => 'checking', 'credit_cents' => $payrollDebit, 'description' => 'Data Service payroll debit'];
+        if ($retirementDebit > 0) {
+            $lines[] = ['account' => 'checking', 'credit_cents' => $retirementDebit, 'description' => 'American Funds retirement debit'];
+        }
+        if ($deduction > 0) {
+            $lines[] = ['account' => 'health_insurance', 'credit_cents' => $deduction, 'description' => 'Employees\' health insurance deduction'];
+        }
 
         return $this->posted($this->ledger->post($data['entry_date'], $lines, ($data['memo'] ?? null) ?: 'Payroll'));
     }

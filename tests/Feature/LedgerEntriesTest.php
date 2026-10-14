@@ -107,28 +107,59 @@ class LedgerEntriesTest extends TestCase
         $this->assertSame(-100000, $this->balance('stripe_clearing'));
     }
 
-    public function test_payroll_splits_into_its_accounts_and_comes_out_of_checking(): void
+    public function test_payroll_splits_into_its_accounts_and_the_two_debits_come_out_of_checking(): void
     {
-        $this->actingAs($this->manager)->postJson('/api/journal-entries/payroll', [
+        $lines = $this->actingAs($this->manager)->postJson('/api/journal-entries/payroll', [
             'entry_date' => '2026-03-15',
             'memo' => 'Payroll, Mar 1-15',
             'officer_compensation' => '4000',
             'wages' => '2500',
             'payroll_taxes' => '620.50',
             'retirement_expense' => '195',
-        ])->assertOk()->assertJsonCount(5, 'lines');
+            'payroll_debit' => '6400.50',
+            'retirement_debit' => '815',
+        ])->assertOk()->json('lines');
 
+        $this->assertCount(7, $lines);
         $this->assertSame(400000, $this->balance('officer_compensation'));
         $this->assertSame(250000, $this->balance('wages'));
         $this->assertSame(62050, $this->balance('payroll_taxes'));
         $this->assertSame(19500, $this->balance('retirement_expense'));
-        $this->assertSame(-731550, $this->balance('checking'));
+        // Two lines out of checking, as the bank shows them...
+        $this->assertSame(-721550, $this->balance('checking'));
+        // ...and the $100 left over is the employees' health deduction.
+        $this->assertSame(-10000, $this->balance('health_insurance'));
     }
 
-    public function test_payroll_needs_an_amount(): void
+    public function test_payroll_with_no_health_deduction_or_retirement_debit(): void
     {
-        $this->actingAs($this->manager)->postJson('/api/journal-entries/payroll', ['entry_date' => '2026-03-15', 'wages' => '0'])
+        $this->actingAs($this->manager)->postJson('/api/journal-entries/payroll', [
+            'entry_date' => '2026-03-15',
+            'wages' => '2500',
+            'payroll_taxes' => '191.25',
+            'payroll_debit' => '2691.25',
+        ])->assertOk()->assertJsonCount(3, 'lines');
+
+        $this->assertSame(-269125, $this->balance('checking'));
+        $this->assertSame(0, $this->balance('health_insurance'));
+    }
+
+    public function test_payroll_needs_an_amount_and_the_data_service_debit(): void
+    {
+        $this->actingAs($this->manager)->postJson('/api/journal-entries/payroll', ['entry_date' => '2026-03-15', 'wages' => '0', 'payroll_debit' => '10'])
             ->assertUnprocessable()->assertJsonPath('message', 'Enter at least one payroll amount.');
+
+        $this->actingAs($this->manager)->postJson('/api/journal-entries/payroll', ['entry_date' => '2026-03-15', 'wages' => '2500'])
+            ->assertUnprocessable()->assertJsonValidationErrors('payroll_debit');
+    }
+
+    public function test_payroll_refuses_more_out_of_checking_than_it_costs(): void
+    {
+        $this->actingAs($this->manager)->postJson('/api/journal-entries/payroll', [
+            'entry_date' => '2026-03-15', 'wages' => '2500', 'payroll_debit' => '2400', 'retirement_debit' => '200',
+        ])->assertUnprocessable()->assertJsonPath('message', 'More came out of checking than the pay run\'s costs. Check the amounts against the payroll report.');
+
+        $this->assertSame(0, $this->balance('checking'));
     }
 
     public function test_an_entry_made_by_hand_is_reversed_and_one_the_app_posted_isnt(): void
