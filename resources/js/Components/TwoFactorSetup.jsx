@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import Button from './Button';
+import Toggle from './Toggle';
 import { usePasswordCheck } from './PasswordCheck';
 import { api } from '../lib/api';
 import { copyToClipboard } from '../lib/clipboard';
@@ -7,13 +8,15 @@ import { copyToClipboard } from '../lib/clipboard';
 // Setting up an authenticator (Fortify's two-factor routes): a new secret,
 // shown as a QR code and a setup key; a code from the app to confirm it;
 // then the recovery codes, once, to keep somewhere safe. `onDone` once
-// they've seen them.
+// they've seen them. "Remember this device" (on unless they untick it)
+// skips the code on this browser for 30 days, as at sign-in.
 export default function TwoFactorSetup({ onDone }) {
     const { ensure, prompt } = usePasswordCheck();
     const [step, setStep] = useState('starting');
     const [qr, setQr] = useState(null);
     const [setupKey, setSetupKey] = useState('');
     const [code, setCode] = useState('');
+    const [rememberDevice, setRememberDevice] = useState(true);
     const [error, setError] = useState(null);
     const [busy, setBusy] = useState(false);
     const [recoveryCodes, setRecoveryCodes] = useState([]);
@@ -47,7 +50,7 @@ export default function TwoFactorSetup({ onDone }) {
         setBusy(true);
         setError(null);
         try {
-            await api.post('/user/confirmed-two-factor-authentication', { code: code.replace(/\s/g, '') });
+            await api.post('/user/confirmed-two-factor-authentication', { code: code.replace(/\s/g, ''), remember_device: rememberDevice });
             setRecoveryCodes(await api.get('/user/two-factor-recovery-codes'));
             setStep('codes');
         } catch (err) {
@@ -109,6 +112,12 @@ export default function TwoFactorSetup({ onDone }) {
                 />
                 {error && <div className="form-error">{error}</div>}
             </div>
+            <Toggle
+                checked={rememberDevice}
+                onChange={setRememberDevice}
+                label="Remember this device for 30 days"
+                className="toggle--muted"
+            />
             <div className="form-actions">
                 <Button type="submit" variant="confirm" disabled={busy}>Turn on</Button>
             </div>

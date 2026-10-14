@@ -19,6 +19,7 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Laravel\Fortify\Events\RecoveryCodeReplaced;
+use Laravel\Fortify\Events\TwoFactorAuthenticationConfirmed;
 use Laravel\Fortify\Events\ValidTwoFactorAuthenticationCodeProvided;
 use Laravel\Fortify\Fortify;
 use Laravel\Passkeys\Passkeys;
@@ -49,7 +50,9 @@ class FortifyServiceProvider extends ServiceProvider
         Fortify::confirmPasswordView(fn () => Inertia::render('Auth/ConfirmPassword'));
 
         // A good code with "Remember this device" ticked: no code here for
-        // 30 days. A recovery code counts as a good code.
+        // 30 days. A recovery code counts as a good code, and so does the
+        // one that turns two-factor on (setup), so the device it was set up
+        // on isn't asked again the next day.
         $rememberDevice = function ($event) {
             if (request()->boolean('remember_device')) {
                 TrustedDevice::remember($event->user);
@@ -57,6 +60,7 @@ class FortifyServiceProvider extends ServiceProvider
         };
         Event::listen(ValidTwoFactorAuthenticationCodeProvided::class, $rememberDevice);
         Event::listen(RecoveryCodeReplaced::class, $rememberDevice);
+        Event::listen(TwoFactorAuthenticationConfirmed::class, $rememberDevice);
 
         // Signing in confirms the password for a while (auth.password_timeout),
         // so setting up two-factor straight after doesn't ask for it again.

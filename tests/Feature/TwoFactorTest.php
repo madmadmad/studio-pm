@@ -59,6 +59,38 @@ class TwoFactorTest extends TestCase
         $this->get('/security/setup')->assertRedirect('/');
     }
 
+    public function test_the_device_it_was_set_up_on_is_remembered(): void
+    {
+        $sam = User::factory()->teamMember()->withoutTwoFactor()->create();
+        $this->actingAs($sam, 'web')->withSession(['auth.password_confirmed_at' => time()]);
+
+        $this->postJson('/user/two-factor-authentication')->assertOk();
+        $secret = $this->getJson('/user/two-factor-secret-key')->json('secretKey');
+        $cookie = $this->postJson('/user/confirmed-two-factor-authentication', [
+            'code' => (new Google2FA)->getCurrentOtp($secret),
+            'remember_device' => true,
+        ])->assertOk()->getCookie(TrustedDevice::COOKIE);
+        $this->assertNotNull($cookie);
+        $this->signOut();
+
+        // The next day: password only.
+        $this->travel(1)->days();
+        $this->signIn($sam, [TrustedDevice::COOKIE => $cookie->getValue()])->assertRedirect('/');
+        $this->assertAuthenticatedAs($sam, 'web');
+    }
+
+    public function test_setting_it_up_without_remember_sets_no_cookie(): void
+    {
+        $sam = User::factory()->teamMember()->withoutTwoFactor()->create();
+        $this->actingAs($sam, 'web')->withSession(['auth.password_confirmed_at' => time()]);
+
+        $this->postJson('/user/two-factor-authentication')->assertOk();
+        $secret = $this->getJson('/user/two-factor-secret-key')->json('secretKey');
+        $this->postJson('/user/confirmed-two-factor-authentication', ['code' => (new Google2FA)->getCurrentOtp($secret)])
+            ->assertOk()
+            ->assertCookieMissing(TrustedDevice::COOKIE);
+    }
+
     public function test_the_password_is_followed_by_a_code(): void
     {
         $sam = User::factory()->teamMember()->create();
