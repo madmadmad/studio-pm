@@ -228,7 +228,7 @@ function TodoList({ todos }) {
 
     return (
         <>
-            <div className="card card--padded page-section">
+            <div className="page-section">
                 <div className="subtask-list">
                     {open.map((todo) => (
                         <TodoRow
@@ -263,7 +263,7 @@ function TodoList({ todos }) {
             </div>
 
             {todos.done.length > 0 && (
-                <div className="card card--padded">
+                <div>
                     <div className="form-panel__header">
                         <div className="section-label section-label--flush">Done</div>
                         <button type="button" onClick={clearDone} className="text-action text-action--sm">Clear done</button>
