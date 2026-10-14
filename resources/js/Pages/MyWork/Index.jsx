@@ -15,7 +15,7 @@ import { api } from '../../lib/api';
 import { formatDate, formatDateTime, todayInAppTimezone } from '../../lib/format';
 import { useRememberedTab } from '../../lib/useRememberedTab';
 
-const TABS = ['Tasks', 'To-do', 'Projects', 'Timesheet'];
+const TABS = ['Projects', 'Tasks', 'Timesheet', 'To-do'];
 
 // Their starred projects as a board, as on the Projects page: drag a card
 // to change its status, or unstar it to take it off here.
@@ -314,8 +314,9 @@ function RecentProjects({ projects }) {
 }
 
 // My Work: the signed-in person's own work, and where they land -- their
-// tasks (assigned or starred), their private to-do list, their projects
-// (recently worked on, then starred), and their week's time. Their account and security are Profile.
+// projects (recently worked on, then starred), their tasks (assigned or
+// starred), their week's time, and their private to-do list. Their
+// account and security are Profile.
 export default function MyWorkIndex({ myTasks, todos, recentProjects, starredProjects, timesheet, timeProjects, timeCompanies, timeServices }) {
     const [tab, setTab] = useRememberedTab('my-work-tab', TABS, { param: 'tab' });
     const { props } = usePage();
@@ -326,10 +327,6 @@ export default function MyWorkIndex({ myTasks, todos, recentProjects, starredPro
             <PageHeader title="My Work" />
             <TabBar tabs={TABS} tab={tab} setTab={setTab} size="lg" />
 
-            {tab === 'Tasks' && <MyTasks tasks={myTasks} />}
-
-            {tab === 'To-do' && <TodoList todos={todos} />}
-
             {tab === 'Projects' && (
                 <>
                     <div className="section-label">Recently worked on</div>
@@ -338,6 +335,8 @@ export default function MyWorkIndex({ myTasks, todos, recentProjects, starredPro
                     <StarredProjects projects={starredProjects} />
                 </>
             )}
+
+            {tab === 'Tasks' && <MyTasks tasks={myTasks} />}
 
             {tab === 'Timesheet' && (
                 <Timesheet
@@ -348,6 +347,8 @@ export default function MyWorkIndex({ myTasks, todos, recentProjects, starredPro
                     currentUser={props.auth.user}
                 />
             )}
+
+            {tab === 'To-do' && <TodoList todos={todos} />}
         </AppLayout>
     );
 }
