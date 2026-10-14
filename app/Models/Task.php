@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Task extends Model
@@ -30,6 +31,12 @@ class Task extends Model
     public function scheduleItem(): BelongsTo
     {
         return $this->belongsTo(ScheduleItem::class);
+    }
+
+    // Who has starred it (TaskFavoriteController).
+    public function favoritedBy(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'task_favorites')->withTimestamps();
     }
 
     public function timeEntries(): HasMany

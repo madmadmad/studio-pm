@@ -230,7 +230,7 @@ function ProjectSummary({ project, proposedHours }) {
     );
 }
 
-function TaskRow({ task, onChange, onOpen }) {
+function TaskRow({ task, favorites, onChange, onOpen }) {
     async function cycleStatus(e) {
         e.stopPropagation();
         const order = ['todo', 'in_progress', 'done'];
@@ -244,6 +244,7 @@ function TaskRow({ task, onChange, onOpen }) {
     return (
         <div onClick={() => onOpen(task.id)} className="grid-row grid-row--action grid-row--link">
             <div className="task-list__title">
+                <StarButton starred={favorites.isStarred(task)} onToggle={() => favorites.toggle(task)} size={14} noun="task" />
                 <span className="u-truncate">{task.title}</span>
                 {task.visible_to_client && (
                     <Eye className="task-list__client" aria-label="Shown to the client" title="Shown to the client" />
@@ -654,7 +655,11 @@ function TaskDrawer({ task, teamNames, scheduleItems = [], isNew, onClose, onCha
 function TasksTab({ project }) {
     const [creating, setCreating] = useState(false);
     const [newTaskId, setNewTaskId] = useState(null);
-    const [selectedTaskId, setSelectedTaskId] = useState(null);
+    // A link straight to a task (?task=, from a Profile's starred tasks)
+    // opens it.
+    const [selectedTaskId, setSelectedTaskId] = useState(() => Number(new URLSearchParams(window.location.search).get('task')) || null);
+    // Starred tasks are each person's own (their Profile's Tasks tab).
+    const favorites = useFavorites(project.tasks, 'tasks');
     // Assignable names come from two places: staff actually assigned to the
     // project (real logins, via active_users) and free-text names added for
     // people without one (team_names). Both should show up as assignee
@@ -687,6 +692,12 @@ function TasksTab({ project }) {
     function closeTask() {
         setSelectedTaskId(null);
         setNewTaskId(null);
+        // Drop a ?task= link, so coming back to the tab doesn't reopen it.
+        const url = new URL(window.location.href);
+        if (url.searchParams.has('task')) {
+            url.searchParams.delete('task');
+            window.history.replaceState(window.history.state, '', url);
+        }
     }
 
     return (
@@ -709,6 +720,7 @@ function TasksTab({ project }) {
                             <TaskRow
                                 key={task.id}
                                 task={task}
+                                favorites={favorites}
                                 onChange={reload}
                                 onOpen={setSelectedTaskId}
                             />

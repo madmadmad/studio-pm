@@ -215,6 +215,12 @@ class User extends Authenticatable implements OAuthenticatable, PasskeyUser
         return $this->belongsToMany(Project::class, 'project_favorites')->withTimestamps();
     }
 
+    // The tasks this person has starred (TaskFavoriteController).
+    public function favoriteTasks(): BelongsToMany
+    {
+        return $this->belongsToMany(Task::class, 'task_favorites')->withTimestamps();
+    }
+
     // The Chat channels and direct messages this person is in.
     public function conversations(): BelongsToMany
     {

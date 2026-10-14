@@ -2,11 +2,12 @@ import { useEffect, useState } from 'react';
 import { Star } from '@phosphor-icons/react';
 import { api } from '../lib/api';
 
-// The star that adds a project to the viewer's favorites: an outline in
-// grey, filled red once starred. Stops the click there, so a star on a
-// clickable row or card doesn't also open the project.
-export default function StarButton({ starred, onToggle, size, className = '' }) {
-    const label = starred ? 'Unstar project' : 'Star project';
+// The star that adds a project (or, with noun="task", a task) to the
+// viewer's favorites: an outline in grey, filled red once starred. Stops
+// the click there, so a star on a clickable row or card doesn't also open
+// the item.
+export default function StarButton({ starred, onToggle, size, noun = 'project', className = '' }) {
+    const label = starred ? `Unstar ${noun}` : `Star ${noun}`;
     return (
         <button
             type="button"
@@ -24,13 +25,14 @@ export default function StarButton({ starred, onToggle, size, className = '' }) 
     );
 }
 
-// Starring across a page's projects: the starred ids, changed at once on a
-// click and put back if the server refuses. Seeded from each project's
-// `is_favorite` (ProjectPageController) and re-seeded when they reload.
-export function useFavorites(projects) {
-    const seed = () => new Set(projects.filter((p) => p.is_favorite).map((p) => p.id));
+// Starring across a page's projects (or tasks, with resource 'tasks'): the
+// starred ids, changed at once on a click and put back if the server
+// refuses. Seeded from each item's `is_favorite` (ProjectPageController,
+// ProfilePageController) and re-seeded when they reload.
+export function useFavorites(items, resource = 'projects') {
+    const seed = () => new Set(items.filter((i) => i.is_favorite).map((i) => i.id));
     const [starred, setStarred] = useState(seed);
-    useEffect(() => setStarred(seed()), [projects]); // eslint-disable-line react-hooks/exhaustive-deps
+    useEffect(() => setStarred(seed()), [items]); // eslint-disable-line react-hooks/exhaustive-deps
 
     function set(id, on) {
         setStarred((current) => {
@@ -41,16 +43,16 @@ export function useFavorites(projects) {
         });
     }
 
-    async function toggle(project) {
-        const on = !starred.has(project.id);
-        set(project.id, on);
+    async function toggle(item) {
+        const on = !starred.has(item.id);
+        set(item.id, on);
         try {
-            if (on) await api.post(`/api/projects/${project.id}/favorite`);
-            else await api.delete(`/api/projects/${project.id}/favorite`);
+            if (on) await api.post(`/api/${resource}/${item.id}/favorite`);
+            else await api.delete(`/api/${resource}/${item.id}/favorite`);
         } catch {
-            set(project.id, !on);
+            set(item.id, !on);
         }
     }
 
-    return { isStarred: (project) => starred.has(project.id), toggle };
+    return { isStarred: (item) => starred.has(item.id), toggle };
 }

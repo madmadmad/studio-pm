@@ -1,0 +1,46 @@
+// Profile's Tasks tab: the person's starred tasks across projects (a
+// .grid-row list), each opening on its project.
+
+.profile-tasks {
+    &__title {
+        display: flex;
+        grid-column: span 5;
+        align-items: center;
+        gap: var(--space-2);
+        min-width: 0;
+        font-weight: var(--font-weight-medium);
+    }
+
+    // The project, with its client under it.
+    &__project {
+        display: flex;
+        flex-direction: column;
+        grid-column: span 3;
+        min-width: 0;
+    }
+
+    &__client {
+        font-size: var(--font-size-xs);
+        line-height: var(--line-height-xs);
+        color: var(--color-text-muted);
+    }
+
+    &__due {
+        grid-column: span 2;
+        font-variant-numeric: tabular-nums;
+
+        &--overdue {
+            color: var(--color-danger-text);
+        }
+    }
+
+    &__status {
+        grid-column: span 2;
+        text-align: right;
+    }
+
+    // No due date ("—").
+    &__empty {
+        color: var(--color-text-muted);
+    }
+}

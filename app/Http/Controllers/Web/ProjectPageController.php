@@ -78,6 +78,8 @@ class ProjectPageController extends Controller
         $project->load([
             'company.contacts',
             'contact',
+            // `is_favorite`: whether the viewer has starred each task.
+            'tasks' => fn ($q) => $q->withExists(['favoritedBy as is_favorite' => fn ($q) => $q->where('users.id', $request->user()->id)]),
             'tasks.subtasks',
             'tasks.files',
             'notes.user',

@@ -9,7 +9,10 @@ import TabBar from '../../Components/TabBar';
 import Timesheet from '../../Components/Timesheet';
 import ProjectBoard from '../../Components/ProjectBoard';
 import EmptyState from '../../Components/EmptyState';
-import { useFavorites } from '../../Components/StarButton';
+import StarButton, { useFavorites } from '../../Components/StarButton';
+import RowActions from '../../Components/RowActions';
+import { TaskStatusBadge } from '../../Components/StatusBadges';
+import { formatDate, todayInAppTimezone } from '../../lib/format';
 import AlertSettings from '../../Components/AlertSettings';
 import AppearanceSetting from '../../Components/AppearanceSetting';
 import BrandColorSetting from '../../Components/BrandColorSetting';
@@ -18,7 +21,7 @@ import BioForm from '../../Components/BioForm';
 import SecuritySettings from '../../Components/SecuritySettings';
 import { shrinkImage } from '../../lib/shrinkImage';
 
-const TABS = ['Timesheet', 'Projects', 'Account', 'Security'];
+const TABS = ['Timesheet', 'Projects', 'Tasks', 'Account', 'Security'];
 
 // Their starred projects as a board, as on the Projects page: drag a card
 // to change its status, or unstar it to take it off here.
@@ -38,6 +41,79 @@ function StarredProjects({ projects }) {
     }
 
     return <ProjectBoard projects={starred} favorites={favorites} onChange={() => router.reload({ only: ['starredProjects'] })} />;
+}
+
+const STATUS_ORDER = ['todo', 'in_progress', 'done'];
+
+// Their starred tasks across every project, open ones first by due date.
+// A row opens the task on its project; the status badge cycles it (when
+// they can change it); unstarring takes it off here.
+function StarredTasks({ tasks }) {
+    const favorites = useFavorites(tasks, 'tasks');
+    const starred = tasks.filter((t) => favorites.isStarred(t));
+    const today = todayInAppTimezone();
+
+    async function cycleStatus(e, task) {
+        e.stopPropagation();
+        const next = STATUS_ORDER[(STATUS_ORDER.indexOf(task.status) + 1) % STATUS_ORDER.length];
+        await api.patch(`/api/tasks/${task.id}`, { status: next });
+        router.reload({ only: ['starredTasks'] });
+    }
+
+    if (starred.length === 0) {
+        return (
+            <div className="card card--flush">
+                <EmptyState text="No starred tasks yet." />
+                <p className="form-hint profile-page__hint">
+                    Star the tasks you&rsquo;re working on from a project&rsquo;s Tasks tab.
+                </p>
+            </div>
+        );
+    }
+
+    return (
+        <div className="card card--flush">
+            <div className="grid-row grid-row--action grid-row--head">
+                <div className="profile-tasks__title">Task</div>
+                <div className="profile-tasks__project">Project</div>
+                <div className="profile-tasks__due">Due date</div>
+                <div className="profile-tasks__status">Status</div>
+                <div />
+            </div>
+            {starred.map((task) => {
+                const overdue = task.due_date && task.status !== 'done' && task.due_date.slice(0, 10) < today;
+                return (
+                    <div
+                        key={task.id}
+                        onClick={() => router.visit(`/projects/${task.project_id}?tab=Tasks&task=${task.id}`)}
+                        className="grid-row grid-row--action grid-row--link"
+                    >
+                        <div className="profile-tasks__title">
+                            <StarButton starred onToggle={() => favorites.toggle(task)} size={14} noun="task" />
+                            <span className="u-truncate">{task.title}</span>
+                        </div>
+                        <div className="profile-tasks__project">
+                            <span className="u-truncate">{task.project?.name}</span>
+                            {task.project?.company && <span className="profile-tasks__client u-truncate">{task.project.company.name}</span>}
+                        </div>
+                        <div className={`profile-tasks__due${task.due_date ? '' : ' profile-tasks__empty'}${overdue ? ' profile-tasks__due--overdue' : ''}`}>
+                            {task.due_date ? formatDate(task.due_date) : '—'}
+                        </div>
+                        <div className="profile-tasks__status">
+                            {task.can_edit ? (
+                                <button onClick={(e) => cycleStatus(e, task)}>
+                                    <TaskStatusBadge task={task} />
+                                </button>
+                            ) : (
+                                <TaskStatusBadge task={task} />
+                            )}
+                        </div>
+                        <RowActions openLabel="Open task" />
+                    </div>
+                );
+            })}
+        </div>
+    );
 }
 
 // One field with its label and any error under it.
@@ -151,7 +227,7 @@ function flatErrors(err) {
 // Your own page: your week's time (Timesheet), the projects you've
 // starred (Projects), your photo, details and password (Account), and
 // two-factor and passkeys (Security).
-export default function ProfileIndex({ profileUser, passwordHint, security, timesheet, timeProjects, timeCompanies, timeServices, starredProjects }) {
+export default function ProfileIndex({ profileUser, passwordHint, security, timesheet, timeProjects, timeCompanies, timeServices, starredProjects, starredTasks }) {
     const [tab, setTab] = useRememberedTab('profile-page-tab', TABS);
     const [user, setUser] = useState(profileUser);
     const [saving, setSaving] = useState(false);
@@ -214,6 +290,8 @@ export default function ProfileIndex({ profileUser, passwordHint, security, time
             )}
 
             {tab === 'Projects' && <StarredProjects projects={starredProjects} />}
+
+            {tab === 'Tasks' && <StarredTasks tasks={starredTasks} />}
 
             {tab === 'Security' && <SecuritySettings security={security} />}
 
