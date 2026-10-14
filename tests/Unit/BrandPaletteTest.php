@@ -11,7 +11,7 @@ class BrandPaletteTest extends TestCase
     public static function colors(): array
     {
         return array_map(fn ($c) => [$c], [
-            'studio red' => '#CF0034', 'yellow' => '#FFD400', 'blue' => '#0057FF', 'green' => '#00A36C',
+            'studio green' => '#8EC27E', 'red' => '#CF0034', 'yellow' => '#FFD400', 'blue' => '#0057FF', 'green' => '#00A36C',
             'near black' => '#111111', 'white' => '#FFFFFF', 'mid grey' => '#7A7A7A', 'navy' => '#14213D',
             'pastel pink' => '#F7C6D9', 'orange' => '#FF6B00',
         ]);
@@ -61,7 +61,7 @@ class BrandPaletteTest extends TestCase
         $this->assertSame('#0057FF', $p['--brand-icon-light']);
     }
 
-    public function test_a_missing_or_malformed_color_falls_back_to_the_studio_red(): void
+    public function test_a_missing_or_malformed_color_falls_back_to_the_studio_default(): void
     {
         $this->assertSame(BrandPalette::for(BrandPalette::DEFAULT), BrandPalette::for(null));
         $this->assertSame(BrandPalette::for(BrandPalette::DEFAULT), BrandPalette::for('red; background: url(x)'));
@@ -69,7 +69,7 @@ class BrandPaletteTest extends TestCase
         $this->assertTrue(BrandPalette::isValid('#a1b2c3'));
     }
 
-    public function test_the_scss_defaults_are_the_studio_reds_palette(): void
+    public function test_the_scss_defaults_are_the_studio_greens_palette(): void
     {
         $scss = file_get_contents(__DIR__.'/../../resources/scss/base/_tokens.scss');
         $value = function (string $name) use ($scss) {
@@ -80,7 +80,10 @@ class BrandPaletteTest extends TestCase
 
         foreach (BrandPalette::for(BrandPalette::DEFAULT) as $name => $hex) {
             $this->assertSame($hex, $value($name), "{$name} in _tokens.scss");
-            // Danger is the same red, fixed (it has no icon or quiet variants).
+        }
+
+        // Danger is its own red's set, fixed (it has no icon or quiet variants).
+        foreach (BrandPalette::for('#CF0034') as $name => $hex) {
             if (! str_contains($name, 'icon') && ! str_contains($name, 'quiet')) {
                 $this->assertSame($hex, $value(str_replace('--brand', '--danger', $name)), str_replace('--brand', '--danger', $name).' in _tokens.scss');
             }

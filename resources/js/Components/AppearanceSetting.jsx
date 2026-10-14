@@ -14,7 +14,7 @@ export const APPEARANCE_OPTIONS = [
 // `endpoint` (staff or client) for every page after. Shared by the Profile
 // pages' switch and the sidebar's account menu (AccountMenu).
 export function useAppearance(current, endpoint, onError) {
-    const [theme, setTheme] = useState(current || 'dark');
+    const [theme, setTheme] = useState(current || 'light');
 
     async function choose(value) {
         const previous = theme;

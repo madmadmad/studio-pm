@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import Button from './Button';
 
 const HEX = /^#?[0-9a-f]{6}$/i;
-const DEFAULT = '#CF0034'; // the studio red (BrandPalette::DEFAULT) -- not var(--brand), which is whoever's signed in
+const DEFAULT = '#8EC27E'; // the studio green (BrandPalette::DEFAULT) -- not var(--brand), which is whoever's signed in
 
 // A brand color: the swatch opens the system color picker, the field takes
 // a pasted hex code, and the reset goes back to the default (null). Text

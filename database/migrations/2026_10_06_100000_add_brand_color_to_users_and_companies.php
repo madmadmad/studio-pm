@@ -5,7 +5,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 // A person's own color for the app, and a client's for what they see
-// (app/Support/BrandPalette). Null is the studio red.
+// (app/Support/BrandPalette). Null is the studio default (BrandPalette::DEFAULT).
 return new class extends Migration
 {
     public function up(): void

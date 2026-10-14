@@ -3,7 +3,7 @@
      sign-in screens (Layouts/AuthLayout.jsx, layout/_auth-shell.scss) in your
      Appearance and brand color. --}}
 @php
-    $theme = in_array($user->theme, ['light', 'system'], true) ? $user->theme : 'dark';
+    $theme = in_array($user->theme, ['dark', 'system'], true) ? $user->theme : 'light';
     $studio = \App\Models\StudioProfile::current();
 @endphp
 <!DOCTYPE html>

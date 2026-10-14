@@ -11,14 +11,14 @@ class AppearanceTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_pages_are_dark_until_someone_chooses_otherwise(): void
+    public function test_pages_are_light_until_someone_chooses_otherwise(): void
     {
         $user = User::factory()->create();
 
-        $this->actingAs($user)->get('/profile')->assertSee('data-theme="dark"', false);
-
-        $this->actingAs($user)->patchJson('/api/profile/appearance', ['theme' => 'light'])->assertOk();
         $this->actingAs($user)->get('/profile')->assertSee('data-theme="light"', false);
+
+        $this->actingAs($user)->patchJson('/api/profile/appearance', ['theme' => 'dark'])->assertOk();
+        $this->actingAs($user)->get('/profile')->assertSee('data-theme="dark"', false);
 
         $this->actingAs($user)->patchJson('/api/profile/appearance', ['theme' => 'system'])->assertOk();
         $this->actingAs($user)->get('/profile')->assertSee('data-theme="system"', false);
@@ -29,9 +29,9 @@ class AppearanceTest extends TestCase
         $this->actingAs(User::factory()->create())->patchJson('/api/profile/appearance', ['theme' => 'neon'])->assertUnprocessable();
     }
 
-    public function test_the_login_page_is_dark(): void
+    public function test_the_login_page_is_light(): void
     {
-        $this->get('/login')->assertSee('data-theme="dark"', false);
+        $this->get('/login')->assertSee('data-theme="light"', false);
     }
 
     public function test_clients_choose_their_own_appearance_in_the_portal(): void
@@ -40,10 +40,13 @@ class AppearanceTest extends TestCase
         $contact = $company->contacts()->create(['name' => 'Jo Park', 'email' => 'jo@example.com', 'is_primary' => true]);
         $contact->forceFill(['portal_invited_at' => now()])->save();
 
-        $this->actingAs($contact, 'client')->patchJson('/api/portal/profile/appearance', ['theme' => 'light'])->assertOk();
+        // Light until they choose otherwise, like the studio's side.
+        $this->actingAs($contact, 'client')->get('/portal')->assertSee('data-theme="light"', false);
 
-        $this->assertSame('light', $contact->fresh()->theme);
-        $this->actingAs($contact, 'client')->get('/portal')->assertSee('data-theme="light"', false)
-            ->assertInertia(fn ($page) => $page->where('auth.user.theme', 'light'));
+        $this->actingAs($contact, 'client')->patchJson('/api/portal/profile/appearance', ['theme' => 'dark'])->assertOk();
+
+        $this->assertSame('dark', $contact->fresh()->theme);
+        $this->actingAs($contact, 'client')->get('/portal')->assertSee('data-theme="dark"', false)
+            ->assertInertia(fn ($page) => $page->where('auth.user.theme', 'dark'));
     }
 }

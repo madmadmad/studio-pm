@@ -10,13 +10,13 @@ namespace App\Support;
 //
 // A person's own color themes the app for them (users.brand_color); a
 // client's (companies.brand_color) themes what that client sees -- the
-// portal and their invoice/proposal links. Unset, it's the studio red.
+// portal and their invoice/proposal links. Unset, it's the studio green.
 //
 // The --brand-* defaults in _tokens.scss are this class's output for
 // DEFAULT (BrandPaletteTest keeps them in step).
 class BrandPalette
 {
-    const DEFAULT = '#CF0034';
+    const DEFAULT = '#8EC27E';
 
     // WCAG: 4.5:1 for text, 3:1 for icons and other marks.
     const TEXT_CONTRAST = 4.5;

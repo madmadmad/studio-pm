@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-// Each person's appearance: dark (the default, when unset), light, or
+// Each person's appearance: dark, light (the default, when unset), or
 // system (follow the computer's setting). Staff and client contacts alike,
 // set on their profile; the page is drawn in it from the first frame
 // (resources/views/app.blade.php).

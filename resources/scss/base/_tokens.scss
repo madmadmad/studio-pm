@@ -13,27 +13,28 @@
     // Brand -- the one color, and everything drawn in it. Referenced only
     // by the role tokens below; components never use these directly.
     //
-    // These are the studio red. A person's own color (Profile) or, on
+    // These are the studio green. A person's own color (Profile) or, on
     // what a client sees, the client's (their page) replaces the whole
     // set on <html style> -- app/Support/BrandPalette works out each one
     // from the color, nudged lighter or darker only as far as contrast
-    // needs, and these defaults are its output for the red (kept in step
+    // needs, and these defaults are its output for the green (kept in step
     // by BrandPaletteTest).
     // -----------------------------------------------------------------
-    --brand: #CF0034; // fills
-    --brand-hover: #B0002C; // a fill under the pointer, toward more contrast with its text
-    --brand-on: #FFFFFF; // text and icons on a fill: white, or near-black when white won't pass
-    --brand-text-dark: #FF4D7A; // as text on dark surfaces and its own tint (4.5:1)
-    --brand-text-light: #CF0034; // as text on light surfaces and its own tint (4.5:1)
-    --brand-icon-dark: #E10038; // icons and marks on dark surfaces (3:1)
-    --brand-icon-light: #CF0034; // icons and marks on light surfaces (3:1)
-    --brand-quiet-dark: #511528; // a quieter fill (30% over the dark page), for a secondary figure
+    --brand: #8EC27E; // fills
+    --brand-hover: #A0CC93; // a fill under the pointer, toward more contrast with its text
+    --brand-on: #121418; // text and icons on a fill: white, or near-black when white won't pass
+    --brand-text-dark: #8EC27E; // as text on dark surfaces and its own tint (4.5:1)
+    --brand-text-light: #4B7E3B; // as text on light surfaces and its own tint (4.5:1)
+    --brand-icon-dark: #8EC27E; // icons and marks on dark surfaces (3:1)
+    --brand-icon-light: #5F9E4B; // icons and marks on light surfaces (3:1)
+    --brand-quiet-dark: #3E4F3E; // a quieter fill (30% over the dark page), for a secondary figure
     --brand-quiet-dark-on: #FFFFFF;
-    --brand-quiet-light: #F1B3C2; // the same over the white page
+    --brand-quiet-light: #DDEDD8; // the same over the white page
     --brand-quiet-light-on: #121418;
 
     // Danger -- its own red, the same whatever the brand color, so delete
-    // and overdue never turn green. The studio red's set, fixed.
+    // and overdue never turn the brand color. BrandPalette's set for
+    // #CF0034, fixed.
     --danger: #CF0034;
     --danger-hover: #B0002C;
     --danger-on: #FFFFFF;
@@ -86,9 +87,9 @@
     --color-accent-text: var(--color-text);
     --color-accent-on: #121418;
 
-    // Success follows the brand color; danger keeps its own red. With the
-    // studio red they match, so what separates them is treatment, not
-    // hue: success badges take the soft tint; success as text or a notice
+    // Success follows the brand color; danger keeps its own red. With a
+    // red brand color they match, so what separates them is treatment,
+    // not hue: success badges take the soft tint; success as text or a notice
     // goes neutral (components/_alert, _table...). Danger badges are a
     // solid fill with a warning glyph; destructive actions sit grey with a
     // trash glyph and only turn red under the pointer.

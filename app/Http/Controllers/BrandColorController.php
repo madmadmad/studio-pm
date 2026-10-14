@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 
 // A person's own color for the app (Profile), like their Appearance: it
 // only ever changes the signed-in person's row. Null goes back to the
-// studio red. Answers with the palette worked out from it, so the page
+// studio default. Answers with the palette worked out from it, so the page
 // can switch at once.
 class BrandColorController extends Controller
 {
