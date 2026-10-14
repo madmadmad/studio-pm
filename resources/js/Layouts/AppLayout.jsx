@@ -4,7 +4,8 @@ import AlertsMenu from '../Components/AlertsMenu';
 import ChatNavBadge from '../Components/chat/ChatNavBadge';
 import AppShell from './AppShell';
 import { hasPermission, isAccountant } from '../lib/permissions';
-import { startChat } from '../lib/chatStore';
+import { startChat, useChat } from '../lib/chatStore';
+import { registerServiceWorker, setBadge } from '../lib/push';
 
 // `staffOnly`: never for the accountant, who has Bookkeeping, Invoices and
 // Expenses alone (User::ACCOUNTANT_PERMISSIONS).
@@ -35,10 +36,21 @@ export default function AppLayout({ flush = false, children }) {
 
     const accountant = isAccountant(user);
 
-    // Chat is the staff's; the accountant never connects to it.
+    // Chat is the staff's; the accountant never connects to it. The service
+    // worker (notifications on this device, public/sw.js) is the staff's too.
     useEffect(() => {
-        if (!accountant) startChat(user, props.chatUnread);
+        if (!accountant) {
+            startChat(user, props.chatUnread);
+            registerServiceWorker();
+        }
     }, [user?.id]);
+
+    // The installed app's icon badge: unread chat (live) plus unread client
+    // threads (each page load) -- the same count a push sets (AppBadge).
+    const chatUnread = useChat((s) => (s.started ? s.total.unread : null)) ?? props.chatUnread?.unread ?? 0;
+    useEffect(() => {
+        if (!accountant) setBadge(chatUnread + (props.clientUnread ?? 0));
+    }, [chatUnread, props.clientUnread]);
 
     return (
         <AppShell

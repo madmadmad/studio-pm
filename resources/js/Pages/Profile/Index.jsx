@@ -7,6 +7,7 @@ import { api } from '../../lib/api';
 import PageHeader from '../../Components/PageHeader';
 import TabBar from '../../Components/TabBar';
 import AlertSettings from '../../Components/AlertSettings';
+import NotificationSettings from '../../Components/NotificationSettings';
 import AppearanceSetting from '../../Components/AppearanceSetting';
 import BrandColorSetting from '../../Components/BrandColorSetting';
 import { useRememberedTab } from '../../lib/useRememberedTab';
@@ -127,7 +128,7 @@ function flatErrors(err) {
 // Your own page: your photo, details and password (Account), and
 // two-factor and passkeys (Security). Your tasks, projects and time are
 // My Work.
-export default function ProfileIndex({ profileUser, passwordHint, security }) {
+export default function ProfileIndex({ profileUser, passwordHint, security, push }) {
     const [tab, setTab] = useRememberedTab('profile-page-tab', TABS);
     const [user, setUser] = useState(profileUser);
     const [saving, setSaving] = useState(false);
@@ -216,6 +217,7 @@ export default function ProfileIndex({ profileUser, passwordHint, security }) {
                     />
                     <BioForm user={user} endpoint="/api/profile/bio" photoEndpoint="/api/profile/bio-photo" onSaved={(updated) => setUser((current) => ({ ...current, job_title: updated.job_title, bio: updated.bio, bio_photo_url: updated.bio_photo_url }))} />
                     <PasswordPanel hint={passwordHint} />
+                    <NotificationSettings user={user} push={push} />
                     <AlertSettings user={user} />
                     <AppearanceSetting current={user.theme} endpoint="/api/profile/appearance" />
                     <BrandColorSetting current={user.brand_color} />

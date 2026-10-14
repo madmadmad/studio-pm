@@ -24,6 +24,12 @@ class ProfilePageController extends Controller
                 'twoFactorSince' => $user->two_factor_confirmed_at?->toIso8601String(),
                 'passkeys' => $user->passkeys()->orderBy('created_at')->get(['id', 'name', 'last_used_at', 'created_at']),
             ],
+            // Notifications on this device: the key the browser subscribes
+            // with (VAPID), and how many devices already have them on.
+            'push' => fn () => [
+                'publicKey' => config('webpush.vapid.public_key'),
+                'devices' => $user->pushSubscriptions()->count(),
+            ],
             // What a new password needs (AppServiceProvider's
             // Password::defaults), said under the field.
             'passwordHint' => app()->isProduction()

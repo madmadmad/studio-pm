@@ -30,6 +30,7 @@ use App\Http\Controllers\ProjectAssignmentController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectFavoriteController;
 use App\Http\Controllers\ProposalController;
+use App\Http\Controllers\PushSubscriptionController;
 use App\Http\Controllers\ScheduleItemController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\StudioLogoController;
@@ -94,6 +95,10 @@ Route::middleware(['auth:sanctum', 'accountant.restrict', 'two-factor.required']
     Route::delete('profile/avatar', [ProfileController::class, 'destroyAvatar']);
     Route::patch('profile/bio', [ProfileController::class, 'updateBio']);
     Route::patch('profile/alerts', [ProfileController::class, 'updateAlerts']);
+    // Notifications on this device (web push).
+    Route::post('push-subscriptions', [PushSubscriptionController::class, 'store']);
+    Route::delete('push-subscriptions', [PushSubscriptionController::class, 'destroy']);
+    Route::post('push-subscriptions/test', [PushSubscriptionController::class, 'test']);
     Route::post('profile/bio-photo', [ProfileController::class, 'updateBioPhoto']);
     Route::delete('profile/bio-photo', [ProfileController::class, 'destroyBioPhoto']);
 

@@ -132,6 +132,8 @@ class ChatService
         $message->load(ChatMessage::displayRelations());
         $this->announce(new ChatMessagePosted($message, $clientId));
         $this->announceActivity($conversation, $message);
+        // On their devices: a direct message, or a mention in a channel.
+        rescue(fn () => PushAlerts::chatMessage($message), report: true);
 
         return $message;
     }

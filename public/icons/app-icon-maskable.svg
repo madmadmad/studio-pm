@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <!-- The studio's app icon: the lockup's mark, white on charcoal. Maskable: the mark kept inside the safe zone. -->
+  <rect width="1024" height="1024" fill="#23282D"/>
+  <path fill="#FFFFFF" transform="translate(261.54 309.04) scale(4.8812)" d="M3.23.81C3.23.23,3.69-.12,4.25.04l46.12,8.79c.56.16,1.49.16,2.04,0L98.54.04c.56-.16,1.02.19,1.02.77v78.83c0,.59-.48,1.06-1.06,1.06h-30.97c-.59,0-1.06-.47-1.06-1.06v-3.78c0-.58-.52-1.06-1.11-1.06h-27.88c-.58,0-1.13.42-1.13,1v3.85c0,.59-.49,1.06-1.07,1.06H4.29c-.58,0-1.06-.47-1.06-1.06V.81h0Z"/>
+</svg>

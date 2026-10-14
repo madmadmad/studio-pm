@@ -7,6 +7,7 @@ use App\Models\InvoiceCategory;
 use App\Models\StudioProfile;
 use App\Models\User;
 use App\Services\ChatUnread;
+use App\Support\AppBadge;
 use App\Support\BrandPalette;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -79,6 +80,10 @@ class HandleInertiaRequests extends Middleware
             // Chat's unread and mention totals, for the nav badge's first
             // draw (it stays current over the socket after that). Staff only.
             'chatUnread' => fn () => $request->user() instanceof User && $request->user()->isStaff() ? ChatUnread::totals($request->user()) : null,
+            // Unread client message threads, which with chat's unread make
+            // the installed app's icon badge (AppBadge, lib/appBadge.js).
+            // Staff only.
+            'clientUnread' => fn () => $request->user() instanceof User && $request->user()->isStaff() ? AppBadge::clientThreads($request->user()) : null,
             // What an invoice can be categorised as, beyond project work
             // (Settings). Staff only.
             'invoiceCategories' => fn () => $request->user() instanceof Contact ? null : InvoiceCategory::orderBy('name')->get(['id', 'name']),

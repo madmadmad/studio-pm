@@ -11,6 +11,7 @@ use App\Models\Proposal;
 use App\Models\StudioProfile;
 use App\Models\User;
 use App\Notifications\ProposalAccepted;
+use App\Services\PushAlerts;
 use App\Support\RichText;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -256,6 +257,8 @@ class ProposalController extends Controller
             // Notifies you -- swap the destination for wherever you want to be reached.
             Notification::route('mail', config('mail.from.address'))
                 ->notify(new ProposalAccepted($proposal));
+            // And on the devices of whoever handles proposals.
+            rescue(fn () => PushAlerts::proposalAccepted($proposal), report: true);
         }
 
         return $proposal;

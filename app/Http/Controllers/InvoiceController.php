@@ -464,7 +464,7 @@ class InvoiceController extends Controller
             'method' => ['required', 'in:check,ach,other'],
         ]);
 
-        $invoice->recordPayment($data['method'], $invoice->total());
+        $invoice->recordPayment($data['method'], $invoice->total(), recordedBy: $request->user());
 
         return $invoice->load('items', 'payments');
     }

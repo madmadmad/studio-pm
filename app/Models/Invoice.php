@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Casts\UtcDateTime;
 use App\Enums\PaymentTerms;
+use App\Services\PushAlerts;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -396,9 +397,14 @@ class Invoice extends Model
     // $stripeFee is Stripe's processing fee on the charge, when known. All
     // in one transaction, so the payment, the invoice's status and the
     // ledger entry (posted once it commits) go together.
-    public function recordPayment(string $method, float $baseAmount, float $surchargeAmount = 0.0, ?string $stripePaymentIntentId = null, ?float $stripeFee = null): void
+    //
+    // Once it's in, the people who handle invoices hear about it on their
+    // devices (PushAlerts) -- all but $recordedBy, who marked it paid.
+    public function recordPayment(string $method, float $baseAmount, float $surchargeAmount = 0.0, ?string $stripePaymentIntentId = null, ?float $stripeFee = null, ?User $recordedBy = null): void
     {
         DB::transaction(fn () => $this->writePayment($method, $baseAmount, $surchargeAmount, $stripePaymentIntentId, $stripeFee));
+
+        rescue(fn () => PushAlerts::invoicePaid($this, $baseAmount, $recordedBy), report: true);
     }
 
     private function writePayment(string $method, float $baseAmount, float $surchargeAmount, ?string $stripePaymentIntentId, ?float $stripeFee): void

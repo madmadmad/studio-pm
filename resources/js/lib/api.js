@@ -114,7 +114,7 @@ export const api = {
     post: (url, body) => request('POST', url, body ?? {}),
     patch: (url, body) => request('PATCH', url, body ?? {}),
     put: (url, body) => request('PUT', url, body ?? {}),
-    delete: (url) => request('DELETE', url),
+    delete: (url, body) => request('DELETE', url, body),
     postForm: (url, formData) => requestForm(url, formData),
     postFormWithProgress: (url, formData, onProgress) => requestFormWithProgress(url, formData, onProgress),
 };

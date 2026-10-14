@@ -19,6 +19,7 @@ use Laravel\Passkeys\Contracts\PasskeyUser;
 use Laravel\Passkeys\PasskeyAuthenticatable;
 use Laravel\Passport\Contracts\OAuthenticatable;
 use Laravel\Passport\HasApiTokens;
+use NotificationChannels\WebPush\HasPushSubscriptions;
 
 #[Fillable(['name', 'job_title', 'bio', 'bio_photo_path', 'email', 'password', 'role', 'avatar_path'])]
 #[Hidden(['password', 'remember_token', 'invite_token', 'login_token', 'two_factor_secret', 'two_factor_recovery_codes', 'avatar_path', 'bio_photo_path'])]
@@ -28,7 +29,7 @@ use Laravel\Passport\HasApiTokens;
 class User extends Authenticatable implements OAuthenticatable, PasskeyUser
 {
     /** @use HasFactory<UserFactory> */
-    use HasApiTokens, HasFactory, Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable;
+    use HasApiTokens, HasFactory, HasPushSubscriptions, Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable;
 
     // Everything, including Settings and the team (config/permissions.php).
     const ROLE_SUPER_ADMIN = 'super_admin';
@@ -61,6 +62,9 @@ class User extends Authenticatable implements OAuthenticatable, PasskeyUser
         return [
             'email_verified_at' => 'datetime',
             'notify_on_document_open' => 'boolean',
+            'push_chat' => 'boolean',
+            'push_proposals' => 'boolean',
+            'push_invoices' => 'boolean',
             'invited_at' => 'datetime',
             'invite_expires_at' => 'datetime',
             'deactivated_at' => 'datetime',

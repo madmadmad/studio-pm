@@ -12,6 +12,15 @@
     <meta name="application-name" content="{{ \App\Models\StudioProfile::brandName() }}">
     <title inertia>{{ \App\Models\StudioProfile::brandName() }}</title>
 
+    {{-- The installable staff app (Safari's Add to Dock, Chrome's Install): its
+         name, icon and start page. Not on the client portal or the public
+         invoice and proposal links, which aren't the staff app. --}}
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+    @unless (request()->is('portal', 'portal/*', 'p/*', 'i/*'))
+        <link rel="manifest" href="/manifest.webmanifest">
+        <meta name="apple-mobile-web-app-title" content="{{ \App\Models\StudioProfile::brandName() }}">
+    @endunless
+
     @routes
     @viteReactRefresh
     @vite(['resources/scss/app.scss', 'resources/js/app.jsx'])

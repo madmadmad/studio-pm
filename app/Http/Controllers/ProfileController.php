@@ -56,11 +56,18 @@ class ProfileController extends Controller
         return $request->user()->replaceBioPhoto(null);
     }
 
-    // Which alerts you get (Profile → Account): for now, the client
-    // opening an invoice or proposal you sent (App\Support\DocumentViews).
+    // Which alerts you get (Profile → Account): the client opening an
+    // invoice or proposal you sent (App\Support\DocumentViews), and which
+    // kinds of notification reach your devices (PushAlerts). One or more
+    // at a time.
     public function updateAlerts(Request $request)
     {
-        $data = $request->validate(['notify_on_document_open' => ['required', 'boolean']]);
+        $data = $request->validate([
+            'notify_on_document_open' => ['sometimes', 'boolean'],
+            'push_chat' => ['sometimes', 'boolean'],
+            'push_proposals' => ['sometimes', 'boolean'],
+            'push_invoices' => ['sometimes', 'boolean'],
+        ]);
 
         $request->user()->forceFill($data)->save();
 

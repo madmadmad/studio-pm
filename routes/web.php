@@ -32,6 +32,7 @@ use App\Http\Controllers\Web\ServicePageController;
 use App\Http\Controllers\Web\SettingsPageController;
 use App\Http\Controllers\Web\TimePageController;
 use App\Http\Controllers\Web\UserPageController;
+use App\Http\Controllers\Web\WebManifestController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -69,6 +70,9 @@ Route::get('/i/{token}', [PublicInvoiceController::class, 'show'])->name('invoic
 Route::post('/i/{token}/viewed', [PublicInvoiceController::class, 'viewed'])->middleware('throttle:30,1')->name('invoices.public.viewed');
 Route::post('/p/{token}/viewed', [PublicProposalController::class, 'viewed'])->middleware('throttle:30,1')->name('proposals.public.viewed');
 Route::get('/i/{token}/pdf', [PublicInvoiceController::class, 'pdf'])->name('invoices.public.pdf');
+
+// The installable app's manifest (Add to Dock / Install / Home Screen).
+Route::get('/manifest.webmanifest', WebManifestController::class)->name('manifest');
 
 // The staff app. The accountant reaches only the corner of it that's
 // theirs (RestrictAccountant).
