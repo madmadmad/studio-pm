@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Account;
 use App\Models\Company;
 use App\Models\Expense;
 use App\Models\User;
@@ -182,5 +183,27 @@ class ExpenseTest extends TestCase
             'date' => now(),
             'plaid_transaction_id' => 'plaid-abc-123',
         ]);
+    }
+
+    public function test_payroll_clearing_is_only_kept_by_an_imported_pay_run_already_on_it(): void
+    {
+        $manager = User::factory()->create();
+        $clearing = Account::forKey('payroll_clearing')->id;
+        $checking = Account::forKey('checking')->id;
+
+        // A new expense can't go there...
+        $this->actingAs($manager)->postJson('/api/expenses', [
+            'name' => 'Wages', 'amount' => '2500', 'date' => '2026-10-15', 'paid_from_account_id' => $clearing,
+        ])->assertUnprocessable()->assertJsonValidationErrors('paid_from_account_id');
+
+        // ...nor an existing one be moved there...
+        $lunch = Expense::create(['name' => 'Lunch', 'amount' => '40', 'date' => '2026-10-15', 'paid_from_account_id' => $checking]);
+        $this->actingAs($manager)->patchJson("/api/expenses/{$lunch->id}", ['paid_from_account_id' => $clearing])
+            ->assertUnprocessable()->assertJsonValidationErrors('paid_from_account_id');
+
+        // ...but a pay run imported from Bonsai keeps it when edited.
+        $wages = Expense::create(['name' => 'Wages & Commissions', 'amount' => '2500', 'date' => '2026-09-15', 'paid_from_account_id' => $clearing]);
+        $this->actingAs($manager)->patchJson("/api/expenses/{$wages->id}", ['name' => 'Wages', 'paid_from_account_id' => $clearing])
+            ->assertOk()->assertJsonPath('paid_from_account_id', $clearing);
     }
 }

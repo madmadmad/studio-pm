@@ -203,8 +203,19 @@ class ExpenseController extends Controller
             'is_recurring' => ['boolean'],
             'recurrence_interval' => ['nullable', 'in:weekly,monthly,quarterly,yearly'],
             'source_label' => ['nullable', 'string', 'max:255'],
-            // The card or bank account it was paid from.
-            'paid_from_account_id' => ['nullable', 'integer', Rule::exists('accounts', 'id')->whereIn('type', [Account::ASSET, Account::LIABILITY])->where('is_active', true)],
+            // The card or bank account it was paid from. Not Payroll
+            // Clearing: only the Bonsai import's pay runs go there (a pay run
+            // now is Bookkeeping's Payroll entry) -- though one of those keeps
+            // it when edited.
+            'paid_from_account_id' => [
+                'nullable', 'integer', Rule::exists('accounts', 'id')->whereIn('type', [Account::ASSET, Account::LIABILITY])->where('is_active', true),
+                function ($attribute, $value, $fail) use ($expense) {
+                    $clearing = Account::where('system_key', 'payroll_clearing')->value('id');
+                    if ($clearing && (int) $value === (int) $clearing && (int) $expense?->paid_from_account_id !== (int) $clearing) {
+                        $fail('Payroll Clearing is only for pay runs imported from Bonsai. Record a pay run with Payroll in Bookkeeping.');
+                    }
+                },
+            ],
         ]);
     }
 }

@@ -651,14 +651,11 @@ export default function ExpensesIndex({ expenses: expensesProp, filters, hasEarl
                                 <input required type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className="input" />
                                 {/* Card or bank: a card payment from checking is a transfer, not an expense. */}
                                 <select aria-label="Paid from" value={form.paid_from_account_id} onChange={(e) => setForm({ ...form, paid_from_account_id: e.target.value })} className="input form-grid__full">
-                                    {paymentAccounts.map((a) => <option key={a.id} value={a.id}>Paid from {a.name}</option>)}
+                                    {/* Payroll Clearing only for a pay run imported from Bonsai that already uses it; a pay run now is Bookkeeping's Payroll entry. */}
+                                    {paymentAccounts
+                                        .filter((a) => a.system_key !== 'payroll_clearing' || a.id === editing?.paid_from_account_id)
+                                        .map((a) => <option key={a.id} value={a.id}>Paid from {a.name}</option>)}
                                 </select>
-                                {/* Only the Bonsai import's pay runs use it; one entered now is Bookkeeping's Payroll entry. */}
-                                {paymentAccounts.find((a) => String(a.id) === String(form.paid_from_account_id))?.system_key === 'payroll_clearing' && (
-                                    <p className="form-hint form-grid__full">
-                                        Payroll Clearing is only for pay runs imported from Bonsai. To record a pay run, use Payroll in Bookkeeping instead; for anything else, pick checking or the card.
-                                    </p>
-                                )}
 
                                 <select value={form.project_id} onChange={(e) => setForm({ ...form, project_id: e.target.value })} className="input form-grid__full">
                                     <option value="">No project</option>
