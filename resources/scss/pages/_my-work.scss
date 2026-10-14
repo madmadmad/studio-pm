@@ -95,3 +95,15 @@
         text-align: right;
     }
 }
+
+// A to-do's line (the task drawer's .subtask-list rows): when it was
+// added, on the right, level with the first line of its text.
+.my-work-todo__date {
+    flex-shrink: 0;
+    margin-top: var(--space-1);
+    font-size: var(--font-size-xs);
+    line-height: var(--line-height-xs);
+    color: var(--color-text-muted);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}

@@ -12,7 +12,7 @@ import StarButton, { useFavorites } from '../../Components/StarButton';
 import RowActions from '../../Components/RowActions';
 import { ProjectStatusBadge, TaskStatusBadge } from '../../Components/StatusBadges';
 import { api } from '../../lib/api';
-import { formatDate, todayInAppTimezone } from '../../lib/format';
+import { formatDate, formatDateTime, todayInAppTimezone } from '../../lib/format';
 import { useRememberedTab } from '../../lib/useRememberedTab';
 
 const TABS = ['Tasks', 'To-do', 'Projects', 'Timesheet'];
@@ -119,7 +119,8 @@ function reloadTodos() {
 }
 
 // One line of the to-do list: tick it, edit it in place (Enter or leaving
-// the field saves), drag it (open ones only), or remove it.
+// the field saves), drag it (open ones only), or remove it. When it was
+// written down sits on the right (the full date and time on hover).
 function TodoRow({ todo, drag }) {
     const [title, setTitle] = useState(todo.title);
     useEffect(() => setTitle(todo.title), [todo.id, todo.title]);
@@ -180,6 +181,9 @@ function TodoRow({ todo, drag }) {
                 aria-label="To-do"
                 className={`subtask-list__title${done ? ' subtask-list__title--done' : ''}`}
             />
+            <time dateTime={todo.created_at} title={`Added ${formatDateTime(todo.created_at)}`} className="my-work-todo__date">
+                {formatDate(todo.created_at)}
+            </time>
             <button type="button" onClick={remove} title="Remove" aria-label={`Remove "${todo.title}"`} className="icon-btn icon-btn--danger subtask-list__remove">
                 <X />
             </button>
