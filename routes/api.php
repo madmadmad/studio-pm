@@ -8,6 +8,7 @@ use App\Http\Controllers\BrandColorController;
 use App\Http\Controllers\Chat\ChatMessageController;
 use App\Http\Controllers\Chat\ConversationController;
 use App\Http\Controllers\Chat\GifController;
+use App\Http\Controllers\ClientSessionController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\ExpenseCategoryController;
@@ -38,15 +39,20 @@ use App\Http\Controllers\StudioProfileController;
 use App\Http\Controllers\SubtaskController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TaskFavoriteController;
-use App\Http\Controllers\TodoController;
 use App\Http\Controllers\TaskFileController;
 use App\Http\Controllers\TaxController;
 use App\Http\Controllers\TimeEntryController;
+use App\Http\Controllers\TodoController;
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth:sanctum', 'accountant.restrict', 'two-factor.required'])->name('api.')->group(function () {
+    // An open app checking in, and what it noticed going wrong
+    // (ClientSessionController, lib/session.js).
+    Route::get('session', [ClientSessionController::class, 'ping']);
+    Route::post('session/events', [ClientSessionController::class, 'event'])->middleware('throttle:30,1');
+
     // Projects/tasks/time entries are open to both roles -- each controller
     // scopes what a Team Member actually sees/touches via the Policies.
     Route::apiResource('companies.projects', ProjectController::class)->shallow();

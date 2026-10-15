@@ -6,15 +6,19 @@ import { iconFor } from '../AttachmentChip';
 import MentionTextarea from './MentionTextarea';
 import { bodyForSaving } from '../../lib/chatText';
 import { formatFileSize } from '../../lib/format';
+import { readDraft, writeDraft } from '../../lib/drafts';
 
 // Writing a message: text with @mentions and emoji, and files -- from the
 // paperclip, pasted, or dropped on the conversation (`droppedFiles`). A GIF
 // (when GIPHY's set up) goes at once, as a message of its own.
 // Enter sends; Shift+Enter is a new line. A file over the size limit is
 // turned away here, before it uploads; the server checks everything again.
-export default function ChatComposer({ placeholder, members, limits, onSend, onTyping, droppedFiles, focusKey }) {
-    const [text, setText] = useState('');
-    const [mentions, setMentions] = useState([]);
+// What's typed and not sent is a draft per conversation (`draftKey`), kept
+// in the browser (lib/drafts.js): it waits there when you switch away, and
+// survives a reload or a sign-out. Files aren't kept.
+export default function ChatComposer({ placeholder, members, limits, onSend, onTyping, droppedFiles, focusKey, draftKey }) {
+    const [text, setText] = useState(() => readDraft(draftKey)?.text ?? '');
+    const [mentions, setMentions] = useState(() => readDraft(draftKey)?.mentions ?? []);
     const [files, setFiles] = useState([]); // { key, file, previewUrl }
     const [error, setError] = useState('');
     const field = useRef(null);
@@ -22,6 +26,22 @@ export default function ChatComposer({ placeholder, members, limits, onSend, onT
     useEffect(() => {
         field.current?.focus();
     }, [focusKey]);
+
+    // Another conversation: its own draft.
+    const shownKey = useRef(draftKey);
+    useEffect(() => {
+        if (shownKey.current === draftKey) return;
+        shownKey.current = draftKey;
+        const draft = readDraft(draftKey);
+        setText(draft?.text ?? '');
+        setMentions(draft?.mentions ?? []);
+    }, [draftKey]);
+
+    // Kept as it's typed (the key it was typed under, not a newer one).
+    useEffect(() => {
+        if (shownKey.current !== draftKey) return;
+        writeDraft(draftKey, text.trim() ? { text, mentions } : null);
+    }, [text, mentions]);
 
     useEffect(() => {
         if (droppedFiles?.length) addFiles(droppedFiles);

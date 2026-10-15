@@ -2,6 +2,7 @@ import { createInertiaApp, router } from '@inertiajs/react';
 import { createRoot } from 'react-dom/client';
 import { IconContext } from '@phosphor-icons/react';
 import { applyBrand } from './lib/brand';
+import { report } from './lib/session';
 
 const pages = import.meta.glob('./Pages/**/*.jsx', { eager: true });
 
@@ -14,6 +15,9 @@ const pages = import.meta.glob('./Pages/**/*.jsx', { eager: true });
 router.on('location', (event) => {
     if (!event.detail.versionChange) return;
     event.preventDefault();
+    // Noted for the server's log (sent after the reload), as it drops
+    // anything typed and not yet saved.
+    report('reload_for_deploy');
     const url = event.detail.url;
     if (url.origin === window.location.origin && url.pathname === window.location.pathname && url.search === window.location.search) {
         window.location.reload();

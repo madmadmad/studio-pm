@@ -1,5 +1,5 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Check, DotsSixVertical, UserCircle, X } from '@phosphor-icons/react';
 import AppLayout from '../../Layouts/AppLayout';
 import PageHeader from '../../Components/PageHeader';
@@ -14,6 +14,7 @@ import { ProjectStatusBadge, TaskStatusBadge } from '../../Components/StatusBadg
 import { api } from '../../lib/api';
 import { formatDate, formatDateTime, todayInAppTimezone } from '../../lib/format';
 import { useRememberedTab } from '../../lib/useRememberedTab';
+import { clearDraft, readDraft, writeDraft } from '../../lib/drafts';
 
 const TABS = ['Projects', 'Tasks', 'Timesheet', 'To-do'];
 
@@ -118,24 +119,69 @@ function reloadTodos() {
     router.reload({ only: ['todos'] });
 }
 
-// One line of the to-do list: tick it, edit it in place (Enter or leaving
-// the field saves), drag it (open ones only), or remove it. When it was
-// written down sits on the right (the full date and time on hover).
-function TodoRow({ todo, drag }) {
-    const [title, setTitle] = useState(todo.title);
-    useEffect(() => setTitle(todo.title), [todo.id, todo.title]);
+// How long after the last keystroke an edit saves.
+const SAVE_AFTER_MS = 800;
+
+// One line of the to-do list: tick it, edit it in place, drag it (open
+// ones only), or remove it. An edit saves a moment after typing stops, and
+// on Enter or leaving the line; until the server has it, it's kept in the
+// browser (lib/drafts.js), so a sign-out or reload never loses it -- one
+// left unsaved is saved when the list next loads. When it was written
+// down sits on the right (the full date and time on hover), or "Not saved"
+// if the last save failed.
+function TodoRow({ todo, drag, userId }) {
+    const draftKey = `todo-edit:${userId}:${todo.id}`;
+    const [title, setTitle] = useState(() => readDraft(draftKey) ?? todo.title);
+    const [unsaved, setUnsaved] = useState(false);
+    const saved = useRef(todo.title);
+    const timer = useRef(null);
     const done = Boolean(todo.done_at);
 
-    async function save() {
-        const value = title.trim();
-        if (!value) {
-            setTitle(todo.title);
+    // A newer title from the server -- unless an edit here is still waiting.
+    useEffect(() => {
+        saved.current = todo.title;
+        if (readDraft(draftKey) === null) setTitle(todo.title);
+    }, [todo.id, todo.title]);
+
+    // An edit that didn't make it last time: send it now.
+    useEffect(() => {
+        const pending = readDraft(draftKey);
+        if (pending !== null) save(pending);
+        return () => clearTimeout(timer.current);
+    }, []);
+
+    async function save(value, { leaving = false } = {}) {
+        clearTimeout(timer.current);
+        const next = value.trim();
+        if (!next) {
+            // Emptied and left: back to what it was.
+            if (leaving) {
+                setTitle(saved.current);
+                clearDraft(draftKey);
+            }
             return;
         }
-        if (value !== todo.title) {
-            await api.patch(`/api/todos/${todo.id}`, { title: value });
-            reloadTodos();
+        if (next === saved.current) {
+            if (readDraft(draftKey) === value) clearDraft(draftKey);
+            setUnsaved(false);
+            return;
         }
+        try {
+            await api.patch(`/api/todos/${todo.id}`, { title: next });
+            saved.current = next;
+            // Only if nothing more was typed while it saved.
+            if (readDraft(draftKey) === value) clearDraft(draftKey);
+            setUnsaved(false);
+        } catch {
+            setUnsaved(true);
+        }
+    }
+
+    function change(value) {
+        setTitle(value);
+        writeDraft(draftKey, value);
+        clearTimeout(timer.current);
+        timer.current = setTimeout(() => save(value), SAVE_AFTER_MS);
     }
 
     async function toggle() {
@@ -145,6 +191,7 @@ function TodoRow({ todo, drag }) {
 
     async function remove() {
         await api.delete(`/api/todos/${todo.id}`);
+        clearDraft(draftKey);
         reloadTodos();
     }
 
@@ -170,8 +217,8 @@ function TodoRow({ todo, drag }) {
             </button>
             <AutoResizeTextarea
                 value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                onBlur={save}
+                onChange={(e) => change(e.target.value)}
+                onBlur={() => save(title, { leaving: true })}
                 onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                         e.preventDefault();
@@ -181,9 +228,13 @@ function TodoRow({ todo, drag }) {
                 aria-label="To-do"
                 className={`subtask-list__title${done ? ' subtask-list__title--done' : ''}`}
             />
-            <time dateTime={todo.created_at} title={`Added ${formatDateTime(todo.created_at)}`} className="my-work-todo__date">
-                {formatDate(todo.created_at)}
-            </time>
+            {unsaved ? (
+                <span className="my-work-todo__date my-work-todo__date--unsaved" title="Kept in this browser; it saves when you’re signed in again.">Not saved</span>
+            ) : (
+                <time dateTime={todo.created_at} title={`Added ${formatDateTime(todo.created_at)}`} className="my-work-todo__date">
+                    {formatDate(todo.created_at)}
+                </time>
+            )}
             <button type="button" onClick={remove} title="Remove" aria-label={`Remove "${todo.title}"`} className="icon-btn icon-btn--danger subtask-list__remove">
                 <X />
             </button>
@@ -192,22 +243,42 @@ function TodoRow({ todo, drag }) {
 }
 
 // Their own running to-do list: private, not tied to a project. The open
-// ones in the order they're dragged into, with a field at the end to add
-// the next (Enter adds it and stays there for another); ticked ones move
-// to Done, newest first, until cleared.
-function TodoList({ todos }) {
+// ones in the order they're dragged into, with a line at the end for the
+// next: Enter adds it (and stays there for another), as does leaving the
+// line with something typed. What's typed there is kept in the browser
+// until the server has it, so it's never lost to a sign-out or reload; if
+// adding fails it stays, with the reason. Ticked ones move to Done, newest
+// first, until cleared.
+function TodoList({ todos, userId }) {
     const [open, setOpen] = useState(todos.open);
     useEffect(() => setOpen(todos.open), [todos.open]);
-    const [draft, setDraft] = useState('');
+    const draftKey = `todo-new:${userId}`;
+    const [draft, setDraftState] = useState(() => readDraft(draftKey, ''));
+    const [error, setError] = useState('');
     const [dragId, setDragId] = useState(null);
+    const adding = useRef(false);
+
+    function setDraft(value) {
+        setDraftState(value);
+        writeDraft(draftKey, value);
+    }
 
     async function add(e) {
-        e.preventDefault();
+        e?.preventDefault();
         const value = draft.trim();
-        if (!value) return;
-        setDraft('');
-        await api.post('/api/todos', { title: value });
-        reloadTodos();
+        if (!value || adding.current) return;
+        adding.current = true;
+        setError('');
+        try {
+            await api.post('/api/todos', { title: value });
+            // Cleared once it's in -- unless more was typed meanwhile.
+            if (readDraft(draftKey, '').trim() === value) setDraft('');
+            reloadTodos();
+        } catch (err) {
+            setError(err.message || 'Not saved. It’s kept here; press Enter to try again.');
+        } finally {
+            adding.current = false;
+        }
     }
 
     async function move(fromId, toId) {
@@ -234,6 +305,7 @@ function TodoList({ todos }) {
                         <TodoRow
                             key={todo.id}
                             todo={todo}
+                            userId={userId}
                             drag={{
                                 dragging: dragId === todo.id,
                                 onDragStart: () => setDragId(todo.id),
@@ -252,6 +324,7 @@ function TodoList({ todos }) {
                             autoFocus
                             value={draft}
                             onChange={(e) => setDraft(e.target.value)}
+                            onBlur={() => add()}
                             placeholder={open.length ? 'Add another…' : 'Add a to-do…'}
                             aria-label="New to-do"
                             maxLength={500}
@@ -259,6 +332,7 @@ function TodoList({ todos }) {
                         />
                     </form>
                 </div>
+                {error && <div className="form-message form-message--error">{error}</div>}
                 <p className="form-hint">Only you can see this list.</p>
             </div>
 
@@ -269,7 +343,7 @@ function TodoList({ todos }) {
                         <button type="button" onClick={clearDone} className="text-action text-action--sm">Clear done</button>
                     </div>
                     <div className="subtask-list">
-                        {todos.done.map((todo) => <TodoRow key={todo.id} todo={todo} />)}
+                        {todos.done.map((todo) => <TodoRow key={todo.id} todo={todo} userId={userId} />)}
                     </div>
                 </div>
             )}
@@ -348,7 +422,7 @@ export default function MyWorkIndex({ myTasks, todos, recentProjects, starredPro
                 />
             )}
 
-            {tab === 'To-do' && <TodoList todos={todos} />}
+            {tab === 'To-do' && <TodoList todos={todos} userId={props.auth.user.id} />}
         </AppLayout>
     );
 }

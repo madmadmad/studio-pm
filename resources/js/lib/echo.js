@@ -43,6 +43,15 @@ export function echo() {
     return instance;
 }
 
+// After the computer sleeps or the network drops, the socket can sit
+// "unavailable" for a while between its own retries: try again now.
+export function reconnect() {
+    const pusher = instance?.connector?.pusher;
+    if (pusher && pusher.connection.state !== 'connected' && pusher.connection.state !== 'connecting') {
+        pusher.connect();
+    }
+}
+
 // Calls `onChange(state)` as the connection goes 'connecting', 'connected',
 // 'unavailable', 'disconnected'...; returns an unsubscribe.
 export function onConnectionChange(onChange) {

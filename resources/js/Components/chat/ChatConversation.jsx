@@ -8,7 +8,7 @@ import ChatComposer from './ChatComposer';
 import ChatMessage from './ChatMessage';
 import PresenceDot from './PresenceDot';
 import { api } from '../../lib/api';
-import { setConversationCounts } from '../../lib/chatStore';
+import { setConversationCounts, useChat } from '../../lib/chatStore';
 import { useChatConversation } from '../../lib/useChatConversation';
 import { formatDaySeparator, isSameDay } from '../../lib/format';
 
@@ -95,6 +95,7 @@ function MembersMenu({ conversation, me, members, online, onEdit, onLeave }) {
 // scroll up), who's typing, and the composer. Marks itself read while it's
 // on screen and scrolled to the newest message.
 export default function ChatConversation({ conversation, me, staff, staffById, online, limits, onEdit, onLeave, onBack }) {
+    const reconnecting = useChat((st) => st.dropped);
     const chat = useChatConversation(conversation.id, me);
     const { messages, loading, hasMore, loadingOlder, lastReadId, typing } = chat;
     const list = useRef(null);
@@ -253,6 +254,8 @@ export default function ChatConversation({ conversation, me, staff, staffById, o
                     <MembersMenu conversation={conversation} me={me} members={allMembers} online={online} onEdit={onEdit} onLeave={onLeave} />
                 </div>
                 {conversation.description && <p className="chat-header__description">{conversation.description}</p>}
+                {/* The live connection dropped (the Mac slept, the network blinked). */}
+                {reconnecting && <p className="chat-header__status" role="status">Reconnecting… New messages will appear when it&rsquo;s back.</p>}
             </header>
 
             <div ref={list} className="chat-history" onScroll={onScroll} role="log" aria-live="polite" aria-relevant="additions">
@@ -316,6 +319,7 @@ export default function ChatConversation({ conversation, me, staff, staffById, o
                     onTyping={chat.notifyTyping}
                     droppedFiles={dropped}
                     focusKey={conversation.id}
+                    draftKey={`chat:${me.id}:${conversation.id}`}
                 />
             </div>
 

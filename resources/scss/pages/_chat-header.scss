@@ -82,6 +82,14 @@
         color: var(--color-text-muted);
     }
 
+    // "Reconnecting…": the live connection is down.
+    &__status {
+        margin-top: var(--space-1);
+        font-size: var(--font-size-xs);
+        line-height: var(--line-height-xs);
+        color: var(--color-warning-text);
+    }
+
     &__members {
         position: relative;
         flex-shrink: 0;

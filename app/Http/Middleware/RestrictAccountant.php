@@ -36,6 +36,9 @@ class RestrictAccountant
         ['GET', 'api/notifications'],
         ['POST', 'api/notifications/{notification}/read'],
         ['PATCH', 'api/profile/appearance'],
+        // An open app checking in, and what it noticed (ClientSessionController).
+        ['GET', 'api/session'],
+        ['POST', 'api/session/events'],
     ];
 
     public function handle(Request $request, Closure $next): Response

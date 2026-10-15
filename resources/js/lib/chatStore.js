@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from 'react';
 import { api } from './api';
-import { echo, onConnectionChange } from './echo';
+import { echo, onConnectionChange, reconnect } from './echo';
+import { onWake, report } from './session';
 
 // Chat's live state that outlives any one page: who's online (the
 // chat.presence channel), your unread and mention counts (refreshed when
@@ -16,6 +17,8 @@ import { echo, onConnectionChange } from './echo';
 let state = {
     started: false,
     connected: false,
+    // Was connected, and isn't now: Chat says "Reconnecting…".
+    dropped: false,
     online: new Set(),
     counts: {},
     total: { unread: 0, mentions: 0 },
@@ -112,16 +115,31 @@ export function startChat(user, initialTotal) {
     if (!client) return;
 
     // The first connect isn't a reconnect -- nothing was missed yet. Every
-    // one after it is: catch up.
+    // one after it is: catch up. A drop and its recovery go to the server's
+    // log (lib/session.js), to see what happens to a window left open.
     let connectedBefore = false;
+    let droppedAt = null;
     onConnectionChange((current) => {
         const connected = current === 'connected';
         if (connected && connectedBefore) {
             refreshUnread();
             reconnectListeners.forEach((fn) => fn());
         }
-        if (connected) connectedBefore = true;
-        set({ connected });
+        if (connected) {
+            if (droppedAt) report('socket_back', { down_seconds: Math.round((Date.now() - droppedAt) / 1000) });
+            droppedAt = null;
+            connectedBefore = true;
+        } else if (connectedBefore && !droppedAt && current !== 'connecting') {
+            droppedAt = Date.now();
+            report('socket_down', { state: current });
+        }
+        set({ connected, dropped: connectedBefore && !connected });
+    });
+
+    // Waking from sleep: don't wait out the socket's own back-off.
+    onWake(() => {
+        reconnect();
+        refreshUnread();
     });
 
     client.join('chat.presence')

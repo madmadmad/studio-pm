@@ -106,4 +106,9 @@
     color: var(--color-text-muted);
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
+
+    // The last save failed; the edit is kept in the browser.
+    &--unsaved {
+        color: var(--color-danger-text);
+    }
 }

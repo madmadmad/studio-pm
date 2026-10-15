@@ -6,6 +6,8 @@ import AppShell from './AppShell';
 import { hasPermission, isAccountant } from '../lib/permissions';
 import { startChat, useChat } from '../lib/chatStore';
 import { registerServiceWorker, setBadge } from '../lib/push';
+import { startSession } from '../lib/session';
+import SignedOutNotice from '../Components/SignedOutNotice';
 
 // `staffOnly`: never for the accountant, who has Bookkeeping, Invoices and
 // Expenses alone (User::ACCOUNTANT_PERMISSIONS).
@@ -38,7 +40,10 @@ export default function AppLayout({ flush = false, children }) {
 
     // Chat is the staff's; the accountant never connects to it. The service
     // worker (notifications on this device, public/sw.js) is the staff's too.
+    // Everyone's session is kept alive while the app is open, and a sign-out
+    // said plainly (lib/session.js).
     useEffect(() => {
+        startSession();
         if (!accountant) {
             startChat(user, props.chatUnread);
             registerServiceWorker();
@@ -64,6 +69,7 @@ export default function AppLayout({ flush = false, children }) {
             flush={flush}
         >
             {children}
+            <SignedOutNotice />
         </AppShell>
     );
 }
