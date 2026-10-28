@@ -36,6 +36,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $schedule->command('invoices:send-reminders')->dailyAt('09:00')->timezone('America/New_York');
         // Yesterday's bank charges into expenses, before the day starts.
         $schedule->command('plaid:sync')->dailyAt('05:00')->timezone('America/New_York');
+        // Check the sales tax rate each new year (CPA review).
+        $schedule->command('sales-tax:remind')->yearlyOn(1, 2, '09:00')->timezone('America/New_York');
     })
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->statefulApi();

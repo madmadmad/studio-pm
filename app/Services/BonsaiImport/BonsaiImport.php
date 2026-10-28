@@ -89,7 +89,8 @@ class BonsaiImport
     // from it, and the rest is matched against the ledger); $cardCsvs the
     // card's exports, matched likewise; $opening the balances the day
     // before $from, as decimals by account handle ('checking' =>
-    // '200000.00', 'capital_one_card' => ...).
+    // '200000.00', 'capital_one_card' => ..., 'shareholder_note_payable' =>
+    // '200000.00').
     public function run(string $expensesCsv, string $invoicesCsv, string $itemsJsonl, string $from = BonsaiRules::FROM, bool $commit = false, ?string $bankCsv = null, array $opening = [], array $cardCsvs = []): ImportReport
     {
         $this->report = new ImportReport;
@@ -726,10 +727,11 @@ class BonsaiImport
 
     // ---- Opening balances and the bank -----------------------------------
 
-    // What checking had and the card owed the day before the history
-    // starts, against Opening Balance Equity. (Checking's opening $200,000
-    // was the partnership's money moved in; the CPA may reclassify it as
-    // shareholder capital.)
+    // What checking had, the card owed and the studio owed its
+    // shareholders the day before the history starts, each against
+    // Opening Balance Equity, which is left with the difference.
+    // (Checking's opening $200,000 was the partnership's money moved in;
+    // our CPA made it a Shareholder Note Payable, Oct 2026.)
     private function openingBalances(array $opening, string $from): void
     {
         $date = Carbon::parse($from)->subDay()->toDateString();

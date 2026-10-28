@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\DB;
 // creates it. Safe to run again: it only adds what's missing and never
 // changes or removes a row -- once the chart exists, it's edited in the app.
 //
-// Codes are placeholders until our CPA supplies a chart. The account names
+// Our CPA kept these codes (Oct 2026). The account names
 // and Bonsai mappings live here and nowhere else, so accounts can be
 // merged or renamed later (Studio Software / Work Devices & Software /
 // Client Software may be). Code finds the accounts it depends on by
@@ -28,12 +28,15 @@ class ChartOfAccountsSeeder extends Seeder
             ['1000', 'Assets', 'asset', 'assets', null],
             ['1010', 'Checking – Waterford Bank', 'asset', 'checking', null],
             ['1050', 'Stripe Clearing', 'asset', 'stripe_clearing', 'Card and ACH payments collected by Stripe and not yet paid out to checking.'],
+            ['1500', 'Equipment & Furniture', 'asset', 'equipment', 'Electronics and furniture bought for $2,500 or more: capitalized rather than expensed (CPA, Oct 2026). Depreciated by the CPA at year end.'],
+            ['1510', 'Accumulated Depreciation', 'asset', 'accumulated_depreciation', 'Reduces Equipment & Furniture by the CPA\'s year-end depreciation (a credit balance).'],
         ],
         'liabilities' => [
             ['2000', 'Liabilities', 'liability', 'liabilities', null],
             ['2010', 'Capital One Card', 'liability', 'capital_one_card', 'Most expenses are charged here; paid off monthly from checking (a transfer, not an expense).'],
             ['2100', 'Payroll Clearing', 'liability', 'payroll_clearing', 'For pay runs imported from Bonsai: a pay run\'s wages, employer taxes and retirement match, less what Data Service and American Funds took from checking and the employees\' health deduction. Nets to zero each pay run. Pay runs entered in Bookkeeping (Payroll) don\'t use it.'],
             ['2200', 'Sales Tax Payable', 'liability', 'sales_tax_payable', 'Ohio sales tax collected on invoices, owed to the state until remitted.'],
+            ['2300', 'Shareholder Note Payable', 'liability', 'shareholder_note_payable', 'What the studio owes its shareholders for money they put in as a loan: the partnership\'s $200,000 moved into checking when the books started (CPA, Oct 2026).'],
         ],
         'equity' => [
             ['3000', 'Equity', 'equity', 'equity', null],
@@ -76,7 +79,7 @@ class ChartOfAccountsSeeder extends Seeder
             ['6080', 'Client Entertainment', 'expense', null, 'CPA: generally not deductible.'],
             ['6090', 'Depreciation', 'expense', null, 'Year-end entries from our CPA only.'],
             ['6100', 'Education & Training', 'expense', null, null],
-            ['6110', 'Electronics & Furniture', 'expense', null, 'CPA: larger purchases may need to be capitalized.'],
+            ['6110', 'Electronics & Furniture', 'expense', 'electronics_furniture', 'Purchases under $2,500. One of $2,500 or more posts to Equipment & Furniture instead (capitalized; CPA, Oct 2026).'],
             ['6120', 'Equipment Repairs', 'expense', null, null],
             ['6130', 'Flights, Taxi & Transportation', 'expense', null, null],
             ['6140', 'Gas & Fuel', 'expense', null, null],
@@ -265,7 +268,7 @@ class ChartOfAccountsSeeder extends Seeder
                     'system_key' => $systemKey,
                     'parent_id' => $i === 0 ? null : $headingId,
                     'description' => $description,
-                    'code_is_placeholder' => true,
+                    'code_is_placeholder' => false,
                     'is_active' => true,
                     'created_at' => now(),
                     'updated_at' => now(),

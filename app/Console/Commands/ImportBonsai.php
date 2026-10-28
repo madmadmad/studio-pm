@@ -26,6 +26,7 @@ class ImportBonsai extends Command
         {--card=* : The card\'s exports, matched against the ledger (optional, one --card for each file)}
         {--opening-checking= : Checking\'s balance the day before --from}
         {--opening-card= : What the Capital One card owed the day before --from}
+        {--opening-shareholder-note= : What the studio owed its shareholders the day before --from (the $200,000 they put in)}
         {--disk= : Read the files from this storage disk (paths on it) and save the report there}
         {--force : Import for real (back up the database first)}';
 
@@ -94,7 +95,11 @@ class ImportBonsai extends Command
                 return self::FAILURE;
             }
         }
-        $opening = array_filter(['checking' => $this->option('opening-checking'), 'capital_one_card' => $this->option('opening-card')]);
+        $opening = array_filter([
+            'checking' => $this->option('opening-checking'),
+            'capital_one_card' => $this->option('opening-card'),
+            'shareholder_note_payable' => $this->option('opening-shareholder-note'),
+        ]);
 
         $report = $import->run($files['expenses'], $files['invoices'], $files['items'], $this->option('from'), $commit, $files['bank'], $opening, $cards);
 

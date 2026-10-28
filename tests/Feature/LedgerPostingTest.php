@@ -87,6 +87,18 @@ class LedgerPostingTest extends TestCase
         $this->assertSame(-12000, $this->balance('capital_one_card'));
     }
 
+    public function test_equipment_of_2500_or_more_is_capitalized(): void
+    {
+        $category = $this->category('Electronics & Furniture')->id;
+        $this->createExpense(['name' => 'Studio display', 'amount' => '2500.00', 'category_id' => $category]);
+        $this->createExpense(['name' => 'Keyboard', 'amount' => '2499.99', 'category_id' => $category]);
+        $this->createExpense(['name' => 'Laptop', 'amount' => '3000.00', 'category_id' => $this->category('Internet')->id]);
+
+        $this->assertSame(250000, $this->balance('equipment'), 'an asset, for the CPA to depreciate');
+        $this->assertSame(249999, $this->balance('electronics_furniture'), 'under the threshold stays an expense');
+        $this->assertSame(300000, $this->balance('Internet'), 'only Electronics & Furniture is capitalized');
+    }
+
     public function test_an_expense_paid_from_checking_credits_checking(): void
     {
         $this->createExpense(['name' => 'Rent', 'category_id' => $this->category('Rent & Lease Property')->id, 'paid_from_account_id' => Account::forKey('checking')->id]);

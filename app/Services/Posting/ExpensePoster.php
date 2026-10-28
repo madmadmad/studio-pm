@@ -13,7 +13,8 @@ use Illuminate\Database\Eloquent\Model;
 // The category decides the account -- its billable account instead when
 // the expense is billed to a client (Advertising billed to a client is
 // Client Media Spend, not our marketing). No category, or one with no
-// account, posts to Uncategorized Expense. A cost split across clients
+// account, posts to Uncategorized Expense. Equipment over the
+// capitalization threshold posts to an asset account instead. A cost split across clients
 // is one debit per client; otherwise the debit carries the project's
 // client. What a rebilled expense earns posts with the client's payment.
 class ExpensePoster extends Poster
@@ -28,7 +29,7 @@ class ExpensePoster extends Poster
 
         $category = $record->category;
         $mappedAccount = $record->is_billable && $category?->billableAccount ? $category->billableAccount : $category?->account;
-        $expenseAccount = $this->mapped($mappedAccount, 'uncategorized_expense');
+        $expenseAccount = $this->capitalized($record, $this->mapped($mappedAccount, 'uncategorized_expense'), abs($cents));
         $paidFrom = $this->mapped($record->paidFrom, 'capital_one_card');
 
         $lines = [
@@ -45,6 +46,18 @@ class ExpensePoster extends Poster
         }
 
         return ['date' => $record->date, 'memo' => $record->name, 'lines' => $lines];
+    }
+
+    // Equipment bought for the threshold or more is an asset, not an
+    // expense (config/ledger.php).
+    private function capitalized(Expense $expense, Account $account, int $cents): Account
+    {
+        $rule = config('ledger.capitalize');
+        if ($expense->is_billable || $cents < $rule['threshold'] * 100 || ! in_array($account->system_key, $rule['accounts'], true)) {
+            return $account;
+        }
+
+        return Account::forKey($rule['asset']);
     }
 
     // One debit per client in a split -- the shares are validated to add

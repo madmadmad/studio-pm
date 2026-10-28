@@ -53,7 +53,7 @@ class ChartOfAccountsTest extends TestCase
         $this->assertSame('Payment Processing Fees', Account::forKey('merchant_fees')->name);
     }
 
-    public function test_every_account_sits_under_a_group_heading_and_codes_are_placeholders(): void
+    public function test_every_account_sits_under_a_group_heading_and_codes_are_final(): void
     {
         $headings = Account::whereNull('parent_id')->pluck('system_key')->sort()->values()->all();
         $this->assertSame(['assets', 'cost_of_revenue', 'equity', 'income', 'liabilities', 'operating_expenses'], $headings);
@@ -62,7 +62,7 @@ class ChartOfAccountsTest extends TestCase
             $this->assertSame($account->parent->type, $account->type, "{$account->name} matches its heading's type");
         }
 
-        $this->assertSame(0, Account::where('code_is_placeholder', false)->count());
+        $this->assertSame(0, Account::where('code_is_placeholder', true)->count(), 'our CPA kept the codes');
         $this->assertSame('cost_of_revenue', Account::forKey('hosting_cost')->parent->system_key);
         $this->assertSame('cost_of_revenue', Account::forKey('client_media_spend')->parent->system_key);
         $this->assertSame('operating_expenses', Account::where('name', 'Advertising & Marketing')->first()->parent->system_key);
