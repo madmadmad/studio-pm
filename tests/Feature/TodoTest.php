@@ -45,6 +45,30 @@ class TodoTest extends TestCase
         $this->actingAs($me)->get('/my-work')->assertInertia(fn ($page) => $page->has('todos.open', 2)->has('todos.done', 0));
     }
 
+    public function test_starred_ones_stay_at_the_top(): void
+    {
+        $me = User::factory()->teamMember()->create();
+        foreach (['Call the printer', 'Renew domain', 'Order toner', 'File receipts'] as $title) {
+            $this->actingAs($me)->postJson('/api/todos', ['title' => $title]);
+        }
+        $ids = Todo::orderBy('id')->pluck('id');
+        $open = fn () => collect($this->actingAs($me)->getJson('/api/todos')->json('open'))->pluck('title')->all();
+
+        // Starred: to the top, in their own order.
+        $this->actingAs($me)->patchJson("/api/todos/{$ids[3]}", ['starred' => true])->assertOk()->assertJsonPath('starred', true);
+        $this->actingAs($me)->patchJson("/api/todos/{$ids[1]}", ['starred' => true]);
+        $this->assertEquals(['Renew domain', 'File receipts', 'Call the printer', 'Order toner'], $open());
+
+        // Unstarred: back to its place among the rest.
+        $this->actingAs($me)->patchJson("/api/todos/{$ids[1]}", ['starred' => false]);
+        $this->assertEquals(['File receipts', 'Call the printer', 'Renew domain', 'Order toner'], $open());
+
+        // Ticked and unticked, it stays starred.
+        $this->actingAs($me)->patchJson("/api/todos/{$ids[3]}", ['done' => true]);
+        $this->actingAs($me)->patchJson("/api/todos/{$ids[3]}", ['done' => false]);
+        $this->assertSame('File receipts', $open()[0]);
+    }
+
     public function test_a_to_do_list_is_private(): void
     {
         $me = User::factory()->teamMember()->create();

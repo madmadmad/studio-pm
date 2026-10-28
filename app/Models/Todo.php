@@ -9,9 +9,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 // its owner ever sees or changes it (TodoController).
 class Todo extends Model
 {
-    protected $fillable = ['title', 'position', 'done_at'];
+    protected $fillable = ['title', 'position', 'starred', 'done_at'];
 
     protected $casts = [
+        'starred' => 'boolean',
         'done_at' => 'datetime',
     ];
 

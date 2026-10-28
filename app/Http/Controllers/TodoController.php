@@ -14,11 +14,11 @@ class TodoController extends Controller
     // How many ticked ones the list keeps showing (newest first).
     const DONE_SHOWN = 50;
 
-    // Open ones in their order, then the most recently ticked.
+    // Open ones in their order, starred first, then the most recently ticked.
     public static function listFor(int $userId): array
     {
         return [
-            'open' => Todo::where('user_id', $userId)->whereNull('done_at')->orderBy('position')->orderBy('id')->get(),
+            'open' => Todo::where('user_id', $userId)->whereNull('done_at')->orderByDesc('starred')->orderBy('position')->orderBy('id')->get(),
             'done' => Todo::where('user_id', $userId)->whereNotNull('done_at')->orderByDesc('done_at')->orderByDesc('id')->limit(self::DONE_SHOWN)->get(),
         ];
     }
@@ -41,18 +41,22 @@ class TodoController extends Controller
         return $todo;
     }
 
-    // A new title, or ticked (`done`: true) / unticked -- unticked, it
-    // goes back to the end of the open list.
+    // A new title, starred / unstarred, or ticked (`done`: true) /
+    // unticked -- unticked, it goes back to the end of the open list.
     public function update(Request $request, Todo $todo)
     {
         $this->own($request, $todo);
         $data = $request->validate([
             'title' => ['sometimes', 'string', 'max:500'],
+            'starred' => ['sometimes', 'boolean'],
             'done' => ['sometimes', 'boolean'],
         ]);
 
         if (isset($data['title'])) {
             $todo->title = trim($data['title']);
+        }
+        if (array_key_exists('starred', $data)) {
+            $todo->starred = $data['starred'];
         }
         if (array_key_exists('done', $data)) {
             if ($data['done'] && ! $todo->done_at) {

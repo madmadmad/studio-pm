@@ -98,6 +98,19 @@
 
 // A to-do's line (the task drawer's .subtask-list rows): when it was
 // added, on the right, level with the first line of its text.
+// Shown on hover until it's starred, like the handle and remove button.
+.my-work-todo__star {
+    flex-shrink: 0;
+    margin-top: var(--space-1);
+    opacity: 0;
+
+    .subtask-list__item:hover &,
+    &:focus-visible,
+    &--on {
+        opacity: 1;
+    }
+}
+
 .my-work-todo__date {
     flex-shrink: 0;
     margin-top: var(--space-1);

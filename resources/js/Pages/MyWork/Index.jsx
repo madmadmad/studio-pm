@@ -119,17 +119,23 @@ function reloadTodos() {
     router.reload({ only: ['todos'] });
 }
 
+// Starred ones above the rest, each keeping its order -- as the server
+// lists them (TodoController::listFor).
+function starredFirst(todos) {
+    return [...todos.filter((t) => t.starred), ...todos.filter((t) => !t.starred)];
+}
+
 // How long after the last keystroke an edit saves.
 const SAVE_AFTER_MS = 800;
 
-// One line of the to-do list: tick it, edit it in place, drag it (open
-// ones only), or remove it. An edit saves a moment after typing stops, and
+// One line of the to-do list: tick it, edit it in place, star or drag it
+// (open ones only), or remove it. An edit saves a moment after typing stops, and
 // on Enter or leaving the line; until the server has it, it's kept in the
 // browser (lib/drafts.js), so a sign-out or reload never loses it -- one
 // left unsaved is saved when the list next loads. When it was written
 // down sits on the right (the full date and time on hover), or "Not saved"
 // if the last save failed.
-function TodoRow({ todo, drag, userId }) {
+function TodoRow({ todo, drag, onStar, userId }) {
     const draftKey = `todo-edit:${userId}:${todo.id}`;
     const [title, setTitle] = useState(() => readDraft(draftKey) ?? todo.title);
     const [unsaved, setUnsaved] = useState(false);
@@ -228,6 +234,15 @@ function TodoRow({ todo, drag, userId }) {
                 aria-label="To-do"
                 className={`subtask-list__title${done ? ' subtask-list__title--done' : ''}`}
             />
+            {onStar && (
+                <StarButton
+                    starred={todo.starred}
+                    onToggle={onStar}
+                    size={14}
+                    noun="to-do"
+                    className={`my-work-todo__star${todo.starred ? ' my-work-todo__star--on' : ''}`}
+                />
+            )}
             {unsaved ? (
                 <span className="my-work-todo__date my-work-todo__date--unsaved" title="Kept in this browser; it saves when you’re signed in again.">Not saved</span>
             ) : (
@@ -247,8 +262,9 @@ function TodoRow({ todo, drag, userId }) {
 // next: Enter adds it (and stays there for another), as does leaving the
 // line with something typed. What's typed there is kept in the browser
 // until the server has it, so it's never lost to a sign-out or reload; if
-// adding fails it stays, with the reason. Ticked ones move to Done, newest
-// first, until cleared.
+// adding fails it stays, with the reason. Starred ones stay at the top, in
+// their own dragged order. Ticked ones move to Done, newest first, until
+// cleared.
 function TodoList({ todos, userId }) {
     const [open, setOpen] = useState(todos.open);
     useEffect(() => setOpen(todos.open), [todos.open]);
@@ -286,8 +302,15 @@ function TodoList({ todos, userId }) {
         const next = [...open];
         const [moved] = next.splice(next.findIndex((t) => t.id === fromId), 1);
         next.splice(next.findIndex((t) => t.id === toId), 0, moved);
-        setOpen(next);
-        await api.put('/api/todos/order', { ids: next.map((t) => t.id) });
+        const sorted = starredFirst(next);
+        setOpen(sorted);
+        await api.put('/api/todos/order', { ids: sorted.map((t) => t.id) });
+        reloadTodos();
+    }
+
+    async function star(todo) {
+        setOpen(starredFirst(open.map((t) => (t.id === todo.id ? { ...t, starred: !t.starred } : t))));
+        await api.patch(`/api/todos/${todo.id}`, { starred: !todo.starred });
         reloadTodos();
     }
 
@@ -306,6 +329,7 @@ function TodoList({ todos, userId }) {
                             key={todo.id}
                             todo={todo}
                             userId={userId}
+                            onStar={() => star(todo)}
                             drag={{
                                 dragging: dragId === todo.id,
                                 onDragStart: () => setDragId(todo.id),
