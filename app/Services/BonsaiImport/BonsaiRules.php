@@ -26,6 +26,11 @@ class BonsaiRules
     // The monthly card payment, as the bank describes it.
     public const CARD_PAYMENT = '/CAPITAL ONE ONLINE PMT/i';
 
+    // The same payment as the card's own statement shows it ("CAPITAL ONE
+    // ONLINE PYMT"): any credit from Capital One itself is a payment, not a
+    // vendor's refund.
+    public const CARD_STATEMENT_PAYMENT = '/^CAPITAL ONE /i';
+
     // A pay run's costs, from Data Service's report: paid from Payroll
     // Clearing rather than checking.
     public const PAYROLL_TAGS = ['Wages & Commissions', 'Payroll Taxes', 'Retirement Expense'];

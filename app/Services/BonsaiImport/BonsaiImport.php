@@ -100,9 +100,10 @@ class BonsaiImport
             ->all();
         $invoices = $this->readJsonl($itemsJsonl);
         $bankRows = $bankCsv ? $this->readCsv($bankCsv) : [];
+        $cardRows = StatementMatch::rows(array_merge(...array_map(fn ($csv) => $this->readCsv($csv), $cardCsvs)));
         $statements = array_filter([
             'checking' => StatementMatch::rows($bankRows),
-            'capital_one_card' => StatementMatch::rows(array_merge(...array_map(fn ($csv) => $this->readCsv($csv), $cardCsvs))),
+            'capital_one_card' => $cardRows,
         ]);
 
         DB::beginTransaction();
@@ -112,6 +113,7 @@ class BonsaiImport
             $this->bonsaiFees($invoiceRows);
             $this->companies($invoices, $invoiceRows);
             $this->importExpenses($expenseRows, $from);
+            $this->cardCredits($cardRows, $from);
             $this->importInvoices($invoices, $invoiceRows, $from);
             $this->settleUnbilled();
             $this->openingBalances($opening, $from);
@@ -346,6 +348,84 @@ class BonsaiImport
                 ];
             }
         }
+    }
+
+    // Refunds and credits on the card statement, which Bonsai never had:
+    // a vendor giving back sales tax (Moo, once it has our exemption form),
+    // a return. Each is recorded as money back -- a negative expense in the
+    // category of the charge it gives back on, so it comes off the same
+    // cost -- and a charge Bonsai has net of that refund is put back to
+    // what the card was charged, so both match the statement line by line.
+    // Card payments aren't refunds; they come from the bank's export.
+    private function cardCredits(array $rows, string $from): void
+    {
+        $rows = collect($rows)->filter(fn (array $r) => $r['date'] >= $from)->values();
+        $charges = $rows->filter(fn (array $r) => $r['cents'] < 0);
+        $card = Account::forKey('capital_one_card');
+
+        foreach ($rows as $credit) {
+            if ($credit['cents'] <= 0 || preg_match(BonsaiRules::CARD_STATEMENT_PAYMENT, $credit['description'])) {
+                continue;
+            }
+            $key = "card-credit:{$credit['date']}:{$credit['cents']}:{$credit['description']}";
+            if ($this->records->has($key)) {
+                $this->report->count('Card refunds already imported (skipped)');
+
+                continue;
+            }
+
+            // The charge it gives back on: the same vendor's, before it.
+            $charge = $charges
+                ->filter(fn (array $c) => $c['description'] === $credit['description'] && $c['date'] <= $credit['date']
+                    && -$c['cents'] > $credit['cents'] && abs(Carbon::parse($c['date'])->diffInDays(Carbon::parse($credit['date']))) <= StatementMatch::MAX_DAYS)
+                ->sortByDesc('date')
+                ->first();
+            $expense = $charge ? $this->chargedExpense($charge, $credit, $card) : null;
+
+            $refund = Expense::create([
+                'name' => $expense?->name ?? Str::title(strtolower($credit['description'])),
+                'amount' => Money::fromCents(-$credit['cents']),
+                'category_id' => $expense?->category_id,
+                'is_billable' => false,
+                'date' => $credit['date'],
+                'billing_status' => 'unbilled',
+                'paid_from_account_id' => $card->id,
+                'source_label' => 'Capital One',
+                'notes' => 'Refund or credit on the card statement'.($charge ? " (on the {$charge['date']} charge)" : '').'.',
+            ]);
+            $this->records->remember($key, $refund);
+            $this->expenses[] = $refund;
+            $this->report->count('Card refunds and credits (from the card statement)');
+            if (! $expense) {
+                $this->report->review('Card refund with no matching charge (uncategorized)', sprintf('%s $%s %s', $credit['date'], number_format($credit['cents'] / 100, 2), $credit['description']));
+            }
+        }
+    }
+
+    // The imported expense for a card charge: on the card, within a few
+    // days, for the charge -- or for the charge less the refund, when it
+    // was entered net, in which case it's put back to the charge.
+    private function chargedExpense(array $charge, array $credit, Account $card): ?Expense
+    {
+        $near = fn (Expense $e) => $e->paid_from_account_id === $card->id && abs(Carbon::parse($charge['date'])->diffInDays($e->date)) <= 3;
+        $cents = fn (Expense $e) => Money::toCents($e->amount);
+        $full = -$charge['cents'];
+
+        $expense = collect($this->expenses)->first(fn (Expense $e) => $near($e) && $cents($e) === $full);
+        if ($expense) {
+            return $expense;
+        }
+
+        $expense = collect($this->expenses)->first(fn (Expense $e) => $near($e) && $cents($e) === $full - $credit['cents']);
+        if ($expense) {
+            $expense->update([
+                'amount' => Money::fromCents($full),
+                'notes' => trim(($expense->notes ?? '')."\nPut back to the card charge; the refund on it is its own credit."),
+            ]);
+            $this->report->review('Charge entered net of a refund, put back to the card charge', sprintf('%s %s $%s', $charge['date'], $expense->name, number_format($full / 100, 2)));
+        }
+
+        return $expense;
     }
 
     private function paidFrom(array $r): Account

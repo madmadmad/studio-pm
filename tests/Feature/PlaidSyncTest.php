@@ -178,6 +178,36 @@ class PlaidSyncTest extends TestCase
         $this->assertSame($travel->id, Expense::sole()->category_id);
     }
 
+    public function test_a_refund_to_the_card_comes_in_as_money_back_in_the_vendors_category(): void
+    {
+        $this->connectedItem();
+        $printing = ExpenseCategory::where('name', 'Printing')->firstOrFail();
+        // Moo's charge, already sorted into Printing.
+        Expense::create(['name' => 'MOO', 'amount' => 151.88, 'date' => '2026-09-10', 'category_id' => $printing->id, 'is_billable' => false]);
+        $moo = ['name' => 'MOO PRINT', 'merchant_name' => 'MOO', 'personal_finance_category' => ['primary' => 'GENERAL_MERCHANDISE']];
+        Http::fake(['*/transactions/sync' => Http::response([
+            ...$this->syncPage([
+                // The sales tax back on the card...
+                $this->transaction('t-1', -10.93, $moo),
+                // ...but a deposit into checking isn't an expense.
+                $this->transaction('t-2', -500, ['account_id' => 'acc-2', 'name' => 'Mobile deposit', 'merchant_name' => null]),
+            ]),
+            'accounts' => [
+                ['account_id' => 'acc-1', 'name' => 'Business Card', 'mask' => '4521', 'type' => 'credit'],
+                ['account_id' => 'acc-2', 'name' => 'Checking', 'mask' => '0042', 'type' => 'depository'],
+            ],
+        ])]);
+
+        $this->actingAs(User::factory()->create())->postJson('/api/plaid/sync')->assertOk();
+
+        $refund = Expense::where('plaid_transaction_id', 't-1')->sole();
+        $this->assertSame('-10.93', $refund->amount);
+        $this->assertSame($printing->id, $refund->category_id);
+        $this->assertNull(Expense::where('plaid_transaction_id', 't-2')->first());
+        // It comes back off what's owed on the card.
+        $this->assertSame(-14095, Account::forKey('capital_one_card')->netDebitCents());
+    }
+
     public function test_a_failed_sync_is_recorded_on_the_bank(): void
     {
         $item = $this->connectedItem();

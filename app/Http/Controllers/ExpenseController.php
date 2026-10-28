@@ -192,7 +192,8 @@ class ExpenseController extends Controller
     {
         return $request->validate([
             'name' => [$expense ? 'sometimes' : 'required', 'string', 'max:255'],
-            'amount' => [$expense ? 'sometimes' : 'required', 'numeric', 'min:0.01'],
+            // Negative: money back (a vendor's refund or credit).
+            'amount' => [$expense ? 'sometimes' : 'required', 'numeric', 'not_in:0'],
             'currency' => ['nullable', 'string', 'size:3'],
             'category_id' => ['nullable', 'exists:expense_categories,id'],
             'project_id' => ['nullable', 'exists:projects,id'],

@@ -13,8 +13,11 @@ use Illuminate\Support\Facades\Log;
 
 // Brings a connected bank's charges into the expense list. Each posted
 // charge becomes an unbilled, non-billable expense ("Chase ••4521" as its
-// source); money coming in (deposits, refunds) and transfers/card payments
-// are left out, as are pending charges until they post. Plaid's changes
+// source). A refund or credit to a credit card (a vendor giving back sales
+// tax, a return) comes in too, as a negative expense in the category of
+// that vendor's last charge, so it comes back off the same cost. Other
+// money coming in (deposits) and transfers/card payments are left out, as
+// are pending charges until they post. Plaid's changes
 // and removals are applied to expenses still unbilled; a charge deleted
 // from the list is remembered and never imported again.
 class PlaidSync
@@ -51,7 +54,7 @@ class PlaidSync
 
         $counts = DB::transaction(function () use ($item, $added, $modified, $removed, $accounts, $cursor) {
             $item->update([
-                'accounts' => collect($accounts)->mapWithKeys(fn ($a) => [$a['account_id'] => ['name' => $a['name'], 'mask' => $a['mask'] ?? null]])->all() ?: $item->accounts,
+                'accounts' => collect($accounts)->mapWithKeys(fn ($a) => [$a['account_id'] => ['name' => $a['name'], 'mask' => $a['mask'] ?? null, 'type' => $a['type'] ?? null]])->all() ?: $item->accounts,
                 'cursor' => $cursor,
                 'last_synced_at' => now(),
                 'last_error' => null,
@@ -61,7 +64,7 @@ class PlaidSync
             $counts = ['added' => 0, 'updated' => 0, 'removed' => 0];
 
             foreach ($added as $t) {
-                if ($dismissed->has($t['transaction_id']) || ! $this->isExpense($t)) {
+                if ($dismissed->has($t['transaction_id']) || ! $this->isExpense($t, $item)) {
                     continue;
                 }
                 $expense = Expense::firstOrNew(['plaid_transaction_id' => $t['transaction_id']]);
@@ -73,7 +76,7 @@ class PlaidSync
                     'amount' => $t['amount'],
                     'currency' => $t['iso_currency_code'] ?? 'USD',
                     'date' => $t['date'],
-                    'category_id' => $this->guessCategory($t),
+                    'category_id' => $t['amount'] < 0 ? $this->refundCategory($t) : $this->guessCategory($t),
                     'is_billable' => false,
                     'billing_status' => 'unbilled',
                     'source_label' => $item->sourceLabel($t['account_id'] ?? null),
@@ -86,7 +89,7 @@ class PlaidSync
                 if (! $expense) {
                     continue;
                 }
-                if (! $this->isExpense($t)) {
+                if (! $this->isExpense($t, $item)) {
                     $counts['removed'] += (int) $this->unlessLocked($expense, fn () => $expense->delete());
 
                     continue;
@@ -136,12 +139,24 @@ class PlaidSync
         }
     }
 
-    // Money out (Plaid's amounts are positive for it), posted, and spending.
-    private function isExpense(array $t): bool
+    // Posted, and spending: money out (Plaid's amounts are positive for
+    // it), or a refund or credit to a credit card.
+    private function isExpense(array $t, PlaidItem $item): bool
     {
+        if (! empty($t['pending']) || in_array($t['personal_finance_category']['primary'] ?? null, self::SKIPPED_CATEGORIES, true)) {
+            return false;
+        }
+
         return (float) $t['amount'] > 0
-            && empty($t['pending'])
-            && ! in_array($t['personal_finance_category']['primary'] ?? null, self::SKIPPED_CATEGORIES, true);
+            || ((float) $t['amount'] < 0 && ($item->accounts[$t['account_id'] ?? '']['type'] ?? null) === 'credit');
+    }
+
+    // A refund goes where that vendor's charges go: the category of their
+    // latest charge, if it has one.
+    private function refundCategory(array $t): ?int
+    {
+        return Expense::where('name', $t['merchant_name'] ?: $t['name'])->where('amount', '>', 0)->whereNotNull('category_id')
+            ->latest('date')->value('category_id');
     }
 
     private function guessCategory(array $t): ?int

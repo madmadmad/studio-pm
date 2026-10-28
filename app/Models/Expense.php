@@ -38,6 +38,12 @@ class Expense extends Model
                     'is_billable' => 'A billable expense must be tied to a project.',
                 ]);
             }
+            // Money back isn't something to bill a client for.
+            if ($expense->is_billable && (float) $expense->amount < 0) {
+                throw ValidationException::withMessages([
+                    'is_billable' => 'A refund or credit can’t be billed to a client.',
+                ]);
+            }
         });
     }
 

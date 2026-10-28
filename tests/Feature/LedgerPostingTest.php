@@ -87,6 +87,22 @@ class LedgerPostingTest extends TestCase
         $this->assertSame(-12000, $this->balance('capital_one_card'));
     }
 
+    public function test_money_back_from_a_vendor_comes_off_the_cost_and_cant_be_billed(): void
+    {
+        $printing = $this->category('Printing')->id;
+        $this->createExpense(['name' => 'MOO PRINT', 'amount' => '151.88', 'category_id' => $printing]);
+        // The sales tax Moo gives back once it has our exemption form.
+        $this->createExpense(['name' => 'MOO PRINT', 'amount' => '-10.93', 'category_id' => $printing]);
+
+        $this->assertSame(14095, $this->balance('Advertising & Marketing'), 'the net cost of the printing');
+        $this->assertSame(-14095, $this->balance('capital_one_card'));
+
+        $this->actingAs($this->manager)->postJson('/api/expenses', [
+            'name' => 'MOO PRINT', 'amount' => '-10.93', 'date' => '2026-03-04', 'category_id' => $printing,
+            'is_billable' => true, 'project_id' => $this->project->id,
+        ])->assertUnprocessable()->assertJsonValidationErrors('is_billable');
+    }
+
     public function test_equipment_of_2500_or_more_is_capitalized(): void
     {
         $category = $this->category('Electronics & Furniture')->id;

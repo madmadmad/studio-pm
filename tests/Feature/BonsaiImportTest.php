@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Account;
 use App\Models\Company;
 use App\Models\Expense;
+use App\Models\ExpenseCategory;
 use App\Models\Invoice;
 use App\Models\JournalEntry;
 use App\Models\Payment;
@@ -161,6 +162,42 @@ class BonsaiImportTest extends TestCase
         $this->assertSame(0, $this->balance('opening_balance_equity'));
         $this->assertSame(-(50000 + 12000 + 20000 + 53870 + 14870) + 100000, $this->balance('capital_one_card'));
         $this->assertStringContainsString('2025-03-26  bank $1,234.56', implode("\n", $report->ledger));
+    }
+
+    public function test_vendor_refunds_on_the_card_statement_come_in_and_net_charges_are_put_back(): void
+    {
+        $dir = sys_get_temp_dir().'/bonsai-card-credits-'.uniqid();
+        mkdir($dir);
+        $header = 'date,name,currency,amount_after_tax,tax_rate,amount_pre_tax,markup_percentage,sales_price,project,member,client,notes,tags,receipt,billable';
+        file_put_contents("{$dir}/expenses.csv", implode("\n", [
+            $header,
+            // Entered net of the sales tax Moo gives back...
+            '2025-10-10,MOO PRINT,USD,337.75,0,337.75,0.0,337.75,"","","","",Professional Services,"",false',
+            // ...and at the full charge, its refund never entered.
+            '2025-01-14,MOO PRINT,USD,213.08,0,213.08,0.0,213.08,"","","","",Professional Services,"",false',
+        ])."\n");
+        file_put_contents("{$dir}/card.csv", implode("\n", [
+            'Transaction Date,Posted Date,Card No.,Description,Category,Debit,Credit',
+            '2025-10-09,2025-10-10,7790,MOO PRINT,Other Services,360.55,',
+            '2025-10-14,2025-10-15,7790,MOO PRINT,Other Services,,22.80',
+            '2025-01-13,2025-01-14,7790,MOO PRINT,Other Services,213.08,',
+            '2025-01-14,2025-01-15,7790,MOO PRINT,Other Services,,15.33',
+            '2025-10-20,2025-10-20,7790,CAPITAL ONE ONLINE PYMT,Payment/Credit,,500.00',
+        ])."\n");
+
+        // The usual invoices (they're paid into checking, not the card).
+        $fixtures = base_path('tests/Fixtures/bonsai');
+        $report = app(BonsaiImport::class)->run("{$dir}/expenses.csv", "{$fixtures}/invoices.csv", "{$fixtures}/items.jsonl", '2025-01-01', true, null, [], ["{$dir}/card.csv"]);
+
+        $this->assertSame(2, $report->counts['Card refunds and credits (from the card statement)'], 'not the card payment');
+        $printing = ExpenseCategory::where('name', 'Printing')->value('id');
+        $moo = Expense::where('name', 'MOO PRINT')->orderBy('date')->get();
+        $this->assertSame(['213.08', '-15.33', '360.55', '-22.80'], $moo->pluck('amount')->all());
+        $this->assertSame([$printing], $moo->pluck('category_id')->unique()->values()->all(), 'refunds go where the charge went');
+        $this->assertCount(1, $report->review['Charge entered net of a refund, put back to the card charge']);
+        // The card in the ledger matches its statement: charges less refunds.
+        $this->assertSame(-(21308 - 1533 + 36055 - 2280), $this->balance('capital_one_card'));
+        $this->assertArrayNotHasKey("On the card's statement, not in the ledger", array_filter($report->review, fn ($rows) => collect($rows)->contains(fn ($r) => str_contains($r, 'MOO'))));
     }
 
     public function test_the_statements_are_matched_and_an_expense_the_bank_paid_moves_to_checking(): void

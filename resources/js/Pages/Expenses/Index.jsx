@@ -28,6 +28,9 @@ function emptyForm(paidFrom = '') {
     return {
         name: '',
         amount: '',
+        // Money back (a vendor's refund or credit): saved as a negative
+        // amount, which takes the cost back off its account.
+        is_refund: false,
         currency: 'USD',
         category_id: '',
         project_id: '',
@@ -453,7 +456,8 @@ export default function ExpensesIndex({ expenses: expensesProp, filters, hasEarl
         setSplit(expense.splits?.length ? expense.splits.map((s) => splitRow(s.company_id, parseFloat(s.amount).toFixed(2))) : null);
         setForm({
             name: expense.name,
-            amount: expense.amount,
+            amount: String(Math.abs(parseFloat(expense.amount))),
+            is_refund: parseFloat(expense.amount) < 0,
             currency: expense.currency,
             category_id: expense.category_id ?? '',
             project_id: expense.project_id ?? '',
@@ -492,7 +496,10 @@ export default function ExpensesIndex({ expenses: expensesProp, filters, hasEarl
         setSaving(true);
         setError('');
         try {
-            const fd = toFormData(split !== null ? { ...form, is_billable: false } : form, receiptFile);
+            const { is_refund: isRefund, ...fields } = form;
+            const amount = Math.abs(parseFloat(fields.amount)) * (isRefund ? -1 : 1);
+            const payload = { ...fields, amount, is_billable: isRefund || split !== null ? false : fields.is_billable };
+            const fd = toFormData(payload, receiptFile);
             // Sent when split, and to clear one that was.
             if (split !== null || editing?.splits?.length) {
                 fd.append('splits', JSON.stringify((split || []).map((r) => ({ company_id: r.company_id === NOT_BILLED ? null : Number(r.company_id), amount: parseFloat(r.amount) }))));
@@ -662,7 +669,16 @@ export default function ExpensesIndex({ expenses: expensesProp, filters, hasEarl
                                     {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
                                 </select>
 
-                                <Toggle checked={form.is_billable && split === null} disabled={split !== null} onChange={(is_billable) => setForm({ ...form, is_billable })} label="Billable to project" />
+                                <Toggle
+                                    checked={form.is_refund}
+                                    onChange={(is_refund) => {
+                                        setForm({ ...form, is_refund, is_billable: is_refund ? false : form.is_billable });
+                                        if (is_refund) setSplit(null);
+                                    }}
+                                    label="Refund or credit (money back)"
+                                    className="form-grid__full"
+                                />
+                                <Toggle checked={form.is_billable && split === null} disabled={split !== null || form.is_refund} onChange={(is_billable) => setForm({ ...form, is_billable })} label="Billable to project" />
                                 <input
                                     type="number" min="0" step="0.01" placeholder="Markup %"
                                     value={form.markup_percent}
@@ -673,7 +689,7 @@ export default function ExpensesIndex({ expenses: expensesProp, filters, hasEarl
 
                             </div>
 
-                            <SplitPanel rows={split} onChange={setSplit} total={form.amount} companies={companies} lastSplit={pickLastSplit(lastSplits.filter((s) => s.id !== editing?.id), form.name, form.amount)} />
+                            {!form.is_refund && <SplitPanel rows={split} onChange={setSplit} total={form.amount} companies={companies} lastSplit={pickLastSplit(lastSplits.filter((s) => s.id !== editing?.id), form.name, form.amount)} />}
 
                             <ReceiptPanel
                                 expense={editing}
