@@ -15,6 +15,7 @@ use App\Http\Controllers\ExpenseCategoryController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\InvoiceCategoryController;
 use App\Http\Controllers\InvoiceController;
+use App\Http\Controllers\InvoicePaymentController;
 use App\Http\Controllers\JournalEntryController;
 use App\Http\Controllers\MessageAttachmentController;
 use App\Http\Controllers\MessageController;
@@ -152,6 +153,7 @@ Route::middleware(['auth:sanctum', 'accountant.restrict', 'two-factor.required']
         Route::post('invoices/{invoice}/sends/{invoiceSend}/reschedule', [InvoiceController::class, 'rescheduleSend']);
         Route::post('invoices/{invoice}/sends/{invoiceSend}/send-now', [InvoiceController::class, 'sendNow']);
         Route::post('invoices/{invoice}/mark-paid', [InvoiceController::class, 'markPaid']);
+        Route::post('invoices/{invoice}/refunds', [InvoicePaymentController::class, 'refund']);
         Route::post('invoices/{invoice}/repeat/stop', [InvoiceController::class, 'stopRepeat']);
     });
     // Invoices pick a category; Settings manages the list.
@@ -199,6 +201,9 @@ Route::middleware(['auth:sanctum', 'accountant.restrict', 'two-factor.required']
         // Closing the books for a stretch of dates.
         Route::post('accounting-periods', [AccountingPeriodController::class, 'store']);
         Route::post('accounting-periods/{accountingPeriod}/unlock', [AccountingPeriodController::class, 'unlock']);
+        // Undoing an invoice payment or refund recorded by mistake.
+        Route::delete('invoices/{invoice}/payments/{payment}', [InvoicePaymentController::class, 'undoPayment']);
+        Route::delete('invoices/{invoice}/refunds/{refund}', [InvoicePaymentController::class, 'undoRefund']);
         Route::patch('studio-profile', [StudioProfileController::class, 'update']);
         Route::post('studio-profile/logo/{variant}', [StudioLogoController::class, 'store']);
         Route::delete('studio-profile/logo/{variant}', [StudioLogoController::class, 'destroy']);

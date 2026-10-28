@@ -126,6 +126,7 @@ class JournalEntry extends Model
         return match ($this->source_type) {
             (new Expense)->getMorphClass() => ['kind' => 'Expense', 'label' => $source?->name ?? 'Deleted expense', 'url' => '/expenses'],
             (new Payment)->getMorphClass() => ['kind' => 'Payment', 'label' => $source ? "Invoice #{$source->invoice?->invoice_number}" : 'Deleted payment', 'url' => $source ? "/invoices/{$source->invoice_id}" : null],
+            (new Refund)->getMorphClass() => ['kind' => 'Refund', 'label' => $source ? "Invoice #{$source->invoice?->invoice_number}" : 'Deleted refund', 'url' => $source ? "/invoices/{$source->invoice_id}" : null],
             (new Transaction)->getMorphClass() => ['kind' => 'Income', 'label' => $source?->description ?: 'Other income', 'url' => '/bookkeeping'],
             default => ['kind' => class_basename($this->source_type), 'label' => (string) $this->source_id, 'url' => null],
         };

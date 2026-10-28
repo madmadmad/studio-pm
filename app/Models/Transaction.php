@@ -12,7 +12,7 @@ class Transaction extends Model
     // from the Payment, so these rows don't post.
     public const CLIENT_INVOICE = 'client invoice';
 
-    protected $fillable = ['type', 'amount', 'tax_amount', 'taxable_amount', 'category', 'occurred_on', 'description', 'invoice_id', 'project_id', 'deposit_account_id'];
+    protected $fillable = ['type', 'amount', 'tax_amount', 'taxable_amount', 'category', 'occurred_on', 'description', 'invoice_id', 'payment_id', 'refund_id', 'project_id', 'deposit_account_id'];
 
     protected $casts = [
         'occurred_on' => 'date',

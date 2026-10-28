@@ -35,14 +35,22 @@ const INVOICE_STATUS = {
     opened: { tone: 'info', label: 'Opened' },
     partial: { tone: 'warning', label: 'Partially paid' },
     paid: { tone: 'success', label: 'Paid' },
+    refunded: { tone: 'neutral', label: 'Refunded' },
     overdue: { tone: 'danger', label: 'Overdue' },
 };
+
+// Everything paid on it has gone back to the client.
+function refundedInFull(invoice) {
+    const sum = (rows) => (rows || []).reduce((total, row) => total + parseFloat(row.amount), 0);
+    return invoice.refunds?.length > 0 && sum(invoice.refunds) >= sum(invoice.payments) - 0.005;
+}
 
 export function InvoiceStatusBadge({ invoice }) {
     // Sent and not yet overdue: part paid, or whether the client has
     // opened it.
     let status = displayInvoiceStatus(invoice);
-    if (status === 'sent' && invoice.payments?.length) status = 'partial';
+    if (status === 'paid' && refundedInFull(invoice)) status = 'refunded';
+    else if (status === 'sent' && invoice.payments?.length) status = 'partial';
     else if (status === 'sent' && invoice.first_viewed_at) status = 'opened';
     const m = INVOICE_STATUS[status] || INVOICE_STATUS.draft;
     return <Badge tone={m.tone} label={m.label} title={openedSummary(invoice) ?? undefined} />;

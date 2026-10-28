@@ -65,6 +65,12 @@ function InvoiceItems({ invoice }) {
                         </div>
                     </>
                 )}
+                {(invoice.refunds || []).map((refund) => (
+                    <div key={`refund-${refund.id}`} className="document__total-row document__total-row--muted">
+                        <div>Refunded {formatDate(refund.refunded_at)}</div>
+                        <div className="document__amount">&minus;{formatCurrency(parseFloat(refund.amount) + parseFloat(refund.surcharge_amount))}</div>
+                    </div>
+                ))}
             </div>
         </div>
     );

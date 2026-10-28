@@ -127,6 +127,12 @@
                         <td class="amount">${{ number_format($payment->amount + $payment->surcharge_amount, 2) }}</td>
                     </tr>
                 @endforeach
+                @foreach ($invoice->refunds as $refund)
+                    <tr>
+                        <td>Refunded {{ $refund->refunded_at->format('M j, Y') }}</td>
+                        <td class="amount">&minus;${{ number_format($refund->amount + $refund->surcharge_amount, 2) }}</td>
+                    </tr>
+                @endforeach
             </tbody>
         </table>
     @endif

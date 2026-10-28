@@ -17,9 +17,11 @@ class PublicInvoiceController extends Controller
 {
     public function show(string $token): Response
     {
-        $invoice = Invoice::with(['company', 'project', 'contact', 'items', 'payments'])
+        $invoice = Invoice::with(['company', 'project', 'contact', 'items', 'payments', 'refunds'])
             ->where('public_token', $token)
             ->firstOrFail();
+        // A refund's reason is the studio's note, not the client's.
+        $invoice->refunds->each->makeHidden(['reason', 'created_by']);
 
         return Inertia::render('Public/InvoiceShow', [
             // Not whether it's been opened -- that's the studio's to know.
@@ -44,7 +46,7 @@ class PublicInvoiceController extends Controller
     // attaches to invoice emails, gated by the same token as the page.
     public function pdf(string $token): HttpResponse
     {
-        $invoice = Invoice::with(['company', 'project', 'contact', 'items', 'payments'])
+        $invoice = Invoice::with(['company', 'project', 'contact', 'items', 'payments', 'refunds'])
             ->where('public_token', $token)
             ->firstOrFail();
 

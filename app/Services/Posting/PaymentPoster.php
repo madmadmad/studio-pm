@@ -21,10 +21,13 @@ use Illuminate\Database\Eloquent\Model;
 // line's service, the invoice's category, Design & Development Services.
 class PaymentPoster extends Poster
 {
+    // What the revenue split reads on the invoice.
+    protected const INVOICE_WITH = ['items.revenueAccount', 'items.expense.category.revenueAccount', 'items.service.revenueAccount', 'category.revenueAccount'];
+
     protected function draft(Model $record): ?array
     {
         /** @var Payment $record */
-        $invoice = $record->invoice()->with(['items.revenueAccount', 'items.expense.category.revenueAccount', 'items.service.revenueAccount', 'category.revenueAccount'])->first();
+        $invoice = $record->invoice()->with(self::INVOICE_WITH)->first();
         $paid = Money::toCents($record->amount);
         $surcharge = Money::toCents($record->surcharge_amount);
         $lateFee = Money::toCents($record->late_fee);
@@ -60,7 +63,7 @@ class PaymentPoster extends Poster
     // revenue account. Each share is rounded and the rounding left over
     // goes on the biggest line, so it adds up to the cent. A discount line
     // (negative) takes its share back off its account.
-    private function revenue(array $items, ?Account $categoryAccount, int $cents, ?int $companyId): array
+    protected function revenue(array $items, ?Account $categoryAccount, int $cents, ?int $companyId): array
     {
         $amounts = array_map(fn (InvoiceItem $item) => Money::toCents($item->amount), $items);
         $subtotal = array_sum($amounts);

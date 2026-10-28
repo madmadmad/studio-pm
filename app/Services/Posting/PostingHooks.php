@@ -5,6 +5,7 @@ namespace App\Services\Posting;
 use App\Exceptions\LedgerException;
 use App\Models\Expense;
 use App\Models\Payment;
+use App\Models\Refund;
 use App\Models\Transaction;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
@@ -16,6 +17,7 @@ class PostingHooks
     public const POSTERS = [
         Expense::class => ExpensePoster::class,
         Payment::class => PaymentPoster::class,
+        Refund::class => RefundPoster::class,
         Transaction::class => IncomePoster::class,
     ];
 

@@ -94,7 +94,7 @@ class InvoiceList
     public function page(): array
     {
         $query = $this->filtered()
-            ->with(['items', 'company', 'project:id,name', 'payments:id,invoice_id,amount,paid_at'])
+            ->with(['items', 'company', 'project:id,name', 'payments:id,invoice_id,amount,paid_at', 'refunds:id,invoice_id,amount'])
             ->withExists(['invoiceSends as has_pending_scheduled_send' => fn ($q) => $q->where('type', 'email')->where('status', 'scheduled')])
             ->orderByDesc('issued_on')
             ->orderByDesc('invoice_number');

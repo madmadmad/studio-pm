@@ -13,7 +13,7 @@ import { reminderRows } from '../lib/reminders';
 import { paymentTermsLabel } from '../lib/paymentTerms';
 import { api } from '../lib/api';
 import { copyToClipboard } from '../lib/clipboard';
-import { useReadOnly } from '../lib/permissions';
+import { useCan, useReadOnly } from '../lib/permissions';
 import { hasQueuedEmail, waitForQueuedSend } from '../lib/invoiceSends';
 
 // The invoice detail, shared by the standalone page (Pages/Invoices/Show)
@@ -68,6 +68,8 @@ export default function InvoiceDetail({ invoice: initialInvoice, studio, invoici
     useEffect(() => setInvoice(initialInvoice), [initialInvoice]);
     // The accountant looks, never changes (no send, edit or payment).
     const readOnly = useReadOnly();
+    // Undoing a payment or refund is a super admin's (Settings) to do.
+    const canUndo = useCan()('settings') && !readOnly;
 
     // A draft opened with `openInEdit` goes straight to its edit form.
     const editsInPlace = openInEdit && initialInvoice.status === 'draft';
@@ -82,6 +84,11 @@ export default function InvoiceDetail({ invoice: initialInvoice, studio, invoici
     const [paymentAmount, setPaymentAmount] = useState(() => balanceText(initialInvoice));
     const [paymentDate, setPaymentDate] = useState(todayInAppTimezone);
     const [recordingPayment, setRecordingPayment] = useState(false);
+    // A refund being recorded, and which payment or refund is being undone.
+    const [refundOpen, setRefundOpen] = useState(false);
+    const [refund, setRefund] = useState({ amount: '', refunded_on: '', method: 'check', reason: '' });
+    const [refunding, setRefunding] = useState(false);
+    const [confirmingUndo, setConfirmingUndo] = useState(null); // 'payments-12' | 'refunds-3'
     useEffect(() => setPaymentAmount(balanceText(invoice)), [invoice.remaining_balance]); // eslint-disable-line react-hooks/exhaustive-deps
     const [sendModalOpen, setSendModalOpen] = useState(false);
     const [successMessage, setSuccessMessage] = useState('');
@@ -158,6 +165,53 @@ export default function InvoiceDetail({ invoice: initialInvoice, studio, invoici
     async function skipReminder(rule) {
         const created = await api.post(`/api/invoices/${invoice.id}/reminders/skip`, { rule });
         setInvoice((current) => ({ ...current, invoice_sends: [created, ...(current.invoice_sends || [])] }));
+    }
+
+    function openRefund() {
+        setRefund({ amount: Number(invoice.refundable_amount).toFixed(2), refunded_on: todayInAppTimezone(), method: 'check', reason: '' });
+        setRefundOpen(true);
+        setError('');
+    }
+
+    async function recordRefund() {
+        setRefunding(true);
+        setError('');
+        try {
+            await api.post(`/api/invoices/${invoice.id}/refunds`, refund);
+            setRefundOpen(false);
+            onChange();
+        } catch (err) {
+            setError(err.message || 'Could not record the refund.');
+        } finally {
+            setRefunding(false);
+        }
+    }
+
+    // kind: 'payments' | 'refunds'
+    async function undo(kind, id) {
+        setError('');
+        try {
+            await api.delete(`/api/invoices/${invoice.id}/${kind}/${id}`);
+            setConfirmingUndo(null);
+            onChange();
+        } catch (err) {
+            setError(err.message || 'Could not undo that.');
+        }
+    }
+
+    // Undo, then "Undo this? Yes / No", beside a payment or refund.
+    function undoControl(kind, id) {
+        if (!canUndo) return null;
+        const key = `${kind}-${id}`;
+        return confirmingUndo === key ? (
+            <span className="invoice-detail__undo">
+                Undo this?{' '}
+                <Button variant="link-accent" onClick={() => undo(kind, id)}>Yes</Button>{' '}
+                <Button variant="link" onClick={() => setConfirmingUndo(null)}>No</Button>
+            </span>
+        ) : (
+            <Button variant="link" onClick={() => setConfirmingUndo(key)}>Undo</Button>
+        );
     }
 
     async function recordPayment() {
@@ -389,8 +443,14 @@ export default function InvoiceDetail({ invoice: initialInvoice, studio, invoici
                         <ul className="detail-list">
                             {invoice.payments.map((payment) => (
                                 <li key={payment.id} className="detail-list__item detail-list__item--split">
-                                    <span>{formatDate(payment.paid_at)}{payment.method ? ` · ${payment.method}` : ''}</span>
+                                    <span>{formatDate(payment.paid_at)}{payment.method ? ` · ${payment.method}` : ''} {undoControl('payments', payment.id)}</span>
                                     <span className="detail-list__amount">{formatCurrency(parseFloat(payment.amount) + parseFloat(payment.surcharge_amount))}</span>
+                                </li>
+                            ))}
+                            {(invoice.refunds || []).map((r) => (
+                                <li key={`refund-${r.id}`} className="detail-list__item detail-list__item--split">
+                                    <span>Refunded {formatDate(r.refunded_at)} · {r.method}{r.reason ? ` · ${r.reason}` : ''} {undoControl('refunds', r.id)}</span>
+                                    <span className="detail-list__amount">&minus;{formatCurrency(parseFloat(r.amount) + parseFloat(r.surcharge_amount))}</span>
                                 </li>
                             ))}
                             {invoice.status === 'sent' && invoice.remaining_balance > 0 && (
@@ -400,6 +460,58 @@ export default function InvoiceDetail({ invoice: initialInvoice, studio, invoici
                                 </li>
                             )}
                         </ul>
+                        {!readOnly && !editing && !refundOpen && invoice.refundable_amount > 0 && (
+                            <Button variant="link" onClick={openRefund}>Record a refund</Button>
+                        )}
+                        {refundOpen && (
+                            <div className="invoice-detail__refund">
+                                <div className="invoice-detail__payment">
+                                    <CurrencyInput
+                                        value={refund.amount}
+                                        onChange={(amount) => setRefund({ ...refund, amount })}
+                                        aria-label="Amount refunded"
+                                        className="input input--sm input--inline invoice-detail__payment-amount"
+                                    />
+                                    <input
+                                        type="date"
+                                        value={refund.refunded_on}
+                                        max={todayInAppTimezone()}
+                                        onChange={(e) => setRefund({ ...refund, refunded_on: e.target.value })}
+                                        aria-label="Date refunded"
+                                        className="input input--sm input--inline"
+                                    />
+                                    <select
+                                        value={refund.method}
+                                        onChange={(e) => setRefund({ ...refund, method: e.target.value })}
+                                        aria-label="How it was refunded"
+                                        className="input input--sm input--inline"
+                                    >
+                                        <option value="check">Check</option>
+                                        <option value="ach">ACH</option>
+                                        <option value="card">Card (Stripe)</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </div>
+                                <input
+                                    value={refund.reason}
+                                    onChange={(e) => setRefund({ ...refund, reason: e.target.value })}
+                                    placeholder="Reason (for us; the client doesn’t see it)"
+                                    aria-label="Reason"
+                                    maxLength={255}
+                                    className="input input--sm"
+                                />
+                                <p className="form-hint">
+                                    {refund.method === 'card'
+                                        ? 'Refund it in Stripe’s dashboard first; this records it. Refunding everything left gives back the 3% card fee too.'
+                                        : 'Send the money first; this records it.'}{' '}
+                                    It comes back off the revenue the payment was booked to. The invoice stays paid.
+                                </p>
+                                <div className="invoice-detail__payment">
+                                    <Button variant="confirm" onClick={recordRefund} disabled={refunding || !(parseFloat(refund.amount) > 0)}>Record refund</Button>
+                                    <Button variant="link" onClick={() => setRefundOpen(false)}>Cancel</Button>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 )}
 

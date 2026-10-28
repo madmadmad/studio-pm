@@ -51,13 +51,13 @@ class Invoice extends Model
     public function loadForDetail(): static
     {
         $this->load([
-            'items.service', 'items.timeEntries', 'items.expense', 'company.contacts', 'contact', 'project', 'payments',
+            'items.service', 'items.timeEntries', 'items.expense', 'company.contacts', 'contact', 'project', 'payments', 'refunds',
             'invoiceSends' => fn ($query) => $query->with('sentBy:id,name')->latest('id'),
             // The series a copy belongs to (its drawer says so).
             'repeatedFrom:id,invoice_number,repeat,next_repeat_on',
         ]);
 
-        return $this->append(['send_blocking_issues', 'contact_email_missing', 'needs_issue_date_update', 'remaining_balance', 'effective_reminders_enabled', 'public_url']);
+        return $this->append(['send_blocking_issues', 'contact_email_missing', 'needs_issue_date_update', 'remaining_balance', 'refundable_amount', 'effective_reminders_enabled', 'public_url']);
     }
 
     // The props the detail view takes alongside the invoice itself.
@@ -117,6 +117,23 @@ class Invoice extends Model
     public function items(): HasMany
     {
         return $this->hasMany(InvoiceItem::class)->orderBy('position')->orderBy('id');
+    }
+
+    // Money given back to the client (Refund): the invoice stays paid.
+    public function refunds(): HasMany
+    {
+        return $this->hasMany(Refund::class)->orderBy('refunded_at');
+    }
+
+    // What could still be refunded: paid in, less what's gone back.
+    public function refundableAmount(): float
+    {
+        return round((float) $this->payments->sum('amount') - (float) $this->refunds->sum('amount'), 2);
+    }
+
+    protected function getRefundableAmountAttribute(): float
+    {
+        return $this->refundableAmount();
     }
 
     public function payments(): HasMany
@@ -416,7 +433,7 @@ class Invoice extends Model
 
     private function writePayment(string $method, float $baseAmount, float $surchargeAmount, ?string $stripePaymentIntentId, ?float $stripeFee, Carbon $paidAt): void
     {
-        $this->payments()->create([
+        $payment = $this->payments()->create([
             'method' => $method,
             'amount' => $baseAmount,
             'surcharge_amount' => $surchargeAmount,
@@ -443,6 +460,7 @@ class Invoice extends Model
             'category' => Transaction::CLIENT_INVOICE,
             'occurred_on' => $paidAt,
             'invoice_id' => $this->id,
+            'payment_id' => $payment->id,
             'project_id' => $this->project_id,
         ]);
 
