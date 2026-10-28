@@ -435,7 +435,8 @@ Bookkeeping › Ledger, following the drawer convention:
 - Transfer drawer (card payment: from checking to Capital One; also
   Stripe payout per C3, and owner contributions/draws).
 - Payroll drawer: pay date, period, Officer Compensation, Wages, Payroll
-  Tax, Retirement Match, total credited to checking.
+  Tax, Retirement Match, total credited to checking. (Replaced Oct 28, 2026
+  -- see "Payroll from the Cash Requirement Summary" below.)
 - Accounts: add, rename, deactivate. Periods: lock/unlock (super admin).
 - Manual entries have no source, so they're corrected by reversal, never
   edited.
@@ -586,6 +587,18 @@ Defaults I'll use unless you say otherwise:
 
 - **Payroll:** the provider pulls the full amount from checking, so the
   payroll entry credits checking for the total; no withholding payables.
+- **Payroll from the Cash Requirement Summary (CPA review, Oct 28, 2026):**
+  each pay run is read from Data Service's PDF
+  (`App\Services\Payroll\CashRequirementSummary`), which is checked against
+  its own subtotals and kept with the entry (`payroll_runs`). Debit Wages
+  for all gross pay (net + employee taxes + every employee deduction; no
+  Officer Compensation -- the CPA takes the officer's share from the W-2),
+  Payroll Taxes for the employer taxes, Retirement Expense for the
+  employer IRA contributions. Credit checking for the Total Cash
+  Requirement and for American Funds (employee + employer IRA), and Health
+  & Life Insurance for the employees' HLTH125 deduction. Workers' comp is
+  paid separately and left out. Earlier Officer Compensation was moved to
+  Wages by `ledger:officer-comp-to-wages`.
 - **Opening balances:** no dedicated form. It's one general journal entry
   on the start date (debit checking, credit the card balance, the
   difference to Opening Balance Equity), entered with the Phase 4 journal

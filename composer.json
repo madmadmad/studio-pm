@@ -20,6 +20,7 @@
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^3.0",
         "league/flysystem-aws-s3-v3": "^3.35",
+        "smalot/pdfparser": "^2.13",
         "symfony/http-client": "^8.1",
         "symfony/postmark-mailer": "^8.1",
         "tightenco/ziggy": "^2.6"

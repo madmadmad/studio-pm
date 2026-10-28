@@ -54,7 +54,7 @@ class BonsaiImportTest extends TestCase
         $this->assertCount(1, $report->skipped['Before 2025-01-01']);
         $this->assertCount(1, $report->skipped['Second copy of the ICHRA premium of 2025-02-21 (the bank paid it once)']);
         $this->assertNull(Expense::firstWhere('name', 'HNB-ECHO SPECIAL ACH'));
-        $this->assertCount(1, $report->review['Wages to split out officer compensation']);
+        $this->assertArrayNotHasKey('Wages to split out officer compensation', $report->review, 'all gross pay stays in Wages (CPA)');
 
         $this->assertSame('capital_one_card', Expense::firstWhere('name', 'Spectrum')->paidFrom->system_key);
         $this->assertSame('checking', Expense::firstWhere('name', 'Columbia Gas')->paidFrom->system_key);

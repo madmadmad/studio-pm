@@ -3,10 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Models\Account;
+use App\Http\Controllers\Concerns\ServesPrivateFile;
 use App\Models\JournalEntry;
+use App\Models\PayrollRun;
+use App\Services\Payroll\CashRequirementSummary;
+use App\Services\Payroll\PayrollReportException;
 use App\Services\Ledger;
 use App\Support\Money;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 // Entries made by hand (Bookkeeping > Journal): a general journal entry,
@@ -16,6 +21,8 @@ use Illuminate\Validation\Rule;
 // (422). Amounts arrive as decimals and post as cents.
 class JournalEntryController extends Controller
 {
+    use ServesPrivateFile;
+
     public function __construct(private Ledger $ledger) {}
 
     // Any balanced set of lines.
@@ -90,51 +97,132 @@ class JournalEntryController extends Controller
         ])), ($data['memo'] ?? null) ?: 'Stripe payout'));
     }
 
-    // One pay run, entered from the payroll provider's report: each cost
-    // to its account, and what actually left checking -- Data Service's
-    // debit (net pay, withholdings, employer taxes) and American Funds'
-    // (retirement deferrals and match), each its own line to match the
-    // bank statement. The provider draws it all, so there are no
-    // withholding payables. What the costs come to beyond those debits is
-    // the employees' health insurance deduction, which stayed in checking:
-    // it's credited back to Health & Life Insurance, as their share of the
-    // premiums.
+    // One pay run, from the payroll provider's (Data Service's) Cash
+    // Requirement Summary -- read from its PDF (readPayrollReport fills the
+    // form) or typed in from it. The costs are gross wages and the
+    // employer's taxes and retirement contributions. What left checking is
+    // Data Service's Total Cash Requirement and American Funds' retirement
+    // draw, each its own line to match the bank statement; the provider
+    // draws everything it withholds, so there are no withholding payables.
+    // The employees' health insurance deduction stayed in checking: it goes
+    // back against Health & Life Insurance, as their share of the premiums.
+    // Costs must equal those three. With the report attached, the amounts
+    // must be the ones it gives, it's kept with the entry, and a second
+    // report for the same check date is refused unless asked for.
     public function payroll(Request $request)
     {
-        $parts = ['officer_compensation', 'wages', 'payroll_taxes', 'retirement_expense'];
+        $costs = ['wages', 'payroll_taxes', 'retirement_expense'];
         $data = $request->validate([
             'entry_date' => ['required', 'date'],
             'memo' => ['nullable', 'string', 'max:255'],
-            ...array_fill_keys($parts, ['nullable', 'numeric', 'min:0']),
+            ...array_fill_keys([...$costs, 'retirement_debit', 'health_deduction'], ['nullable', 'numeric', 'min:0']),
             'payroll_debit' => ['required', 'numeric', 'min:0.01'],
-            'retirement_debit' => ['nullable', 'numeric', 'min:0'],
+            'report' => ['nullable', 'file', 'mimes:pdf', 'max:10240'],
+            'allow_duplicate' => ['nullable', 'boolean'],
         ], [
-            'payroll_debit.required' => 'Enter what Data Service took from checking.',
-            'payroll_debit.min' => 'Enter what Data Service took from checking.',
+            'payroll_debit.required' => 'Enter the Total Cash Requirement Data Service took from checking.',
+            'payroll_debit.min' => 'Enter the Total Cash Requirement Data Service took from checking.',
         ]);
+        $cents = fn (string $key) => Money::toCents($data[$key] ?? null);
 
-        $lines = collect($parts)
-            ->map(fn (string $key) => ['account' => $key, 'debit_cents' => Money::toCents($data[$key] ?? null)])
+        $costCents = array_sum(array_map($cents, $costs));
+        abort_if($costCents === 0, 422, 'Enter at least one payroll amount.');
+        $outCents = $cents('payroll_debit') + $cents('retirement_debit') + $cents('health_deduction');
+        abort_unless($costCents === $outCents, 422, sprintf(
+            'The costs come to %s but what left checking plus the health deduction comes to %s. Check the amounts against the payroll report.',
+            '$'.number_format($costCents / 100, 2), '$'.number_format($outCents / 100, 2),
+        ));
+
+        $report = null;
+        if ($request->hasFile('report')) {
+            $report = $this->readReport($request->file('report')->getRealPath());
+            foreach ($report->amounts() as $key => $amount) {
+                abort_unless($cents($key) === Money::toCents($amount), 422, 'The amounts don’t match the attached report. Read the report again, or post without it.');
+            }
+            if (! ($data['allow_duplicate'] ?? false) && ($existing = $this->postedRunFor($report))) {
+                abort(422, "The pay run for the {$report->checkDate->format('M j, Y')} check date is already entered (entry #{$existing->journalEntry->entry_number}).");
+            }
+        }
+
+        $lines = collect($costs)
+            ->map(fn (string $key) => ['account' => $key, 'debit_cents' => $cents($key)])
             ->filter(fn (array $line) => $line['debit_cents'] > 0)
             ->values()
             ->all();
-        abort_if($lines === [], 422, 'Enter at least one payroll amount.');
-
-        $costs = array_sum(array_column($lines, 'debit_cents'));
-        $payrollDebit = Money::toCents($data['payroll_debit']);
-        $retirementDebit = Money::toCents($data['retirement_debit'] ?? null);
-        $deduction = $costs - $payrollDebit - $retirementDebit;
-        abort_if($deduction < 0, 422, 'More came out of checking than the pay run\'s costs. Check the amounts against the payroll report.');
-
-        $lines[] = ['account' => 'checking', 'credit_cents' => $payrollDebit, 'description' => 'Data Service payroll debit'];
-        if ($retirementDebit > 0) {
-            $lines[] = ['account' => 'checking', 'credit_cents' => $retirementDebit, 'description' => 'American Funds retirement debit'];
+        $lines[] = ['account' => 'checking', 'credit_cents' => $cents('payroll_debit'), 'description' => 'Total Cash Requirement (Data Service)'];
+        if ($cents('retirement_debit') > 0) {
+            $lines[] = ['account' => 'checking', 'credit_cents' => $cents('retirement_debit'), 'description' => 'American Funds retirement debit'];
         }
-        if ($deduction > 0) {
-            $lines[] = ['account' => 'health_insurance', 'credit_cents' => $deduction, 'description' => 'Employees\' health insurance deduction'];
+        if ($cents('health_deduction') > 0) {
+            $lines[] = ['account' => 'health_insurance', 'credit_cents' => $cents('health_deduction'), 'description' => 'Employees\' health insurance deduction'];
         }
 
-        return $this->posted($this->ledger->post($data['entry_date'], $lines, ($data['memo'] ?? null) ?: 'Payroll'));
+        $memo = ($data['memo'] ?? null) ?: ($report ? 'Payroll, check date '.$report->checkDate->format('M j, Y') : 'Payroll');
+
+        $entry = DB::transaction(function () use ($data, $lines, $memo, $report, $request) {
+            $entry = $this->ledger->post($data['entry_date'], $lines, $memo);
+            if ($report) {
+                $file = $request->file('report');
+                PayrollRun::create([
+                    'check_date' => $report->checkDate,
+                    'period_date' => $report->periodDate,
+                    'journal_entry_id' => $entry->id,
+                    'report_path' => $file->store('payroll-reports', config('filesystems.private_disk')),
+                    'report_filename' => $file->getClientOriginalName(),
+                    'summary' => $report->toArray(),
+                    'created_by' => $request->user()->id,
+                ]);
+            }
+
+            return $entry;
+        });
+
+        return $this->posted($entry);
+    }
+
+    // Reads an uploaded Cash Requirement Summary for the payroll form: the
+    // amounts to fill in, the check date, every line read (to show what
+    // each amount came from), and any pay run already entered for that
+    // check date. Nothing is posted or kept.
+    public function readPayrollReport(Request $request)
+    {
+        $request->validate(['report' => ['required', 'file', 'mimes:pdf', 'max:10240']], [
+            'report.mimes' => 'Choose the Cash Requirement Summary PDF.',
+        ]);
+        $report = $this->readReport($request->file('report')->getRealPath());
+        $existing = $this->postedRunFor($report);
+
+        return [
+            'entry_date' => $report->checkDate->toDateString(),
+            'memo' => 'Payroll, check date '.$report->checkDate->format('M j, Y'),
+            'amounts' => $report->amounts(),
+            'report' => $report->toArray(),
+            'already_entered' => $existing ? ['entry_number' => $existing->journalEntry->entry_number] : null,
+        ];
+    }
+
+    // The report a pay run was posted from.
+    public function payrollReport(PayrollRun $payrollRun)
+    {
+        return $this->respondWithPrivateFile(config('filesystems.private_disk'), $payrollRun->report_path, $payrollRun->report_filename);
+    }
+
+    private function readReport(string $path): CashRequirementSummary
+    {
+        try {
+            return CashRequirementSummary::fromPdf($path);
+        } catch (PayrollReportException $e) {
+            abort(422, $e->getMessage());
+        }
+    }
+
+    // A pay run already posted (and not reversed) for the report's check date.
+    private function postedRunFor(CashRequirementSummary $report): ?PayrollRun
+    {
+        return PayrollRun::with('journalEntry')
+            ->whereDate('check_date', $report->checkDate)
+            ->whereDoesntHave('journalEntry.reversal')
+            ->first();
     }
 
     // Undo an entry made by hand. One the app posted for an expense or a
@@ -153,6 +241,6 @@ class JournalEntryController extends Controller
 
     private function posted(JournalEntry $entry): array
     {
-        return $entry->load(['lines.account', 'lines.company', 'source', 'creator', 'reverses', 'reversal'])->summary();
+        return $entry->load(['lines.account', 'lines.company', 'source', 'creator', 'reverses', 'reversal', 'payrollRun'])->summary();
     }
 }

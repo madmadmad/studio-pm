@@ -5,8 +5,9 @@ import { api } from '../../lib/api';
 
 // The shell every entry form shares: a title, its fields, any error the
 // server sends back (an unbalanced entry, a locked date), and the Post
-// button. `payload()` builds what's posted to `endpoint`; `canPost` keeps
-// the button off until the form is complete.
+// button. `payload()` builds what's posted to `endpoint` -- a FormData
+// when it carries a file; `canPost` keeps the button off until the form
+// is complete.
 export default function EntryFormDrawer({ title, hint, endpoint, payload, canPost = true, size, onPosted, onClose, children }) {
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
@@ -16,7 +17,8 @@ export default function EntryFormDrawer({ title, hint, endpoint, payload, canPos
         setSaving(true);
         setError('');
         try {
-            onPosted(await api.post(endpoint, payload()));
+            const body = payload();
+            onPosted(await (body instanceof FormData ? api.postForm(endpoint, body) : api.post(endpoint, body)));
             onClose();
         } catch (err) {
             setError(err.message || 'Could not post this entry.');

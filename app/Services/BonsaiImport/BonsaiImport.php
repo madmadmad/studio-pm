@@ -316,9 +316,6 @@ class BonsaiImport
             if ($billable && $category && ! $category->billable_account_id && ! $category->revenue_account_id && $category->account?->parent?->system_key === 'operating_expenses') {
                 $this->report->review("Billable but tagged \"{$tag}\" (an operating expense)", $line);
             }
-            if ($tag === 'Wages & Commissions') {
-                $this->report->review('Wages to split out officer compensation', $line);
-            }
             if (stripos($r['notes'], 'personal') !== false) {
                 $this->report->review('Notes mention personal funds', $line);
             }

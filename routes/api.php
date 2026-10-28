@@ -179,6 +179,8 @@ Route::middleware(['auth:sanctum', 'accountant.restrict', 'two-factor.required']
         Route::post('journal-entries/transfer', [JournalEntryController::class, 'transfer']);
         Route::post('journal-entries/payout', [JournalEntryController::class, 'payout']);
         Route::post('journal-entries/payroll', [JournalEntryController::class, 'payroll']);
+        Route::post('journal-entries/payroll/read', [JournalEntryController::class, 'readPayrollReport']);
+        Route::get('payroll-runs/{payrollRun}/report', [JournalEntryController::class, 'payrollReport'])->name('payroll-runs.report');
         Route::post('journal-entries/{journalEntry}/reverse', [JournalEntryController::class, 'reverse']);
         Route::post('accounts', [AccountController::class, 'store']);
         Route::patch('accounts/{account}', [AccountController::class, 'update']);

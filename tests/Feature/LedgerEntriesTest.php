@@ -109,25 +109,26 @@ class LedgerEntriesTest extends TestCase
 
     public function test_payroll_splits_into_its_accounts_and_the_two_debits_come_out_of_checking(): void
     {
-        $lines = $this->actingAs($this->manager)->postJson('/api/journal-entries/payroll', [
+        $entry = $this->actingAs($this->manager)->postJson('/api/journal-entries/payroll', [
             'entry_date' => '2026-03-15',
             'memo' => 'Payroll, Mar 1-15',
-            'officer_compensation' => '4000',
-            'wages' => '2500',
+            'wages' => '6500',
             'payroll_taxes' => '620.50',
             'retirement_expense' => '195',
             'payroll_debit' => '6400.50',
             'retirement_debit' => '815',
-        ])->assertOk()->json('lines');
+            'health_deduction' => '100',
+        ])->assertOk();
 
-        $this->assertCount(7, $lines);
-        $this->assertSame(400000, $this->balance('officer_compensation'));
-        $this->assertSame(250000, $this->balance('wages'));
+        $this->assertCount(6, $entry->json('lines'));
+        $this->assertSame('Total Cash Requirement (Data Service)', $entry->json('lines.3.description'));
+        $this->assertSame(650000, $this->balance('wages'));
+        $this->assertSame(0, $this->balance('officer_compensation'));
         $this->assertSame(62050, $this->balance('payroll_taxes'));
         $this->assertSame(19500, $this->balance('retirement_expense'));
         // Two lines out of checking, as the bank shows them...
         $this->assertSame(-721550, $this->balance('checking'));
-        // ...and the $100 left over is the employees' health deduction.
+        // ...and the employees' health deduction back against the premiums.
         $this->assertSame(-10000, $this->balance('health_insurance'));
     }
 
@@ -144,6 +145,18 @@ class LedgerEntriesTest extends TestCase
         $this->assertSame(0, $this->balance('health_insurance'));
     }
 
+    public function test_payroll_that_does_not_balance_is_refused(): void
+    {
+        $this->actingAs($this->manager)->postJson('/api/journal-entries/payroll', [
+            'entry_date' => '2026-03-15',
+            'wages' => '2500',
+            'payroll_taxes' => '191.25',
+            'payroll_debit' => '2600',
+        ])->assertStatus(422)->assertJsonPath('message', 'The costs come to $2,691.25 but what left checking plus the health deduction comes to $2,600.00. Check the amounts against the payroll report.');
+
+        $this->assertSame(0, JournalEntry::count());
+    }
+
     public function test_payroll_needs_an_amount_and_the_data_service_debit(): void
     {
         $this->actingAs($this->manager)->postJson('/api/journal-entries/payroll', ['entry_date' => '2026-03-15', 'wages' => '0', 'payroll_debit' => '10'])
@@ -157,7 +170,7 @@ class LedgerEntriesTest extends TestCase
     {
         $this->actingAs($this->manager)->postJson('/api/journal-entries/payroll', [
             'entry_date' => '2026-03-15', 'wages' => '2500', 'payroll_debit' => '2400', 'retirement_debit' => '200',
-        ])->assertUnprocessable()->assertJsonPath('message', 'More came out of checking than the pay run\'s costs. Check the amounts against the payroll report.');
+        ])->assertUnprocessable()->assertJsonPath('message', 'The costs come to $2,500.00 but what left checking plus the health deduction comes to $2,600.00. Check the amounts against the payroll report.');
 
         $this->assertSame(0, $this->balance('checking'));
     }

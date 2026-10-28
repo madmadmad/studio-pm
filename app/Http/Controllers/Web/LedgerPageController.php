@@ -33,7 +33,7 @@ class LedgerPageController extends Controller
             'year' => $year,
             'years' => $years,
             'entries' => JournalEntry::whereYear('entry_date', $year)
-                ->with(['lines.account', 'lines.company', 'source', 'creator', 'reverses', 'reversal'])
+                ->with(['lines.account', 'lines.company', 'source', 'creator', 'reverses', 'reversal', 'payrollRun'])
                 ->orderByDesc('entry_date')->orderByDesc('entry_number')
                 ->get()
                 ->map->summary(),

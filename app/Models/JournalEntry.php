@@ -60,6 +60,12 @@ class JournalEntry extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
+    // The payroll report a payroll entry was posted from, if it was.
+    public function payrollRun(): HasOne
+    {
+        return $this->hasOne(PayrollRun::class);
+    }
+
     public function isReversal(): bool
     {
         return $this->reverses_entry_id !== null;
@@ -95,6 +101,7 @@ class JournalEntry extends Model
             'posted_at' => $this->posted_at->toIso8601String(),
             'reverses' => $this->reverses?->only('id', 'entry_number'),
             'reversed_by' => $this->reversal?->only('id', 'entry_number'),
+            'payroll_report_url' => $this->relationLoaded('payrollRun') ? $this->payrollRun?->reportUrl() : null,
             'lines' => $this->lines->map(fn (JournalLine $line) => [
                 'id' => $line->id,
                 'account' => $line->account->only('id', 'code', 'name'),

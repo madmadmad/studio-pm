@@ -9,7 +9,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 // The accountant's whole app is this list: Bookkeeping (every report and
 // export), invoices and expenses to look at (an invoice, its PDF, a
-// receipt), posting and reversing journal entries, their alerts and
+// receipt, a pay run's payroll report), posting and reversing journal entries, their alerts and
 // Appearance, and signing out. Anything else -- a page or an action,
 // existing or added later -- is closed to them: a page sends them to
 // Bookkeeping, anything else is refused. Everyone else passes straight
@@ -29,6 +29,7 @@ class RestrictAccountant
         ['GET', 'api/invoices/{invoice}'],
         ['GET', 'api/invoice-categories'],
         ['GET', 'api/expenses/{expense}/receipt'],
+        ['GET', 'api/payroll-runs/{payrollRun}/report'],
         ['GET', 'api/bookkeeping/*'],
         ['GET', 'api/transactions'],
         ['POST', 'api/journal-entries'],
