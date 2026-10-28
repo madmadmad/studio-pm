@@ -23,7 +23,7 @@ class StripeCheckoutService
      */
     public function createCardSessionFor(Invoice $invoice): Session
     {
-        $baseAmount = $invoice->total();
+        $baseAmount = $invoice->remainingBalance();
         $surchargeAmount = $invoice->cardSurchargeAmount();
 
         return Session::create([
@@ -59,7 +59,7 @@ class StripeCheckoutService
      */
     public function createAchSessionFor(Invoice $invoice): Session
     {
-        $baseAmount = $invoice->total();
+        $baseAmount = $invoice->remainingBalance();
 
         return Session::create([
             'mode' => 'payment',
@@ -76,9 +76,22 @@ class StripeCheckoutService
         ]);
     }
 
-    // The invoice's lines, then its sales tax as a line of its own.
+    // The invoice's lines, then its sales tax as a line of its own -- or,
+    // once part of it has been paid, the balance due as one line (the
+    // lines would add up to the whole total).
     protected function itemLineItems(Invoice $invoice): array
     {
+        if ($invoice->payments()->exists()) {
+            return [[
+                'price_data' => [
+                    'currency' => 'usd',
+                    'product_data' => ['name' => "Balance due on invoice #{$invoice->invoice_number}"],
+                    'unit_amount' => $this->toCents($invoice->remainingBalance()),
+                ],
+                'quantity' => 1,
+            ]];
+        }
+
         $lines = $invoice->items->map(fn ($item) => [
             'price_data' => [
                 'currency' => 'usd',

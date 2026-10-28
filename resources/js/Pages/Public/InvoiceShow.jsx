@@ -10,7 +10,8 @@ import { useReportOpened } from '../../lib/reportOpened';
 
 // No card-fee row here on purpose -- that fee only exists between the
 // client and Stripe if they choose to pay by card, broken out on Stripe's
-// own checkout page. The total is the items plus any sales tax.
+// own checkout page. The total is the items plus any sales tax; once some
+// of it has been paid, each payment and the balance due follow it.
 function InvoiceItems({ invoice }) {
     const subtotal = invoiceSubtotal(invoice.items);
     const total = invoiceTotal(invoice.items, invoice.surcharge, invoice.tax_rate);
@@ -50,6 +51,20 @@ function InvoiceItems({ invoice }) {
                     <div className="document__total-label">Total</div>
                     <div className="document__total-value">{formatCurrency(total)}</div>
                 </div>
+                {invoice.status === 'sent' && invoice.payments.length > 0 && (
+                    <>
+                        {invoice.payments.map((payment) => (
+                            <div key={payment.id} className="document__total-row document__total-row--muted">
+                                <div>Paid {formatDate(payment.paid_at)}</div>
+                                <div className="document__amount">&minus;{formatCurrency(parseFloat(payment.amount))}</div>
+                            </div>
+                        ))}
+                        <div className="document__total-row document__total-row--grand">
+                            <div className="document__total-label">Balance due</div>
+                            <div className="document__total-value">{formatCurrency(invoice.remaining_balance)}</div>
+                        </div>
+                    </>
+                )}
             </div>
         </div>
     );
@@ -67,7 +82,9 @@ function companyAddressLines(company) {
 export default function InvoiceShow({ invoice, studio }) {
     useReportOpened();
     const { branding } = usePage().props;
-    const paidAt = invoice.payments[0]?.paid_at;
+    // The payment that settled it: the latest.
+    const paidAt = invoice.payments.map((p) => p.paid_at).sort().at(-1);
+    const partlyPaid = invoice.status === 'sent' && invoice.payments.length > 0;
     const [paying, setPaying] = useState(null); // null | 'card' | 'ach'
     const [error, setError] = useState('');
 
@@ -155,7 +172,7 @@ export default function InvoiceShow({ invoice, studio }) {
                                             disabled={paying !== null}
                                             className="btn btn--lg btn--accent"
                                         >
-                                            {paying === 'card' ? 'Redirecting…' : 'Pay by card — 3% fee applies'}
+                                            {paying === 'card' ? 'Redirecting…' : `Pay ${partlyPaid ? `${formatCurrency(invoice.remaining_balance)} ` : ''}by card — 3% fee applies`}
                                         </button>
                                     </div>
                                     {error && <div className="form-message form-message--error document__pay-error">{error}</div>}

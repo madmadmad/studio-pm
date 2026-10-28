@@ -41,15 +41,16 @@ class MarkInvoicePaidFromStripeWebhook
 
         $metadata = $session['metadata'] ?? [];
         $method = $metadata['method'] ?? 'card';
-        $baseAmount = (float) ($metadata['base_amount'] ?? $invoice->total());
+        $baseAmount = (float) ($metadata['base_amount'] ?? $invoice->remainingBalance());
         $surchargeAmount = (float) ($metadata['surcharge_amount'] ?? 0);
 
-        // The invoice could have been edited (or its items rebilled) between
-        // checkout and webhook -- still record what Stripe actually
-        // collected rather than silently dropping the payment, but flag the
-        // mismatch since it means the client didn't pay the current total.
-        if (abs($baseAmount - $invoice->total()) > 0.01) {
-            Log::warning("Stripe checkout base_amount ({$baseAmount}) doesn't match invoice #{$invoice->invoice_number} total ({$invoice->total()}) -- recording the payment as received anyway.");
+        // The invoice could have been edited (or its items rebilled), or
+        // another payment recorded, between checkout and webhook -- still
+        // record what Stripe actually collected rather than silently
+        // dropping the payment, but flag the mismatch since it means the
+        // client didn't pay the current balance.
+        if (abs($baseAmount - $invoice->remainingBalance()) > 0.01) {
+            Log::warning("Stripe checkout base_amount ({$baseAmount}) doesn't match invoice #{$invoice->invoice_number} balance due ({$invoice->remainingBalance()}) -- recording the payment as received anyway.");
         }
 
         // Stripe's fee on the charge, so the ledger books it with the

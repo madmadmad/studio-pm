@@ -33,14 +33,17 @@ const INVOICE_STATUS = {
     scheduled: { tone: 'neutral', label: 'Scheduled' },
     sent: { tone: 'accent', label: 'Sent' },
     opened: { tone: 'info', label: 'Opened' },
+    partial: { tone: 'warning', label: 'Partially paid' },
     paid: { tone: 'success', label: 'Paid' },
     overdue: { tone: 'danger', label: 'Overdue' },
 };
 
 export function InvoiceStatusBadge({ invoice }) {
-    // Sent and not yet overdue: whether the client has opened it.
+    // Sent and not yet overdue: part paid, or whether the client has
+    // opened it.
     let status = displayInvoiceStatus(invoice);
-    if (status === 'sent' && invoice.first_viewed_at) status = 'opened';
+    if (status === 'sent' && invoice.payments?.length) status = 'partial';
+    else if (status === 'sent' && invoice.first_viewed_at) status = 'opened';
     const m = INVOICE_STATUS[status] || INVOICE_STATUS.draft;
     return <Badge tone={m.tone} label={m.label} title={openedSummary(invoice) ?? undefined} />;
 }

@@ -245,9 +245,10 @@ class Invoice extends Model
     // Checkout line item for a card payment. It is never added to total():
     // the fee is between the client and Stripe, shown only on Stripe's own
     // page, and never affects what this invoice is worth in the app.
+    // The 3% card fee on what's left to pay.
     public function cardSurchargeAmount(): float
     {
-        return round($this->total() * 0.03, 2);
+        return round($this->remainingBalance() * 0.03, 2);
     }
 
     // What the client owes: the lines plus any sales tax.
@@ -394,45 +395,65 @@ class Invoice extends Model
     // income Transaction, so bookkeeping can always tell "amount owed" from
     // "amount Stripe actually processed."
     //
-    // $stripeFee is Stripe's processing fee on the charge, when known. All
-    // in one transaction, so the payment, the invoice's status and the
-    // ledger entry (posted once it commits) go together.
+    // $stripeFee is Stripe's processing fee on the charge, when known;
+    // $paidAt when the money came in (now, unless a payment is recorded
+    // after the fact). All in one transaction, so the payment, the
+    // invoice's status and the ledger entry (posted once it commits) go
+    // together.
+    //
+    // A payment can be part of what's owed: the invoice is paid once its
+    // payments cover the total, and stays sent (partially paid, still
+    // reminded about its balance) until then.
     //
     // Once it's in, the people who handle invoices hear about it on their
     // devices (PushAlerts) -- all but $recordedBy, who marked it paid.
-    public function recordPayment(string $method, float $baseAmount, float $surchargeAmount = 0.0, ?string $stripePaymentIntentId = null, ?float $stripeFee = null, ?User $recordedBy = null): void
+    public function recordPayment(string $method, float $baseAmount, float $surchargeAmount = 0.0, ?string $stripePaymentIntentId = null, ?float $stripeFee = null, ?User $recordedBy = null, ?Carbon $paidAt = null): void
     {
-        DB::transaction(fn () => $this->writePayment($method, $baseAmount, $surchargeAmount, $stripePaymentIntentId, $stripeFee));
+        DB::transaction(fn () => $this->writePayment($method, $baseAmount, $surchargeAmount, $stripePaymentIntentId, $stripeFee, $paidAt ?? now()));
 
         rescue(fn () => PushAlerts::invoicePaid($this, $baseAmount, $recordedBy), report: true);
     }
 
-    private function writePayment(string $method, float $baseAmount, float $surchargeAmount, ?string $stripePaymentIntentId, ?float $stripeFee): void
+    private function writePayment(string $method, float $baseAmount, float $surchargeAmount, ?string $stripePaymentIntentId, ?float $stripeFee, Carbon $paidAt): void
     {
-        $this->update(['status' => 'paid']);
-
         $this->payments()->create([
             'method' => $method,
             'amount' => $baseAmount,
             'surcharge_amount' => $surchargeAmount,
             'stripe_fee' => $stripeFee,
             'stripe_payment_intent_id' => $stripePaymentIntentId,
-            'paid_at' => now(),
+            'paid_at' => $paidAt,
         ]);
+        $this->unsetRelation('payments');
+        $paidInFull = $this->isPaidInFull();
+        if ($paidInFull) {
+            $this->update(['status' => 'paid']);
+        }
 
         // The amount received includes any sales tax; the tax is noted
-        // apart, since it's owed to the state rather than earned.
+        // apart, since it's owed to the state rather than earned. Part of
+        // the total carries its share of the tax and the taxable sales.
+        $total = $this->total();
+        $share = $total > 0 ? min(1, $baseAmount / $total) : 1;
         Transaction::create([
             'type' => 'income',
             'amount' => $baseAmount,
-            'tax_amount' => min($this->taxAmount(), $baseAmount),
-            'taxable_amount' => $this->taxableSubtotal(),
+            'tax_amount' => min(round($this->taxAmount() * $share, 2), $baseAmount),
+            'taxable_amount' => round($this->taxableSubtotal() * $share, 2),
             'category' => Transaction::CLIENT_INVOICE,
-            'occurred_on' => now(),
+            'occurred_on' => $paidAt,
             'invoice_id' => $this->id,
             'project_id' => $this->project_id,
         ]);
 
-        $this->expenses()->update(['billing_status' => 'billed_and_paid']);
+        if ($paidInFull) {
+            $this->expenses()->update(['billing_status' => 'billed_and_paid']);
+        }
+    }
+
+    // Its payments cover the total (to the cent).
+    public function isPaidInFull(): bool
+    {
+        return $this->remainingBalance() < 0.005;
     }
 }

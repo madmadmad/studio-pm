@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Check, Copy, DownloadSimple, Eye, PaperPlaneTilt, PencilSimple } from '@phosphor-icons/react';
 import Button from './Button';
+import CurrencyInput from './CurrencyInput';
 import InvoiceLineItems from './InvoiceLineItems';
 import InvoiceDateFields from './InvoiceDateFields';
 import SendInvoiceModal from './SendInvoiceModal';
 import { TaxRow, TaxToggle, useSalesTax } from './InvoiceTax';
 import { InvoiceCategorySelect } from './InvoiceCategory';
-import { formatCurrency, formatDate, invoiceSubtotal, invoiceTotal } from '../lib/format';
+import { formatCurrency, formatDate, invoiceSubtotal, invoiceTotal, todayInAppTimezone } from '../lib/format';
 import { formatDateTimeEastern, utcToEasternParts, easternWallTimeToUtcIso } from '../lib/datetime';
 import { reminderRows } from '../lib/reminders';
 import { paymentTermsLabel } from '../lib/paymentTerms';
@@ -56,6 +57,12 @@ export function InvoiceDueLine({ invoice }) {
     );
 }
 
+// The balance due as the payment form's starting amount ("1250.00").
+function balanceText(invoice) {
+    const balance = invoice?.remaining_balance;
+    return balance > 0 ? Number(balance).toFixed(2) : '';
+}
+
 export default function InvoiceDetail({ invoice: initialInvoice, studio, invoicingDefaults, onChange, renderFrame, bare = false, openInEdit = false, onDone }) {
     const [invoice, setInvoice] = useState(initialInvoice);
     useEffect(() => setInvoice(initialInvoice), [initialInvoice]);
@@ -70,7 +77,12 @@ export default function InvoiceDetail({ invoice: initialInvoice, studio, invoici
     const [error, setError] = useState('');
     const [copied, setCopied] = useState(false);
     const [paymentMethod, setPaymentMethod] = useState('check');
+    // What's being recorded: the balance due unless changed (part of it),
+    // received today unless it came in earlier.
+    const [paymentAmount, setPaymentAmount] = useState(() => balanceText(initialInvoice));
+    const [paymentDate, setPaymentDate] = useState(todayInAppTimezone);
     const [recordingPayment, setRecordingPayment] = useState(false);
+    useEffect(() => setPaymentAmount(balanceText(invoice)), [invoice.remaining_balance]); // eslint-disable-line react-hooks/exhaustive-deps
     const [sendModalOpen, setSendModalOpen] = useState(false);
     const [successMessage, setSuccessMessage] = useState('');
     const [reschedulingId, setReschedulingId] = useState(null);
@@ -150,9 +162,12 @@ export default function InvoiceDetail({ invoice: initialInvoice, studio, invoici
 
     async function recordPayment() {
         setRecordingPayment(true);
+        setError('');
         try {
-            await api.post(`/api/invoices/${invoice.id}/mark-paid`, { method: paymentMethod });
+            await api.post(`/api/invoices/${invoice.id}/mark-paid`, { method: paymentMethod, amount: paymentAmount, paid_on: paymentDate });
             onChange();
+        } catch (err) {
+            setError(err.message || 'Could not record the payment.');
         } finally {
             setRecordingPayment(false);
         }
@@ -249,8 +264,8 @@ export default function InvoiceDetail({ invoice: initialInvoice, studio, invoici
                     <PaperPlaneTilt />
                 </button>
             )}
-            {/* Drafts and sent invoices can be edited; paid ones are locked. */}
-            {!readOnly && invoice.status !== 'paid' && !editing && (
+            {/* Drafts and sent invoices can be edited; paid and partly paid ones are locked. */}
+            {!readOnly && invoice.status !== 'paid' && !invoice.payments?.length && !editing && (
                 <button onClick={startEditing} title="Edit invoice" aria-label="Edit invoice" className="icon-btn icon-btn--edit">
                     <PencilSimple />
                 </button>
@@ -378,6 +393,12 @@ export default function InvoiceDetail({ invoice: initialInvoice, studio, invoici
                                     <span className="detail-list__amount">{formatCurrency(parseFloat(payment.amount) + parseFloat(payment.surcharge_amount))}</span>
                                 </li>
                             ))}
+                            {invoice.status === 'sent' && invoice.remaining_balance > 0 && (
+                                <li className="detail-list__item detail-list__item--split">
+                                    <strong>Balance due</strong>
+                                    <strong className="detail-list__amount">{formatCurrency(invoice.remaining_balance)}</strong>
+                                </li>
+                            )}
                         </ul>
                     </div>
                 )}
@@ -486,16 +507,31 @@ export default function InvoiceDetail({ invoice: initialInvoice, studio, invoici
                     <div className={bare ? 'form-panel' : undefined}>
                         {bare && heading('Record payment')}
                         <div className="invoice-detail__payment">
+                            <CurrencyInput
+                                value={paymentAmount}
+                                onChange={setPaymentAmount}
+                                aria-label="Amount received"
+                                className="input input--sm input--inline invoice-detail__payment-amount"
+                            />
+                            <input
+                                type="date"
+                                value={paymentDate}
+                                max={todayInAppTimezone()}
+                                onChange={(e) => setPaymentDate(e.target.value)}
+                                aria-label="Date received"
+                                className="input input--sm input--inline"
+                            />
                             <select
                                 value={paymentMethod}
                                 onChange={(e) => setPaymentMethod(e.target.value)}
+                                aria-label="How it was paid"
                                 className="input input--sm input--inline"
                             >
                                 <option value="check">Check</option>
                                 <option value="ach">ACH</option>
                                 <option value="other">Other</option>
                             </select>
-                            <Button variant="confirm" onClick={recordPayment} disabled={recordingPayment}>
+                            <Button variant="confirm" onClick={recordPayment} disabled={recordingPayment || !(parseFloat(paymentAmount) > 0)}>
                                 Record payment
                             </Button>
                         </div>

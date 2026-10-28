@@ -23,7 +23,9 @@ class PublicInvoiceController extends Controller
 
         return Inertia::render('Public/InvoiceShow', [
             // Not whether it's been opened -- that's the studio's to know.
-            'invoice' => $invoice->setAttribute('document_title', $invoice->documentTitle())->makeHidden(['first_viewed_at', 'last_viewed_at', 'view_count']),
+            'invoice' => $invoice->setAttribute('document_title', $invoice->documentTitle())
+                ->setAttribute('remaining_balance', $invoice->remainingBalance())
+                ->makeHidden(['first_viewed_at', 'last_viewed_at', 'view_count']),
             'studio' => StudioProfile::current(),
             // In the client's own color, whoever opens the link.
             'brand' => BrandPalette::for($invoice->company?->brand_color),

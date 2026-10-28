@@ -102,8 +102,10 @@ class InvoiceController extends Controller
     public function update(Request $request, Invoice $invoice)
     {
         // Drafts and sent invoices can be edited; paid ones can't -- their
-        // payment is already in bookkeeping, and an edit would disagree with it.
+        // payment is already in bookkeeping, and an edit would disagree with
+        // it. Nor can one partly paid, for the same reason.
         abort_if($invoice->status === 'paid', 422, 'Paid invoices cannot be edited.');
+        abort_if($invoice->payments()->exists(), 422, 'This invoice has a payment recorded, so it can’t be edited.');
 
         $data = $this->validateInvoice($request, [
             'contact_id' => ['nullable', Rule::exists('contacts', 'id')->where('company_id', $invoice->company_id)],
@@ -456,15 +458,29 @@ class InvoiceController extends Controller
     // regardless of the invoice's own card-surcharge flag: that flag only
     // ever governs whether the client is offered a card option, and a card
     // fee that was never actually collected has no business in the books.
+    //
+    // The amount is the balance due unless a smaller one is given (a
+    // partial payment); more than the balance is refused. The date is when
+    // it came in -- today unless it's being recorded late.
     public function markPaid(Request $request, Invoice $invoice)
     {
         $data = $request->validate([
             // Recorded by hand: ACH comes straight to the bank, not
             // through Stripe.
             'method' => ['required', 'in:check,ach,other'],
-        ]);
+            'amount' => ['nullable', 'numeric', 'min:0.01'],
+            'paid_on' => ['nullable', 'date', 'before_or_equal:today'],
+        ], ['paid_on.before_or_equal' => 'The payment date can’t be in the future.']);
 
-        $invoice->recordPayment($data['method'], $invoice->total(), recordedBy: $request->user());
+        $balance = $invoice->remainingBalance();
+        abort_if($balance < 0.005, 422, 'This invoice is already paid in full.');
+        $amount = isset($data['amount']) ? round((float) $data['amount'], 2) : $balance;
+        abort_if($amount - $balance > 0.005, 422, 'That’s more than the balance due ($'.number_format($balance, 2).').');
+
+        $paidOn = $data['paid_on'] ?? null;
+        $paidAt = $paidOn && ! Carbon::parse($paidOn)->isToday() ? Carbon::parse($paidOn)->setTime(12, 0) : now();
+
+        $invoice->recordPayment($data['method'], $amount, recordedBy: $request->user(), paidAt: $paidAt);
 
         return $invoice->load('items', 'payments');
     }
@@ -472,6 +488,7 @@ class InvoiceController extends Controller
     public function destroy(Invoice $invoice)
     {
         abort_if($invoice->status === 'paid', 422, 'Paid invoices cannot be deleted.');
+        abort_if($invoice->payments()->exists(), 422, 'This invoice has payments recorded, so it can’t be deleted.');
 
         DB::transaction(function () use ($invoice) {
             // Same reasoning as update(): don't leave time entries stuck

@@ -507,7 +507,7 @@ export default function InvoicesIndex({ invoices: invoicesProp, filters, hasEarl
                                                         <CheckCircle />
                                                     </button>
                                                 )}
-                                                {!readOnly && invoice.status !== 'paid' && (
+                                                {!readOnly && invoice.status !== 'paid' && !invoice.payments?.length && (
                                                     <button
                                                         onClick={() => deleteInvoice(invoice)}
                                                         disabled={deletingId === invoice.id}

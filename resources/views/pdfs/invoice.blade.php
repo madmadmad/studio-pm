@@ -104,6 +104,12 @@
             <td>Total</td>
             <td class="amount">${{ number_format($invoice->total(), 2) }}</td>
         </tr>
+        @if ($invoice->payments->isNotEmpty() && ! $invoice->isPaidInFull())
+            <tr class="total">
+                <td>Balance due</td>
+                <td class="amount">${{ number_format($invoice->remainingBalance(), 2) }}</td>
+            </tr>
+        @endif
     </table>
 
     @if ($invoice->payments->isNotEmpty())
