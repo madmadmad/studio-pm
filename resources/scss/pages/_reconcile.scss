@@ -1,0 +1,82 @@
+// Bookkeeping > Reconcile: an account per card, then one statement's
+// entries ticked off against it.
+
+.reconcile {
+    display: grid;
+    gap: var(--space-4);
+
+    &__account {
+        display: grid;
+        gap: var(--space-3);
+    }
+
+    &__head {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: var(--space-2);
+    }
+
+    &__name {
+        margin: 0;
+        font-size: var(--font-size-lg);
+    }
+
+    &__last,
+    &__open {
+        margin: 0;
+        color: var(--color-text-muted);
+        font-size: var(--font-size-sm);
+    }
+
+    // Statement date | ending balance | export | Start.
+    &__start {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-end;
+        gap: var(--space-3);
+    }
+
+    &__field {
+        display: grid;
+        gap: var(--space-1);
+        width: 11rem;
+
+        &--wide {
+            width: 18rem;
+            max-width: 100%;
+        }
+    }
+
+    &__error {
+        flex-basis: 100%;
+    }
+
+    &__actions {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: var(--space-3);
+    }
+
+    &__confirm {
+        font-size: var(--font-size-sm);
+        color: var(--color-text-muted);
+    }
+
+    &__tick {
+        width: 2.5rem;
+    }
+
+    // A ticked entry reads as done.
+    &__line--cleared td:not(.reconcile__tick) {
+        color: var(--color-text-muted);
+    }
+
+    &__missing-amount {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--space-3);
+    }
+}

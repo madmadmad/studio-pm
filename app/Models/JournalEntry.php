@@ -66,6 +66,16 @@ class JournalEntry extends Model
         return $this->hasOne(PayrollRun::class);
     }
 
+    // The finished bank or card statement one of its lines is on, if any:
+    // then it can't be reversed (Ledger) until that's reopened.
+    public function reconciledStatement(): ?BankReconciliation
+    {
+        return BankReconciliation::whereNotNull('completed_at')
+            ->whereIn('id', $this->lines()->whereNotNull('bank_reconciliation_id')->pluck('bank_reconciliation_id'))
+            ->with('account')
+            ->first();
+    }
+
     public function isReversal(): bool
     {
         return $this->reverses_entry_id !== null;

@@ -61,6 +61,9 @@ class Ledger
             if ($entry->reversal()->exists()) {
                 throw new LedgerException("Entry #{$entry->entry_number} has already been reversed.");
             }
+            if ($statement = $entry->reconciledStatement()) {
+                throw new LedgerException("This is on the reconciled {$statement->label()} statement, so it can't be changed. Reopen that reconciliation first.");
+            }
             $this->assertOpen($date);
 
             $lines = $entry->lines()->get()->map(fn ($line) => [

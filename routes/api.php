@@ -17,6 +17,7 @@ use App\Http\Controllers\InvoiceCategoryController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\InvoicePaymentController;
 use App\Http\Controllers\JournalEntryController;
+use App\Http\Controllers\ReconciliationController;
 use App\Http\Controllers\MessageAttachmentController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\NoteController;
@@ -184,6 +185,13 @@ Route::middleware(['auth:sanctum', 'accountant.restrict', 'two-factor.required']
         Route::post('journal-entries/payroll/read', [JournalEntryController::class, 'readPayrollReport']);
         Route::get('payroll-runs/{payrollRun}/report', [JournalEntryController::class, 'payrollReport'])->name('payroll-runs.report');
         Route::post('journal-entries/{journalEntry}/reverse', [JournalEntryController::class, 'reverse']);
+        // Reconciling bank and card statements.
+        Route::post('reconciliations', [ReconciliationController::class, 'store']);
+        Route::post('reconciliations/{reconciliation}/lines/{line}', [ReconciliationController::class, 'toggle']);
+        Route::post('reconciliations/{reconciliation}/rows/{row}/add', [ReconciliationController::class, 'addMissing'])->whereNumber('row');
+        Route::post('reconciliations/{reconciliation}/finish', [ReconciliationController::class, 'finish']);
+        Route::post('reconciliations/{reconciliation}/reopen', [ReconciliationController::class, 'reopen']);
+        Route::delete('reconciliations/{reconciliation}', [ReconciliationController::class, 'destroy']);
         Route::post('accounts', [AccountController::class, 'store']);
         Route::patch('accounts/{account}', [AccountController::class, 'update']);
     });

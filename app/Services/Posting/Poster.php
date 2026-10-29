@@ -65,6 +65,10 @@ abstract class Poster
             return;
         }
 
+        if ($live && ($statement = $live->reconciledStatement())) {
+            throw new LedgerException("This is on the reconciled {$statement->label()} statement, so it can't be changed. Reopen that reconciliation first.");
+        }
+
         foreach (array_filter([$live?->entry_date, $draft['date'] ?? null]) as $date) {
             if ($period = AccountingPeriod::lockedOn($date)) {
                 throw new LedgerException(sprintf(

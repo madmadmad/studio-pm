@@ -610,3 +610,24 @@ Still open (not blocking Phase 1):
    Needed by Phase 6. Keep exports out of the repo.
 2. **MySQL or SQLite for production:** README says MySQL on Forge, the
    production env says SQLite. Migrations will be written to work on both.
+
+## Monthly reconciliation (CPA review, Oct 28, 2026)
+
+Bookkeeping > Reconcile (`App\Services\Reconciliation\Reconciler`): checking
+and the Capital One card, each against its monthly statement. A statement's
+end date and ending balance are entered, with its CSV export optionally
+uploaded (the bank's and Capital One's formats, read by `StatementMatch::rows`;
+pending rows left out); the export's rows tick the ledger lines for the same
+amount within 10 days. Lines up to the statement date that no finished
+statement covers are listed to tick; export rows the books don't have can be
+added (an expense, money back to the card, or other income into checking,
+uncategorized). It finishes only at a $0.00 difference, and from then on its
+entries can't be reversed (`Ledger::reverse`, `Poster::guard`) until the
+latest finished statement is reopened. The accountant sees every statement
+and its CSV report. `reconcile:remind` alerts bookkeepers on the 5th for an
+account not reconciled in 35 days.
+
+At cutover, after the Bonsai import has matched the history to the
+statements: `php artisan reconcile:through checking <date> <balance>` and
+`… capital_one_card <date> <owed>` mark everything through the last statement
+before go-live as one finished statement (refused unless the books agree).

@@ -49,6 +49,7 @@ export default function BookkeepingIndex({ transactions, summary, year, reportYe
                 actions={(
                     <>
                         <Link href="/bookkeeping/accounts" className="btn btn--secondary">Chart of accounts</Link>
+                        <Link href="/bookkeeping/reconcile" className="btn btn--secondary">Reconcile</Link>
                         <Link href="/bookkeeping/journal" className="btn btn--primary">Journal</Link>
                     </>
                 )}

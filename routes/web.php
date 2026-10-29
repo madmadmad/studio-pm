@@ -16,6 +16,7 @@ use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\ExpensePageController;
 use App\Http\Controllers\Web\InvoicePageController;
 use App\Http\Controllers\Web\LedgerPageController;
+use App\Http\Controllers\Web\ReconciliationPageController;
 use App\Http\Controllers\Web\LedgerReportPageController;
 use App\Http\Controllers\Web\MyWorkPageController;
 use App\Http\Controllers\Web\PortalAuthController;
@@ -147,6 +148,9 @@ Route::middleware(['auth', 'accountant.restrict', 'two-factor.required'])->group
         Route::get('/bookkeeping/expenses.csv', [BookkeepingPageController::class, 'expensesCsv'])->name('bookkeeping.expenses.csv');
         Route::get('/bookkeeping/accounts', [LedgerPageController::class, 'accounts'])->name('bookkeeping.accounts');
         Route::get('/bookkeeping/journal', [LedgerPageController::class, 'journal'])->name('bookkeeping.journal');
+        Route::get('/bookkeeping/reconcile', [ReconciliationPageController::class, 'index'])->name('bookkeeping.reconcile');
+        Route::get('/bookkeeping/reconcile/{reconciliation}.csv', [ReconciliationPageController::class, 'csv'])->name('bookkeeping.reconcile.csv');
+        Route::get('/bookkeeping/reconcile/{reconciliation}', [ReconciliationPageController::class, 'show'])->name('bookkeeping.reconcile.show');
         Route::prefix('/bookkeeping/ledger')->name('bookkeeping.ledger.')->controller(LedgerReportPageController::class)->group(function () {
             Route::get('/general-ledger', 'generalLedger')->name('general-ledger');
             Route::get('/general-ledger.csv', 'generalLedgerCsv')->name('general-ledger.csv');
