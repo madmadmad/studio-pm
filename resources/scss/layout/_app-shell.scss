@@ -233,6 +233,8 @@
         font-size: var(--font-size-base);
         line-height: var(--line-height-base);
         font-weight: var(--font-weight-semibold);
+        // The usual tracking curve, unless the typeface tightens the nav.
+        letter-spacing: var(--letter-spacing-nav, calc(var(--letter-spacing-scale) + var(--letter-spacing-offset)));
         color: var(--color-on-canvas-subtle);
         text-align: left;
         background-color: var(--color-on-canvas-fill);

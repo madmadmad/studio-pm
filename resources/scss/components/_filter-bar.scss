@@ -44,6 +44,8 @@
         padding: 0 var(--space-3);
         font-size: var(--font-size-sm);
         line-height: var(--line-height-sm);
+        // The usual tracking curve, unless the typeface tightens controls.
+        letter-spacing: var(--letter-spacing-control, calc(var(--letter-spacing-scale) + var(--letter-spacing-offset)));
         color: var(--color-text);
         background-color: var(--color-neutral-fill);
         border: var(--border-width) solid transparent;

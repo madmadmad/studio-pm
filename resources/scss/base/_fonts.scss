@@ -86,3 +86,39 @@
     font-display: swap;
     unicode-range: U+30-39;
 }
+
+// Neue Haas Grotesk Display -- on trial (Oct 2026), switched on by
+// $typeface in base/_tokens.scss. Light 45, Roman 55, Medium 65, Bold 75.
+// Only loaded by a browser when the tokens name it.
+
+@font-face {
+    font-family: 'Neue Haas Grotesk Display';
+    src: url('/webfonts/NeueHaas/NeueHaasGroteskDisplay-45Light.woff2') format('woff2');
+    font-weight: 300;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Neue Haas Grotesk Display';
+    src: url('/webfonts/NeueHaas/NeueHaasGroteskDisplay-55Roman.woff2') format('woff2');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Neue Haas Grotesk Display';
+    src: url('/webfonts/NeueHaas/NeueHaasGroteskDisplay-65Medium.woff2') format('woff2');
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Neue Haas Grotesk Display';
+    src: url('/webfonts/NeueHaas/NeueHaasGroteskDisplay-75Bold.woff2') format('woff2');
+    font-weight: 600 800;
+    font-style: normal;
+    font-display: swap;
+}

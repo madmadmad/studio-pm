@@ -80,7 +80,8 @@
     &__value {
         font-size: var(--font-size-lg);
         line-height: var(--line-height-lg);
-        font-weight: var(--font-weight-medium);
+        // Medium, unless the typeface wants its figures heavier.
+        font-weight: var(--font-weight-figures, var(--font-weight-medium));
         font-variant-numeric: tabular-nums;
         letter-spacing: var(--letter-spacing-figures);
 

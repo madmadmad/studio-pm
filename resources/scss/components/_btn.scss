@@ -13,6 +13,8 @@
     padding: 0 var(--space-3);
     font-size: var(--font-size-sm);
     font-weight: var(--font-weight-bold);
+    // The usual tracking curve, unless the typeface tightens controls.
+    letter-spacing: var(--letter-spacing-control, calc(var(--letter-spacing-scale) + var(--letter-spacing-offset)));
     line-height: var(--line-height-sm);
     border: var(--border-width) solid transparent;
     border-radius: var(--radius-base);

@@ -3,6 +3,11 @@
 // var(--...). Breakpoints are the one exception -- see abstracts/_breakpoints.
 @use '../abstracts' as *;
 
+// The app's typeface: 'inter' (its own), or 'neue-haas' (Neue Haas Grotesk
+// Display, on trial). Change this one word to switch back and forth; the
+// Neue Haas overrides are at the end of Typography below.
+$typeface: 'neue-haas';
+
 :root {
     // Dark by default: native controls, scrollbars and a <select>'s open
     // list render dark to match. (Light mode and .document opt back into
@@ -262,6 +267,39 @@
     --letter-spacing-body: -0.018em;
     --letter-spacing-display: -0.05rem;
     --letter-spacing-figures: -0.04em; // metric card numbers; em, so it scales with their size
+
+    // Neue Haas Grotesk Display instead of Inter ($typeface above). Its
+    // Medium is heavier than Inter's, so text steps down a weight: Roman
+    // for body, Medium for emphasis, Bold for headings and buttons. A
+    // display cut is drawn for large sizes, so small text gets a little
+    // more room than Inter's tight curve.
+    @if $typeface == 'neue-haas' {
+        --font-family-sans: 'Neue Haas Grotesk Display', 'Inter', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
+            'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+        --font-family-display: 'Neue Haas Grotesk Display', 'Inter Display', 'Inter', ui-sans-serif, system-ui, sans-serif;
+
+        --font-weight-light: 300;
+        --font-weight-normal: 400;
+        --font-weight-medium: 500;
+        --font-weight-semibold: 700;
+        --font-weight-bold: 700;
+        --font-weight-extrabold: 700;
+
+        // A little tight throughout, more so as text grows: -0.06px at
+        // 12px (labels, table headers, hints), -0.14px at 14px, -0.3px at
+        // 18px, -0.54px at 24px.
+        --letter-spacing-scale: -0.04em;
+        --letter-spacing-offset: 0.02625rem; // 0.42px
+        --letter-spacing-body: -0.005em;
+        --letter-spacing-display: -0.05rem;
+        --letter-spacing-figures: -0.035em;
+        // The sidebar's bold nav links, tighter than the small-text curve.
+        --letter-spacing-nav: -0.015em;
+        // Buttons and filter pills: bold small text, tightened the same way.
+        --letter-spacing-control: -0.015em;
+        // Metric card figures in Bold: Medium reads too light at that size.
+        --font-weight-figures: 700;
+    }
 
     // -----------------------------------------------------------------
     // Spacing -- step names match the old Tailwind scale (1 = 0.25rem) so
