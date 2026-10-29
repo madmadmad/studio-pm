@@ -3,6 +3,7 @@ import { Fragment, useEffect, useRef, useState } from 'react';
 import { CaretRight, Check, CheckCircle, Copy, DownloadSimple, Eye, PaperPlaneTilt, Trash } from '@phosphor-icons/react';
 import AppLayout from '../../Layouts/AppLayout';
 import Button from '../../Components/Button';
+import SettingsSection from '../../Components/SettingsSection';
 import InvoiceLineItems from '../../Components/InvoiceLineItems';
 import EmptyState from '../../Components/EmptyState';
 import { TaxRow, TaxToggle, useSalesTax } from '../../Components/InvoiceTax';
@@ -372,10 +373,11 @@ export default function InvoicesIndex({ invoices: invoicesProp, filters, hasEarl
                         <InvoiceCategorySelect value={draft.category_id ?? ''} onChange={(value) => setDraft({ ...draft, category_id: value })} />
                     </div>
 
+                    <SettingsSection title="Dates & terms">
                     <div className="form-panel">
-                        <div className="section-label section-label--ruled">Dates &amp; terms</div>
                         <InvoiceDateFields values={draft} onChange={(patch) => setDraft((current) => ({ ...current, ...patch }))} />
                     </div>
+                    </SettingsSection>
 
                     <InvoiceLineItems items={draft.items} taxed={draft.tax_rate != null} onChange={(items) => setDraft((current) => ({ ...current, items }))} />
 

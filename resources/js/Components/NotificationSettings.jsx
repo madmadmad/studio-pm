@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import Button from './Button';
+import SettingsSection from './SettingsSection';
 import Toggle from './Toggle';
 import { api } from '../lib/api';
 import { currentSubscription, installed, pushSupported, turnOff, turnOn } from '../lib/push';
@@ -61,8 +62,8 @@ export default function NotificationSettings({ user, push }) {
     }
 
     return (
+        <SettingsSection title="Notifications" description="Chat messages, accepted proposals and paid invoices on this device, even when the app is closed. Choose which below.">
         <div className="form-panel form-stack">
-            <div className="section-label section-label--ruled">Notifications</div>
 
             {!pushSupported ? (
                 <p className="form-hint">This browser can&rsquo;t show notifications. On a Mac, open the app in Safari and choose File &rarr; Add to Dock.</p>
@@ -99,5 +100,6 @@ export default function NotificationSettings({ user, push }) {
                 ))}
             </div>
         </div>
+        </SettingsSection>
     );
 }

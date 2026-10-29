@@ -6,6 +6,8 @@
 
 .metric-card {
     background-color: var(--color-surface-subtle);
+    // The one panel with a shadow, the same on every metric card.
+    box-shadow: var(--shadow-card);
 
     // Filled with an intent color (MetricCard's `tone`), text in the
     // intent's -on color at full strength (a dimmed label on red falls
@@ -72,6 +74,8 @@
         margin-bottom: var(--space-1);
         font-size: var(--font-size-xs);
         line-height: var(--line-height-xs);
+        // The usual tracking curve, unless the typeface opens labels up.
+        letter-spacing: var(--letter-spacing-label, calc(var(--letter-spacing-scale) + var(--letter-spacing-offset)));
         color: var(--color-text-muted);
     }
 

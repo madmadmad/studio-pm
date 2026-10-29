@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { DotsSixVertical, Receipt } from '@phosphor-icons/react';
 import Button from './Button';
+import SettingsSection from './SettingsSection';
 import AutoResizeTextarea from './AutoResizeTextarea';
 import Toggle from './Toggle';
 import CurrencyInput from './CurrencyInput';
@@ -129,8 +130,8 @@ export default function InvoiceLineItems({ items, onChange, projectId = null, ta
 
     // On a panel under its own heading, like the form's other steps.
     return (
+        <SettingsSection title="Line items">
         <div className="form-panel">
-            <div className="section-label section-label--ruled">Line items</div>
             <div className="invoice-form__items">
                 {items.map((item, idx) => (
                     <div
@@ -210,5 +211,6 @@ export default function InvoiceLineItems({ items, onChange, projectId = null, ta
                 </div>
             </div>
         </div>
+        </SettingsSection>
     );
 }

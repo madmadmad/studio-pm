@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import Button from './Button';
+import SettingsSection from './SettingsSection';
 import InvoiceLineItems from './InvoiceLineItems';
 import Drawer from './Drawer';
 import InvoiceDateFields from './InvoiceDateFields';
@@ -256,8 +257,8 @@ export default function NewInvoiceDrawer({ company, projects, initialProjectId =
                 )}
 
                 {proposalsWithItems.length > 0 && (
+                    <SettingsSection title="Bill from proposal">
                     <div className="form-panel">
-                        <div className="section-label section-label--ruled">Bill from proposal</div>
 
                         <div className="invoice-form__billing-field">
                             <label className="label" htmlFor="invoice-proposal">Proposal</label>
@@ -338,12 +339,14 @@ export default function NewInvoiceDrawer({ company, projects, initialProjectId =
                             )
                         )}
                     </div>
+                    </SettingsSection>
                 )}
 
+                <SettingsSection title="Dates & terms">
                 <div className="form-panel">
-                    <div className="section-label section-label--ruled">Dates &amp; terms</div>
                     <InvoiceDateFields values={form} onChange={(patch) => setForm((current) => ({ ...current, ...patch }))} />
                 </div>
+                </SettingsSection>
 
                 <InvoiceLineItems items={form.items} projectId={project?.id ?? null} taxed={form.tax_rate != null} onChange={(items) => setForm((current) => ({ ...current, items }))} />
 

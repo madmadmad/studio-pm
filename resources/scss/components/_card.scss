@@ -1,12 +1,11 @@
 // The panel for metrics, list rows, and grouped content: a step lighter
-// than the page, lifted by a soft shadow rather than a border. Used by
+// than the page, set apart by its fill alone -- no border, no shadow.
+// Only metric cards are lifted by a shadow (.metric-card). Used by
 // Components/Card.jsx or directly.
 
 .card {
     background-color: var(--color-surface);
-    // border: var(--border-width) solid var(--color-border);
     border: 0;
-    box-shadow: var(--shadow-card);
     border-radius: var(--radius-base);
 
     &--padded {
@@ -14,22 +13,20 @@
     }
 
     // Holds an edge-to-edge table or list. Square, so list rows (and their
-    // hover fill) run straight to the corners. Flat -- no fill or shadow:
-    // a list sits on the page, divided by its row rules alone.
+    // hover fill) run straight to the corners. No fill: a list sits on the
+    // page, divided by its row rules alone.
     // A table wider than the screen (a phone) scrolls sideways inside it
     // rather than being cut off.
     &--flush {
         overflow-x: auto;
         background-color: transparent;
         border-radius: 0;
-        box-shadow: none;
     }
 
     // A plain .card that holds list rows (the dashboards' recent invoices
     // and projects) is a list too, so it goes flat the same way.
     &:has(> .list-row, > .empty-state) {
         background-color: transparent;
-        box-shadow: none;
     }
 
     // Title row at the top of a card: heading plus an action on the right.
@@ -57,4 +54,15 @@
     &--narrow {
         max-width: var(--size-form);
     }
+}
+
+// A panel's heading -- a settings card's ("Proposal email", "Sales tax"),
+// a profile section's ("Details", "Notifications"): a real heading at full
+// text color, not a field label.
+.panel-title {
+    margin: 0;
+    font-size: var(--font-size-lg);
+    line-height: var(--line-height-lg);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text);
 }

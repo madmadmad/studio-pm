@@ -2,6 +2,7 @@ import { router } from '@inertiajs/react';
 import { useState } from 'react';
 import { Desktop, Moon, Sun } from '@phosphor-icons/react';
 import { api } from '../lib/api';
+import SettingsSection from './SettingsSection';
 
 export const APPEARANCE_OPTIONS = [
     { value: 'dark', label: 'Dark', icon: <Moon /> },
@@ -56,17 +57,19 @@ export function AppearanceToggle({ current, endpoint, onError }) {
     );
 }
 
-// A person's Appearance (staff and clients alike) as a Profile panel:
+// A person's Appearance as a section of its own (the client portal's
+// profile; staff Profile puts the bare AppearanceToggle in Look and feel):
 // Dark (the default), Light, or System to follow the computer.
 export default function AppearanceSetting({ current, endpoint }) {
     const [error, setError] = useState('');
 
     return (
+        <SettingsSection title="Appearance">
         <div className="form-panel">
-            <div className="section-label section-label--ruled">Appearance</div>
             <AppearanceToggle current={current} endpoint={endpoint} onError={setError} />
             <p className="form-hint form-hint--attached">System follows your computer&rsquo;s light or dark setting.</p>
             {error && <div className="form-error">{error}</div>}
         </div>
+        </SettingsSection>
     );
 }

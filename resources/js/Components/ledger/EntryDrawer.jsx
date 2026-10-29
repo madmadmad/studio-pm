@@ -5,6 +5,7 @@ import Button from '../Button';
 import Drawer, { DrawerByline, DrawerDate } from '../Drawer';
 import { api } from '../../lib/api';
 import { formatCurrency } from '../../lib/format';
+import SettingsSection from '../SettingsSection';
 
 const money = (cents) => (cents ? formatCurrency(cents / 100) : '');
 
@@ -86,8 +87,8 @@ export default function EntryDrawer({ entry, onReversed, onClose }) {
             </div>
 
             {canReverse && (
+                <SettingsSection title="Reverse">
                 <div className="form-panel">
-                    <div className="section-label section-label--ruled">Reverse</div>
                     <p className="form-hint">Cancels this entry with a mirror image. Use the original date unless its period is locked.</p>
                     <div className="inline-form">
                         <input type="date" aria-label="Reverse on" value={reverseOn} onChange={(e) => setReverseOn(e.target.value)} className="input input--xs" />
@@ -95,6 +96,7 @@ export default function EntryDrawer({ entry, onReversed, onClose }) {
                     </div>
                     {error && <div className="form-message form-message--error">{error}</div>}
                 </div>
+                </SettingsSection>
             )}
         </Drawer>
     );

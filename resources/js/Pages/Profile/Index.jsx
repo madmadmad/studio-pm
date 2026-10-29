@@ -8,11 +8,12 @@ import PageHeader from '../../Components/PageHeader';
 import TabBar from '../../Components/TabBar';
 import AlertSettings from '../../Components/AlertSettings';
 import NotificationSettings from '../../Components/NotificationSettings';
-import AppearanceSetting from '../../Components/AppearanceSetting';
+import { AppearanceToggle } from '../../Components/AppearanceSetting';
 import BrandColorSetting from '../../Components/BrandColorSetting';
 import { useRememberedTab } from '../../lib/useRememberedTab';
 import BioForm from '../../Components/BioForm';
 import SecuritySettings from '../../Components/SecuritySettings';
+import SettingsSection from '../../Components/SettingsSection';
 import { shrinkImage } from '../../lib/shrinkImage';
 
 const TABS = ['Account', 'Security'];
@@ -54,8 +55,8 @@ function DetailsPanel({ user, onSaved }) {
     }
 
     return (
+        <SettingsSection title="Details" description="Your name, and the email you sign in with.">
         <form onSubmit={submit} className="form-panel form-stack">
-            <div className="section-label section-label--ruled">Details</div>
             <Field label="Name" error={errors.name}>
                 <input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} autoComplete="name" className="input" />
             </Field>
@@ -67,6 +68,7 @@ function DetailsPanel({ user, onSaved }) {
                 <Button type="submit" variant="confirm" disabled={saving}>Save</Button>
             </div>
         </form>
+        </SettingsSection>
     );
 }
 
@@ -99,8 +101,8 @@ function PasswordPanel({ hint }) {
     const set = (field) => (e) => setForm({ ...form, [field]: e.target.value });
 
     return (
+        <SettingsSection title="Password" description="Change the password you sign in with. You&rsquo;ll need the current one.">
         <form onSubmit={submit} className="form-panel form-stack">
-            <div className="section-label section-label--ruled">Password</div>
             <Field label="Current password" error={errors.current_password}>
                 <input required type="password" value={form.current_password} onChange={set('current_password')} autoComplete="current-password" className="input" />
             </Field>
@@ -115,6 +117,7 @@ function PasswordPanel({ hint }) {
                 <Button type="submit" variant="confirm" disabled={saving}>Change password</Button>
             </div>
         </form>
+        </SettingsSection>
     );
 }
 
@@ -183,10 +186,9 @@ export default function ProfileIndex({ profileUser, passwordHint, security, push
             {tab === 'Security' && <SecuritySettings security={security} />}
 
             {tab === 'Account' && (
-                <div className="profile-page">
+                <div className="settings-sections">
+                    <SettingsSection title="Photo" description="Your photo shows up next to your messages and throughout the app. (Proposals use the bio photo below.)">
                     <div className="form-panel profile-card">
-                        <div className="section-label section-label--ruled">Photo</div>
-                        <p className="form-hint">Your photo shows up next to your messages and throughout the app. (Proposals use the bio photo below.)</p>
                         <div className="profile-card__identity">
                             <Avatar name={user.name} avatarUrl={user.avatar_url} id={user.id} size={72} />
                             <div>
@@ -207,6 +209,7 @@ export default function ProfileIndex({ profileUser, passwordHint, security, push
                         </div>
                         <input ref={inputRef} type="file" accept="image/*" hidden onChange={uploadAvatar} />
                     </div>
+                    </SettingsSection>
 
                     <DetailsPanel
                         user={user}
@@ -219,8 +222,15 @@ export default function ProfileIndex({ profileUser, passwordHint, security, push
                     <PasswordPanel hint={passwordHint} />
                     <NotificationSettings user={user} push={push} />
                     <AlertSettings user={user} />
-                    <AppearanceSetting current={user.theme} endpoint="/api/profile/appearance" />
-                    <BrandColorSetting current={user.brand_color} />
+                    <SettingsSection title="Look and feel" description="How the app looks for you: light or dark, and the color its buttons, highlights and links take.">
+                        <div className="form-panel form-stack">
+                            <div>
+                                <div className="label">Appearance</div>
+                                <AppearanceToggle current={user.theme} endpoint="/api/profile/appearance" />
+                            </div>
+                            <BrandColorSetting current={user.brand_color} />
+                        </div>
+                    </SettingsSection>
                 </div>
             )}
         </AppLayout>

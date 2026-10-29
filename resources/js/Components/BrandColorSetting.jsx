@@ -4,7 +4,8 @@ import ColorPicker from './ColorPicker';
 import { api } from '../lib/api';
 import { applyBrand } from '../lib/brand';
 
-// A person's own color for the app (Profile), beside their Appearance.
+// A person's own color for the app (Profile's Look and feel card, under
+// Appearance): its label, the picker and what it does.
 // Saved a moment after the picker settles -- dragging across the system
 // picker fires a change for every step -- and the whole app recolors as
 // soon as it is, with text in the color adjusted for contrast.
@@ -29,8 +30,8 @@ export default function BrandColorSetting({ current }) {
     }
 
     return (
-        <div className="form-panel">
-            <div className="section-label section-label--ruled">Color</div>
+        <div>
+            <div className="label">Color</div>
             <ColorPicker value={color} onChange={change} />
             <p className="form-hint form-hint--attached">Buttons, highlights and links take this color. Text in it is lightened or darkened where it needs to stay readable.</p>
             {error && <div className="form-error">{error}</div>}

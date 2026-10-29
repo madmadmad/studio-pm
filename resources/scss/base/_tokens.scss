@@ -234,8 +234,10 @@ $typeface: 'neue-haas';
     --line-height-lg: 1.75rem;
     --font-size-xl: 1.5rem;
     --line-height-xl: 1.75rem;
-    --font-size-2xl: 1.85rem; // page titles, headline numerals
+    --font-size-2xl: 1.85rem; // drawer titles, headline numerals (and page titles on a phone)
     --line-height-2xl: 2rem;
+    --font-size-title: 2.25rem; // page titles, a step above a drawer's
+    --line-height-title: 2.625rem;
 
     // Text you type at length -- every textarea and rich-text editor --
     // a size up from other fields and at full text color, so long entries
@@ -259,13 +261,13 @@ $typeface: 'neue-haas';
     // offset tightens larger text more than smaller -- about -0.009em at
     // 12px, -0.014em at 16px, -0.021em at 28px, close to Inter's own
     // recommended tracking. These two are the knobs for the whole curve.
-    --letter-spacing-scale: -0.03em;
-    --letter-spacing-offset: 0.015625rem; // 0.25px
+    --letter-spacing-scale: -0.025em;
+    --letter-spacing-offset: 0.01562rem; // 0.25px
 
     // Fixed tracking, for the few places that opt out of the curve: the
     // display headings, and the totals figures.
-    --letter-spacing-body: -0.018em;
-    --letter-spacing-display: -0.05rem;
+    --letter-spacing-body: -0.016em;
+    --letter-spacing-display: -0.04rem;
     --letter-spacing-figures: -0.04em; // metric card numbers; em, so it scales with their size
 
     // Neue Haas Grotesk Display instead of Inter ($typeface above). Its
@@ -278,6 +280,14 @@ $typeface: 'neue-haas';
             'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
         --font-family-display: 'Neue Haas Grotesk Display', 'Inter Display', 'Inter', ui-sans-serif, system-ui, sans-serif;
 
+        // Body copy and small text a step up: Neue Haas's lowercase is
+        // shorter than Inter's, so 14px and 12px read small. 15px on 21px;
+        // 13px on 18px.
+        --font-size-sm: 0.9375rem;
+        --line-height-sm: 1.3125rem;
+        --font-size-xs: 0.8125rem;
+        --line-height-xs: 1.125rem;
+
         --font-weight-light: 300;
         --font-weight-normal: 400;
         --font-weight-medium: 500;
@@ -285,18 +295,24 @@ $typeface: 'neue-haas';
         --font-weight-bold: 700;
         --font-weight-extrabold: 700;
 
-        // A little tight throughout, more so as text grows: -0.06px at
-        // 12px (labels, table headers, hints), -0.14px at 14px, -0.3px at
-        // 18px, -0.54px at 24px.
+        // Small text a little open, tightening as text grows: +0.16px at
+        // 12px (labels, table headers, hints), +0.08px at 14px, -0.08px
+        // at 18px, -0.32px at 24px. Judged in the installed app (Safari).
         --letter-spacing-scale: -0.04em;
-        --letter-spacing-offset: 0.02625rem; // 0.42px
+        --letter-spacing-offset: 0.04rem; // 0.64px
         --letter-spacing-body: -0.005em;
-        --letter-spacing-display: -0.05rem;
-        --letter-spacing-figures: -0.035em;
+        --letter-spacing-display: -0.04rem;
+        --letter-spacing-figures: -0.02em;
         // The sidebar's bold nav links, tighter than the small-text curve.
-        --letter-spacing-nav: -0.015em;
+        --letter-spacing-nav: -0.01em;
         // Buttons and filter pills: bold small text, tightened the same way.
-        --letter-spacing-control: -0.015em;
+        --letter-spacing-control: -0.01em;
+        // Metric card descriptions ("Net", "Sales tax collected"): light
+        // and small, so a little more room than the curve gives.
+        --letter-spacing-label: 0.015em;
+        // The same for the other light small labels (the subhead style:
+        // field labels, section labels, table headers).
+        --letter-spacing-subhead: 0.015em;
         // Metric card figures in Bold: Medium reads too light at that size.
         --font-weight-figures: 700;
     }
@@ -328,7 +344,7 @@ $typeface: 'neue-haas';
     --space-row-x: var(--space-4);
     --space-row-y: var(--space-2);
     --space-panel-lg: var(--space-8); // modal, drawer, auth card padding
-    --space-section: var(--space-6); // gap below a page section
+    --space-section: var(--space-4); // gap below a page section -- the same as between cards side by side, so panels sit evenly both ways
     --space-section-lg: var(--space-10); // between a page's major blocks (header, metrics, tabs)
     --space-page: var(--space-4); // main content padding: a phone's gutter, wider below
 

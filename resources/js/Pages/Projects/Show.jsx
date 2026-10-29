@@ -38,6 +38,7 @@ import { PROJECT_STATUS_OPTIONS } from '../../Components/ProjectsTable';
 import ProposalView from '../../Components/ProposalView';
 import { hasPermission } from '../../lib/permissions';
 import { useMessagePolling } from '../../lib/useMessagePolling';
+import SettingsSection from '../../Components/SettingsSection';
 
 // The team isn't a tab: it opens in a drawer from the header (TeamDrawer).
 const ALL_TABS = ['Schedule', 'Tasks', 'Notes', 'Messages', 'Time', 'Proposals', 'Billing', 'Expenses'];
@@ -373,13 +374,17 @@ function SubtasksSection({ task, onChange }) {
     }
 
     return (
+        <SettingsSection
+            title="Subtasks"
+            action={(
+                <>
+                    <button onClick={() => setAdding(true)} title="Add subtask" className="icon-btn icon-btn--secondary">
+                        <Plus />
+                    </button>
+                </>
+            )}
+        >
         <div className="form-panel">
-            <div className="form-panel__header">
-                <div className="section-label section-label--flush">Subtasks</div>
-                <button onClick={() => setAdding(true)} title="Add subtask" className="icon-btn icon-btn--secondary">
-                    <Plus />
-                </button>
-            </div>
             {subtasks.length === 0 && !adding ? (
                 <EmptyState text="No subtasks yet." />
             ) : (
@@ -419,6 +424,7 @@ function SubtasksSection({ task, onChange }) {
                 </div>
             )}
         </div>
+        </SettingsSection>
     );
 }
 
@@ -448,19 +454,23 @@ function FilesSection({ task, onChange }) {
     }
 
     return (
+        <SettingsSection
+            title="Files"
+            action={(
+                <>
+                    <button
+                        onClick={() => inputRef.current.click()}
+                        disabled={uploading}
+                        title={uploading ? 'Uploading…' : 'Add file'}
+                        className="icon-btn icon-btn--secondary"
+                    >
+                        <Paperclip />
+                    </button>
+                    <input ref={inputRef} type="file" onChange={handleFileChange} hidden />
+                </>
+            )}
+        >
         <div className="form-panel">
-            <div className="form-panel__header">
-                <div className="section-label section-label--flush">Files</div>
-                <button
-                    onClick={() => inputRef.current.click()}
-                    disabled={uploading}
-                    title={uploading ? 'Uploading…' : 'Add file'}
-                    className="icon-btn icon-btn--secondary"
-                >
-                    <Paperclip />
-                </button>
-                <input ref={inputRef} type="file" onChange={handleFileChange} hidden />
-            </div>
             {files.length === 0 ? (
                 <EmptyState text="No files yet." />
             ) : (
@@ -491,6 +501,7 @@ function FilesSection({ task, onChange }) {
                 </div>
             )}
         </div>
+        </SettingsSection>
     );
 }
 
@@ -556,8 +567,8 @@ function TaskDrawer({ task, teamNames, scheduleItems = [], isNew, onClose, onCha
             />
 
             {/* Grouped on panels like the proposal and invoice forms. */}
+            <SettingsSection title="Details">
             <div className="form-panel">
-                <div className="section-label section-label--ruled">Details</div>
                 <div className="form-grid">
                     <div>
                         <label className="label">Status</label>
@@ -617,20 +628,25 @@ function TaskDrawer({ task, teamNames, scheduleItems = [], isNew, onClose, onCha
                     </div>
                 </div>
             </div>
+            </SettingsSection>
 
+            <SettingsSection
+                title="Description"
+                action={(
+                    <>
+                        {!editingDescription && (
+                            <button
+                                onClick={() => setEditingDescription(true)}
+                                title="Edit description"
+                                className="icon-btn icon-btn--edit"
+                            >
+                                <PencilSimple />
+                            </button>
+                        )}
+                    </>
+                )}
+            >
             <div className="form-panel">
-                <div className="form-panel__header">
-                    <div className="section-label section-label--flush">Description</div>
-                    {!editingDescription && (
-                        <button
-                            onClick={() => setEditingDescription(true)}
-                            title="Edit description"
-                            className="icon-btn icon-btn--edit"
-                        >
-                            <PencilSimple />
-                        </button>
-                    )}
-                </div>
                 {editingDescription ? (
                     <>
                         <RichTextEditor value={description} onChange={handleDescriptionChange} />
@@ -644,6 +660,7 @@ function TaskDrawer({ task, teamNames, scheduleItems = [], isNew, onClose, onCha
                     <p className="drawer__empty">No description yet.</p>
                 )}
             </div>
+            </SettingsSection>
 
             <SubtasksSection task={task} onChange={onChange} />
 

@@ -10,6 +10,7 @@ import Toggle from '../../Components/Toggle';
 import RowActions from '../../Components/RowActions';
 import Avatar from '../../Components/Avatar';
 import BioForm from '../../Components/BioForm';
+import SettingsSection from '../../Components/SettingsSection';
 import { api } from '../../lib/api';
 import PageHeader from '../../Components/PageHeader';
 import TabToolbar from '../../Components/TabToolbar';
@@ -117,9 +118,9 @@ function ProfileDrawer({ user, onSaved, onClose }) {
     return (
         <Drawer size="wide" onClose={onClose}>
             <h2 className="drawer__title">{current.name}</h2>
+            <div className="settings-sections">
+            <SettingsSection title="Avatar" description="Shown next to their messages and around the app.">
             <div className="form-panel">
-                <div className="section-label section-label--ruled">Avatar</div>
-                <p className="form-hint">Shown next to their messages and around the app.</p>
                 <div className="users__photo">
                     <Avatar name={current.name} avatarUrl={current.avatar_url} id={current.id} size={72} />
                     <Button variant="secondary" onClick={() => fileRef.current.click()} disabled={busy}>
@@ -132,7 +133,9 @@ function ProfileDrawer({ user, onSaved, onClose }) {
                 </div>
                 {error && <div className="form-message form-message--error form-message--spaced">{error}</div>}
             </div>
+            </SettingsSection>
             <BioForm user={current} endpoint={`/api/users/${user.id}`} photoEndpoint={`/api/users/${user.id}/bio-photo`} onSaved={(updated) => { setCurrent(updated); onSaved(updated); }} />
+            </div>
         </Drawer>
     );
 }

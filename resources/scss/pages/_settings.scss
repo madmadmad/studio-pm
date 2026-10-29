@@ -1,20 +1,10 @@
 // Settings (Pages/Settings/Index.jsx): a tab per part of the app, its
-// cards in two columns (one on narrower screens), each column stacking its
-// own; the sales tax name and rate share a row, the rate narrow with its %
-// after it; the invoice categories list.
+// sections in rows (components/_settings-section.scss); the sales tax name
+// and rate share a row, the rate narrow with its % after it; the invoice
+// categories list.
 @use '../abstracts' as *;
 
 .settings {
-    &__columns {
-        display: grid;
-        gap: var(--space-4);
-        align-items: start;
-
-        @include respond-to('lg') {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-    }
-
     // The email picker, with who it goes to beside it.
     &__email-pick {
         display: flex;

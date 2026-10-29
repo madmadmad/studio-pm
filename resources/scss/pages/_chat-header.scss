@@ -51,6 +51,11 @@
         line-height: var(--line-height-2xl);
         font-weight: var(--font-weight-extrabold);
         letter-spacing: var(--letter-spacing-display);
+
+        @include respond-to('sm') {
+            font-size: var(--font-size-title);
+            line-height: var(--line-height-title);
+        }
     }
 
     // One line, cut short with "…" when it's too long -- clipped side to

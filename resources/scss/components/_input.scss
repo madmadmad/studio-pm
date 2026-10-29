@@ -26,6 +26,14 @@
         padding-block: 0;
     }
 
+    // Safari sets a date or time field's value at the top of the box
+    // rather than centering it as it does text: padding that centers one
+    // line of it does the same, in every browser. :is() so it outweighs
+    // --sm's padding; not --xs, which sizes itself to its content.
+    &:is([type='date'], [type='time'], [type='datetime-local']):not(.input--xs) {
+        padding-block: calc((var(--size-control) - 2 * var(--border-width) - 1lh) / 2);
+    }
+
     // :read-only is scoped to input/textarea on purpose: a <select> has no
     // readonly state and matches :read-only unconditionally.
     &:disabled,

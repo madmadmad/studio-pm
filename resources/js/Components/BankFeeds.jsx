@@ -2,6 +2,7 @@ import { Link } from '@inertiajs/react';
 import { useState } from 'react';
 import { X } from '@phosphor-icons/react';
 import Button from './Button';
+import SettingsSection from './SettingsSection';
 import { api } from '../lib/api';
 import { formatRelativeTime } from '../lib/format';
 
@@ -91,11 +92,11 @@ export default function BankFeeds({ items: initialItems, configured }) {
     }
 
     return (
+        <SettingsSection
+            title="Bank feeds"
+            description={<>Charges from connected banks sync every morning into <Link href="/expenses">Expenses</Link> as unbilled expenses, with the bank as their source. Refunds and credits to a card come in as money back, in the category of that vendor&rsquo;s last charge; deposits, transfers and card payments are left out. Deleting an imported expense dismisses it: it won&rsquo;t sync back.</>}
+        >
         <div className="card card--padded form-stack settings__card">
-            <div className="section-label">Bank feeds</div>
-            <p className="form-hint">
-                Charges from connected banks sync every morning into <Link href="/expenses">Expenses</Link> as unbilled expenses, with the bank as their source. Deposits, refunds and card payments are left out. Deleting an imported expense dismisses it: it won&rsquo;t sync back.
-            </p>
             {!configured ? (
                 <p className="form-hint">Add PLAID_CLIENT_ID and PLAID_SECRET to .env to connect a bank.</p>
             ) : (
@@ -128,5 +129,6 @@ export default function BankFeeds({ items: initialItems, configured }) {
             )}
             {error && <div className="form-error">{error}</div>}
         </div>
+        </SettingsSection>
     );
 }

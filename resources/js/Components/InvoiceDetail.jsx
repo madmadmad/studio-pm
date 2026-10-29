@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Check, Copy, DownloadSimple, Eye, PaperPlaneTilt, PencilSimple } from '@phosphor-icons/react';
 import Button from './Button';
+import SettingsSection from './SettingsSection';
 import CurrencyInput from './CurrencyInput';
 import InvoiceLineItems from './InvoiceLineItems';
 import InvoiceDateFields from './InvoiceDateFields';
@@ -63,6 +64,27 @@ function balanceText(invoice) {
     return balance > 0 ? Number(balance).toFixed(2) : '';
 }
 
+// One titled part of an invoice (Payments, Reminders...): in a drawer, its
+// heading above a panel, as every drawer and settings row has it; on the
+// page, a card under its heading (`pageHeading` false: a card alone) -- or,
+// with `page` false, no card at all.
+function InvoiceSection({ bare, title, page = true, pageHeading = true, children }) {
+    if (bare) {
+        return (
+            <SettingsSection title={title}>
+                <div className="form-panel">{children}</div>
+            </SettingsSection>
+        );
+    }
+    if (!page) return <div>{children}</div>;
+    return (
+        <div className="card card--padded page-section">
+            {pageHeading && <h2 className="section-heading">{title}</h2>}
+            {children}
+        </div>
+    );
+}
+
 export default function InvoiceDetail({ invoice: initialInvoice, studio, invoicingDefaults, onChange, renderFrame, bare = false, openInEdit = false, onDone }) {
     const [invoice, setInvoice] = useState(initialInvoice);
     useEffect(() => setInvoice(initialInvoice), [initialInvoice]);
@@ -97,11 +119,8 @@ export default function InvoiceDetail({ invoice: initialInvoice, studio, invoici
     const [rescheduleTime, setRescheduleTime] = useState('');
 
     // A card on the page; in a drawer, a subtle panel per section (the
-    // drawer is already the raised layer), under a ruled label.
+    // drawer is already the raised layer). Titled ones: InvoiceSection.
     const section = bare ? 'form-panel' : 'card card--padded page-section';
-    const heading = (text) => (bare
-        ? <div className="section-label section-label--ruled">{text}</div>
-        : <h2 className="section-heading">{text}</h2>);
 
     const subtotal = invoiceSubtotal(invoice.items);
     const total = invoiceTotal(invoice.items, invoice.surcharge, invoice.tax_rate);
@@ -362,10 +381,11 @@ export default function InvoiceDetail({ invoice: initialInvoice, studio, invoici
                             <InvoiceCategorySelect value={form.category_id} onChange={(value) => setForm({ ...form, category_id: value })} />
                         </div>
 
+                        <SettingsSection title="Dates & terms">
                         <div className="form-panel">
-                            <div className="section-label section-label--ruled">Dates &amp; terms</div>
                             <InvoiceDateFields values={form} onChange={(patch) => setForm((current) => ({ ...current, ...patch }))} />
                         </div>
+                        </SettingsSection>
 
                         <InvoiceLineItems items={form.items} projectId={invoice.project_id} taxed={form.tax_rate != null} onChange={(items) => setForm((current) => ({ ...current, items }))} />
 
@@ -399,14 +419,16 @@ export default function InvoiceDetail({ invoice: initialInvoice, studio, invoici
                         </div>
                     </div>
                 ) : (
-                    <div className={section}>
+                    <InvoiceSection bare={bare} title="Line items" pageHeading={false}>
                         <table className="table table--flush card__section">
+                            {!bare && (
                             <thead>
                                 <tr>
                                     <th>Description</th>
                                     <th className="table__cell--end">Amount</th>
                                 </tr>
                             </thead>
+                            )}
                             <tbody>
                                 {invoice.items.map((item) => (
                                     <tr key={item.id}>
@@ -434,12 +456,11 @@ export default function InvoiceDetail({ invoice: initialInvoice, studio, invoici
                                 <span className="totals__value">{formatCurrency(total)}</span>
                             </div>
                         </div>
-                    </div>
+                    </InvoiceSection>
                 )}
 
                 {invoice.payments.length > 0 && (
-                    <div className={section}>
-                        {heading('Payments')}
+                    <InvoiceSection bare={bare} title="Payments">
                         <ul className="detail-list">
                             {invoice.payments.map((payment) => (
                                 <li key={payment.id} className="detail-list__item detail-list__item--split">
@@ -512,7 +533,7 @@ export default function InvoiceDetail({ invoice: initialInvoice, studio, invoici
                                 </div>
                             </div>
                         )}
-                    </div>
+                    </InvoiceSection>
                 )}
 
                 {/* A repeating series (set when it was sent), or a copy of one. */}
@@ -566,8 +587,7 @@ export default function InvoiceDetail({ invoice: initialInvoice, studio, invoici
                 )}
 
                 {invoice.status !== 'draft' && invoice.status !== 'paid' && (
-                    <div className={section}>
-                        {heading('Reminders')}
+                    <InvoiceSection bare={bare} title="Reminders">
                         <ul className="detail-list">
                             {reminderRows(invoice).map((row) => (
                                 <li key={row.rule} className="detail-list__item detail-list__item--split">
@@ -583,12 +603,11 @@ export default function InvoiceDetail({ invoice: initialInvoice, studio, invoici
                                 </li>
                             ))}
                         </ul>
-                    </div>
+                    </InvoiceSection>
                 )}
 
                 {(invoice.invoice_sends?.length > 0 || invoice.first_viewed_at) && (
-                    <div className={section}>
-                        {heading('History')}
+                    <InvoiceSection bare={bare} title="History">
                         <ul className="detail-list">
                             {/* The client opening its link (App\Support\DocumentViews). */}
                             {invoice.first_viewed_at && (
@@ -610,14 +629,13 @@ export default function InvoiceDetail({ invoice: initialInvoice, studio, invoici
                                 </li>
                             ))}
                         </ul>
-                    </div>
+                    </InvoiceSection>
                 )}
 
                 {!editing && error && <div className="form-message form-message--error form-message--spaced">{error}</div>}
 
                 {!readOnly && !editing && invoice.status === 'sent' && (
-                    <div className={bare ? 'form-panel' : undefined}>
-                        {bare && heading('Record payment')}
+                    <InvoiceSection bare={bare} title="Record payment" page={false}>
                         <div className="invoice-detail__payment">
                             <CurrencyInput
                                 value={paymentAmount}
@@ -647,7 +665,7 @@ export default function InvoiceDetail({ invoice: initialInvoice, studio, invoici
                                 Record payment
                             </Button>
                         </div>
-                    </div>
+                    </InvoiceSection>
                 )}
 
                 {sendModalOpen && (

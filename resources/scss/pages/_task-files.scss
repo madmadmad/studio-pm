@@ -2,14 +2,13 @@
 @use '../abstracts' as *;
 
 .task-files {
-    // Styled like a metric card: filled, lifted by the card shadow, no
-    // border (kept transparent so the size holds).
+    // Filled like a panel, no border (kept transparent so the size holds)
+    // and no shadow -- only metric cards have one.
     &__list {
         overflow: hidden;
         background-color: var(--color-surface-subtle);
         border: var(--border-width) solid transparent;
         border-radius: var(--radius-base);
-        box-shadow: var(--shadow-card);
     }
 
     &__item {

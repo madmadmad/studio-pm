@@ -2,6 +2,7 @@ import { router } from '@inertiajs/react';
 import { useState } from 'react';
 import Button from './Button';
 import Passkeys from './Passkeys';
+import SettingsSection from './SettingsSection';
 import { usePasswordCheck } from './PasswordCheck';
 import { RecoveryCodes } from './TwoFactorSetup';
 import { api } from '../lib/api';
@@ -14,16 +15,16 @@ export default function SecuritySettings({ security }) {
     const reload = () => router.reload({ only: ['security'] });
 
     return (
-        <div className="profile-page">
+        <div className="settings-sections">
             <TwoFactorPanel security={security} />
-            <div className="form-panel">
-                <div className="section-label section-label--ruled">Passkeys</div>
-                <p className="form-hint">
-                    A passkey signs you in with Touch ID, Face ID or your device passcode &mdash; no password or code. It&rsquo;s saved in
-                    Passwords and shared across your Apple devices.
-                </p>
-                <Passkeys passkeys={security.passkeys} onChange={reload} />
-            </div>
+            <SettingsSection
+                title="Passkeys"
+                description={<>A passkey signs you in with Touch ID, Face ID or your device passcode &mdash; no password or code. It&rsquo;s saved in Passwords and shared across your Apple devices.</>}
+            >
+                <div className="form-panel">
+                    <Passkeys passkeys={security.passkeys} onChange={reload} />
+                </div>
+            </SettingsSection>
         </div>
     );
 }
@@ -69,8 +70,8 @@ function TwoFactorPanel({ security }) {
     };
 
     return (
+        <SettingsSection title="Two-factor sign-in" description="After your password, a code from your authenticator app, so a stolen password alone can't get in.">
         <div className="form-panel">
-            <div className="section-label section-label--ruled">Two-factor sign-in</div>
             {prompt || (
                 <div className="form-stack">
                     <p className="form-hint">
@@ -88,5 +89,6 @@ function TwoFactorPanel({ security }) {
                 </div>
             )}
         </div>
+        </SettingsSection>
     );
 }

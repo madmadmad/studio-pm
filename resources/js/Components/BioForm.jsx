@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import BioPhoto from './BioPhoto';
 import Button from './Button';
+import SettingsSection from './SettingsSection';
 import RichTextEditor from './RichTextEditor';
 import { api } from '../lib/api';
 import { toRichText } from '../lib/richText';
@@ -62,9 +63,8 @@ export default function BioForm({ user, endpoint, photoEndpoint, onSaved, classN
     }
 
     return (
+        <SettingsSection title="Bio" description={<>Shown when this person is in a proposal&rsquo;s team section. The bio photo is separate from the avatar used around the app &mdash; a headshot for clients.</>}>
         <form onSubmit={submit} className={className}>
-            <div className="section-label section-label--ruled">Bio</div>
-            <p className="form-hint">Shown when this person is in a proposal&rsquo;s team section. The bio photo is separate from the avatar used around the app &mdash; a headshot for clients.</p>
             <div className="bio-form__photo">
                 <BioPhoto name={user.name} url={photoUrl} size="sm" />
                 <Button type="button" variant="secondary" onClick={() => fileRef.current.click()} disabled={photoBusy}>
@@ -95,5 +95,6 @@ export default function BioForm({ user, endpoint, photoEndpoint, onSaved, classN
                 <Button type="submit" variant="confirm" disabled={saving}>Save</Button>
             </div>
         </form>
+        </SettingsSection>
     );
 }

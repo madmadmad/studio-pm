@@ -13,6 +13,7 @@ import { formatCurrency } from '../lib/format';
 import { api } from '../lib/api';
 import { copyToClipboard } from '../lib/clipboard';
 import { isBlankRichText, toPlainText, toRichText } from '../lib/richText';
+import SettingsSection from './SettingsSection';
 
 // The proposal editor, shared by the standalone page (Pages/Proposals/Form)
 // and the project page's proposal drawer. The caller supplies the frame
@@ -97,8 +98,8 @@ function TeamPanel({ ids, heading, onChange }) {
     }
 
     return (
+        <SettingsSection title="Team">
         <div className="form-panel">
-            <div className="section-label section-label--ruled">Team</div>
             {chosen.length > 0 && (
                 <>
                     <input
@@ -147,6 +148,7 @@ function TeamPanel({ ids, heading, onChange }) {
                 Shown to the client after the disclaimer, before the estimate: each person&rsquo;s bio photo, position and bio from their Team record. Leave it empty for no team section.
             </p>
         </div>
+        </SettingsSection>
     );
 }
 
@@ -348,8 +350,8 @@ export default function ProposalEditor({ proposal, companies, services, presetCo
         <div className="proposal-form">
             {/* Grouped on panels like the invoice forms: who and what for, the
                 proposal itself, then its services. */}
+            <SettingsSection title="Contact">
             <div className="form-panel">
-                <div className="section-label section-label--ruled">Client, project &amp; contact</div>
                 {/* Client, project and contact side by side. */}
                 <div className="form-grid form-grid--3">
                     <div>
@@ -421,8 +423,9 @@ export default function ProposalEditor({ proposal, companies, services, presetCo
                     </div>
                 </div>
             </div>
+            </SettingsSection>
+            <SettingsSection title="Proposal">
             <div className="form-panel">
-                <div className="section-label section-label--ruled">Proposal</div>
                 <input
                     placeholder="Proposal title"
                     value={form.title}
@@ -431,10 +434,11 @@ export default function ProposalEditor({ proposal, companies, services, presetCo
                 />
                 <RichTextEditor value={form.body} onChange={(body) => setForm({ ...form, body })} />
             </div>
+            </SettingsSection>
 
             {/* Shown to the client between the scope of work and the services. */}
+            <SettingsSection title="Disclaimer">
             <div className="form-panel">
-                <div className="section-label section-label--ruled">Disclaimer</div>
                 <AutoResizeTextarea
                     value={form.disclaimer}
                     onChange={(e) => setForm({ ...form, disclaimer: e.target.value })}
@@ -444,6 +448,7 @@ export default function ProposalEditor({ proposal, companies, services, presetCo
                 />
                 <p className="form-hint form-hint--attached">Shown to the client below the scope of work, above the services. Leave it blank for none.</p>
             </div>
+            </SettingsSection>
 
             <TeamPanel
                 ids={form.team_user_ids}
@@ -452,14 +457,15 @@ export default function ProposalEditor({ proposal, companies, services, presetCo
             />
 
             {/* The studio's About, closing the proposal -- its text is in Settings. */}
+            <SettingsSection title="About">
             <div className="form-panel">
-                <div className="section-label section-label--ruled">About</div>
                 <Toggle checked={form.show_about} onChange={(show_about) => setForm({ ...form, show_about })} label="Close with the About section" />
                 <p className="form-hint form-hint--attached">The studio&rsquo;s About, at the end of the proposal after the team. Its text is in Settings &rsaquo; Proposals.</p>
             </div>
+            </SettingsSection>
 
+            <SettingsSection title="Services">
             <div className="form-panel">
-                <div className="section-label section-label--ruled">Services</div>
                 {servicesLocked ? (
                     <>
                         <p className="form-hint proposal-form__locked-note">
@@ -572,11 +578,12 @@ export default function ProposalEditor({ proposal, companies, services, presetCo
                 )}
 
             </div>
+            </SettingsSection>
 
             {/* The estimate: never entered by hand, always what the services
                 add up to (and locked with them once accepted). */}
+            <SettingsSection title="Estimate">
             <div className="form-panel proposal-form__estimate">
-                <div className="section-label section-label--ruled">Estimate</div>
                 <div className="proposal-form__estimate-row">
                     <span className="proposal-form__estimate-note">
                         {form.items.length > 0 ? 'Total of the services above' : 'Add services above to build the estimate'}
@@ -584,6 +591,7 @@ export default function ProposalEditor({ proposal, companies, services, presetCo
                     <span className="proposal-form__estimate-value u-tabular-nums">{formatCurrency(itemsTotal)}</span>
                 </div>
             </div>
+            </SettingsSection>
 
             {error && <div className="form-message form-message--error form-message--spaced">{error}</div>}
 

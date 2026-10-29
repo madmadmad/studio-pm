@@ -1,6 +1,7 @@
 // Top of every app/portal page: optional back link, the page title with
 // its actions on the right, and one or more lines of muted context.
 // Used by Components/PageHeader.jsx.
+@use '../abstracts' as *;
 
 .page-header {
     margin-bottom: var(--space-section);
@@ -15,12 +16,20 @@
         gap: var(--space-3);
     }
 
+    // A size above a drawer's title (.drawer__title), so the page outranks
+    // what opens over it -- from a tablet up; a phone keeps the drawer's
+    // size so long titles don't crowd it.
     &__title {
         font-family: var(--font-family-display);
         font-size: var(--font-size-2xl);
         line-height: var(--line-height-2xl);
         font-weight: var(--font-weight-extrabold);
         letter-spacing: var(--letter-spacing-display);
+
+        @include respond-to('sm') {
+            font-size: var(--font-size-title);
+            line-height: var(--line-height-title);
+        }
     }
 
     // A person's photo beside their name as the title (My profile).

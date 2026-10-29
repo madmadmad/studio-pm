@@ -135,11 +135,16 @@
 
     // Heading of a create-mode drawer ("Log time"), sized to match the
     // editable title a record's drawer opens with.
+    // A page title's style a size down (.page-header__title), so a
+    // drawer's reads as clearly above its section headings and below the
+    // page's.
     &__title {
         margin-bottom: var(--space-4);
-        font-size: var(--font-size-xl);
-        line-height: var(--line-height-xl);
-        font-weight: var(--font-weight-semibold);
+        font-family: var(--font-family-display);
+        font-size: var(--font-size-2xl);
+        line-height: var(--line-height-2xl);
+        font-weight: var(--font-weight-extrabold);
+        letter-spacing: var(--letter-spacing-display);
     }
 
     // A section's label with its one icon action at the right (edit

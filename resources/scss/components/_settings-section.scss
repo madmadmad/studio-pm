@@ -1,0 +1,86 @@
+// Components/SettingsSection.jsx: a heading (and what it's for) above its
+// panel -- in drawers and forms, the heading has more room above it than
+// between it and its panel, so it reads with what's below.
+//
+// On a settings-style page (.settings-sections: Settings, My profile) the
+// sections are rows instead: from the lg breakpoint the heading and
+// description take a column on the left and the card the rest, rows ruled
+// apart. A drawer keeps the stacked form, whatever wraps it.
+@use '../abstracts' as *;
+
+.settings-section {
+    display: grid;
+    gap: var(--space-3);
+    margin-bottom: var(--space-4);
+
+    &:not(:first-child) {
+        margin-top: var(--space-6);
+    }
+
+    // The heading, with any action (Add, Edit) at its far end.
+    &__heading {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--space-2);
+    }
+
+    &__description {
+        margin-top: var(--space-1);
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+        color: var(--color-text-muted);
+    }
+
+    // The panel owns no outer margin here; the section's spacing does.
+    &__body {
+        min-width: 0;
+
+        > .card,
+        > .form-panel {
+            margin-bottom: 0;
+        }
+    }
+}
+
+.settings-sections > .settings-section {
+    margin-top: 0;
+    margin-bottom: 0;
+
+    + .settings-section {
+        margin-top: var(--space-section);
+        padding-top: var(--space-section);
+        border-top: var(--border-width) solid var(--color-border);
+    }
+
+    // The card fills its column, up to a comfortable form width.
+    .settings-section__body {
+        max-width: 48rem;
+    }
+
+    @include respond-to('lg') {
+        grid-template-columns: minmax(0, 16rem) minmax(0, 1fr);
+        gap: var(--space-8);
+    }
+}
+
+// In a drawer (the team member's), stacked like any drawer's sections:
+// full width, no rules.
+.drawer .settings-sections > .settings-section {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-3);
+    margin-bottom: var(--space-4);
+
+    &:not(:first-child) {
+        margin-top: var(--space-6);
+    }
+
+    + .settings-section {
+        padding-top: 0;
+        border-top: 0;
+    }
+
+    .settings-section__body {
+        max-width: none;
+    }
+}

@@ -8,13 +8,6 @@
     padding: var(--space-panel);
     background-color: var(--color-surface);
     border-radius: var(--radius-base);
-    box-shadow: var(--shadow-card);
-
-    // Flat inside a drawer: the drawer is already the raised layer, so the
-    // fill alone sets a panel apart.
-    .drawer & {
-        box-shadow: none;
-    }
 
     // A heading with an action beside it (edit, add, attach): the ruled
     // heading's line, with the button on the right.

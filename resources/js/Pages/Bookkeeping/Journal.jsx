@@ -16,6 +16,7 @@ import { api } from '../../lib/api';
 import { formatCurrency, formatDate } from '../../lib/format';
 import { useRememberedTab } from '../../lib/useRememberedTab';
 import { useReadOnly } from '../../lib/permissions';
+import SettingsSection from '../../Components/SettingsSection';
 
 // The year's entries, newest first. A row opens the entry.
 function EntriesTab({ entries, year, years, onOpen }) {
@@ -99,8 +100,8 @@ function PeriodsTab({ periods: periodsProp }) {
 
     return (
         <>
+            <SettingsSection title="Lock a period">
             <form onSubmit={lock} className="form-panel page-section">
-                <div className="section-label section-label--ruled">Lock a period</div>
                 <p className="form-hint">Once the CPA has a period's numbers, lock it so nothing changes underneath them. Unlock it to fix something.</p>
                 <div className="inline-form">
                     <input required type="date" aria-label="From" value={form.starts_on} onChange={(e) => setForm({ ...form, starts_on: e.target.value })} className="input input--xs" />
@@ -109,6 +110,7 @@ function PeriodsTab({ periods: periodsProp }) {
                 </div>
                 {error && <div className="form-message form-message--error">{error}</div>}
             </form>
+            </SettingsSection>
             <div className="card card--flush page-section">
                 {periods.length === 0 ? (
                     <EmptyState text="No periods locked yet." />

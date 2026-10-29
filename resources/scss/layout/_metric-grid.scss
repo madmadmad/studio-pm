@@ -9,12 +9,13 @@
 .metric-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: var(--space-3);
+    // The same gap across and below, so the cards and the panels under
+    // them sit evenly.
+    gap: var(--space-section);
     margin-bottom: var(--space-section);
 
     @include respond-to('sm') {
         grid-template-columns: repeat(auto-fit, minmax(min(var(--size-metric-card-min), 100%), 1fr));
-        gap: var(--space-4);
     }
 
     // Same as .page-section--loose.
@@ -25,7 +26,7 @@
     // Directly above another .metric-grid that belongs with it (a separate
     // row of related cards): the grid's own gap, so the two read as one.
     &--stacked {
-        margin-bottom: var(--space-4);
+        margin-bottom: var(--space-section);
     }
 
     // Cards that belong side by side (a project's budget figures): one row

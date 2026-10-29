@@ -29,8 +29,8 @@
     }
 }
 
-// The staff profile page: Photo, Details and Password panels in a narrow
-// column, as wide as a narrow card.
+// The client portal's profile page: its panels in a narrow column, as wide
+// as a narrow card. (The staff profile uses settings rows instead.)
 .profile-page {
     max-width: var(--size-form);
 

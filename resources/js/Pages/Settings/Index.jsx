@@ -8,6 +8,7 @@ import PageHeader from '../../Components/PageHeader';
 import AutoResizeTextarea from '../../Components/AutoResizeTextarea';
 import BankFeeds from '../../Components/BankFeeds';
 import RichTextEditor from '../../Components/RichTextEditor';
+import SettingsSection from '../../Components/SettingsSection';
 import { toRichText } from '../../lib/richText';
 import TabBar from '../../Components/TabBar';
 import { useRememberedTab } from '../../lib/useRememberedTab';
@@ -40,11 +41,11 @@ function InvoiceCategories() {
     }
 
     return (
+        <SettingsSection
+            title="Invoice categories"
+            description={<>For invoices that aren&rsquo;t project work, like hosting. They need no project, stay off the project boards, and add up by year in Bookkeeping&rsquo;s Invoices by category report.</>}
+        >
         <form onSubmit={add} className="card card--padded form-stack settings__card">
-            <div className="section-label">Invoice categories</div>
-            <p className="form-hint">
-                For invoices that aren&rsquo;t project work, like hosting. They need no project, stay off the project boards, and add up by year in Bookkeeping&rsquo;s Invoices by category report.
-            </p>
             <div className="settings__categories">
                 <div className="settings__category settings__category--fixed">Project work <span className="settings__category-note">every other invoice</span></div>
                 {categories.map((category) => (
@@ -62,23 +63,25 @@ function InvoiceCategories() {
             </div>
             {error && <div className="form-error">{error}</div>}
         </form>
+        </SettingsSection>
     );
 }
 
-// One settings card: its label, its fields, and a Save for the studio
-// profile.
-function SettingsCard({ id, title, onSubmit, saving, saved, children }) {
+// One settings section: its heading and what it's for, then a card with
+// its fields and a Save for the studio profile.
+function SettingsCard({ id, title, description, onSubmit, saving, saved, children }) {
     return (
-        <form onSubmit={(e) => onSubmit(e, id)} className="card card--padded form-stack settings__card">
-            <div className="section-label">{title}</div>
-            {children}
-            <div className="form-actions form-stack__footer">
-                {saved === id && <span className="form-message form-message--success">Saved</span>}
-                <Button type="submit" variant="confirm" disabled={saving}>
-                    Save
-                </Button>
-            </div>
-        </form>
+        <SettingsSection title={title} description={description}>
+            <form onSubmit={(e) => onSubmit(e, id)} className="card card--padded form-stack settings__card">
+                {children}
+                <div className="form-actions form-stack__footer">
+                    {saved === id && <span className="form-message form-message--success">Saved</span>}
+                    <Button type="submit" variant="confirm" disabled={saving}>
+                        Save
+                    </Button>
+                </div>
+            </form>
+        </SettingsSection>
     );
 }
 
@@ -100,9 +103,6 @@ function NotificationEmails({ definitions, templates, onChange }) {
 
     return (
         <>
-            <p className="form-hint">
-                The wording of the emails the app sends on its own. Words starting with a colon are filled in when it&rsquo;s sent; blank lines split the message into paragraphs. Clear the heading or note to leave it out.
-            </p>
             <div className="settings__email-pick">
                 <select value={key} onChange={(e) => setKey(e.target.value)} aria-label="Email" className="input">
                     {keys.map((k) => <option key={k} value={k}>{definitions[k].label}</option>)}
@@ -173,11 +173,11 @@ function StudioLogo({ initial }) {
     ];
 
     return (
+        <SettingsSection
+            title="Logo"
+            description="Used across the app, on sign-in screens, client links, emails and PDFs. Upload an SVG or PNG; the dark-background version is the one for dark mode."
+        >
         <div className="card card--padded form-stack settings__card">
-            <div className="section-label">Logo</div>
-            <p className="form-hint">
-                Used across the app, on sign-in screens, client links, emails and PDFs. Upload an SVG or PNG; the dark-background version is the one for dark mode.
-            </p>
             <div className="settings__logos">
                 {versions.map((v) => (
                     <div key={v.variant} className="settings__logo">
@@ -208,6 +208,7 @@ function StudioLogo({ initial }) {
             {message && <div className="form-hint">{message}</div>}
             {error && <div className="form-error">{error}</div>}
         </div>
+        </SettingsSection>
     );
 }
 
@@ -268,9 +269,8 @@ export default function SettingsIndex({ studioProfile, logos, emailTemplates = {
             <TabBar tabs={TABS} tab={tab} setTab={setTab} size="lg" />
 
             {tab === 'General' && (
-                <div className="settings__columns">
-                    <div className="settings__column">
-                        <SettingsCard id="studio" title="Studio information" onSubmit={submit} saving={saving} saved={saved}>
+                <div className="settings-sections">
+                    <SettingsCard id="studio" title="Studio information" description={<>Your studio&rsquo;s name and contact details, for invoices, proposals and the emails the app sends.</>} onSubmit={submit} saving={saving} saved={saved}>
                         <input
                             required
                             placeholder="Studio name"
@@ -304,21 +304,21 @@ export default function SettingsIndex({ studioProfile, logos, emailTemplates = {
                             onChange={(e) => setForm({ ...form, website: e.target.value })}
                             className="input"
                         />
-                        </SettingsCard>
-                    </div>
-                    <div className="settings__column">
-                        <StudioLogo initial={logos} />
-                    </div>
+                    </SettingsCard>
+                    <StudioLogo initial={logos} />
                 </div>
             )}
 
             {tab === 'Proposals' && (
-                <div className="settings__columns">
-                    <div className="settings__column">
-                        <SettingsCard id="proposal-email" title="Proposal email" onSubmit={submit} saving={saving} saved={saved}>
-                        <p className="form-hint">
-                            The message the Send Proposal dialog starts with; it can be edited before each send. <code>:firm_name</code>, <code>:contact_first_name</code> and <code>:proposal_title</code> are filled in for you. Leave it blank for the standard message.
-                        </p>
+                <div className="settings-sections">
+                    <SettingsCard
+                        id="proposal-email"
+                        title="Proposal email"
+                        description={<>The message the Send Proposal dialog starts with; it can be edited before each send. <code>:firm_name</code>, <code>:contact_first_name</code> and <code>:proposal_title</code> are filled in for you. Leave it blank for the standard message.</>}
+                        onSubmit={submit}
+                        saving={saving}
+                        saved={saved}
+                    >
                         <AutoResizeTextarea
                             placeholder="The standard message"
                             value={form.proposal_email_message}
@@ -326,13 +326,15 @@ export default function SettingsIndex({ studioProfile, logos, emailTemplates = {
                             rows={4}
                             className="input"
                         />
-                        </SettingsCard>
-                    </div>
-                    <div className="settings__column">
-                        <SettingsCard id="disclaimer" title="Estimate disclaimer" onSubmit={submit} saving={saving} saved={saved}>
-                        <p className="form-hint">
-                            New proposals start with this below the scope of work, above the services. It can be edited on each proposal; changing it here doesn&rsquo;t change proposals already written. Leave it blank for none.
-                        </p>
+                    </SettingsCard>
+                    <SettingsCard
+                        id="disclaimer"
+                        title="Estimate disclaimer"
+                        description={<>New proposals start with this below the scope of work, above the services. It can be edited on each proposal; changing it here doesn&rsquo;t change proposals already written. Leave it blank for none.</>}
+                        onSubmit={submit}
+                        saving={saving}
+                        saved={saved}
+                    >
                         <AutoResizeTextarea
                             placeholder="No default disclaimer"
                             value={form.proposal_disclaimer}
@@ -340,31 +342,37 @@ export default function SettingsIndex({ studioProfile, logos, emailTemplates = {
                             rows={3}
                             className="input"
                         />
-                        </SettingsCard>
-                        <SettingsCard id="about" title="About section" onSubmit={submit} saving={saving} saved={saved}>
-                            <p className="form-hint">
-                                Closes every proposal, after the team &mdash; unless a proposal switches it off. The heading is your studio&rsquo;s name unless you give it another.
-                            </p>
-                            <input
-                                placeholder={studioProfile.name || 'Heading'}
-                                value={form.proposal_about_heading}
-                                onChange={(e) => setForm({ ...form, proposal_about_heading: e.target.value })}
-                                aria-label="About heading"
-                                className="input"
-                            />
-                            <RichTextEditor value={form.proposal_about} onChange={(proposal_about) => setForm({ ...form, proposal_about })} />
-                        </SettingsCard>
-                    </div>
+                    </SettingsCard>
+                    <SettingsCard
+                        id="about"
+                        title="About section"
+                        description={<>Closes every proposal, after the team &mdash; unless a proposal switches it off. The heading is your studio&rsquo;s name unless you give it another.</>}
+                        onSubmit={submit}
+                        saving={saving}
+                        saved={saved}
+                    >
+                        <input
+                            placeholder={studioProfile.name || 'Heading'}
+                            value={form.proposal_about_heading}
+                            onChange={(e) => setForm({ ...form, proposal_about_heading: e.target.value })}
+                            aria-label="About heading"
+                            className="input"
+                        />
+                        <RichTextEditor value={form.proposal_about} onChange={(proposal_about) => setForm({ ...form, proposal_about })} />
+                    </SettingsCard>
                 </div>
             )}
 
             {tab === 'Invoices & payments' && (
-                <div className="settings__columns">
-                    <div className="settings__column">
-                        <SettingsCard id="invoice-email" title="Invoice email" onSubmit={submit} saving={saving} saved={saved}>
-                        <p className="form-hint">
-                            The message the Send Invoice dialog starts with; it can be edited before each send. <code>:firm_name</code>, <code>:contact_first_name</code>, <code>:invoice_number</code>, <code>:amount_due</code> and <code>:due_date</code> are filled in for you. Leave it blank for the standard message.
-                        </p>
+                <div className="settings-sections">
+                    <SettingsCard
+                        id="invoice-email"
+                        title="Invoice email"
+                        description={<>The message the Send Invoice dialog starts with; it can be edited before each send. <code>:firm_name</code>, <code>:contact_first_name</code>, <code>:invoice_number</code>, <code>:amount_due</code> and <code>:due_date</code> are filled in for you. Leave it blank for the standard message.</>}
+                        onSubmit={submit}
+                        saving={saving}
+                        saved={saved}
+                    >
                         <AutoResizeTextarea
                             placeholder="The standard message"
                             value={form.invoice_email_message}
@@ -372,11 +380,15 @@ export default function SettingsIndex({ studioProfile, logos, emailTemplates = {
                             rows={3}
                             className="input"
                         />
-                        </SettingsCard>
-                        <SettingsCard id="payment" title="Payment instructions" onSubmit={submit} saving={saving} saved={saved}>
-                        <p className="form-hint">
-                            Shown on sent invoices alongside the Pay Now button, for clients who'd rather pay by ACH or check.
-                        </p>
+                    </SettingsCard>
+                    <SettingsCard
+                        id="payment"
+                        title="Payment instructions"
+                        description="Shown on sent invoices alongside the Pay Now button, for clients who'd rather pay by ACH or check."
+                        onSubmit={submit}
+                        saving={saving}
+                        saved={saved}
+                    >
                         <textarea
                             placeholder={'e.g. To pay by ACH or check, contact us at hello@studio.com for our routing and account details, or mail a check to the address above.'}
                             value={form.payment_instructions}
@@ -384,13 +396,15 @@ export default function SettingsIndex({ studioProfile, logos, emailTemplates = {
                             rows={3}
                             className="input"
                         />
-                        </SettingsCard>
-                    </div>
-                    <div className="settings__column">
-                        <SettingsCard id="tax" title="Sales tax" onSubmit={submit} saving={saving} saved={saved}>
-                        <p className="form-hint">
-                            Charged on an invoice&rsquo;s taxable lines when Charge Tax is on. An invoice keeps the rate it was charged at, so changing it here only affects invoices you turn tax on for afterwards. Leave the rate blank to hide Charge Tax.
-                        </p>
+                    </SettingsCard>
+                    <SettingsCard
+                        id="tax"
+                        title="Sales tax"
+                        description={<>Charged on an invoice&rsquo;s taxable lines when Charge Tax is on. An invoice keeps the rate it was charged at, so changing it here only affects invoices you turn tax on for afterwards. Leave the rate blank to hide Charge Tax.</>}
+                        onSubmit={submit}
+                        saving={saving}
+                        saved={saved}
+                    >
                         <div className="settings__tax">
                             <input
                                 placeholder="Name, e.g. Ohio sales tax"
@@ -414,28 +428,34 @@ export default function SettingsIndex({ studioProfile, logos, emailTemplates = {
                                 <span className="settings__unit">%</span>
                             </div>
                         </div>
-                        </SettingsCard>
-                        <InvoiceCategories />
-                    </div>
+                    </SettingsCard>
+                    <InvoiceCategories />
                 </div>
             )}
 
             {tab === 'Expenses' && (
-                <div className="settings__columns">
-                    <div className="settings__column">
-                        <BankFeeds items={plaidItems} configured={plaidConfigured} />
-                    </div>
+                <div className="settings-sections">
+                    <BankFeeds items={plaidItems} configured={plaidConfigured} />
                 </div>
             )}
 
             {tab === 'Notifications' && (
-                    <SettingsCard id="emails" title="Notification emails" onSubmit={submit} saving={saving} saved={saved}>
+                <div className="settings-sections">
+                    <SettingsCard
+                        id="emails"
+                        title="Notification emails"
+                        description={<>The wording of the emails the app sends on its own. Words starting with a colon are filled in when it&rsquo;s sent; blank lines split the message into paragraphs. Clear the heading or note to leave it out.</>}
+                        onSubmit={submit}
+                        saving={saving}
+                        saved={saved}
+                    >
                         <NotificationEmails
                             definitions={emailTemplates}
                             templates={form.email_templates}
                             onChange={(email_templates) => setForm({ ...form, email_templates })}
                         />
                     </SettingsCard>
+                </div>
             )}
         </AppLayout>
     );

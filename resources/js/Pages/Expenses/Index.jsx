@@ -21,6 +21,7 @@ import YearChart from '../../Components/YearChart';
 import LoadMore from '../../Components/LoadMore';
 import MonthDivider from '../../Components/MonthDivider';
 import { useReadOnly } from '../../lib/permissions';
+import SettingsSection from '../../Components/SettingsSection';
 
 // `paidFrom` is the account a new expense starts out paid from (the
 // Capital One card).
@@ -156,32 +157,36 @@ function ReceiptPanel({ expense, file, onPick, onClear }) {
         : expense?.receipt_url ? { name: expense.receipt_filename || 'Receipt', meta: 'Attached', url: expense.receipt_url } : null;
 
     return (
+        <SettingsSection
+            title="Receipt"
+            action={(
+                <>
+                    <button
+                        type="button"
+                        onClick={() => inputRef.current.click()}
+                        title={current ? 'Replace receipt' : 'Add receipt'}
+                        aria-label={current ? 'Replace receipt' : 'Add receipt'}
+                        className="icon-btn icon-btn--secondary"
+                    >
+                        <Paperclip />
+                    </button>
+                    <input
+                        ref={inputRef}
+                        type="file"
+                        accept="image/*,.pdf"
+                        onChange={async (e) => {
+                            const picked = e.target.files?.[0] ?? null;
+                            e.target.value = '';
+                            // A phone photo of a receipt shrinks to a fraction of
+                            // its size and stays legible at 2400px; PDFs go up as they are.
+                            onPick(picked && await shrinkImage(picked, { maxSide: 2400 }));
+                        }}
+                        hidden
+                    />
+                </>
+            )}
+        >
         <div className="form-panel expenses__receipt">
-            <div className="form-panel__header">
-                <div className="section-label section-label--flush">Receipt</div>
-                <button
-                    type="button"
-                    onClick={() => inputRef.current.click()}
-                    title={current ? 'Replace receipt' : 'Add receipt'}
-                    aria-label={current ? 'Replace receipt' : 'Add receipt'}
-                    className="icon-btn icon-btn--secondary"
-                >
-                    <Paperclip />
-                </button>
-                <input
-                    ref={inputRef}
-                    type="file"
-                    accept="image/*,.pdf"
-                    onChange={async (e) => {
-                        const picked = e.target.files?.[0] ?? null;
-                        e.target.value = '';
-                        // A phone photo of a receipt shrinks to a fraction of
-                        // its size and stays legible at 2400px; PDFs go up as they are.
-                        onPick(picked && await shrinkImage(picked, { maxSide: 2400 }));
-                    }}
-                    hidden
-                />
-            </div>
             {!current ? (
                 <EmptyState text="No receipt yet." />
             ) : (
@@ -207,6 +212,7 @@ function ReceiptPanel({ expense, file, onPick, onClear }) {
                 </div>
             )}
         </div>
+        </SettingsSection>
     );
 }
 
@@ -262,15 +268,19 @@ function SplitPanel({ rows, onChange, total, companies, lastSplit }) {
     const used = (rows || []).map((r) => r.company_id);
 
     return (
+        <SettingsSection
+            title="Split across clients"
+            action={(
+                <>
+                    <Toggle
+                        checked={on}
+                        onChange={(value) => onChange(value ? (lastSplit ? scaleSplit(lastSplit, total) : [splitRow()]) : null)}
+                        label="Split"
+                    />
+                </>
+            )}
+        >
         <div className="form-panel expenses__split">
-            <div className="form-panel__header">
-                <div className="section-label section-label--flush">Split across clients</div>
-                <Toggle
-                    checked={on}
-                    onChange={(value) => onChange(value ? (lastSplit ? scaleSplit(lastSplit, total) : [splitRow()]) : null)}
-                    label="Split"
-                />
-            </div>
             {!on ? (
                 <p className="form-hint">For a shared cost, like one hosting bill covering several clients: each client&rsquo;s share counts against their hosting in the profitability report.</p>
             ) : (
@@ -306,6 +316,7 @@ function SplitPanel({ rows, onChange, total, companies, lastSplit }) {
                 </>
             )}
         </div>
+        </SettingsSection>
     );
 }
 
