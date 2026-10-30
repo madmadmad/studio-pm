@@ -41,6 +41,14 @@
         background-color: var(--color-surface-subtle);
     }
 
+    // A dropdown keeps its field fill when disabled ("Select a client
+    // first"): the grey above is the panel's own, so it would vanish into
+    // a form panel. Dimmed text marks it instead.
+    &:is(select):disabled {
+        color: var(--color-text-muted);
+        background-color: var(--color-field);
+    }
+
     // Multi-line text: the editor size (see --font-size-editor).
     &:is(textarea) {
         font-size: var(--font-size-editor);

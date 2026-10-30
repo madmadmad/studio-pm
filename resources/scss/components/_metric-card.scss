@@ -6,8 +6,6 @@
 
 .metric-card {
     background-color: var(--color-surface-subtle);
-    // The one panel with a shadow, the same on every metric card.
-    box-shadow: var(--shadow-card);
 
     // Filled with an intent color (MetricCard's `tone`), text in the
     // intent's -on color at full strength (a dimmed label on red falls
@@ -52,7 +50,7 @@
     // often sits beside a --primary card, so it can't be red too: a grey
     // card edged in red, the figure in red, a warning glyph on the label.
     &--danger {
-        box-shadow: inset 0 0 0 var(--border-width) var(--color-danger), var(--shadow-card);
+        box-shadow: inset 0 0 0 var(--border-width) var(--color-danger);
 
         .metric-card__label {
             display: flex;

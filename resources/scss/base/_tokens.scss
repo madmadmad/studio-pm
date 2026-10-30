@@ -364,7 +364,7 @@ $typeface: 'neue-haas';
 
     // Shell layers only (content panel, drawer) -- large-scale rounding
     // that --radius-base would be too tight for. Components never use these.
-    --radius-panel: 1.25rem;
+    --radius-panel: 0;
     --radius-drawer: var(--radius-panel); // leading (left) edge only
 
     // -----------------------------------------------------------------
@@ -380,11 +380,11 @@ $typeface: 'neue-haas';
       0 4px 4px hsl(0deg 0% 0% / 0.1)
     ; // toggle knob: small, close to its track
     --shadow-card:
-      0 1px 1px hsl(0deg 0% 0% / 0.075),
-      0 2px 2px hsl(0deg 0% 0% / 0.075),
-      0 4px 4px hsl(0deg 0% 0% / 0.075),
-      0 8px 8px hsl(0deg 0% 0% / 0.075),
-      0 16px 16px hsl(0deg 0% 0% / 0.075)
+      0 1px 1px hsl(0deg 0% 0% / 0.04),
+      0 2px 2px hsl(0deg 0% 0% / 0.05),
+      0 6px 6px hsl(0deg 0% 0% / 0.06),
+      0 12px 12px hsl(0deg 0% 0% / 0.07),
+      0 24px 24px hsl(0deg 0% 0% / 0.075)
     ; // cards: soft lift, no border
     --shadow-card-drawer:
       0 1px 1px hsl(0deg 0% 0% / 0.05),
@@ -411,11 +411,11 @@ $typeface: 'neue-haas';
       0 64px 64px hsl(0deg 0% 0% / 0.09)
     ; // modal: the highest layer
     --shadow-drawer:
-      -1px 0 1px hsl(0deg 0% 0% / 0.07),
-      -1px 0 2px hsl(0deg 0% 0% / 0.08),
-      -3px 0 4px hsl(0deg 0% 0% / 0.075),
-      -6px 0 8px hsl(0deg 0% 0% / 0.075),
-      -16px 0 16px hsl(0deg 0% 0% / 0.075)
+      -1px 0 1px hsl(0deg 0% 0% / 0.03),
+      -1px 0 2px hsl(0deg 0% 0% / 0.03),
+      -3px 0 4px hsl(0deg 0% 0% / 0.05),
+      -6px 0 8px hsl(0deg 0% 0% / 0.05),
+      -16px 0 16px hsl(0deg 0% 0% / 0.06)
     ; // cast left, off the right-edge drawer
 
     --z-dropdown: 10;
@@ -565,7 +565,7 @@ $typeface: 'neue-haas';
     --color-canvas: #EEF0F1;
     --color-on-canvas: #23262E;
     --color-on-canvas-strong: #fff; // the current nav item
-    --color-on-canvas-muted: color-mix(in srgb, var(--color-on-canvas) 72%, transparent);
+    --color-on-canvas-muted: color-mix(in srgb, var(--color-on-canvas) 70%, transparent);
     --color-on-canvas-subtle: color-mix(in srgb, var(--color-on-canvas) 55%, transparent);
     --color-on-canvas-border: color-mix(in srgb, var(--color-on-canvas) 12%, transparent);
     --color-on-canvas-fill: transparent;
@@ -582,10 +582,11 @@ $typeface: 'neue-haas';
 
     // Shadows read heavier on white: the same layers, lighter.
     --shadow-card:
-      0 1px 1px hsl(220deg 15% 20% / 0.04),
-      0 2px 2px hsl(220deg 15% 20% / 0.04),
-      0 4px 4px hsl(220deg 15% 20% / 0.04),
-      0 8px 8px hsl(220deg 15% 20% / 0.03)
+      // 0 1px 1px hsl(220deg 15% 20% / 0.03),
+      // 0 2px 2px hsl(220deg 15% 20% / 0.02),
+      // 0 4px 4px hsl(220deg 15% 20% / 0.02),
+      // 0 8px 8px hsl(220deg 15% 20% / 0.03),
+      // 0 20px 20px hsl(220deg 15% 20% / 0.03)
     ;
     --shadow-card-drawer: var(--shadow-card);
     --shadow-popover:
@@ -604,10 +605,10 @@ $typeface: 'neue-haas';
       0 32px 32px hsl(220deg 15% 20% / 0.06)
     ;
     --shadow-drawer:
-      -1px 0 1px hsl(220deg 15% 20% / 0.05),
-      -2px 0 4px hsl(220deg 15% 20% / 0.05),
-      -8px 0 16px hsl(220deg 15% 20% / 0.05),
-      -16px 0 32px hsl(220deg 15% 20% / 0.05)
+      -1px 0 1px hsl(220deg 15% 20% / 0.02),
+      -2px 0 4px hsl(220deg 15% 20% / 0.02),
+      -8px 0 16px hsl(220deg 15% 20% / 0.03),
+      -16px 0 32px hsl(220deg 15% 20% / 0.03)
     ;
 }
 

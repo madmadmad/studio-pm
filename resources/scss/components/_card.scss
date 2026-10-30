@@ -1,7 +1,7 @@
 // The panel for metrics, list rows, and grouped content: a step lighter
 // than the page, set apart by its fill alone -- no border, no shadow.
-// Only metric cards are lifted by a shadow (.metric-card). Used by
-// Components/Card.jsx or directly.
+// Shadows belong to the shell's panels (content panel, drawer), never
+// cards. Used by Components/Card.jsx or directly.
 
 .card {
     background-color: var(--color-surface);

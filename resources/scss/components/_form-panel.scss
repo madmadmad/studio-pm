@@ -24,4 +24,15 @@
     > :last-child {
         margin-bottom: 0;
     }
+
+    // Already on a filled, padded panel (an invoice being edited on its
+    // page): same fill, so a second inset would only push the fields in
+    // past the headings and totals beside them. It keeps the grouping,
+    // not the box.
+    .card--padded &,
+    .form-panel & {
+        padding: 0;
+        background-color: transparent;
+        border-radius: 0;
+    }
 }

@@ -305,7 +305,7 @@ export default function StyleGuide() {
                     </div>
                 </Section>
 
-                <Section title="Cards" description="The .card class -- a panel a step lighter than the page, set apart by its fill alone (no border, no shadow). Only metric cards are lifted by the soft card shadow (--shadow-card). Add .card--padded (or the Card component's default) for inner spacing. A MetricCard's primary tone is the red gradient for a headline figure; its danger tone is grey, edged in red, with a warning glyph -- it often sits beside a primary card, so it can't be red too.">
+                <Section title="Cards" description="The .card class -- a panel a step lighter than the page, set apart by its fill alone (no border, no shadow -- shadows are for the content panel and drawers only). Add .card--padded (or the Card component's default) for inner spacing. A MetricCard's primary tone is the red gradient for a headline figure; its danger tone is grey, edged in red, with a warning glyph -- it often sits beside a primary card, so it can't be red too.">
                     <div className="style-guide__grid">
                         <MetricCard label="Open invoices" value="12" />
                         <MetricCard label="Hours remaining" value="137.5h" tone="primary" />
