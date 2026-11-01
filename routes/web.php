@@ -9,6 +9,7 @@ use App\Http\Controllers\ProposalController;
 use App\Http\Controllers\TaskFileController;
 use App\Http\Controllers\Web\AcceptInvitationController;
 use App\Http\Controllers\Web\AccountantSignInController;
+use App\Http\Controllers\Web\AlertPageController;
 use App\Http\Controllers\Web\BookkeepingPageController;
 use App\Http\Controllers\Web\ChatPageController;
 use App\Http\Controllers\Web\ClientPageController;
@@ -126,6 +127,7 @@ Route::middleware(['auth', 'accountant.restrict', 'two-factor.required'])->group
         Route::get('/invoices', [InvoicePageController::class, 'index'])->name('invoices.index');
         Route::get('/invoices/{invoice}/pdf', [InvoicePageController::class, 'pdf'])->name('invoices.pdf');
         Route::get('/invoices/{invoice}', [InvoicePageController::class, 'show'])->name('invoices.show');
+        Route::get('/alerts', [AlertPageController::class, 'index'])->name('alerts.index');
     });
 
     Route::middleware('permission:proposals')->group(function () {

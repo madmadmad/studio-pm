@@ -24,6 +24,7 @@ class RestrictAccountant
         ['GET', 'invoices/{invoice}'],
         ['GET', 'invoices/{invoice}/pdf'],
         ['GET', 'expenses'],
+        ['GET', 'alerts'],
         ['POST', 'logout'],
 
         ['GET', 'api/invoices/{invoice}'],
@@ -34,7 +35,7 @@ class RestrictAccountant
         ['GET', 'api/transactions'],
         ['POST', 'api/journal-entries'],
         ['POST', 'api/journal-entries/{journalEntry}/reverse'],
-        ['GET', 'api/notifications'],
+        ['POST', 'api/notifications/read-all'],
         ['POST', 'api/notifications/{notification}/read'],
         ['PATCH', 'api/profile/appearance'],
         // An open app checking in, and what it noticed (ClientSessionController).

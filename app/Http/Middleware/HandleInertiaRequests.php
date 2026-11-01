@@ -84,6 +84,9 @@ class HandleInertiaRequests extends Middleware
             // the installed app's icon badge (AppBadge, lib/appBadge.js).
             // Staff only.
             'clientUnread' => fn () => $request->user() instanceof User && $request->user()->isStaff() ? AppBadge::clientThreads($request->user()) : null,
+            // Unread alerts, for the Alerts nav item's count. Whoever has
+            // the Alerts page (invoices permission).
+            'alertsUnread' => fn () => $request->user() instanceof User && $request->user()->hasPermission('invoices') ? $request->user()->unreadNotifications()->count() : null,
             // What an invoice can be categorised as, beyond project work
             // (Settings). Staff only.
             'invoiceCategories' => fn () => $request->user() instanceof Contact ? null : InvoiceCategory::orderBy('name')->get(['id', 'name']),

@@ -1,6 +1,5 @@
 import { useEffect } from 'react';
 import { usePage } from '@inertiajs/react';
-import AlertsMenu from '../Components/AlertsMenu';
 import ChatNavBadge from '../Components/chat/ChatNavBadge';
 import AppShell from './AppShell';
 import { hasPermission, isAccountant } from '../lib/permissions';
@@ -15,6 +14,7 @@ const NAV_ITEMS = [
     // The Overview (/overview) is off the sidebar for now; My Work is home.
     { href: '/my-work', label: 'My Work', staffOnly: true },
     { href: '/chat', label: 'Chat', badge: <ChatNavBadge />, staffOnly: true },
+    { href: '/alerts', label: 'Alerts', badge: <AlertsNavBadge />, permission: 'invoices' },
     { href: '/clients', label: 'Clients', permission: 'clients' },
     { href: '/projects', label: 'Projects', staffOnly: true },
     // Time and Timesheets (/time-entries, /timesheets) are hidden while time
@@ -28,6 +28,16 @@ const NAV_ITEMS = [
     { href: '/users', label: 'Team', permission: 'team' },
     { href: '/settings', label: 'Settings', permission: 'settings' },
 ];
+
+// The Alerts nav item's unread count (HandleInertiaRequests' alertsUnread),
+// as each page loads. Nothing when there's nothing new.
+function AlertsNavBadge() {
+    const unread = usePage().props.alertsUnread ?? 0;
+    if (unread === 0) return null;
+
+    const label = `${unread} unread alert${unread === 1 ? '' : 's'}`;
+    return <span className="count app-shell__nav-badge" title={label} aria-label={label}>{unread}</span>;
+}
 
 // The staff app frame: the shared sidebar with the staff nav. Starts Chat's
 // live connection (presence, unread counts) on the first page and keeps it
@@ -60,8 +70,6 @@ export default function AppLayout({ flush = false, children }) {
     return (
         <AppShell
             navItems={NAV_ITEMS.filter((item) => (item.permission ? hasPermission(user, item.permission) : !(accountant && item.staffOnly)))}
-            // Alerts are failed or skipped invoice sends.
-            footerExtra={hasPermission(user, 'invoices') && <AlertsMenu />}
             // The accountant has no Profile page; their menu has Appearance and sign-out.
             profileHref={accountant ? null : '/profile'}
             logoutHref="/logout"

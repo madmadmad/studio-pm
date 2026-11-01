@@ -38,7 +38,7 @@ function useMenu() {
 // The sidebar frame shared by the staff app (AppLayout) and the Client Hub
 // (PortalLayout): brand, nav links, anything extra after them, then the
 // signed-in person's menu -- Profile, Appearance, log out (AccountMenu) --
-// at the bottom (`footerExtra` -- the alerts bell -- just above its rule).
+// at the bottom.
 // The sidebar stays in view as the page scrolls, so that menu is always at
 // hand. `appearanceEndpoint` saves the person's Appearance (staff or client). `navItems` are
 // { href, label, exact?, also? }; a link is current when the URL starts
@@ -50,7 +50,7 @@ function useMenu() {
 //
 // Below lg a bar across the top stands in for the sidebar -- a menu button
 // and the logo -- and the sidebar slides in over the page (_app-shell.scss).
-export default function AppShell({ navItems, extraNav, footerExtra, profileHref, logoutHref, logoutLabel = 'Log out', appearanceEndpoint, flush = false, children }) {
+export default function AppShell({ navItems, extraNav, profileHref, logoutHref, logoutLabel = 'Log out', appearanceEndpoint, flush = false, children }) {
     const { url, props } = usePage();
     const user = props.auth?.user;
     const branding = props.branding;
@@ -107,7 +107,6 @@ export default function AppShell({ navItems, extraNav, footerExtra, profileHref,
                     </Link>
                 ))}
                 {extraNav}
-                {footerExtra && <div className="app-shell__footer-extra">{footerExtra}</div>}
                 <div className="app-shell__footer">
                     {user && (
                         <AccountMenu

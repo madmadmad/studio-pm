@@ -1,0 +1,19 @@
+// The Alerts page (Pages/Alerts/Index.jsx): one .list-row per alert, as a
+// button. Unread at full strength; read ones step back to muted.
+
+.alerts {
+    &__row {
+        gap: var(--space-4);
+        width: 100%;
+        text-align: left;
+
+        &--read .alerts__message {
+            font-weight: var(--font-weight-normal);
+            color: var(--color-text-muted);
+        }
+    }
+
+    &__message {
+        min-width: 0;
+    }
+}

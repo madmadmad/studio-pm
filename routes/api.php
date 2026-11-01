@@ -110,7 +110,7 @@ Route::middleware(['auth:sanctum', 'accountant.restrict', 'two-factor.required']
     Route::post('profile/bio-photo', [ProfileController::class, 'updateBioPhoto']);
     Route::delete('profile/bio-photo', [ProfileController::class, 'destroyBioPhoto']);
 
-    Route::get('notifications', [NotificationController::class, 'index']);
+    Route::post('notifications/read-all', [NotificationController::class, 'markAllRead']);
     Route::post('notifications/{notification}/read', [NotificationController::class, 'markRead']);
 
     Route::get('time-entries', [TimeEntryController::class, 'index']);
