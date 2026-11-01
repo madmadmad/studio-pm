@@ -5,7 +5,7 @@ import AppLayout from '../../Layouts/AppLayout';
 import MetricCard from '../../Components/MetricCard';
 import PageHeader from '../../Components/PageHeader';
 import { InvoiceStatusBadge } from '../../Components/StatusBadges';
-import { formatCurrency, formatDate } from '../../lib/format';
+import { formatCurrency, formatShortDate } from '../../lib/format';
 
 // Invoices by category for a year: every invoice issued that year (sent or
 // paid), grouped by what it was for -- project work, Hosting... -- with
@@ -88,7 +88,7 @@ export default function InvoiceCategories({ report, years }) {
                                     {isOpen && category.invoices.map((invoice) => (
                                         <tr key={invoice.id} className="sales-tax__payment">
                                             <td>
-                                                #{invoice.invoice_number} &middot; {formatDate(invoice.issued_on)}
+                                                #{invoice.invoice_number} &middot; {formatShortDate(invoice.issued_on)}
                                                 <span className="sales-tax__client"> &middot; {invoice.client}{invoice.project ? ` · ${invoice.project}` : ''}</span>
                                             </td>
                                             <td className="table__cell--end">

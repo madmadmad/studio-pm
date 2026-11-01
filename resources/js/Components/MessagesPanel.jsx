@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { LinkSimple, Paperclip, PencilSimple, Trash, X } from '@phosphor-icons/react';
 import EmojiPicker, { REACTION_EMOJI } from './EmojiPicker';
-import { formatDate, formatDateTime, formatDaySeparator, formatRelativeTime, isSameDay } from '../lib/format';
+import { formatDateTime, formatDaySeparator, formatRelativeTime, isSameDay, formatShortDate } from '../lib/format';
 import { api } from '../lib/api';
 import Badge from './Badge';
 import Button from './Button';
@@ -912,7 +912,7 @@ export default function MessagesPanel({ project, currentActorType, currentActorI
                                     </div>
                                     <div className="thread-list__participants">{participants.map((p) => p.name).join(', ') || '—'}</div>
                                 </div>
-                                <div className="thread-list__date" title={formatDateTime(lastActivity)}>{formatDate(lastActivity)}</div>
+                                <div className="thread-list__date" title={formatDateTime(lastActivity)}>{formatShortDate(lastActivity)}</div>
                             </button>
                         );
                     })}

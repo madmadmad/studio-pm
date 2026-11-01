@@ -14,7 +14,7 @@ import TabToolbar from '../../../Components/TabToolbar';
 import ContactCards from '../../../Components/client/ContactCards';
 import ScheduleChart from '../../../Components/schedule/ScheduleChart';
 import { formatLength, formatRange } from '../../../lib/scheduleDates';
-import { displayInvoiceStatus, formatCurrency, formatDate, formatDateTime, formatFileSize, invoiceTotal } from '../../../lib/format';
+import { displayInvoiceStatus, formatCurrency, formatDateTime, formatFileSize, invoiceTotal, formatShortDate } from '../../../lib/format';
 import { api } from '../../../lib/api';
 import { isBlankRichText, toRichText } from '../../../lib/richText';
 import PageHeader from '../../../Components/PageHeader';
@@ -50,7 +50,7 @@ function TaskRow({ task, onOpen }) {
                 <span className="u-truncate">{task.title}</span>
             </div>
             <div className="task-list__assignee portal-project__muted">{task.assignee || 'Unassigned'}</div>
-            <div className="task-list__due portal-project__muted">{task.due_date ? formatDate(task.due_date) : '—'}</div>
+            <div className="task-list__due portal-project__muted">{task.due_date ? formatShortDate(task.due_date) : '—'}</div>
             <div className="task-list__subtasks portal-project__muted">{task.subtasks?.length || '—'}</div>
             <div className="task-list__status">
                 <button onClick={cycleStatus} title="Change status">
@@ -308,7 +308,7 @@ function MessageThreadRow({ thread, unread, onOpen }) {
                 <span className={`u-truncate${unread ? ' unread-subject' : ''}`}>{thread.subject}</span>
             </div>
             <div className="project-messages__participants">{participants.map((p) => p.name).join(', ') || '—'}</div>
-            <div className="project-messages__date" title={formatDateTime(lastActivity)}>{formatDate(lastActivity)}</div>
+            <div className="project-messages__date" title={formatDateTime(lastActivity)}>{formatShortDate(lastActivity)}</div>
             <RowActions openLabel="Open thread" />
         </div>
     );
@@ -467,7 +467,7 @@ function ProposalsTab({ project }) {
                     <div key={proposal.id} className="list-row list-row--static">
                         <div>
                             <div className="list-row__title">{proposal.title}</div>
-                            <div className="list-row__meta">Accepted {formatDate(proposal.accepted_at)}</div>
+                            <div className="list-row__meta">Accepted {formatShortDate(proposal.accepted_at)}</div>
                         </div>
                         <div className="list-row__aside">
                             <span className="list-row__amount">{formatCurrency(proposal.estimate_amount)}</span>
@@ -498,7 +498,7 @@ function InvoicesTab({ project }) {
                     <div key={invoice.id} className="list-row list-row--static">
                         <div>
                             <div className="list-row__title">Invoice #{invoice.invoice_number ?? invoice.id}</div>
-                            <div className="list-row__meta">Issued {formatDate(invoice.issued_on)} &middot; Due {formatDate(invoice.due_on)}</div>
+                            <div className="list-row__meta">Issued {formatShortDate(invoice.issued_on)} &middot; Due {formatShortDate(invoice.due_on)}</div>
                         </div>
                         <div className="list-row__aside">
                             <span className="list-row__amount">{formatCurrency(invoiceTotal(invoice.items, invoice.surcharge, invoice.tax_rate))}</span>

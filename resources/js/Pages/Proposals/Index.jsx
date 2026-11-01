@@ -4,7 +4,7 @@ import { CaretRight, Check, Copy, Eye, PaperPlaneTilt, Trash } from '@phosphor-i
 import AppLayout from '../../Layouts/AppLayout';
 import EmptyState from '../../Components/EmptyState';
 import { ProposalStatusBadge } from '../../Components/StatusBadges';
-import { formatCurrency, formatDate, monthInAppTimezone, todayInAppTimezone } from '../../lib/format';
+import { formatCurrency, monthInAppTimezone, todayInAppTimezone, formatShortDate } from '../../lib/format';
 import MetricCard from '../../Components/MetricCard';
 import { useListMotion } from '../../lib/listMotion';
 import { api } from '../../lib/api';
@@ -209,7 +209,7 @@ export default function ProposalsIndex({ proposals: proposalsProp, companies, se
                                                 </button>
                                             )}
                                             {proposal.status === 'accepted' && (
-                                                <span className="table__note">{formatDate(proposal.accepted_at)}</span>
+                                                <span className="table__note">{formatShortDate(proposal.accepted_at)}</span>
                                             )}
                                             {proposal.status !== 'accepted' && (
                                                 <button

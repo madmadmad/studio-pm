@@ -5,7 +5,7 @@ import Button from '../../Components/Button';
 import CurrencyInput from '../../Components/CurrencyInput';
 import PageHeader from '../../Components/PageHeader';
 import { api } from '../../lib/api';
-import { formatCurrency, formatDate, todayInAppTimezone } from '../../lib/format';
+import { formatCurrency, formatDate, todayInAppTimezone, formatShortDate } from '../../lib/format';
 import { useReadOnly } from '../../lib/permissions';
 
 // Bookkeeping > Reconcile: checking and the card, each reconciled against
@@ -101,7 +101,7 @@ function AccountPanel({ account }) {
                     <tbody>
                         {account.history.map((r) => (
                             <tr key={r.id} onClick={() => router.visit(`/bookkeeping/reconcile/${r.id}`)} className="table__row--link">
-                                <td className="table__cell--strong">{formatDate(r.date)}</td>
+                                <td className="table__cell--strong">{formatShortDate(r.date)}</td>
                                 <td className="table__cell--end table__cell--numeric">{formatCurrency(r.ending_cents / 100)}</td>
                                 <td className="table__cell--muted">{r.completed_at ? `Reconciled${r.completed_by ? ` by ${r.completed_by}` : ''}` : 'In progress'}</td>
                             </tr>

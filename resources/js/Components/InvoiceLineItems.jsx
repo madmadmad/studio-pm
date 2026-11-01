@@ -6,7 +6,7 @@ import AutoResizeTextarea from './AutoResizeTextarea';
 import Toggle from './Toggle';
 import CurrencyInput from './CurrencyInput';
 import { api } from '../lib/api';
-import { formatCurrency, formatDate } from '../lib/format';
+import { formatCurrency, formatShortDate } from '../lib/format';
 
 // What an expense bills: its cost plus markup (Expense::billableAmount).
 function billableAmount(expense) {
@@ -73,7 +73,7 @@ function AddExpense({ projectId, items, onAdd }) {
                             <span className="invoice-form__expense-name">
                                 {expense.name}
                                 <span className="invoice-form__expense-meta">
-                                    {formatDate(expense.date)}
+                                    {formatShortDate(expense.date)}
                                     {parseFloat(expense.markup_percent) > 0 && ` · ${formatCurrency(expense.amount)} + ${parseFloat(expense.markup_percent)}% markup`}
                                     {!expense.is_billable && ' · Not marked billable'}
                                 </span>

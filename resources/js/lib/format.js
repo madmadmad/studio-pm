@@ -24,6 +24,18 @@ export function formatDate(value) {
 // The full "October 11, 2023, 3:30 PM" form -- used as a tooltip/title
 // alongside formatRelativeTime's short form, so the exact moment is always
 // one hover away.
+// The compact form for lists and tables: 10/05/2026. Sentences, headings
+// and documents keep formatDate's "Oct 5, 2026".
+export function formatShortDate(value) {
+    if (!value) return '—';
+    const date = /^\d{4}-\d{2}-\d{2}$/.test(value) ? new Date(`${value}T00:00:00`) : new Date(value);
+    return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+    });
+}
+
 export function formatDateTime(value) {
     if (!value) return '—';
     return new Date(value).toLocaleString('en-US', {

@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { CaretLeft, CaretRight } from '@phosphor-icons/react';
 import AppLayout from '../../Layouts/AppLayout';
 import EmptyState from '../../Components/EmptyState';
-import { formatDate } from '../../lib/format';
+import { formatDate, formatShortDate } from '../../lib/format';
 import { api } from '../../lib/api';
 import PageHeader from '../../Components/PageHeader';
 
@@ -86,7 +86,7 @@ export default function TimeWeekly({ weekStart, weekEnd, entries, companies }) {
                         <tbody>
                             {entries.map((entry) => (
                                 <tr key={entry.id}>
-                                    <td>{formatDate(entry.date)}</td>
+                                    <td>{formatShortDate(entry.date)}</td>
                                     <td className="table__cell--muted">{entry.company?.name ?? '—'}</td>
                                     <td className="table__cell--tight table__cell--numeric table__cell--narrow">
                                         <EditableCell entry={entry} field="hours" type="number" />

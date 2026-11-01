@@ -7,7 +7,7 @@ import MetricCard from '../../Components/MetricCard';
 import EmptyState from '../../Components/EmptyState';
 import YearChart from '../../Components/YearChart';
 import { ProjectStatusBadge } from '../../Components/StatusBadges';
-import { formatCurrency, formatDate, formatDaySeparator, formatRelativeTime, todayInAppTimezone } from '../../lib/format';
+import { formatCurrency, formatDaySeparator, formatRelativeTime, todayInAppTimezone, formatShortDate } from '../../lib/format';
 import PageHeader from '../../Components/PageHeader';
 
 const ICONS = {
@@ -169,7 +169,7 @@ function TasksDue({ tasks, mine }) {
                                 </div>
                             </div>
                             <span className={`list-row__meta${overdue ? ' overview__overdue' : ''}`}>
-                                {overdue ? 'Overdue · ' : ''}{formatDate(task.due_date)}
+                                {overdue ? 'Overdue · ' : ''}{formatShortDate(task.due_date)}
                             </span>
                         </Link>
                     );

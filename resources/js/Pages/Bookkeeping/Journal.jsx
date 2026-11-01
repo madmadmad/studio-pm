@@ -13,7 +13,7 @@ import PayoutDrawer from '../../Components/ledger/PayoutDrawer';
 import PayrollDrawer from '../../Components/ledger/PayrollDrawer';
 import TransferDrawer from '../../Components/ledger/TransferDrawer';
 import { api } from '../../lib/api';
-import { formatCurrency, formatDate } from '../../lib/format';
+import { formatCurrency, formatDate, formatShortDate } from '../../lib/format';
 import { useRememberedTab } from '../../lib/useRememberedTab';
 import { useReadOnly } from '../../lib/permissions';
 import SettingsSection from '../../Components/SettingsSection';
@@ -50,7 +50,7 @@ function EntriesTab({ entries, year, years, onOpen }) {
                             {entries.map((entry) => (
                                 <tr key={entry.id} onClick={() => onOpen(entry)} className="table__row--link">
                                     <td className="table__cell--muted u-tabular-nums">{entry.entry_number}</td>
-                                    <td>{formatDate(entry.entry_date)}</td>
+                                    <td>{formatShortDate(entry.entry_date)}</td>
                                     <td className="table__cell--strong">
                                         <span className="table__group">
                                             {entry.memo}
@@ -126,7 +126,7 @@ function PeriodsTab({ periods: periodsProp }) {
                         <tbody>
                             {periods.map((period) => (
                                 <tr key={period.id}>
-                                    <td className="table__cell--strong">{formatDate(period.starts_on)} – {formatDate(period.ends_on)}</td>
+                                    <td className="table__cell--strong">{formatShortDate(period.starts_on)} – {formatShortDate(period.ends_on)}</td>
                                     <td>
                                         {period.locked_at
                                             ? <span className="table__group"><Badge tone="success" label="Locked" />{period.locker && <span className="table__note">by {period.locker.name}</span>}</span>

@@ -11,7 +11,7 @@ import RichTextView from '../../Components/RichTextView';
 import Avatar from '../../Components/Avatar';
 import { NewThreadForm, ThreadView, isSameActor, threadParticipantActors } from '../../Components/MessagesPanel';
 import { ProjectStatusBadge, TaskStatusBadge, InvoiceStatusBadge, ProposalStatusBadge, ExpenseStatusBadge, TimeEntryStatusBadge } from '../../Components/StatusBadges';
-import { formatCurrency, formatDate, formatDateTime, formatFileSize, invoiceTotal, todayInAppTimezone } from '../../lib/format';
+import { formatCurrency, formatDate, formatDateTime, formatFileSize, invoiceTotal, todayInAppTimezone, formatShortDate } from '../../lib/format';
 import { addDays, daysBetween, formatLength, formatRange } from '../../lib/scheduleDates';
 import ScheduleChart from '../../Components/schedule/ScheduleChart';
 import { todayLocal } from '../../lib/paymentTerms';
@@ -252,7 +252,7 @@ function TaskRow({ task, favorites, onChange, onOpen }) {
                 )}
             </div>
             <div className={`task-list__assignee${task.assignee ? '' : ' task-list__empty'}`}>{task.assignee || 'Unassigned'}</div>
-            <div className={`task-list__due${task.due_date ? '' : ' task-list__empty'}`}>{task.due_date ? formatDate(task.due_date) : '—'}</div>
+            <div className={`task-list__due${task.due_date ? '' : ' task-list__empty'}`}>{task.due_date ? formatShortDate(task.due_date) : '—'}</div>
             {/* How many subtasks it has (they're listed in the drawer). */}
             <div className={`task-list__subtasks${task.subtasks?.length ? '' : ' task-list__empty'}`}>{task.subtasks?.length || '—'}</div>
             <div className="task-list__status">
@@ -1021,7 +1021,7 @@ function ScheduleItemDrawer({ project, item, onClose, onOpenTask }) {
                                     <button key={task.id} type="button" onClick={() => onOpenTask(task)} className="schedule-phase-tasks__task">
                                         <span className="u-truncate">{task.title}</span>
                                         <span className="schedule-phase-tasks__meta">
-                                            {task.due_date ? formatDate(task.due_date) : 'No due date'}
+                                            {task.due_date ? formatShortDate(task.due_date) : 'No due date'}
                                             <TaskStatusBadge task={task} />
                                         </span>
                                     </button>
@@ -1220,7 +1220,7 @@ function NoteRow({ note, onOpen }) {
                 <span className="note-list__title">{note.title || 'Untitled note'}</span>
             </div>
             <div className="note-list__author">{note.user?.name ?? '—'}</div>
-            <div className="note-list__date">{formatDate(note.updated_at)}</div>
+            <div className="note-list__date">{formatShortDate(note.updated_at)}</div>
             <RowActions
                 openLabel="Open note"
                 deleteLabel="Delete note"
@@ -1395,7 +1395,7 @@ function MessageThreadRow({ thread, currentUserId, unread, onOpen }) {
                 {!amParticipant && <Badge tone="accent" label="Not joined" />}
             </div>
             <div className="project-messages__participants">{participants.map((p) => p.name).join(', ') || '—'}</div>
-            <div className="project-messages__date" title={formatDateTime(lastActivity)}>{formatDate(lastActivity)}</div>
+            <div className="project-messages__date" title={formatDateTime(lastActivity)}>{formatShortDate(lastActivity)}</div>
             <RowActions openLabel="Open thread" />
         </div>
     );
@@ -1501,7 +1501,7 @@ function MessagesTab({ project, unread }) {
 function TimeEntryRow({ entry, canDelete, onOpen }) {
     return (
         <div onClick={() => onOpen(entry.id)} className="grid-row grid-row--action grid-row--link">
-            <div className="time-list__date">{formatDate(entry.date)}</div>
+            <div className="time-list__date">{formatShortDate(entry.date)}</div>
             <div className="time-list__who">
                 {entry.user && <Avatar name={entry.user.name} avatarUrl={entry.user.avatar_url} id={entry.user.id} size={24} />}
                 <span className="u-truncate">{entry.user?.name ?? '—'}</span>
@@ -1684,7 +1684,7 @@ function InvoiceRow({ invoice, onOpen, loading }) {
             className={`grid-row grid-row--action grid-row--link${loading ? ' grid-row--loading' : ''}`}
         >
             <div className="project-billing__number">{invoice.invoice_number}</div>
-            <div className="project-billing__issued">{formatDate(invoice.issued_on)}</div>
+            <div className="project-billing__issued">{formatShortDate(invoice.issued_on)}</div>
             <div className="project-billing__total">{formatCurrency(invoiceTotal(invoice.items, invoice.surcharge, invoice.tax_rate))}</div>
             <div className="project-billing__status"><InvoiceStatusBadge invoice={invoice} /></div>
             <RowActions
@@ -1973,7 +1973,7 @@ function ExpenseDrawer({ expense, onClose, onChange }) {
 function ExpenseRow({ expense, onOpen }) {
     return (
         <div onClick={() => onOpen(expense.id)} className="grid-row grid-row--action grid-row--link">
-            <div className="project-expenses__date">{formatDate(expense.date)}</div>
+            <div className="project-expenses__date">{formatShortDate(expense.date)}</div>
             <div className="project-expenses__name">{expense.name}</div>
             <div className="project-expenses__status"><ExpenseStatusBadge expense={expense} /></div>
             <div className="project-expenses__amount">{formatCurrency(expense.amount)}</div>

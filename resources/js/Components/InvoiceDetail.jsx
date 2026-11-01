@@ -8,7 +8,7 @@ import InvoiceDateFields from './InvoiceDateFields';
 import SendInvoiceModal from './SendInvoiceModal';
 import { TaxRow, TaxToggle, useSalesTax } from './InvoiceTax';
 import { InvoiceCategorySelect } from './InvoiceCategory';
-import { formatCurrency, formatDate, invoiceSubtotal, invoiceTotal, todayInAppTimezone } from '../lib/format';
+import { formatCurrency, formatDate, invoiceSubtotal, invoiceTotal, todayInAppTimezone, formatShortDate } from '../lib/format';
 import { formatDateTimeEastern, utcToEasternParts, easternWallTimeToUtcIso } from '../lib/datetime';
 import { reminderRows } from '../lib/reminders';
 import { paymentTermsLabel } from '../lib/paymentTerms';
@@ -464,13 +464,13 @@ export default function InvoiceDetail({ invoice: initialInvoice, studio, invoici
                         <ul className="detail-list">
                             {invoice.payments.map((payment) => (
                                 <li key={payment.id} className="detail-list__item detail-list__item--split">
-                                    <span>{formatDate(payment.paid_at)}{payment.method ? ` · ${payment.method}` : ''} {undoControl('payments', payment.id)}</span>
+                                    <span>{formatShortDate(payment.paid_at)}{payment.method ? ` · ${payment.method}` : ''} {undoControl('payments', payment.id)}</span>
                                     <span className="detail-list__amount">{formatCurrency(parseFloat(payment.amount) + parseFloat(payment.surcharge_amount))}</span>
                                 </li>
                             ))}
                             {(invoice.refunds || []).map((r) => (
                                 <li key={`refund-${r.id}`} className="detail-list__item detail-list__item--split">
-                                    <span>Refunded {formatDate(r.refunded_at)} · {r.method}{r.reason ? ` · ${r.reason}` : ''} {undoControl('refunds', r.id)}</span>
+                                    <span>Refunded {formatShortDate(r.refunded_at)} · {r.method}{r.reason ? ` · ${r.reason}` : ''} {undoControl('refunds', r.id)}</span>
                                     <span className="detail-list__amount">&minus;{formatCurrency(parseFloat(r.amount) + parseFloat(r.surcharge_amount))}</span>
                                 </li>
                             ))}
@@ -592,7 +592,7 @@ export default function InvoiceDetail({ invoice: initialInvoice, studio, invoici
                             {reminderRows(invoice).map((row) => (
                                 <li key={row.rule} className="detail-list__item detail-list__item--split">
                                     <span>
-                                        {row.label} &middot; {formatDate(row.date.toISOString())}
+                                        {row.label} &middot; {formatShortDate(row.date.toISOString())}
                                         {row.status === 'sent' && <span className="detail-list__status--success"> &middot; Sent</span>}
                                         {row.status === 'cancelled' && <span className="detail-list__status--muted"> &middot; Skipped</span>}
                                         {row.status === 'failed' && <span className="detail-list__status--error"> &middot; Failed</span>}

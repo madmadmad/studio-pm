@@ -10,7 +10,7 @@ import { TaxRow, TaxToggle, useSalesTax } from '../../Components/InvoiceTax';
 import { InvoiceCategoryBadge, InvoiceCategorySelect, PROJECT_WORK, RepeatIcon, useInvoiceCategories } from '../../Components/InvoiceCategory';
 import InvoiceDateFields, { useInvoiceDateFields } from '../../Components/InvoiceDateFields';
 import { InvoiceStatusBadge } from '../../Components/StatusBadges';
-import { formatCurrency, formatDate, invoiceSubtotal, invoiceTotal } from '../../lib/format';
+import { formatCurrency, invoiceSubtotal, invoiceTotal, formatShortDate } from '../../lib/format';
 import MetricCard from '../../Components/MetricCard';
 import { calculateDueDate, todayLocal } from '../../lib/paymentTerms';
 import { api } from '../../lib/api';
@@ -479,8 +479,8 @@ export default function InvoicesIndex({ invoices: invoicesProp, filters, hasEarl
                                                 <RepeatIcon invoice={invoice} />
                                             </div>
                                         </td>
-                                        <td className="table__cell--muted table__secondary">{formatDate(invoice.issued_on)}</td>
-                                        <td className="table__cell--muted table__secondary">{formatDate(invoice.due_on)}</td>
+                                        <td className="table__cell--muted table__secondary">{formatShortDate(invoice.issued_on)}</td>
+                                        <td className="table__cell--muted table__secondary">{formatShortDate(invoice.due_on)}</td>
                                         <td className="table__cell--numeric">{formatCurrency(invoiceTotal(invoice.items, invoice.surcharge, invoice.tax_rate))}</td>
                                         <td><InvoiceStatusBadge invoice={invoice} /></td>
                                         {/* On a phone the row opens the drawer, which has them all. */}

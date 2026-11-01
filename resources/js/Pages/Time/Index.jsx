@@ -4,7 +4,7 @@ import AppLayout from '../../Layouts/AppLayout';
 import Button from '../../Components/Button';
 import EmptyState from '../../Components/EmptyState';
 import Badge from '../../Components/Badge';
-import { formatCurrency, formatDate } from '../../lib/format';
+import { formatCurrency, formatShortDate } from '../../lib/format';
 import { getTray, addToTray, setTray } from '../../lib/tray';
 import PageHeader from '../../Components/PageHeader';
 import TimeEntryDrawer, { NewTimeEntryDrawer } from '../../Components/TimeEntryDrawer';
@@ -86,7 +86,7 @@ export default function TimeIndex({ timeEntries, companies, projects }) {
                         </div>
                         {timeEntries.map((entry) => (
                             <div key={entry.id} onClick={(e) => openRow(e, entry)} className="grid-row grid-row--action grid-row--link">
-                                <div className="time-list__date">{formatDate(entry.date)}</div>
+                                <div className="time-list__date">{formatShortDate(entry.date)}</div>
                                 <div className="time-list__client">
                                     <Link href={`/clients/${entry.company_id}`} className="link u-truncate">
                                         {entry.company?.name ?? '—'}

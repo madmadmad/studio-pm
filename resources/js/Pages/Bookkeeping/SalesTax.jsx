@@ -4,7 +4,7 @@ import { CaretDown, CaretRight, DownloadSimple } from '@phosphor-icons/react';
 import AppLayout from '../../Layouts/AppLayout';
 import MetricCard from '../../Components/MetricCard';
 import PageHeader from '../../Components/PageHeader';
-import { formatCurrency, formatDate } from '../../lib/format';
+import { formatCurrency, formatShortDate } from '../../lib/format';
 
 // The monthly sales tax report: per month, the figures a sales tax return
 // asks for (gross, taxable and exempt sales, tax collected), by when the
@@ -94,7 +94,7 @@ export default function SalesTax({ report, years }) {
                                     {open && month.payments.map((payment) => (
                                         <tr key={payment.id} className="sales-tax__payment">
                                             <td>
-                                                {formatDate(payment.date)}
+                                                {formatShortDate(payment.date)}
                                                 {' · '}
                                                 {payment.invoice_number ? `Invoice #${payment.invoice_number}` : (payment.description || 'Manual entry')}
                                                 {payment.client && <span className="sales-tax__client"> · {payment.client}</span>}

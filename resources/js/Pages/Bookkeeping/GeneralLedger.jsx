@@ -5,7 +5,7 @@ import EmptyState from '../../Components/EmptyState';
 import PageHeader from '../../Components/PageHeader';
 import AccountSelect from '../../Components/ledger/AccountSelect';
 import ReportDates from '../../Components/ledger/ReportDates';
-import { formatCurrency, formatDate } from '../../lib/format';
+import { formatCurrency, formatDate, formatShortDate } from '../../lib/format';
 
 const money = (cents) => (cents ? formatCurrency(cents / 100) : '');
 
@@ -30,7 +30,7 @@ function AccountLedger({ account, from, to }) {
                     </thead>
                     <tbody>
                         <tr>
-                            <td className="table__cell--muted">{formatDate(from)}</td>
+                            <td className="table__cell--muted">{formatShortDate(from)}</td>
                             <td />
                             <td className="table__cell--muted">Opening balance</td>
                             <td />
@@ -40,7 +40,7 @@ function AccountLedger({ account, from, to }) {
                         </tr>
                         {account.lines.map((line) => (
                             <tr key={line.id}>
-                                <td>{formatDate(line.date)}</td>
+                                <td>{formatShortDate(line.date)}</td>
                                 <td className="table__cell--muted u-tabular-nums">{line.entry_number}</td>
                                 <td>
                                     {line.memo}
@@ -55,7 +55,7 @@ function AccountLedger({ account, from, to }) {
                     </tbody>
                     <tfoot>
                         <tr>
-                            <td className="table__cell--muted">{formatDate(to)}</td>
+                            <td className="table__cell--muted">{formatShortDate(to)}</td>
                             <td />
                             <td className="table__cell--strong">Closing balance</td>
                             <td />

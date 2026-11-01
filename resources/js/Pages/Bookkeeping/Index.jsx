@@ -4,7 +4,7 @@ import AppLayout from '../../Layouts/AppLayout';
 import Button from '../../Components/Button';
 import MetricCard from '../../Components/MetricCard';
 import EmptyState from '../../Components/EmptyState';
-import { formatCurrency, formatDate, formatMonth } from '../../lib/format';
+import { formatCurrency, formatMonth, formatShortDate } from '../../lib/format';
 import { api } from '../../lib/api';
 import PageHeader from '../../Components/PageHeader';
 import YearChart from '../../Components/YearChart';
@@ -107,7 +107,7 @@ export default function BookkeepingIndex({ transactions, summary, year, reportYe
                         <tbody>
                             {transactions.map((t) => (
                                 <tr key={t.id}>
-                                    <td>{formatDate(t.occurred_on)}</td>
+                                    <td>{formatShortDate(t.occurred_on)}</td>
                                     <td className="table__cell--muted">{t.category ?? '—'}</td>
                                     <td className="table__cell--muted">{t.description || (t.invoice && `Invoice #${t.invoice.invoice_number}`)}</td>
                                     <td className="table__cell--end table__cell--numeric table__cell--positive">

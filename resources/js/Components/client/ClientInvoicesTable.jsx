@@ -2,7 +2,7 @@ import { CaretRight } from '@phosphor-icons/react';
 import { InvoiceStatusBadge } from '../StatusBadges';
 import Badge from '../Badge';
 import { RepeatIcon } from '../InvoiceCategory';
-import { displayInvoiceStatus, formatCurrency, formatDate, invoiceTotal } from '../../lib/format';
+import { displayInvoiceStatus, formatCurrency, invoiceTotal, formatShortDate } from '../../lib/format';
 import { visitRow } from '../../lib/rowLink';
 import RowLink from './RowLink';
 import { useListMotion } from '../../lib/listMotion';
@@ -48,8 +48,8 @@ export default function ClientInvoicesTable({ invoices, hrefFor, clientView = fa
                             <td className="table__cell--muted">
                                 {invoice.project?.name ?? (invoice.category ? <Badge tone="neutral" label={invoice.category.name} /> : '—')}
                             </td>
-                            <td className="table__cell--muted table__secondary">{formatDate(invoice.issued_on)}</td>
-                            <td className="table__cell--muted table__secondary">{formatDate(invoice.due_on)}</td>
+                            <td className="table__cell--muted table__secondary">{formatShortDate(invoice.issued_on)}</td>
+                            <td className="table__cell--muted table__secondary">{formatShortDate(invoice.due_on)}</td>
                             <td className="table__cell--numeric">
                                 {formatCurrency(invoice.total ?? invoiceTotal(invoice.items, invoice.surcharge, invoice.tax_rate))}
                             </td>

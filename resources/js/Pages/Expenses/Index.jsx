@@ -6,7 +6,7 @@ import Button from '../../Components/Button';
 import EmptyState from '../../Components/EmptyState';
 import Badge from '../../Components/Badge';
 import { ExpenseStatusBadge } from '../../Components/StatusBadges';
-import { formatCurrency, formatDate, formatFileSize } from '../../lib/format';
+import { formatCurrency, formatFileSize, formatShortDate } from '../../lib/format';
 import MetricCard from '../../Components/MetricCard';
 import { useListMotion } from '../../lib/listMotion';
 import { expenseCategoryIcon } from '../../lib/expenseCategoryIcon';
@@ -797,7 +797,7 @@ export default function ExpensesIndex({ expenses: expensesProp, filters, hasEarl
                                                 </div>
                                             </td>
                                             <td className="table__cell--muted table__secondary">{projectById[expense.project_id]?.name ?? '—'}</td>
-                                            <td className="table__secondary">{formatDate(expense.date)}</td>
+                                            <td className="table__secondary">{formatShortDate(expense.date)}</td>
                                             <td className="table__secondary"><CategoryPill category={expense.category} /></td>
                                             <td><ExpenseStatusBadge expense={expense} /></td>
                                             <td className="table__cell--end table__cell--numeric">{formatCurrency(expense.amount)}</td>

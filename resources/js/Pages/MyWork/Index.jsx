@@ -12,7 +12,7 @@ import StarButton, { useFavorites } from '../../Components/StarButton';
 import RowActions from '../../Components/RowActions';
 import { ProjectStatusBadge, TaskStatusBadge } from '../../Components/StatusBadges';
 import { api } from '../../lib/api';
-import { formatDate, formatDateTime, todayInAppTimezone } from '../../lib/format';
+import { formatDateTime, todayInAppTimezone, formatShortDate } from '../../lib/format';
 import { useRememberedTab } from '../../lib/useRememberedTab';
 import { clearDraft, readDraft, writeDraft } from '../../lib/drafts';
 
@@ -96,7 +96,7 @@ function MyTasks({ tasks }) {
                             {task.project?.company && <span className="my-work-tasks__client u-truncate">{task.project.company.name}</span>}
                         </div>
                         <div className={`my-work-tasks__due${task.due_date ? '' : ' my-work-tasks__empty'}${overdue ? ' my-work-tasks__due--overdue' : ''}`}>
-                            {task.due_date ? formatDate(task.due_date) : '—'}
+                            {task.due_date ? formatShortDate(task.due_date) : '—'}
                         </div>
                         <div className="my-work-tasks__status">
                             {task.can_edit ? (
@@ -247,7 +247,7 @@ function TodoRow({ todo, drag, onStar, userId }) {
                 <span className="my-work-todo__date my-work-todo__date--unsaved" title="Kept in this browser; it saves when you’re signed in again.">Not saved</span>
             ) : (
                 <time dateTime={todo.created_at} title={`Added ${formatDateTime(todo.created_at)}`} className="my-work-todo__date">
-                    {formatDate(todo.created_at)}
+                    {formatShortDate(todo.created_at)}
                 </time>
             )}
             <button type="button" onClick={remove} title="Remove" aria-label={`Remove "${todo.title}"`} className="icon-btn icon-btn--danger subtask-list__remove">
@@ -401,7 +401,7 @@ function RecentProjects({ projects }) {
                         <span className="u-truncate">{project.name}</span>
                         {project.company && <span className="my-work-projects__client u-truncate">{project.company.name}</span>}
                     </div>
-                    <div className="my-work-projects__last">{formatDate(project.last_worked_on)}</div>
+                    <div className="my-work-projects__last">{formatShortDate(project.last_worked_on)}</div>
                     <div className="my-work-projects__hours">{parseFloat(project.hours)}h</div>
                     <div className="my-work-projects__status"><ProjectStatusBadge project={project} /></div>
                     <RowActions openLabel="Open project" />

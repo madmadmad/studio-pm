@@ -6,7 +6,7 @@ import Button from '../../Components/Button';
 import MetricCard from '../../Components/MetricCard';
 import PageHeader from '../../Components/PageHeader';
 import { api } from '../../lib/api';
-import { formatCurrency, formatDate } from '../../lib/format';
+import { formatCurrency, formatDate, formatShortDate } from '../../lib/format';
 import { useReadOnly } from '../../lib/permissions';
 
 const money = (cents) => formatCurrency(cents / 100);
@@ -82,7 +82,7 @@ export default function Reconciliation({ reconciliation: r, summary: initialSumm
                                 />
                             </td>
                             <td>{line.memo} <span className="table__cell--muted">#{line.entry_number}</span></td>
-                            <td className="table__cell--muted">{formatDate(line.date)}</td>
+                            <td className="table__cell--muted">{formatShortDate(line.date)}</td>
                             <td className="table__cell--end table__cell--numeric">{money(Math.abs(line.cents))}</td>
                         </tr>
                     ))}
@@ -144,7 +144,7 @@ export default function Reconciliation({ reconciliation: r, summary: initialSumm
                     <ul className="detail-list">
                         {missing.map((row) => (
                             <li key={row.index} className="detail-list__item detail-list__item--split">
-                                <span>{formatDate(row.date)} · {row.description}</span>
+                                <span>{formatShortDate(row.date)} · {row.description}</span>
                                 <span className="reconcile__missing-amount">
                                     <span className="u-tabular-nums">{money(row.cents)}</span>
                                     <Button variant="link-accent" onClick={() => add(row)} disabled={busy}>Add</Button>
