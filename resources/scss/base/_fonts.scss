@@ -122,3 +122,39 @@
     font-style: normal;
     font-display: swap;
 }
+
+// Aeonik -- on trial (Nov 2026), switched on by $typeface in
+// base/_tokens.scss. Light, Regular, Medium, Bold. Only loaded by a browser
+// when the tokens name it.
+
+@font-face {
+    font-family: 'Aeonik';
+    src: url('/webfonts/Aeonik/Aeonik-Light.woff2') format('woff2');
+    font-weight: 300;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Aeonik';
+    src: url('/webfonts/Aeonik/Aeonik-Regular.woff2') format('woff2');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Aeonik';
+    src: url('/webfonts/Aeonik/Aeonik-Medium.woff2') format('woff2');
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Aeonik';
+    src: url('/webfonts/Aeonik/Aeonik-Bold.woff2') format('woff2');
+    font-weight: 600 800;
+    font-style: normal;
+    font-display: swap;
+}
