@@ -153,7 +153,10 @@ Route::middleware(['auth', 'accountant.restrict', 'two-factor.required'])->group
         Route::get('/bookkeeping/reconcile', [ReconciliationPageController::class, 'index'])->name('bookkeeping.reconcile');
         Route::get('/bookkeeping/reconcile/{reconciliation}.csv', [ReconciliationPageController::class, 'csv'])->name('bookkeeping.reconcile.csv');
         Route::get('/bookkeeping/reconcile/{reconciliation}/statement', [ReconciliationPageController::class, 'statement'])->name('bookkeeping.reconcile.statement');
-        Route::get('/bookkeeping/reconcile/{reconciliation}', [ReconciliationPageController::class, 'show'])->name('bookkeeping.reconcile.show');
+        // One that's been dropped goes back to the list, not a dead end
+        // (the installed app has no address bar to leave by).
+        Route::get('/bookkeeping/reconcile/{reconciliation}', [ReconciliationPageController::class, 'show'])->name('bookkeeping.reconcile.show')
+            ->missing(fn () => redirect()->route('bookkeeping.reconcile'));
         Route::prefix('/bookkeeping/ledger')->name('bookkeeping.ledger.')->controller(LedgerReportPageController::class)->group(function () {
             Route::get('/general-ledger', 'generalLedger')->name('general-ledger');
             Route::get('/general-ledger.csv', 'generalLedgerCsv')->name('general-ledger.csv');

@@ -163,4 +163,18 @@ class ReconciliationTest extends TestCase
 
         Notification::assertSentTo($this->admin, ReconciliationDue::class, fn (ReconciliationDue $n) => str_contains($n->toArray($this->admin)['message'], 'Capital One Card (never)'));
     }
+
+    public function test_a_dropped_statement_goes_back_to_the_list_and_other_misses_have_a_way_out(): void
+    {
+        $id = $this->startSeptember()->json('id');
+        $this->actingAs($this->admin)->deleteJson("/api/reconciliations/{$id}")->assertNoContent();
+
+        // Reloaded after it was dropped: the list, not a dead end.
+        $this->page($id)->assertRedirect('/bookkeeping/reconcile');
+
+        // Any other page that isn't there: Back, and home.
+        $this->actingAs($this->admin)->get('/no-such-page')->assertNotFound()
+            ->assertSee('Page not found')->assertSee('Go back')->assertSee('Go to My Work')->assertSee('href="/"', false);
+        $this->get('/portal/no-such-page')->assertNotFound()->assertSee('Go to the portal')->assertSee('href="/portal"', false);
+    }
 }
