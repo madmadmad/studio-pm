@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Web;
 
+use App\Http\Controllers\Concerns\ServesPrivateFile;
 use App\Http\Controllers\Controller;
 use App\Models\Account;
 use App\Models\BankReconciliation;
@@ -17,6 +18,8 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 // all, and changes nothing (RestrictAccountant).
 class ReconciliationPageController extends Controller
 {
+    use ServesPrivateFile;
+
     public function __construct(private Reconciler $reconciler) {}
 
     public function index(): Response
@@ -65,8 +68,19 @@ class ReconciliationPageController extends Controller
                 'completed_by' => $reconciliation->completer?->name,
                 'started_by' => $reconciliation->creator?->name,
                 'can_reopen' => $reconciliation->isCompleted() && $latest?->id === $reconciliation->id && ! $this->reconciler->open($reconciliation->account),
+                'has_statement_file' => (bool) $reconciliation->statement_file_path,
+                // What the bank says the statement began with, when it
+                // isn't where the last statement left off.
+                'beginning_off_cents' => $reconciliation->statement_beginning_cents !== null && $reconciliation->statement_beginning_cents !== $reconciliation->starting_balance_cents
+                    ? $reconciliation->statement_beginning_cents
+                    : null,
+                // Whether a finished statement came before it (else the
+                // books start at nothing).
+                'follows_one' => BankReconciliation::where('account_id', $reconciliation->account_id)->whereNotNull('completed_at')
+                    ->where('statement_date', '<', $reconciliation->statement_date)->exists(),
             ],
             'summary' => $this->reconciler->summary($reconciliation),
+            'first_day_off' => $reconciliation->isCompleted() ? null : $this->reconciler->firstDayOff($reconciliation),
             'lines' => $lines->map(fn (JournalLine $line) => [
                 'id' => $line->id,
                 'date' => $line->entry->entry_date->toDateString(),
@@ -81,6 +95,14 @@ class ReconciliationPageController extends Controller
                 ->whereNull('line_id')->values(),
             'has_export' => $reconciliation->statement_rows !== null,
         ]);
+    }
+
+    // The statement's PDF it was started from.
+    public function statement(BankReconciliation $reconciliation)
+    {
+        abort_unless($reconciliation->statement_file_path, 404);
+
+        return $this->respondWithPrivateFile(config('filesystems.private_disk'), $reconciliation->statement_file_path, $reconciliation->statement_file_name);
     }
 
     // The reconciliation report for the accountant: the statement's

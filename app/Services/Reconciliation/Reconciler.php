@@ -9,16 +9,18 @@ use App\Models\Expense;
 use App\Models\JournalLine;
 use App\Models\Transaction;
 use App\Models\User;
-use App\Services\BonsaiImport\StatementMatch;
 use App\Services\Ledger;
 use App\Support\Money;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 // Monthly bank and card reconciliation (CPA review, Oct 2026). A
-// statement's end date and ending balance are entered (and, optionally,
-// its CSV export uploaded); the account's ledger lines up to that date
+// statement's PDF is uploaded (Statements\BankStatement reads its date,
+// balances and transactions), or its end date and ending balance are
+// entered and, optionally, its CSV export uploaded; the account's ledger
+// lines up to that date
 // that no finished statement covers are ticked off as cleared -- the
 // export's rows ticking their matches -- until what's cleared, added to
 // where the last statement ended, comes to the statement's ending balance.
@@ -68,9 +70,10 @@ class Reconciler
     }
 
     /**
-     * @param  list<array<string, string>>|null  $csvRows  the export's rows, as read from the CSV
+     * @param  list<array{date: string, cents: int, description: string}>|null  $statementRows  the statement's transactions (StatementMatch::rows, or a BankStatement's)
+     * @param  array<string, mixed>  $extra  from a PDF: the file, the bank's beginning balance and daily balances
      */
-    public function start(Account $account, string $statementDate, int $endingCents, ?array $csvRows, User $by): BankReconciliation
+    public function start(Account $account, string $statementDate, int $endingCents, ?array $statementRows, User $by, array $extra = []): BankReconciliation
     {
         if ($this->open($account)) {
             throw new LedgerException("A reconciliation for {$account->name} is already in progress. Finish or cancel it first.");
@@ -81,11 +84,15 @@ class Reconciler
         }
 
         $rows = null;
-        if ($csvRows !== null) {
+        if ($statementRows !== null) {
             $from = $last?->statement_date->copy()->addDay()->toDateString();
-            $rows = collect(StatementMatch::rows($csvRows))
+            // An export can run past the statement either way; a statement's
+            // own rows are all on it (a card charge made just before the
+            // cycle began, posted in it, included).
+            $whole = (bool) ($extra['whole_statement'] ?? false);
+            $rows = collect($statementRows)
                 // Not yet posted ("… (Pending)") isn't on a statement.
-                ->filter(fn (array $r) => $r['cents'] !== 0 && $r['date'] <= $statementDate && (! $from || $r['date'] >= $from) && ! str_contains($r['description'], '(Pending)'))
+                ->filter(fn (array $r) => $r['cents'] !== 0 && ($whole || ($r['date'] <= $statementDate && (! $from || $r['date'] >= $from))) && ! str_contains($r['description'], '(Pending)'))
                 ->map(fn (array $r) => ['date' => $r['date'], 'cents' => $r['cents'], 'description' => $r['description'], 'line_id' => null])
                 ->values()->all();
         }
@@ -97,7 +104,7 @@ class Reconciler
             'statement_ending_balance_cents' => $endingCents,
             'statement_rows' => $rows,
             'created_by' => $by->id,
-        ]);
+        ] + collect($extra)->only(['statement_file_path', 'statement_file_name', 'statement_beginning_cents', 'statement_balances'])->all());
         $this->autoMatch($reconciliation);
 
         return $reconciliation->fresh();
@@ -177,6 +184,38 @@ class Reconciler
         ];
     }
 
+    // The first day the bank's balance (the statement's daily balances)
+    // and the books' cleared balance part ways, or null when they never
+    // do -- or there are no daily balances. Each cleared line counts on the
+    // day the bank shows it (its matched row's date), else its own date.
+    // Counted from what the bank says the month began with, so a start
+    // that's already off (shown on its own) doesn't hide where this
+    // month's trouble is.
+    public function firstDayOff(BankReconciliation $r): ?array
+    {
+        $balances = $r->statement_balances;
+        if (! $balances) {
+            return null;
+        }
+        $sign = self::sign($r->account);
+        $bankDates = collect($r->statement_rows ?? [])->whereNotNull('line_id')->pluck('date', 'line_id');
+        $cleared = JournalLine::with('entry')->where('bank_reconciliation_id', $r->id)->get()
+            ->map(fn (JournalLine $l) => [
+                'date' => $bankDates[$l->id] ?? $l->entry->entry_date->toDateString(),
+                'cents' => $sign * ($l->debit_cents - $l->credit_cents),
+            ]);
+
+        ksort($balances);
+        foreach ($balances as $date => $bank) {
+            $books = ($r->statement_beginning_cents ?? $r->starting_balance_cents) + $cleared->where('date', '<=', $date)->sum('cents');
+            if ($books !== $bank) {
+                return ['date' => $date, 'bank_cents' => $bank, 'books_cents' => (int) $books];
+            }
+        }
+
+        return null;
+    }
+
     // A statement row the books don't have, added: a charge or a payment
     // out of checking as an expense, a credit to the card as money back, a
     // deposit into checking as other income. Uncategorized, to be sorted
@@ -236,6 +275,9 @@ class Reconciler
             JournalLine::where('bank_reconciliation_id', $r->id)->get()->each->update(['bank_reconciliation_id' => null]);
             $r->delete();
         });
+        if ($r->statement_file_path) {
+            Storage::disk(config('filesystems.private_disk'))->delete($r->statement_file_path);
+        }
     }
 
     // Everything on the account through $date, as one finished statement --

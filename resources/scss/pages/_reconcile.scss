@@ -79,4 +79,57 @@
         align-items: center;
         gap: var(--space-3);
     }
+
+    // A statement's PDF, read: who it's from, then each check -- a green
+    // tick, or a red warning to look at before starting.
+    &__preview {
+        flex-basis: 100%;
+        padding: var(--space-3);
+        background-color: var(--color-surface-muted);
+        border-radius: var(--radius-base);
+    }
+
+    &__preview-head {
+        margin-bottom: var(--space-2);
+        font-size: var(--font-size-sm);
+        font-weight: var(--font-weight-medium);
+    }
+
+    &__checks {
+        display: grid;
+        gap: var(--space-1-5);
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    &__check,
+    &__notice {
+        display: flex;
+        align-items: flex-start;
+        gap: var(--space-2);
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+
+        svg {
+            flex-shrink: 0;
+            width: var(--size-icon-sm);
+            height: var(--size-icon-sm);
+            margin-top: 2px; // one-off: centered on the first line
+            color: var(--color-success);
+        }
+    }
+
+    &__check--warn svg,
+    &__notice svg {
+        color: var(--color-danger);
+    }
+
+    // On a statement: something to look at before ticking.
+    &__notice {
+        margin: 0;
+        padding: var(--space-3);
+        background-color: var(--color-danger-soft);
+        border-radius: var(--radius-base);
+    }
 }

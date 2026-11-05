@@ -14,13 +14,15 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 // in checking, what's owed on the card.
 class BankReconciliation extends Model
 {
-    protected $fillable = ['account_id', 'statement_date', 'starting_balance_cents', 'statement_ending_balance_cents', 'statement_rows', 'completed_at', 'created_by', 'completed_by'];
+    protected $fillable = ['account_id', 'statement_date', 'starting_balance_cents', 'statement_ending_balance_cents', 'statement_rows', 'statement_file_path', 'statement_file_name', 'statement_beginning_cents', 'statement_balances', 'completed_at', 'created_by', 'completed_by'];
 
     protected $casts = [
         'statement_date' => 'date',
         'starting_balance_cents' => 'integer',
         'statement_ending_balance_cents' => 'integer',
+        'statement_beginning_cents' => 'integer',
         'statement_rows' => 'array',
+        'statement_balances' => 'array',
         'completed_at' => 'datetime',
     ];
 

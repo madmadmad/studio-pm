@@ -189,6 +189,7 @@ Route::middleware(['auth:sanctum', 'accountant.restrict', 'two-factor.required']
         Route::get('payroll-runs/{payrollRun}/report', [JournalEntryController::class, 'payrollReport'])->name('payroll-runs.report');
         Route::post('journal-entries/{journalEntry}/reverse', [JournalEntryController::class, 'reverse']);
         // Reconciling bank and card statements.
+        Route::post('reconciliations/preview', [ReconciliationController::class, 'preview']);
         Route::post('reconciliations', [ReconciliationController::class, 'store']);
         Route::post('reconciliations/{reconciliation}/lines/{line}', [ReconciliationController::class, 'toggle']);
         Route::post('reconciliations/{reconciliation}/rows/{row}/add', [ReconciliationController::class, 'addMissing'])->whereNumber('row');

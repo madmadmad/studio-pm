@@ -1,6 +1,6 @@
 import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
-import { DownloadSimple } from '@phosphor-icons/react';
+import { DownloadSimple, FilePdf, WarningCircle } from '@phosphor-icons/react';
 import AppLayout from '../../Layouts/AppLayout';
 import Button from '../../Components/Button';
 import MetricCard from '../../Components/MetricCard';
@@ -17,7 +17,7 @@ const money = (cents) => formatCurrency(cents / 100);
 // and the running difference from the statement's ending balance. Lines on
 // the export the books don't have can be added from here. It finishes at a
 // difference of $0.00; the latest finished one can be reopened to fix.
-export default function Reconciliation({ reconciliation: r, summary: initialSummary, lines: initialLines, missing, has_export: hasExport }) {
+export default function Reconciliation({ reconciliation: r, summary: initialSummary, lines: initialLines, missing, has_export: hasExport, first_day_off: firstDayOff }) {
     const readOnly = useReadOnly();
     const editable = !readOnly && !r.completed_at;
     const [lines, setLines] = useState(initialLines);
@@ -101,9 +101,16 @@ export default function Reconciliation({ reconciliation: r, summary: initialSumm
                     ? `Reconciled ${formatDate(r.completed_at)}${r.completed_by ? ` by ${r.completed_by}` : ''}.`
                     : 'Tick each entry that’s on the statement. It’s done when the difference is $0.00.'}
                 actions={(
-                    <a href={`/bookkeeping/reconcile/${r.id}.csv`} className="btn btn--secondary">
-                        <DownloadSimple /> Report (CSV)
-                    </a>
+                    <>
+                        {r.has_statement_file && (
+                            <a href={`/bookkeeping/reconcile/${r.id}/statement`} target="_blank" rel="noopener" className="btn btn--secondary">
+                                <FilePdf /> Statement (PDF)
+                            </a>
+                        )}
+                        <a href={`/bookkeeping/reconcile/${r.id}.csv`} className="btn btn--secondary">
+                            <DownloadSimple /> Report (CSV)
+                        </a>
+                    </>
                 )}
             />
 
@@ -113,6 +120,27 @@ export default function Reconciliation({ reconciliation: r, summary: initialSumm
                 <MetricCard label={r.is_card ? 'Owed per statement' : 'Statement balance'} value={money(summary.ending_cents)} />
                 <MetricCard label="Difference" value={money(difference)} tone={difference === 0 ? 'success' : 'danger'} />
             </div>
+
+            {r.beginning_off_cents !== null && (
+                <p className="reconcile__notice page-section">
+                    <WarningCircle weight="fill" />
+                    <span>
+                        {r.follows_one ? (
+                            <>The statement starts at {money(r.beginning_off_cents)}, but the last reconciled statement ended at {money(summary.starting_cents)}: off by {money(Math.abs(r.beginning_off_cents - summary.starting_cents))} before anything’s ticked. Check the previous month.</>
+                        ) : (
+                            <>The statement starts at {money(r.beginning_off_cents)}, but no earlier statement is reconciled here, so the books start at {money(summary.starting_cents)}. Reconcile the months before this one first.</>
+                        )}
+                    </span>
+                </p>
+            )}
+            {firstDayOff && difference !== 0 && (
+                <p className="reconcile__notice page-section">
+                    <WarningCircle weight="fill" />
+                    <span>
+                        The books and the bank first part ways on {formatShortDate(firstDayOff.date)}: the bank had {money(firstDayOff.bank_cents)} at the end of that day, the books’ cleared balance {money(firstDayOff.books_cents)}. Start looking there.
+                    </span>
+                </p>
+            )}
 
             {error && <div className="form-message form-message--error page-section">{error}</div>}
 
@@ -140,7 +168,7 @@ export default function Reconciliation({ reconciliation: r, summary: initialSumm
             {editable && hasExport && missing.length > 0 && (
                 <div className="card card--padded page-section">
                     <div className="section-label">On the statement, not in the books</div>
-                    <p className="form-hint">Add what’s really missing; it comes in uncategorized, to sort on Expenses. Leave anything that’s a match the dates hid, and tick its entry below instead.</p>
+                    <p className="form-hint">Add what’s really missing; it comes in uncategorized, to sort on Expenses or Income. Leave anything that’s a match the dates hid, and tick its entry below instead.</p>
                     <ul className="detail-list">
                         {missing.map((row) => (
                             <li key={row.index} className="detail-list__item detail-list__item--split">

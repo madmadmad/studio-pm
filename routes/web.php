@@ -152,6 +152,7 @@ Route::middleware(['auth', 'accountant.restrict', 'two-factor.required'])->group
         Route::get('/bookkeeping/journal', [LedgerPageController::class, 'journal'])->name('bookkeeping.journal');
         Route::get('/bookkeeping/reconcile', [ReconciliationPageController::class, 'index'])->name('bookkeeping.reconcile');
         Route::get('/bookkeeping/reconcile/{reconciliation}.csv', [ReconciliationPageController::class, 'csv'])->name('bookkeeping.reconcile.csv');
+        Route::get('/bookkeeping/reconcile/{reconciliation}/statement', [ReconciliationPageController::class, 'statement'])->name('bookkeeping.reconcile.statement');
         Route::get('/bookkeeping/reconcile/{reconciliation}', [ReconciliationPageController::class, 'show'])->name('bookkeeping.reconcile.show');
         Route::prefix('/bookkeeping/ledger')->name('bookkeeping.ledger.')->controller(LedgerReportPageController::class)->group(function () {
             Route::get('/general-ledger', 'generalLedger')->name('general-ledger');
