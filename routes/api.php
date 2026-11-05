@@ -44,6 +44,7 @@ use App\Http\Controllers\TaskFavoriteController;
 use App\Http\Controllers\TaskFileController;
 use App\Http\Controllers\TaxController;
 use App\Http\Controllers\TimeEntryController;
+use App\Http\Controllers\TodoCategoryController;
 use App\Http\Controllers\TodoController;
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\UserController;
@@ -128,6 +129,8 @@ Route::middleware(['auth:sanctum', 'accountant.restrict', 'two-factor.required']
     Route::put('todos/order', [TodoController::class, 'reorder']);
     Route::delete('todos/done', [TodoController::class, 'clearDone']);
     Route::apiResource('todos', TodoController::class)->only(['index', 'store', 'update', 'destroy']);
+    Route::put('todo-categories/order', [TodoCategoryController::class, 'reorder']);
+    Route::apiResource('todo-categories', TodoCategoryController::class)->only(['store', 'update', 'destroy']);
 
     Route::post('projects/{project}/assignments', [ProjectAssignmentController::class, 'store']);
     Route::delete('projects/{project}/assignments/{user}', [ProjectAssignmentController::class, 'destroy']);

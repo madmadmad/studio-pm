@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Todo;
+use App\Models\TodoCategory;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -89,6 +90,82 @@ class TodoTest extends TestCase
         $todo = Todo::find($mine);
         $this->assertSame('Mine', $todo->title);
         $this->assertNotNull($todo->done_at);
+    }
+
+    public function test_groups_named_colored_ordered_and_deleted(): void
+    {
+        $me = User::factory()->teamMember()->create();
+        $hot = $this->actingAs($me)->postJson('/api/todo-categories', ['name' => '  Hot  '])->assertCreated()
+            ->assertJsonPath('name', 'Hot')->assertJsonPath('color', '#2F6FDB')->json('id');
+        $proposals = $this->actingAs($me)->postJson('/api/todo-categories', ['name' => 'Proposals'])->assertJsonPath('color', '#1E9E80')->json('id');
+        $waiting = $this->actingAs($me)->postJson('/api/todo-categories', ['name' => 'Waiting', 'color' => '#ff6600'])->assertJsonPath('color', '#FF6600')->json('id');
+        $categories = fn () => collect($this->actingAs($me)->getJson('/api/todos')->json('categories'));
+
+        // Renamed, recolored, folded.
+        $this->actingAs($me)->patchJson("/api/todo-categories/{$waiting}", ['name' => 'Waiting for feedback', 'color' => '#a1b2c3', 'collapsed' => true])->assertOk();
+        $this->actingAs($me)->patchJson("/api/todo-categories/{$waiting}", ['color' => 'neon'])->assertUnprocessable();
+        $this->actingAs($me)->patchJson("/api/todo-categories/{$waiting}", ['color' => '#12345'])->assertUnprocessable();
+        $this->actingAs($me)->patchJson("/api/todo-categories/{$waiting}", ['name' => '   '])->assertUnprocessable();
+        $this->assertEquals(['name' => 'Waiting for feedback', 'color' => '#A1B2C3', 'collapsed' => true],
+            collect($categories()->firstWhere('id', $waiting))->only('name', 'color', 'collapsed')->all());
+
+        // Dragged into a new order.
+        $this->actingAs($me)->putJson('/api/todo-categories/order', ['ids' => [$waiting, $hot, $proposals]])->assertOk();
+        $this->assertEquals(['Waiting for feedback', 'Hot', 'Proposals'], $categories()->pluck('name')->all());
+
+        // Deleted: its to-dos stay, in no group.
+        $todo = $this->actingAs($me)->postJson('/api/todos', ['title' => 'Send the deck', 'todo_category_id' => $proposals])
+            ->assertJsonPath('todo_category_id', $proposals)->json('id');
+        $this->actingAs($me)->deleteJson("/api/todo-categories/{$proposals}")->assertNoContent();
+        $this->assertNull(Todo::find($todo)->todo_category_id);
+        $this->assertEquals(2, $categories()->count());
+    }
+
+    public function test_to_dos_move_between_groups(): void
+    {
+        $me = User::factory()->teamMember()->create();
+        $hot = $this->actingAs($me)->postJson('/api/todo-categories', ['name' => 'Hot'])->json('id');
+        $a = $this->actingAs($me)->postJson('/api/todos', ['title' => 'A'])->json('id');
+        $b = $this->actingAs($me)->postJson('/api/todos', ['title' => 'B', 'todo_category_id' => $hot])->json('id');
+        $c = $this->actingAs($me)->postJson('/api/todos', ['title' => 'C'])->json('id');
+
+        // "Move to": to the end of the group.
+        $this->actingAs($me)->patchJson("/api/todos/{$a}", ['todo_category_id' => $hot])->assertOk()->assertJsonPath('todo_category_id', $hot);
+        $inHot = fn () => collect($this->actingAs($me)->getJson('/api/todos')->json('open'))->where('todo_category_id', $hot)->pluck('title')->values()->all();
+        $this->assertEquals(['B', 'A'], $inHot());
+
+        // Dragged from no group onto the top of Hot.
+        $this->actingAs($me)->putJson('/api/todos/order', ['ids' => [$c, $b, $a], 'move' => ['id' => $c, 'todo_category_id' => $hot]])->assertOk();
+        $this->assertEquals(['C', 'B', 'A'], $inHot());
+
+        // And back out to none.
+        $this->actingAs($me)->patchJson("/api/todos/{$c}", ['todo_category_id' => null])->assertOk()->assertJsonPath('todo_category_id', null);
+        $this->assertEquals(['B', 'A'], $inHot());
+
+        // Starred rises to the top of its group.
+        $this->actingAs($me)->patchJson("/api/todos/{$a}", ['starred' => true]);
+        $this->assertEquals(['A', 'B'], $inHot());
+    }
+
+    public function test_groups_are_private(): void
+    {
+        $me = User::factory()->teamMember()->create();
+        $other = User::factory()->teamMember()->create();
+        $mine = $this->actingAs($me)->postJson('/api/todo-categories', ['name' => 'Mine'])->json('id');
+        $theirTodo = $this->actingAs($other)->postJson('/api/todos', ['title' => 'Theirs'])->json('id');
+
+        $this->actingAs($other)->getJson('/api/todos')->assertJsonCount(0, 'categories');
+        $this->actingAs($other)->patchJson("/api/todo-categories/{$mine}", ['name' => 'Taken'])->assertNotFound();
+        $this->actingAs($other)->deleteJson("/api/todo-categories/{$mine}")->assertNotFound();
+        $this->actingAs($other)->putJson('/api/todo-categories/order', ['ids' => [$mine]])->assertOk();
+
+        // Nor can they put their own to-dos in it.
+        $this->actingAs($other)->postJson('/api/todos', ['title' => 'Sneaky', 'todo_category_id' => $mine])->assertUnprocessable();
+        $this->actingAs($other)->patchJson("/api/todos/{$theirTodo}", ['todo_category_id' => $mine])->assertUnprocessable();
+        $this->actingAs($other)->putJson('/api/todos/order', ['ids' => [$theirTodo], 'move' => ['id' => $theirTodo, 'todo_category_id' => $mine]])->assertUnprocessable();
+
+        $this->assertSame('Mine', TodoCategory::find($mine)->name);
+        $this->assertSame(0, Todo::whereNotNull('todo_category_id')->count());
     }
 
     public function test_a_to_do_needs_a_title(): void

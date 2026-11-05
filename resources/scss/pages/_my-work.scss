@@ -125,3 +125,283 @@
         color: var(--color-danger-text);
     }
 }
+
+// "Move to category" on an open to-do: shown on hover, like the star.
+.my-work-todo__move {
+    flex-shrink: 0;
+    margin-top: var(--space-0-5);
+    opacity: 0;
+
+    .subtask-list__item:hover &,
+    &:focus-within {
+        opacity: 1;
+    }
+}
+
+// A ticked one's category, before its date.
+.my-work-todo__category {
+    display: inline-flex;
+    flex-shrink: 1;
+    align-items: center;
+    gap: var(--space-1);
+    max-width: 10rem; // one-off: a long category name truncates rather than squeezing the to-do
+    min-width: 0;
+    margin-top: var(--space-1);
+    font-size: var(--font-size-xs);
+    line-height: var(--line-height-xs);
+    color: var(--color-text-muted);
+}
+
+.my-work-todo__dot {
+    flex-shrink: 0;
+    width: var(--space-2);
+    height: var(--space-2);
+    background-color: var(--todo-color);
+    border-radius: 50%;
+}
+
+// One section of the to-do list: the to-dos in no category, or a
+// category's, under its heading.
+.todo-section + .todo-section {
+    margin-top: var(--space-5);
+}
+
+// A category's heading: handle, fold caret, color dot, its name (edited
+// in place), its count, and its menu -- on a rule in its color.
+.todo-category {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding-bottom: var(--space-1-5);
+    border-bottom: 2px solid var(--todo-color, var(--color-border));
+
+    &--dragging {
+        opacity: 0.4;
+    }
+
+    &:hover .subtask-list__handle,
+    &:hover .todo-category__menu,
+    .todo-category__menu:focus-within {
+        opacity: 1;
+    }
+
+    .subtask-list__handle {
+        flex-shrink: 0;
+        margin-top: 0;
+        opacity: 0;
+    }
+
+    &--new {
+        flex-wrap: wrap;
+        margin-top: var(--space-5);
+        padding-left: calc(14px + var(--space-2)); // one-off: lines up with the names, past the handle
+    }
+
+    // The color dot: the system color picker, its native input hidden
+    // inside, so a click anywhere on the dot opens it.
+    &__swatch {
+        position: relative;
+        flex-shrink: 0;
+        width: var(--space-3);
+        height: var(--space-3);
+        background-color: var(--todo-color);
+        border-radius: 50%;
+        box-shadow: inset 0 0 0 var(--border-width) color-mix(in srgb, var(--color-text) 15%, transparent); // a white or near-black pick still has an edge
+        cursor: pointer;
+
+        &:hover {
+            transform: scale(1.25);
+        }
+
+        &:focus-within {
+            outline: var(--focus-ring-width) solid var(--color-focus-ring);
+            outline-offset: var(--focus-ring-offset);
+        }
+
+        input {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            padding: 0;
+            border: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+    }
+
+    &__name {
+        min-width: 0;
+        max-width: 100%;
+        padding: 0;
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+        font-weight: var(--font-weight-semibold);
+        color: var(--color-text);
+        background-color: transparent;
+        border: none;
+
+        &:focus {
+            outline: none;
+        }
+
+        &--new {
+            flex: 1;
+            font-weight: var(--font-weight-normal);
+        }
+    }
+
+    &__count {
+        font-size: var(--font-size-xs);
+        line-height: var(--line-height-xs);
+        color: var(--color-text-muted);
+        font-variant-numeric: tabular-nums;
+    }
+
+    &__menu {
+        margin-left: auto;
+        opacity: 0;
+    }
+
+    &__add {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--space-1);
+        margin-top: var(--space-5);
+    }
+}
+
+// Touch screens have no hover: show the row and heading controls.
+@media (hover: none) {
+    .my-work-todo__move,
+    .todo-category__menu,
+    .todo-section .subtask-list__handle,
+    .todo-category .subtask-list__handle {
+        opacity: 1;
+    }
+}
+
+// Dragging on the to-do list (usePointerDrag): the handle takes the
+// pointer, touch included, and nothing selects while it's held.
+.page-section .subtask-list__handle,
+.todo-category .subtask-list__handle {
+    touch-action: none;
+}
+
+body.is-sorting {
+    cursor: grabbing;
+    user-select: none;
+
+    * {
+        cursor: grabbing !important; // one-off: the hand stays over fields and buttons mid-drag
+    }
+}
+
+// Where a dragged to-do or category would land: a line above or below
+// what's under the pointer, or a category heading lit up to take it.
+.todo-drop {
+    &--above {
+        box-shadow: inset 0 2px 0 var(--color-primary);
+    }
+
+    &--below {
+        box-shadow: inset 0 -2px 0 var(--color-primary);
+    }
+
+    &--into {
+        background-color: var(--color-surface-highlight);
+        border-radius: var(--radius-base) var(--radius-base) 0 0;
+    }
+}
+
+// Above the to-dos in no category (always last, once there are
+// categories): just the grey rule, with a strip above it to drop a to-do
+// or a category on.
+.todo-category--plain {
+    height: var(--space-3);
+    padding-bottom: 0;
+}
+
+// The to-do list reads a size up from the task drawer's subtasks it shares
+// rows with: made fast and read fast. Every control on a row is centered
+// on the first line of text (2px padding + half of a 24px line = 14px
+// down), so each one's top margin is 14px less half its height.
+.todo-list {
+    .subtask-list__title {
+        font-size: var(--font-size-base);
+        line-height: var(--line-height-base);
+    }
+
+    .subtask-list__item .subtask-list__check {
+        margin-top: var(--space-1); // 20px box
+    }
+
+    .subtask-list__item .subtask-list__handle,
+    .my-work-todo__star {
+        margin-top: 7px; // one-off: 14px icons on the 14px center line
+    }
+
+    .my-work-todo__move {
+        margin-top: 3px; // one-off: its menu button stands taller than the icon
+    }
+
+    .subtask-list__remove {
+        margin-top: 5px; // one-off: the X's box on the 14px center line
+    }
+
+    .my-work-todo__date,
+    .my-work-todo__category {
+        margin-top: var(--space-1); // a 20px line on the 14px center line
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+    }
+
+    .todo-category {
+        .subtask-list__handle {
+            margin-top: 0;
+        }
+    }
+
+    .todo-category__name {
+        font-size: var(--font-size-base);
+        line-height: var(--line-height-base);
+    }
+
+    .todo-category__count {
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+    }
+}
+
+// A category's name field, as wide as the name (and no wider than the
+// heading): the input and a hidden copy of the name share one grid cell,
+// so the copy sets the width.
+.todo-category__fit {
+    display: inline-grid;
+    min-width: 2ch;
+    max-width: 100%;
+    overflow: hidden;
+
+    &::after,
+    .todo-category__name {
+        grid-area: 1 / 1;
+    }
+
+    &::after {
+        content: attr(data-value);
+        visibility: hidden;
+        white-space: pre;
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+        font-weight: var(--font-weight-semibold);
+    }
+
+    .todo-category__name {
+        width: 100%;
+    }
+
+    .todo-list &::after {
+        font-size: var(--font-size-base);
+        line-height: var(--line-height-base);
+    }
+}

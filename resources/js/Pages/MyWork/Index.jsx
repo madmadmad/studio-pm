@@ -1,6 +1,6 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
-import { Check, DotsSixVertical, UserCircle, X } from '@phosphor-icons/react';
+import { CaretDown, CaretRight, Check, DotsSixVertical, DotsThree, FolderSimple, Plus, UserCircle, X } from '@phosphor-icons/react';
 import AppLayout from '../../Layouts/AppLayout';
 import PageHeader from '../../Components/PageHeader';
 import TabBar from '../../Components/TabBar';
@@ -10,6 +10,7 @@ import EmptyState from '../../Components/EmptyState';
 import AutoResizeTextarea from '../../Components/AutoResizeTextarea';
 import StarButton, { useFavorites } from '../../Components/StarButton';
 import RowActions from '../../Components/RowActions';
+import ActionMenu from '../../Components/ActionMenu';
 import { ProjectStatusBadge, TaskStatusBadge } from '../../Components/StatusBadges';
 import { api } from '../../lib/api';
 import { formatDateTime, todayInAppTimezone, formatShortDate } from '../../lib/format';
@@ -125,17 +126,88 @@ function starredFirst(todos) {
     return [...todos.filter((t) => t.starred), ...todos.filter((t) => !t.starred)];
 }
 
+// A category's color, for its dot, rule and label (--todo-color).
+const GRAY = '#8A9097';
+const colorStyle = (category) => ({ '--todo-color': category?.color || GRAY });
+
+// The open ones sorted into their sections: each category in its order,
+// then those in no category -- starred first in each, otherwise as
+// they're ordered.
+function sectionsOf(open, categories) {
+    const known = new Set(categories.map((c) => c.id));
+    const loose = open.filter((t) => !t.todo_category_id || !known.has(t.todo_category_id));
+    return [
+        ...categories.map((category) => ({ category, todos: starredFirst(open.filter((t) => t.todo_category_id === category.id)) })),
+        { category: null, todos: starredFirst(loose) },
+    ];
+}
+
+// Dragging on the to-do list, by the pointer rather than the browser's
+// own drag-and-drop -- which Safari and Firefox won't start on a row of
+// editable text -- so it works the same everywhere, touch included.
+// Pressing a handle (`start`) picks up a to-do or a category; past a few
+// pixels it's a drag, and whatever is under the pointer with a
+// `data-drop` key ("todo:<id>", "category:<id>", "end:<category id or
+// none>") is where it would land. Letting go there calls `onDrop(item,
+// key)`; Escape, or letting go anywhere else, puts it back.
+function usePointerDrag(onDrop) {
+    const [drag, setDrag] = useState(null);
+    const current = useRef(null);
+    const dropRef = useRef(onDrop);
+    dropRef.current = onDrop;
+
+    function start(e, kind, id) {
+        if (e.button !== 0) return;
+        e.preventDefault();
+        current.current = { kind, id, x: e.clientX, y: e.clientY, active: false, over: null };
+
+        function move(ev) {
+            const now = current.current;
+            if (!now.active && Math.hypot(ev.clientX - now.x, ev.clientY - now.y) < 4) return;
+            const over = document.elementFromPoint(ev.clientX, ev.clientY)?.closest('[data-drop]')?.dataset.drop ?? null;
+            if (now.active && over === now.over) return;
+            current.current = { ...now, active: true, over };
+            setDrag(current.current);
+            document.body.classList.add('is-sorting');
+        }
+
+        function finish(ev) {
+            window.removeEventListener('pointermove', move);
+            window.removeEventListener('pointerup', finish);
+            window.removeEventListener('pointercancel', finish);
+            window.removeEventListener('keydown', escape);
+            document.body.classList.remove('is-sorting');
+            const done = current.current;
+            current.current = null;
+            setDrag(null);
+            if (ev?.type === 'pointerup' && done?.active && done.over) dropRef.current(done, done.over);
+        }
+
+        function escape(ev) {
+            if (ev.key === 'Escape') finish();
+        }
+
+        window.addEventListener('pointermove', move);
+        window.addEventListener('pointerup', finish);
+        window.addEventListener('pointercancel', finish);
+        window.addEventListener('keydown', escape);
+    }
+
+    return { drag, start };
+}
+
 // How long after the last keystroke an edit saves.
 const SAVE_AFTER_MS = 800;
 
 // One line of the to-do list: tick it, edit it in place, star or drag it
-// (open ones only), or remove it. An edit saves a moment after typing stops, and
-// on Enter or leaving the line; until the server has it, it's kept in the
-// browser (lib/drafts.js), so a sign-out or reload never loses it -- one
-// left unsaved is saved when the list next loads. When it was written
-// down sits on the right (the full date and time on hover), or "Not saved"
-// if the last save failed.
-function TodoRow({ todo, drag, onStar, userId }) {
+// (open ones only), move it to another category, or remove it. An edit
+// saves a moment after typing stops, and on Enter or leaving the line;
+// until the server has it, it's kept in the browser (lib/drafts.js), so a
+// sign-out or reload never loses it -- one left unsaved is saved when the
+// list next loads. When it was written down sits on the right (the full
+// date and time on hover), or "Not saved" if the last save failed. A
+// ticked one shows the category it was in.
+function TodoRow({ todo, drag, onStar, onMove, categories = [], category, userId }) {
     const draftKey = `todo-edit:${userId}:${todo.id}`;
     const [title, setTitle] = useState(() => readDraft(draftKey) ?? todo.title);
     const [unsaved, setUnsaved] = useState(false);
@@ -201,16 +273,19 @@ function TodoRow({ todo, drag, onStar, userId }) {
         reloadTodos();
     }
 
+    const moveTargets = onMove && categories.length > 0
+        ? [
+            todo.todo_category_id && { label: 'No category', onSelect: () => onMove(null) },
+            ...categories.filter((c) => c.id !== todo.todo_category_id).map((c) => ({ label: c.name, onSelect: () => onMove(c.id) })),
+        ].filter(Boolean)
+        : [];
+
     return (
         <div
-            draggable={Boolean(drag)}
-            onDragStart={drag?.onDragStart}
-            onDragOver={drag?.onDragOver}
-            onDrop={drag?.onDrop}
-            onDragEnd={drag?.onDragEnd}
-            className={`subtask-list__item${drag?.dragging ? ' subtask-list__item--dragging' : ''}${drag ? '' : ' subtask-list__item--draft'}`}
+            data-drop={drag ? `todo:${todo.id}` : undefined}
+            className={`subtask-list__item${drag?.dragging ? ' subtask-list__item--dragging' : ''}${drag?.drop ? ` todo-drop todo-drop--${drag.drop}` : ''}${drag ? '' : ' subtask-list__item--draft'}`}
         >
-            <span className="subtask-list__handle" title="Drag to reorder">
+            <span className="subtask-list__handle" onPointerDown={drag?.onHandleDown} title="Drag to reorder or move to another category">
                 <DotsSixVertical size={14} weight="bold" />
             </span>
             <button
@@ -234,6 +309,17 @@ function TodoRow({ todo, drag, onStar, userId }) {
                 aria-label="To-do"
                 className={`subtask-list__title${done ? ' subtask-list__title--done' : ''}`}
             />
+            {done && category && (
+                <span className="my-work-todo__category" style={colorStyle(category)}>
+                    <span className="my-work-todo__dot" aria-hidden="true" />
+                    <span className="u-truncate">{category.name}</span>
+                </span>
+            )}
+            {moveTargets.length > 0 && (
+                <span className="my-work-todo__move">
+                    <ActionMenu label="Move to category" icon={<FolderSimple size={14} />} items={moveTargets} />
+                </span>
+            )}
             {onStar && (
                 <StarButton
                     starred={todo.starred}
@@ -257,21 +343,15 @@ function TodoRow({ todo, drag, onStar, userId }) {
     );
 }
 
-// Their own running to-do list: private, not tied to a project. The open
-// ones in the order they're dragged into, with a line at the end for the
-// next: Enter adds it (and stays there for another), as does leaving the
-// line with something typed. What's typed there is kept in the browser
-// until the server has it, so it's never lost to a sign-out or reload; if
-// adding fails it stays, with the reason. Starred ones stay at the top, in
-// their own dragged order. Ticked ones move to Done, newest first, until
-// cleared.
-function TodoList({ todos, userId }) {
-    const [open, setOpen] = useState(todos.open);
-    useEffect(() => setOpen(todos.open), [todos.open]);
-    const draftKey = `todo-new:${userId}`;
+// The line at the end of a section for the next one: Enter adds it (and
+// stays there for another), as does leaving the line with something typed.
+// What's typed is kept in the browser until the server has it, so it's
+// never lost to a sign-out or reload; if adding fails it stays, with the
+// reason. Dropping a dragged to-do here puts it at the end of the section.
+function AddTodo({ categoryId, userId, placeholder, autoFocus, dropOver }) {
+    const draftKey = categoryId ? `todo-new:${userId}:${categoryId}` : `todo-new:${userId}`;
     const [draft, setDraftState] = useState(() => readDraft(draftKey, ''));
     const [error, setError] = useState('');
-    const [dragId, setDragId] = useState(null);
     const adding = useRef(false);
 
     function setDraft(value) {
@@ -286,7 +366,7 @@ function TodoList({ todos, userId }) {
         adding.current = true;
         setError('');
         try {
-            await api.post('/api/todos', { title: value });
+            await api.post('/api/todos', { title: value, todo_category_id: categoryId });
             // Cleared once it's in -- unless more was typed meanwhile.
             if (readDraft(draftKey, '').trim() === value) setDraft('');
             reloadTodos();
@@ -297,20 +377,333 @@ function TodoList({ todos, userId }) {
         }
     }
 
-    async function move(fromId, toId) {
-        if (fromId === null || fromId === toId) return;
-        const next = [...open];
-        const [moved] = next.splice(next.findIndex((t) => t.id === fromId), 1);
-        next.splice(next.findIndex((t) => t.id === toId), 0, moved);
-        const sorted = starredFirst(next);
-        setOpen(sorted);
-        await api.put('/api/todos/order', { ids: sorted.map((t) => t.id) });
+    return (
+        <>
+            <form
+                onSubmit={add}
+                data-drop={`end:${categoryId ?? 'none'}`}
+                className={`subtask-list__item subtask-list__item--draft${dropOver ? ' todo-drop todo-drop--above' : ''}`}
+            >
+                <span className="subtask-list__handle" aria-hidden="true">
+                    <DotsSixVertical size={14} weight="bold" />
+                </span>
+                <span className="subtask-list__check" aria-hidden="true" />
+                <input
+                    autoFocus={autoFocus}
+                    value={draft}
+                    onChange={(e) => setDraft(e.target.value)}
+                    onBlur={() => add()}
+                    placeholder={placeholder}
+                    aria-label="New to-do"
+                    maxLength={500}
+                    className="subtask-list__title"
+                />
+            </form>
+            {error && <div className="form-message form-message--error">{error}</div>}
+        </>
+    );
+}
+
+// How long after the last move in the color picker the color saves.
+const COLOR_SAVE_AFTER_MS = 500;
+
+// A category's color dot: opens the system color picker (a native color
+// input hidden inside it, as in Components/ColorPicker). The category
+// takes each color as it's picked (`onPreview`); it saves (`onChange`) a
+// moment after the picking stops, or when the picker closes.
+function CategoryColor({ category, onPreview, onChange }) {
+    const timer = useRef(null);
+    const pending = useRef(null);
+    useEffect(() => () => clearTimeout(timer.current), []);
+
+    function save() {
+        clearTimeout(timer.current);
+        if (pending.current) onChange(pending.current);
+        pending.current = null;
+    }
+
+    function pick(raw) {
+        const color = raw.toUpperCase();
+        pending.current = color;
+        onPreview(color);
+        clearTimeout(timer.current);
+        timer.current = setTimeout(save, COLOR_SAVE_AFTER_MS);
+    }
+
+    return (
+        <label className="todo-category__swatch" title="Change color">
+            <input
+                type="color"
+                value={category.color || GRAY}
+                onChange={(e) => pick(e.target.value)}
+                onBlur={save}
+                aria-label={`Change the color of "${category.name}"`}
+            />
+        </label>
+    );
+}
+
+// A category's heading: fold it away, recolor it, rename it in place,
+// drag it (or use its menu) to move it, or delete it. A to-do dropped on
+// it goes to the end of it.
+function CategoryHeader({ category, count, drag, first, last, onChange, onPreview, onShift, onDelete }) {
+    const [name, setName] = useState(category.name);
+    useEffect(() => setName(category.name), [category.name]);
+    const Caret = category.collapsed ? CaretRight : CaretDown;
+
+    function rename() {
+        const next = name.trim();
+        if (!next) setName(category.name);
+        else if (next !== category.name) onChange({ name: next });
+    }
+
+    return (
+        <div
+            data-drop={`category:${category.id}`}
+            className={`todo-category${drag.dragging ? ' todo-category--dragging' : ''}${drag.drop ? ` todo-drop todo-drop--${drag.drop}` : ''}`}
+        >
+            <span className="subtask-list__handle" onPointerDown={drag.onHandleDown} title="Drag to reorder categories">
+                <DotsSixVertical size={14} weight="bold" />
+            </span>
+            <button
+                type="button"
+                onClick={() => onChange({ collapsed: !category.collapsed })}
+                aria-label={category.collapsed ? `Show "${category.name}"` : `Hide "${category.name}"`}
+                aria-expanded={!category.collapsed}
+                className="icon-btn icon-btn--secondary"
+            >
+                <Caret size={14} weight="bold" />
+            </button>
+            <CategoryColor category={category} onPreview={(color) => onPreview({ color })} onChange={(color) => onChange({ color })} />
+            {/* As wide as the name: the input sits over a hidden copy of it. */}
+            <span className="todo-category__fit" data-value={name || ' '}>
+                <input
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    onBlur={rename}
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter') e.target.blur();
+                        if (e.key === 'Escape') {
+                            setName(category.name);
+                            e.target.blur();
+                        }
+                    }}
+                    aria-label="Category name"
+                    maxLength={100}
+                    size={1}
+                    className="todo-category__name"
+                />
+            </span>
+            <span className="todo-category__count">{count}</span>
+            <span className="todo-category__menu">
+                <ActionMenu
+                    label="Category options"
+                    icon={<DotsThree size={16} weight="bold" />}
+                    items={[
+                        !first && { label: 'Move up', onSelect: () => onShift(-1) },
+                        !last && { label: 'Move down', onSelect: () => onShift(1) },
+                        { label: 'Delete category', danger: true, onSelect: onDelete },
+                    ]}
+                />
+            </span>
+        </div>
+    );
+}
+
+// A new category's name: Enter makes it, Escape or leaving it empty
+// puts the button back.
+function AddCategory() {
+    const [editing, setEditing] = useState(false);
+    const [name, setName] = useState('');
+    const [error, setError] = useState('');
+
+    async function add(e) {
+        e?.preventDefault();
+        const value = name.trim();
+        if (!value) {
+            setEditing(false);
+            return;
+        }
+        try {
+            await api.post('/api/todo-categories', { name: value });
+            setName('');
+            setEditing(false);
+            setError('');
+            reloadTodos();
+        } catch (err) {
+            setError(err.message || 'Not saved.');
+        }
+    }
+
+    if (!editing) {
+        return (
+            <button type="button" onClick={() => setEditing(true)} className="text-action text-action--sm todo-category__add">
+                <Plus size={12} weight="bold" /> Add category
+            </button>
+        );
+    }
+
+    return (
+        <form onSubmit={add} className="todo-category todo-category--new">
+            <input
+                autoFocus
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                onBlur={() => add()}
+                onKeyDown={(e) => {
+                    if (e.key === 'Escape') {
+                        setName('');
+                        setEditing(false);
+                    }
+                }}
+                placeholder="Name it: Hot, Proposals, Waiting for feedback…"
+                aria-label="New category"
+                maxLength={100}
+                className="todo-category__name todo-category__name--new"
+            />
+            {error && <div className="form-message form-message--error">{error}</div>}
+        </form>
+    );
+}
+
+// Their own running to-do list: private, not tied to a project. Open ones
+// in their categories -- named, colored and ordered by them, each
+// foldable -- then those in none (under a plain rule, once there are
+// categories), each section with a line at its end for the next. To-dos drag within and between categories (or use "Move to");
+// starred ones stay at the top of theirs, in their own dragged order.
+// Ticked ones move to Done, newest first, until cleared.
+function TodoList({ todos, userId }) {
+    const [open, setOpen] = useState(todos.open);
+    const [categories, setCategories] = useState(todos.categories);
+    useEffect(() => setOpen(todos.open), [todos.open]);
+    useEffect(() => setCategories(todos.categories), [todos.categories]);
+
+    const sections = sectionsOf(open, categories);
+    const byId = Object.fromEntries(categories.map((c) => [c.id, c]));
+
+    // A to-do dropped on another (targetId) takes its place -- the one
+    // there moves down, or up if this came from above it in the same
+    // category -- or, dropped at the end of a section (targetId null),
+    // goes last in it. Either way into that section's category.
+    async function dropTodo(movedId, categoryId, targetId) {
+        if (movedId === targetId) return;
+        const moved = open.find((t) => t.id === movedId);
+        if (!moved) return;
+        const changed = (moved.todo_category_id ?? null) !== categoryId;
+        const shown = sections.flatMap((section) => section.todos);
+        const downward = !changed && targetId !== null && shown.indexOf(moved) < shown.findIndex((t) => t.id === targetId);
+        const next = shown.filter((t) => t.id !== moved.id);
+        const placed = { ...moved, todo_category_id: categoryId };
+        const at = targetId === null ? -1 : next.findIndex((t) => t.id === targetId);
+        if (at === -1) next.push(placed);
+        else next.splice(downward ? at + 1 : at, 0, placed);
+
+        const ordered = sectionsOf(next, categories).flatMap((s) => s.todos);
+        setOpen(ordered);
+        await api.put('/api/todos/order', {
+            ids: ordered.map((t) => t.id),
+            ...(changed && { move: { id: moved.id, todo_category_id: categoryId } }),
+        });
+        reloadTodos();
+    }
+
+    async function moveTodo(todo, categoryId) {
+        setOpen(open.map((t) => (t.id === todo.id ? { ...t, todo_category_id: categoryId } : t)));
+        await api.patch(`/api/todos/${todo.id}`, { todo_category_id: categoryId });
         reloadTodos();
     }
 
     async function star(todo) {
-        setOpen(starredFirst(open.map((t) => (t.id === todo.id ? { ...t, starred: !t.starred } : t))));
+        setOpen(open.map((t) => (t.id === todo.id ? { ...t, starred: !t.starred } : t)));
         await api.patch(`/api/todos/${todo.id}`, { starred: !todo.starred });
+        reloadTodos();
+    }
+
+    async function changeCategory(category, changes) {
+        setCategories(categories.map((c) => (c.id === category.id ? { ...c, ...changes } : c)));
+        await api.patch(`/api/todo-categories/${category.id}`, changes);
+        reloadTodos();
+    }
+
+    async function orderCategories(next) {
+        setCategories(next);
+        await api.put('/api/todo-categories/order', { ids: next.map((c) => c.id) });
+        reloadTodos();
+    }
+
+    // A category dropped on another takes its place, that one moving
+    // down (or up, if this came from above it); dropped on the rule over
+    // those in no category (targetId null), it goes last.
+    function dropCategory(movedId, targetId) {
+        if (movedId === targetId || !byId[movedId] || (targetId !== null && !byId[targetId])) return;
+        const next = categories.filter((c) => c.id !== movedId);
+        if (targetId === null) {
+            if (categories[categories.length - 1].id === movedId) return;
+            next.push(byId[movedId]);
+        } else {
+            const downward = categories.findIndex((c) => c.id === movedId) < categories.findIndex((c) => c.id === targetId);
+            const at = next.findIndex((c) => c.id === targetId);
+            next.splice(downward ? at + 1 : at, 0, byId[movedId]);
+        }
+        orderCategories(next);
+    }
+
+    // Where a to-do's section is: its category, if it's one of theirs.
+    const sectionOf = (todo) => (todo.todo_category_id && byId[todo.todo_category_id] ? todo.todo_category_id : null);
+
+    // Letting go of a dragged to-do or category on a `data-drop` key.
+    function drop(item, key) {
+        const [type, raw] = key.split(':');
+        const id = raw === 'none' ? null : Number(raw);
+        if (item.kind === 'category') {
+            if (type === 'category') dropCategory(item.id, id);
+            return;
+        }
+        if (type === 'todo') {
+            const target = open.find((t) => t.id === id);
+            if (target) dropTodo(item.id, sectionOf(target), id);
+        } else {
+            dropTodo(item.id, id, null);
+        }
+    }
+
+    const { drag, start } = usePointerDrag(drop);
+
+    // How the thing under a drag shows where it would land: a line above
+    // or below it, or (a category heading taking a to-do) lit up.
+    function dropMark(key) {
+        if (!drag || drag.over !== key) return null;
+        const [type, raw] = key.split(':');
+        const id = Number(raw);
+        if (drag.kind === 'category') {
+            if (type !== 'category' || id === drag.id) return null;
+            // On the rule over those in no category: last, just above it.
+            if (raw === 'none') return categories[categories.length - 1]?.id === drag.id ? null : 'above';
+            return categories.findIndex((c) => c.id === drag.id) < categories.findIndex((c) => c.id === id) ? 'below' : 'above';
+        }
+        if (type === 'category') return 'into';
+        if (type === 'end') return 'above';
+        if (id === drag.id) return null;
+        const shown = sections.flatMap((section) => section.todos);
+        const from = shown.findIndex((t) => t.id === drag.id);
+        const to = shown.findIndex((t) => t.id === id);
+        return from < to && sectionOf(shown[from]) === sectionOf(shown[to]) ? 'below' : 'above';
+    }
+
+    function shiftCategory(category, by) {
+        const next = [...categories];
+        const at = next.indexOf(category);
+        next.splice(at, 1);
+        next.splice(at + by, 0, category);
+        orderCategories(next);
+    }
+
+    async function deleteCategory(category, count) {
+        const message = count
+            ? `Delete "${category.name}"? Its ${count} to-do${count === 1 ? '' : 's'} will move to the bottom of your list, out of any category.`
+            : `Delete "${category.name}"?`;
+        if (!confirm(message)) return;
+        await api.delete(`/api/todo-categories/${category.id}`);
         reloadTodos();
     }
 
@@ -320,43 +713,68 @@ function TodoList({ todos, userId }) {
         reloadTodos();
     }
 
+
     return (
-        <>
+        <div className="todo-list">
             <div className="page-section">
-                <div className="subtask-list">
-                    {open.map((todo) => (
-                        <TodoRow
-                            key={todo.id}
-                            todo={todo}
-                            userId={userId}
-                            onStar={() => star(todo)}
-                            drag={{
-                                dragging: dragId === todo.id,
-                                onDragStart: () => setDragId(todo.id),
-                                onDragOver: (e) => e.preventDefault(),
-                                onDrop: () => move(dragId, todo.id),
-                                onDragEnd: () => setDragId(null),
-                            }}
-                        />
-                    ))}
-                    <form onSubmit={add} className="subtask-list__item subtask-list__item--draft">
-                        <span className="subtask-list__handle" aria-hidden="true">
-                            <DotsSixVertical size={14} weight="bold" />
-                        </span>
-                        <span className="subtask-list__check" aria-hidden="true" />
-                        <input
-                            autoFocus
-                            value={draft}
-                            onChange={(e) => setDraft(e.target.value)}
-                            onBlur={() => add()}
-                            placeholder={open.length ? 'Add another…' : 'Add a to-do…'}
-                            aria-label="New to-do"
-                            maxLength={500}
-                            className="subtask-list__title"
-                        />
-                    </form>
-                </div>
-                {error && <div className="form-message form-message--error">{error}</div>}
+                {sections.map(({ category, todos: items }, i) => {
+                    const categoryId = category?.id ?? null;
+                    return (
+                        <div key={categoryId ?? 'none'} className="todo-section" style={category ? colorStyle(category) : undefined}>
+                            {!category && categories.length > 0 && (
+                                <div
+                                    data-drop="category:none"
+                                    aria-hidden="true"
+                                    className={`todo-category todo-category--plain${dropMark('category:none') ? ` todo-drop todo-drop--${dropMark('category:none')}` : ''}`}
+                                />
+                            )}
+                            {category && (
+                                <CategoryHeader
+                                    category={category}
+                                    count={items.length}
+                                    first={i === 0}
+                                    last={i === categories.length - 1}
+                                    onChange={(changes) => changeCategory(category, changes)}
+                                    onPreview={(changes) => setCategories((all) => all.map((c) => (c.id === category.id ? { ...c, ...changes } : c)))}
+                                    onShift={(by) => shiftCategory(category, by)}
+                                    onDelete={() => deleteCategory(category, items.length)}
+                                    drag={{
+                                        dragging: drag?.kind === 'category' && drag.id === category.id,
+                                        drop: dropMark(`category:${category.id}`),
+                                        onHandleDown: (e) => start(e, 'category', category.id),
+                                    }}
+                                />
+                            )}
+                            {!category?.collapsed && (
+                                <div className="subtask-list">
+                                    {items.map((todo) => (
+                                        <TodoRow
+                                            key={todo.id}
+                                            todo={todo}
+                                            userId={userId}
+                                            categories={categories}
+                                            onStar={() => star(todo)}
+                                            onMove={(to) => moveTodo(todo, to)}
+                                            drag={{
+                                                dragging: drag?.kind === 'todo' && drag.id === todo.id,
+                                                drop: dropMark(`todo:${todo.id}`),
+                                                onHandleDown: (e) => start(e, 'todo', todo.id),
+                                            }}
+                                        />
+                                    ))}
+                                    <AddTodo
+                                        categoryId={categoryId}
+                                        userId={userId}
+                                        autoFocus={categories.length === 0}
+                                        placeholder={category ? `Add to ${category.name}…` : open.length ? 'Add another…' : 'Add a to-do…'}
+                                        dropOver={drag?.kind === 'todo' && drag.over === `end:${categoryId ?? 'none'}`}
+                                    />
+                                </div>
+                            )}
+                        </div>
+                    );
+                })}
+                <AddCategory />
                 <p className="form-hint">Only you can see this list.</p>
             </div>
 
@@ -367,11 +785,11 @@ function TodoList({ todos, userId }) {
                         <button type="button" onClick={clearDone} className="text-action text-action--sm">Clear done</button>
                     </div>
                     <div className="subtask-list">
-                        {todos.done.map((todo) => <TodoRow key={todo.id} todo={todo} userId={userId} />)}
+                        {todos.done.map((todo) => <TodoRow key={todo.id} todo={todo} userId={userId} category={byId[todo.todo_category_id]} />)}
                     </div>
                 </div>
             )}
-        </>
+        </div>
     );
 }
 
