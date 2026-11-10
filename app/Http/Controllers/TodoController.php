@@ -17,6 +17,10 @@ class TodoController extends Controller
     // How many ticked ones the list keeps showing (newest first).
     const DONE_SHOWN = 50;
 
+    // A to-do's link: any app's address (https:, mailto:, readdle-spark:
+    // for an email copied from Spark), but never one that runs script.
+    const LINK = 'regex:/^(?!\s*(javascript|data|vbscript):)\s*[a-z][a-z0-9+.\-]*:\S+\s*$/i';
+
     // Their groups in order, the open ones in their order (starred first;
     // the page sorts them into their groups, keeping it), then the most
     // recently ticked.
@@ -53,7 +57,8 @@ class TodoController extends Controller
         return $todo;
     }
 
-    // A new title, starred / unstarred, moved to another group (or none)
+    // A new title, a link set or cleared (null or blank), starred /
+    // unstarred, moved to another group (or none)
     // -- to the end of it -- or ticked (`done`: true) / unticked --
     // unticked, it goes back to the end of its group.
     public function update(Request $request, Todo $todo)
@@ -61,6 +66,7 @@ class TodoController extends Controller
         $this->own($request, $todo);
         $data = $request->validate([
             'title' => ['sometimes', 'string', 'max:500'],
+            'url' => ['sometimes', 'nullable', 'string', 'max:2000', self::LINK],
             'starred' => ['sometimes', 'boolean'],
             'done' => ['sometimes', 'boolean'],
             'todo_category_id' => ['sometimes', 'nullable', self::ownCategory($todo->user_id)],
@@ -68,6 +74,9 @@ class TodoController extends Controller
 
         if (isset($data['title'])) {
             $todo->title = trim($data['title']);
+        }
+        if (array_key_exists('url', $data)) {
+            $todo->url = trim((string) $data['url']) ?: null;
         }
         if (array_key_exists('starred', $data)) {
             $todo->starred = $data['starred'];

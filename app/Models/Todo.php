@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 // (TodoController).
 class Todo extends Model
 {
-    protected $fillable = ['title', 'position', 'starred', 'done_at', 'todo_category_id'];
+    protected $fillable = ['title', 'url', 'position', 'starred', 'done_at', 'todo_category_id'];
 
     protected $casts = [
         'starred' => 'boolean',

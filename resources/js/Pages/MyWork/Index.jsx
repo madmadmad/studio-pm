@@ -1,6 +1,6 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
-import { CaretDown, CaretRight, Check, DotsSixVertical, DotsThree, FolderSimple, Plus, UserCircle, X } from '@phosphor-icons/react';
+import { CaretDown, CaretRight, Check, DotsSixVertical, DotsThree, FolderSimple, LinkSimple, PencilSimple, Plus, UserCircle, X } from '@phosphor-icons/react';
 import AppLayout from '../../Layouts/AppLayout';
 import PageHeader from '../../Components/PageHeader';
 import TabBar from '../../Components/TabBar';
@@ -309,6 +309,7 @@ function TodoRow({ todo, drag, onStar, onMove, categories = [], category, userId
                 aria-label="To-do"
                 className={`subtask-list__title${done ? ' subtask-list__title--done' : ''}`}
             />
+            {(todo.url || !done) && <TodoLink todo={todo} editable={!done} />}
             {done && category && (
                 <span className="my-work-todo__category" style={colorStyle(category)}>
                     <span className="my-work-todo__dot" aria-hidden="true" />
@@ -340,6 +341,109 @@ function TodoRow({ todo, drag, onStar, onMove, categories = [], category, userId
                 <X />
             </button>
         </div>
+    );
+}
+
+// What a link's icon says on hover: the site, or the app (Spark for
+// "readdle-spark:" links).
+function linkLabel(url) {
+    if (/^readdle-spark:/i.test(url) || /sparkmailapp\.com/i.test(url)) return 'Open in Spark';
+    try {
+        const parsed = new URL(url);
+        return parsed.host ? `Open ${parsed.host.replace(/^www\./, '')}` : `Open ${parsed.protocol.replace(':', '')} link`;
+    } catch {
+        return 'Open link';
+    }
+}
+
+// A to-do's link (an email copied from Spark, a page): its icon opens it
+// in one click and stays on the row. On an open to-do a button, shown on
+// hover, adds the link or changes or removes it, in a small popover.
+function TodoLink({ todo, editable }) {
+    const [editing, setEditing] = useState(false);
+    const [value, setValue] = useState(todo.url ?? '');
+    const [error, setError] = useState('');
+    const ref = useRef(null);
+
+    useEffect(() => {
+        if (!editing) return;
+        function close(e) {
+            if (e.type === 'keydown' ? e.key === 'Escape' : !ref.current?.contains(e.target)) setEditing(false);
+        }
+        document.addEventListener('mousedown', close);
+        document.addEventListener('keydown', close);
+        return () => {
+            document.removeEventListener('mousedown', close);
+            document.removeEventListener('keydown', close);
+        };
+    }, [editing]);
+
+    function open() {
+        setValue(todo.url ?? '');
+        setError('');
+        setEditing(true);
+    }
+
+    async function save(url) {
+        try {
+            await api.patch(`/api/todos/${todo.id}`, { url: url.trim() || null });
+            setEditing(false);
+            reloadTodos();
+        } catch {
+            setError('That doesn’t look like a link.');
+        }
+    }
+
+    return (
+        <span className="my-work-todo__link" ref={ref}>
+            {todo.url && (
+                <a href={todo.url} target="_blank" rel="noopener noreferrer" title={linkLabel(todo.url)} aria-label={`${linkLabel(todo.url)}: "${todo.title}"`} className="icon-btn my-work-todo__link-open">
+                    <LinkSimple size={14} weight="bold" />
+                </a>
+            )}
+            {editable && (
+                <button
+                    type="button"
+                    onClick={() => (editing ? setEditing(false) : open())}
+                    title={todo.url ? 'Change link' : 'Add link'}
+                    aria-label={todo.url ? `Change the link on "${todo.title}"` : `Add a link to "${todo.title}"`}
+                    aria-expanded={editing}
+                    className="icon-btn icon-btn--secondary my-work-todo__link-edit"
+                >
+                    {todo.url ? <PencilSimple size={14} /> : <LinkSimple size={14} />}
+                </button>
+            )}
+            {editing && (
+                <form
+                    className="popover popover--padded my-work-todo__link-panel"
+                    onSubmit={(e) => {
+                        e.preventDefault();
+                        save(value);
+                    }}
+                >
+                    <input
+                        type="text"
+                        inputMode="url"
+                        value={value}
+                        onChange={(e) => setValue(e.target.value)}
+                        placeholder="Paste a link"
+                        aria-label="Link"
+                        autoFocus
+                        onFocus={(e) => e.target.select()}
+                        className="input input--sm"
+                    />
+                    {error && <div className="form-error">{error}</div>}
+                    <div className="my-work-todo__link-actions">
+                        {todo.url && (
+                            <button type="button" onClick={() => save('')} className="text-action text-action--sm text-action--danger">
+                                Remove
+                            </button>
+                        )}
+                        <button type="submit" className="btn btn--primary btn--sm">Save</button>
+                    </div>
+                </form>
+            )}
+        </span>
     );
 }
 

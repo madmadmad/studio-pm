@@ -168,6 +168,31 @@ class TodoTest extends TestCase
         $this->assertSame(0, Todo::whereNotNull('todo_category_id')->count());
     }
 
+    public function test_a_to_do_carries_a_link(): void
+    {
+        $me = User::factory()->teamMember()->create();
+        $id = $this->actingAs($me)->postJson('/api/todos', ['title' => 'Reply to Dana'])->json('id');
+
+        // Spark's own links, web links, mail links.
+        foreach (['readdle-spark://bl=QTpiaWxs', 'https://sparkmailapp.com/share/abc', 'mailto:dana@example.com'] as $url) {
+            $this->actingAs($me)->patchJson("/api/todos/{$id}", ['url' => "  {$url} "])->assertOk()->assertJsonPath('url', $url);
+        }
+        $this->assertSame('mailto:dana@example.com', $this->actingAs($me)->getJson('/api/todos')->json('open.0.url'));
+
+        // Never one that runs script, nor something that isn't a link.
+        foreach (['javascript:alert(1)', ' JavaScript:alert(1)', 'data:text/html,hi', 'just some words'] as $bad) {
+            $this->actingAs($me)->patchJson("/api/todos/{$id}", ['url' => $bad])->assertUnprocessable();
+        }
+
+        // Cleared.
+        $this->actingAs($me)->patchJson("/api/todos/{$id}", ['url' => null])->assertOk()->assertJsonPath('url', null);
+        $this->actingAs($me)->patchJson("/api/todos/{$id}", ['url' => 'https://example.com'])->assertOk();
+        $this->actingAs($me)->patchJson("/api/todos/{$id}", ['url' => ''])->assertOk()->assertJsonPath('url', null);
+
+        // Someone else's to-do: not theirs to link.
+        $this->actingAs(User::factory()->teamMember()->create())->patchJson("/api/todos/{$id}", ['url' => 'https://example.com'])->assertNotFound();
+    }
+
     public function test_a_to_do_needs_a_title(): void
     {
         $this->actingAs(User::factory()->create())->postJson('/api/todos', ['title' => ''])->assertUnprocessable();
