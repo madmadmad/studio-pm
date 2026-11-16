@@ -81,6 +81,10 @@ select {
     background-position: right var(--space-2-5) center;
     background-size: var(--space-3); // arrow glyph size, 12px
     padding-right: var(--space-8); // room for the arrow
+    // No tracking: Firefox sizes a select to its widest option without
+    // letter-spacing, so the curve's ~0.2px a letter clipped the last one
+    // ("Completec"). Chrome counts it; untracked, both fit.
+    letter-spacing: 0;
 
     // The same arrow in light mode's muted grey (#595f64).
     @include light-mode {

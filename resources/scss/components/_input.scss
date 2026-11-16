@@ -75,13 +75,21 @@
 
     // Shrink to content instead of filling the row (a select beside a
     // button, a picker in a table cell).
+    // Not squeezed below its content in a flex row either (the Invoices
+    // category, the reports' year), which would clip the last letter;
+    // never wider than the row on a phone.
     &--inline {
+        flex-shrink: 0;
         width: auto;
+        max-width: 100%;
     }
 
     // Tiny inline select sitting beside a badge in a table row.
     // Row height (--size-row-action), like the badge beside it.
     &--micro {
+        // Never squeezed below its widest option by the badge beside it
+        // in a flex row (.table__group): that clipped "Completed".
+        flex-shrink: 0;
         height: var(--size-row-action);
         padding-block: 0;
         padding-inline: var(--space-1);
