@@ -1,6 +1,6 @@
 import { Head, router, usePage } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
-import { Check, DownloadSimple, PencilSimple } from '@phosphor-icons/react';
+import { ArrowUpRight, Check, DownloadSimple, PencilSimple } from '@phosphor-icons/react';
 import PortalLayout from '../../../Layouts/PortalLayout';
 import Button from '../../../Components/Button';
 import TitleInput from '../../../Components/TitleInput';
@@ -458,6 +458,18 @@ function ScheduleTab({ project }) {
     );
 }
 
+// The cue at the end of a row that opens the client's page in a new tab:
+// the whole row is the link; this just says so, in link text rather than
+// a button, so the status badge stays the row's only box.
+function RowView() {
+    return (
+        <span className="list-row__view">
+            View
+            <ArrowUpRight size={14} weight="bold" aria-hidden="true" />
+        </span>
+    );
+}
+
 function ProposalsTab({ project }) {
     return (
         <div className="card card--flush">
@@ -465,7 +477,13 @@ function ProposalsTab({ project }) {
                 <EmptyState text="No accepted proposals yet." />
             ) : (
                 project.proposals.map((proposal) => (
-                    <div key={proposal.id} className="list-row list-row--static">
+                    <a
+                        key={proposal.id}
+                        href={`/p/${proposal.accept_token}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="list-row"
+                    >
                         <div>
                             <div className="list-row__title">{proposal.title}</div>
                             <div className="list-row__meta">Accepted {formatShortDate(proposal.accepted_at)}</div>
@@ -473,16 +491,9 @@ function ProposalsTab({ project }) {
                         <div className="list-row__aside">
                             <span className="list-row__amount">{formatCurrency(proposal.estimate_amount)}</span>
                             <ProposalStatusBadge proposal={proposal} />
-                            <a
-                                href={`/p/${proposal.accept_token}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="btn btn--confirm btn--sm"
-                            >
-                                Client view
-                            </a>
+                            <RowView />
                         </div>
-                    </div>
+                    </a>
                 ))
             )}
         </div>
@@ -496,7 +507,13 @@ function InvoicesTab({ project }) {
                 <EmptyState text="No invoices yet." />
             ) : (
                 project.invoices.map((invoice) => (
-                    <div key={invoice.id} className="list-row list-row--static">
+                    <a
+                        key={invoice.id}
+                        href={`/i/${invoice.public_token}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="list-row"
+                    >
                         <div>
                             <div className="list-row__title">Invoice #{invoice.invoice_number ?? invoice.id}</div>
                             <div className="list-row__meta">Issued {formatShortDate(invoice.issued_on)} &middot; Due {formatShortDate(invoice.due_on)}</div>
@@ -505,16 +522,9 @@ function InvoicesTab({ project }) {
                             <span className="list-row__amount">{formatCurrency(invoiceTotal(invoice.items, invoice.surcharge, invoice.tax_rate))}</span>
                             {/* Every invoice here is sent, so only Paid / Overdue need saying. */}
                             {displayInvoiceStatus(invoice) !== 'sent' && <InvoiceStatusBadge invoice={invoice} />}
-                            <a
-                                href={`/i/${invoice.public_token}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="btn btn--confirm btn--sm"
-                            >
-                                Client view
-                            </a>
+                            <RowView />
                         </div>
-                    </div>
+                    </a>
                 ))
             )}
         </div>

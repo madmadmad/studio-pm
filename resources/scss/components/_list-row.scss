@@ -43,6 +43,22 @@
         gap: var(--space-3);
     }
 
+    // "View ↗" at the end of a row that opens a page (the portal project's
+    // proposals and invoices): link text, underlined with the row's hover.
+    &__view {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--space-1);
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+        font-weight: var(--font-weight-semibold);
+        color: var(--color-primary-text);
+    }
+
+    &:hover &__view {
+        text-decoration: underline;
+    }
+
     &__amount {
         font-size: var(--font-size-sm);
         line-height: var(--line-height-sm);
