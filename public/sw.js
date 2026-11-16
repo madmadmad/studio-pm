@@ -29,7 +29,7 @@ self.addEventListener('push', (event) => {
         self.registration.showNotification(data.title || 'Madhouse Studio', {
             body: data.body || '',
             tag: data.tag || undefined,
-            data: { url: data.data?.url || '/my-work' },
+            data: { url: data.data?.url || '/home' },
             icon: data.icon || '/icons/icon-192.png',
         }),
     ]));
@@ -37,7 +37,7 @@ self.addEventListener('push', (event) => {
 
 self.addEventListener('notificationclick', (event) => {
     event.notification.close();
-    const url = new URL(event.notification.data?.url || '/my-work', self.location.origin).href;
+    const url = new URL(event.notification.data?.url || '/home', self.location.origin).href;
 
     event.waitUntil((async () => {
         const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });

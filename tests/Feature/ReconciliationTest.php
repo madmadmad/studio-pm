@@ -174,7 +174,7 @@ class ReconciliationTest extends TestCase
 
         // Any other page that isn't there: Back, and home.
         $this->actingAs($this->admin)->get('/no-such-page')->assertNotFound()
-            ->assertSee('Page not found')->assertSee('Go back')->assertSee('Go to My Work')->assertSee('href="/"', false);
+            ->assertSee('Page not found')->assertSee('Go back')->assertSee('Go home')->assertSee('href="/"', false);
         $this->get('/portal/no-such-page')->assertNotFound()->assertSee('Go to the portal')->assertSee('href="/portal"', false);
     }
 }

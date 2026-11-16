@@ -45,7 +45,7 @@ class PushSubscriptionController extends Controller
         $user = $request->user();
         abort_unless($user->pushSubscriptions()->exists(), 422, 'Turn on notifications on this device first.');
 
-        $user->notifyNow(new PushAlert('Notifications are on', 'This is how studio alerts will show up on this device.', '/my-work', 'test'));
+        $user->notifyNow(new PushAlert('Notifications are on', 'This is how studio alerts will show up on this device.', '/home', 'test'));
 
         return response()->noContent();
     }

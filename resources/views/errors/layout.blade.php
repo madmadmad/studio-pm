@@ -3,7 +3,7 @@
      Back, and Home. The installed app (Add to Dock, Home Screen) has no
      address bar, so without these an error is a dead end. Self-contained:
      no database, no build, so it still draws when those are what failed.
-     Home is the portal's for a client, My Work (/) for the studio. --}}
+     Home is the portal's for a client, Home (/, My Work) for the studio. --}}
 @php($home = request()->is('portal', 'portal/*') ? '/portal' : '/')
 <html lang="en">
 <head>
@@ -12,6 +12,12 @@
     <meta name="robots" content="noindex">
     <title>@yield('title')</title>
     <style>
+        @font-face {
+            font-family: 'Inter Tight';
+            src: url('/webfonts/InterTight/InterTight-Variable-Latin.woff2') format('woff2');
+            font-weight: 100 900;
+            font-display: swap;
+        }
         :root {
             --bg: #ffffff;
             --text: #23262e;
@@ -38,7 +44,7 @@
             min-height: 100vh;
             margin: 0;
             padding: 16px;
-            font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            font-family: 'Inter Tight', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
             color: var(--text);
             background: var(--bg);
         }
@@ -70,7 +76,7 @@
         <p>@yield('message')</p>
         <div class="actions">
             <button type="button" class="button" onclick="history.length > 1 ? history.back() : location.assign('{{ $home }}')">Go back</button>
-            <a href="{{ $home }}" class="button button--primary">{{ $home === '/' ? 'Go to My Work' : 'Go to the portal' }}</a>
+            <a href="{{ $home }}" class="button button--primary">{{ $home === '/' ? 'Go home' : 'Go to the portal' }}</a>
         </div>
     </main>
 </body>

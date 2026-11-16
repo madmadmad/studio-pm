@@ -16,8 +16,10 @@ class MyWorkTest extends TestCase
     {
         $me = User::factory()->teamMember()->create();
 
-        $this->actingAs($me)->get('/')->assertRedirect('/my-work');
-        $this->actingAs($me)->get('/my-work')->assertOk()->assertInertia(fn ($page) => $page->component('MyWork/Index'));
+        $this->actingAs($me)->get('/')->assertRedirect('/home');
+        // The old address, for bookmarks and installed apps: query kept.
+        $this->actingAs($me)->get('/my-work?tab=todo')->assertRedirect('/home?tab=todo');
+        $this->actingAs($me)->get('/home')->assertOk()->assertInertia(fn ($page) => $page->component('MyWork/Index'));
         $this->actingAs($me)->get('/overview')->assertOk()->assertInertia(fn ($page) => $page->component('Dashboard/Index'));
     }
 
@@ -46,7 +48,7 @@ class MyWorkTest extends TestCase
         $log($colleague, $site, '2026-10-14', 8); // someone else's
         $log($me, $left, '2026-10-12', 1); // a project they're not on (any more)
 
-        $this->actingAs($me)->get('/my-work')->assertInertia(fn ($page) => $page
+        $this->actingAs($me)->get('/home')->assertInertia(fn ($page) => $page
             ->has('recentProjects', 2)
             ->where('recentProjects.0.name', 'Website')
             ->where('recentProjects.0.last_worked_on', '2026-10-13')

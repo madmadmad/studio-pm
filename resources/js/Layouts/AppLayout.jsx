@@ -11,8 +11,8 @@ import SignedOutNotice from '../Components/SignedOutNotice';
 // `staffOnly`: never for the accountant, who has Bookkeeping, Invoices and
 // Expenses alone (User::ACCOUNTANT_PERMISSIONS).
 const NAV_ITEMS = [
-    // The Overview (/overview) is off the sidebar for now; My Work is home.
-    { href: '/my-work', label: 'My Work', staffOnly: true },
+    // The Overview (/overview) is off the sidebar for now; My Work (labeled Home) is home.
+    { href: '/home', label: 'Home', staffOnly: true },
     { href: '/chat', label: 'Chat', badge: <ChatNavBadge />, staffOnly: true },
     { href: '/alerts', label: 'Alerts', badge: <AlertsNavBadge />, permission: 'invoices' },
     { href: '/clients', label: 'Clients', permission: 'clients' },

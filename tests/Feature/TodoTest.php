@@ -43,7 +43,7 @@ class TodoTest extends TestCase
         $this->actingAs($me)->deleteJson('/api/todos/done')->assertNoContent();
         $this->assertEquals(2, Todo::count());
 
-        $this->actingAs($me)->get('/my-work')->assertInertia(fn ($page) => $page->has('todos.open', 2)->has('todos.done', 0));
+        $this->actingAs($me)->get('/home')->assertInertia(fn ($page) => $page->has('todos.open', 2)->has('todos.done', 0));
     }
 
     public function test_starred_ones_stay_at_the_top(): void
@@ -79,7 +79,7 @@ class TodoTest extends TestCase
 
         // Nobody else sees it, even a super admin...
         $this->actingAs($boss)->getJson('/api/todos')->assertJsonCount(0, 'open')->assertJsonCount(0, 'done');
-        $this->actingAs($boss)->get('/my-work')->assertInertia(fn ($page) => $page->has('todos.open', 0)->has('todos.done', 0));
+        $this->actingAs($boss)->get('/home')->assertInertia(fn ($page) => $page->has('todos.open', 0)->has('todos.done', 0));
 
         // ...or can change, reorder, clear or delete it.
         $this->actingAs($boss)->patchJson("/api/todos/{$mine}", ['title' => 'Theirs'])->assertNotFound();

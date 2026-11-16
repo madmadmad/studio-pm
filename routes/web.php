@@ -79,10 +79,13 @@ Route::get('/manifest.webmanifest', WebManifestController::class)->name('manifes
 // The staff app. The accountant reaches only the corner of it that's
 // theirs (RestrictAccountant).
 Route::middleware(['auth', 'accountant.restrict', 'two-factor.required'])->group(function () {
-    // Home (and where signing in lands) is My Work. The Overview is off
-    // the sidebar for now but still at /overview.
-    Route::redirect('/', '/my-work')->name('home');
-    Route::get('/my-work', [MyWorkPageController::class, 'index'])->name('my-work.index');
+    // Home (and where signing in lands) is the person's own work
+    // (MyWorkPageController). It was /my-work until Nov 2026; that still
+    // redirects, query and all, for bookmarks and installed apps. The
+    // Overview is off the sidebar for now but still at /overview.
+    Route::redirect('/', '/home')->name('home');
+    Route::get('/home', [MyWorkPageController::class, 'index'])->name('my-work.index');
+    Route::get('/my-work', fn (Illuminate\Http\Request $request) => redirect('/home'.($request->getQueryString() ? '?'.$request->getQueryString() : '')));
     Route::get('/overview', [DashboardController::class, 'index'])->name('dashboard');
 
     // Two-factor, required of all staff: where they're sent until it's set

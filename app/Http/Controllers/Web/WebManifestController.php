@@ -19,7 +19,7 @@ class WebManifestController extends Controller
             'name' => $name,
             'short_name' => $name,
             'id' => '/',
-            'start_url' => '/my-work',
+            'start_url' => '/home',
             'scope' => '/',
             'display' => 'standalone',
             'background_color' => '#FFFFFF',

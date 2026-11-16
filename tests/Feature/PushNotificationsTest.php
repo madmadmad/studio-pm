@@ -183,10 +183,10 @@ class PushNotificationsTest extends TestCase
     {
         $this->get('/manifest.webmanifest')->assertOk()
             ->assertHeader('Content-Type', 'application/manifest+json')
-            ->assertJsonPath('start_url', '/my-work')
+            ->assertJsonPath('start_url', '/home')
             ->assertJsonPath('display', 'standalone')
             ->assertJsonPath('icons.1.sizes', '512x512');
 
-        $this->actingAs($this->teamMember())->get('/my-work')->assertSee('rel="manifest"', false);
+        $this->actingAs($this->teamMember())->get('/home')->assertSee('rel="manifest"', false);
     }
 }

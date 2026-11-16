@@ -943,8 +943,8 @@ export default function MyWorkIndex({ myTasks, todos, recentProjects, starredPro
 
     return (
         <AppLayout>
-            <Head title="My Work" />
-            <PageHeader title="My Work" />
+            <Head title="Home" />
+            <PageHeader title="Home" />
             <TabBar tabs={TABS} tab={tab} setTab={setTab} size="lg" />
 
             {tab === 'Projects' && (
