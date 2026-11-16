@@ -1,6 +1,6 @@
 /* Notification emails, styled like the proposal and invoice emails
    (resources/views/emails): a grey page, a white 520px card, the studio
-   logo, Inter Display (Helvetica/Arial where the mail app drops web
+   logo, Inter Tight (Helvetica/Arial where the mail app drops web
    fonts), 14px dark text and a dark left-aligned button. Inlined into
    each element when sent. */
 
@@ -9,7 +9,7 @@
 body,
 body *:not(html):not(style):not(br):not(tr):not(code) {
     box-sizing: border-box;
-    font-family: 'Inter Display', Helvetica, Arial, sans-serif;
+    font-family: 'Inter Tight', Helvetica, Arial, sans-serif;
     position: relative;
 }
 
@@ -54,14 +54,14 @@ h1 {
 
 h2 {
     font-size: 16px;
-    font-weight: bold;
+    font-weight: 600;
     margin-top: 0;
     text-align: start;
 }
 
 h3 {
     font-size: 14px;
-    font-weight: bold;
+    font-weight: 600;
     margin-top: 0;
     text-align: left;
 }
@@ -114,7 +114,7 @@ img {
 .header a {
     color: #18181b;
     font-size: 19px;
-    font-weight: bold;
+    font-weight: 600;
     text-decoration: none;
 }
 

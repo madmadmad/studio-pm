@@ -4,6 +4,7 @@ import { DownloadSimple } from '@phosphor-icons/react';
 import DocumentFrom from '../../Components/DocumentFrom';
 import { formatCurrency, formatDate } from '../../lib/format';
 import { api } from '../../lib/api';
+import { isBlankRichText } from '../../lib/richText';
 import ProposalTeam from '../../Components/ProposalTeam';
 import ProposalAbout from '../../Components/ProposalAbout';
 import ProposalFeeSummary from '../../Components/ProposalFeeSummary';
@@ -73,10 +74,14 @@ export default function ProposalShow({ proposal, token, studio }) {
                     <div className="document__estimate">Estimate: {formatCurrency(proposal.estimate_amount)}</div>
                 )}
 
-                <div
-                    className="prose document__body"
-                    dangerouslySetInnerHTML={{ __html: proposal.body }}
-                />
+                {/* Only with a scope of work: its rule would otherwise sit
+                    over nothing, above the estimate. */}
+                {!isBlankRichText(proposal.body) && (
+                    <div
+                        className="prose document__body"
+                        dangerouslySetInnerHTML={{ __html: proposal.body }}
+                    />
+                )}
 
                 {proposal.disclaimer && <p className="document__disclaimer">{proposal.disclaimer}</p>}
 

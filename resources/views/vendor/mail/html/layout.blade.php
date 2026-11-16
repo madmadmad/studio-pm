@@ -23,10 +23,9 @@ width: 100% !important;
 }
 }
 </style>
-{{-- Inter Display where the mail app loads web fonts; Helvetica/Arial otherwise. --}}
+{{-- Inter Tight where the mail app loads web fonts; Helvetica/Arial otherwise. --}}
 <style>
-@font-face { font-family: 'Inter Display'; src: url('{{ url('/webfonts/InterDisplay/InterDisplay-Regular.woff2') }}') format('woff2'); font-weight: 400; font-style: normal; }
-@font-face { font-family: 'Inter Display'; src: url('{{ url('/webfonts/InterDisplay/InterDisplay-SemiBold.woff2') }}') format('woff2'); font-weight: 600; font-style: normal; }
+@font-face { font-family: 'Inter Tight'; src: url('{{ url('/webfonts/InterTight/InterTight-Variable-Latin.woff2') }}') format('woff2'); font-weight: 100 900; font-style: normal; }
 </style>
 {!! $head ?? '' !!}
 </head>

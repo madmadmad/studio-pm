@@ -72,8 +72,7 @@
         margin-bottom: var(--space-1);
         font-size: var(--font-size-xs);
         line-height: var(--line-height-xs);
-        // The usual tracking curve, unless the typeface opens labels up.
-        letter-spacing: var(--letter-spacing-label, calc(var(--letter-spacing-scale) + var(--letter-spacing-offset)));
+        letter-spacing: var(--letter-spacing-label);
         color: var(--color-text-muted);
     }
 
@@ -82,9 +81,7 @@
     &__value {
         font-size: var(--font-size-lg);
         line-height: var(--line-height-lg);
-        // Medium, unless the typeface wants its figures heavier.
-        font-weight: var(--font-weight-figures, var(--font-weight-medium));
-        font-variant-numeric: tabular-nums;
+        font-weight: var(--font-weight-figures);
         letter-spacing: var(--letter-spacing-figures);
 
         @include respond-to('sm') {

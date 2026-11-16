@@ -9,25 +9,37 @@
         {{-- Mirrors the public proposal page (.document__title--spaced,
              .document__body, .prose, .document__section-title in
              _document.scss / _prose.scss), scaled like the title. --}}
-        h1 { margin-bottom: 16px; }
+        h1 { margin-bottom: 14px; } {{-- the page's 20px --}}
+        {{-- A lone total under the last item's rule (.document__total-row--ruled):
+             --space-4 between them. --}}
+        table.totals { margin-top: 0; }
+        table.totals tr.total td { padding-top: 11px; }
         table.parties { margin-bottom: 12px; }
         table.fields { margin-bottom: 24px; }
         .estimate { color: #595F64; margin-bottom: 19px; }
-        .disclaimer { color: #595F64; font-size: 9.5px; line-height: 1.5; margin-bottom: 19px; white-space: pre-line; }
-        .body { line-height: 1.6; margin-bottom: 26px; padding-bottom: 26px; border-bottom: 1px solid #e7e7e9; }
+        .disclaimer { color: #595F64; font-size: 9.5px; line-height: 1.4; margin-bottom: 19px; white-space: pre-line; }
+        {{-- The scope at the page's prose 1.6; bios, About and the
+             disclaimer at its sm 1.4. --}}
+        {{-- Standard page breaks: the cover (title, parties, dates) is page
+             1, the scope of work starts page 2, and the estimate starts the
+             page after -- so no rule under the scope; the break does that. --}}
+        .body { line-height: 1.6; page-break-before: always; }
+        .estimate-section { page-break-before: always; }
         .body p { margin: 0 0 0.75em; }
         .body ul, .body ol { margin: 0.5em 0 0.75em 1.25em; padding: 0; }
         {{-- Headings match the web page's: the scope's H2 and the section
-             titles share one style (_prose.scss's 1.35em, on this sheet's 11px). --}}
-        .body h2, .body h3, .body h4 { font-family: 'Inter Display', sans-serif; font-weight: 600; letter-spacing: -0.018em; margin: 0.75em 0 0.4em; }
-        .body h2 { font-size: 15px; }
-        .body h3 { font-size: 12.5px; }
-        .body h4 { font-size: 11px; }
+             titles share one style (_prose.scss's sizes, in em of the body
+             text). Weight 700 is the 640 cut (styles partial), as on the page. --}}
+        .body h2, .body h3, .body h4 { font-family: 'Inter Tight', sans-serif; font-weight: 700; letter-spacing: 0; margin: 0.75em 0 0.4em; }
+        .body h2 { font-size: 1.35em; }
+        .body h3 { font-size: 1.15em; }
+        .body h4 { font-size: 1em; }
         {{-- Item notes keep the invoice's tight plain-text spacing. --}}
         .item-details p { margin: 0; }
         .item-details ul, .item-details ol { margin: 0 0 0 1.25em; padding: 0; }
-        .section-title { font-family: 'Inter Display', sans-serif; font-weight: 600; letter-spacing: -0.018em; font-size: 15px; margin-bottom: 10px; }
-        .notice { margin-top: 24px; color: #595F64; }
+        .section-title { font-family: 'Inter Tight', sans-serif; font-weight: 700; letter-spacing: 0; font-size: 1.35em; margin-bottom: 10px; }
+        {{-- "Accepted on …" in the page's grey box (.document__notice). --}}
+        .notice { margin-top: 24px; padding: 11px; background: #f7f7f7; border-radius: 3px; font-weight: 500; }
         {{-- The team section: a row per person, the portrait (4:5, the page's
              200px scaled like the rest of this sheet) beside name, position and bio. --}}
         table.member { width: 100%; margin-bottom: 14px; page-break-inside: avoid; }
@@ -35,16 +47,19 @@
         td.member-photo { width: 135px; padding-right: 18px; }
         td.member-photo img { width: 135px; height: 169px; border-radius: 3px; }
         {{-- No photo: their initials in the same frame, as on the web page. --}}
-        .member-initials { width: 135px; height: 93px; padding-top: 76px; line-height: 24px; border-radius: 3px; background: #e7e7e9; color: #595F64; text-align: center; font-weight: 600; font-size: 22px; }
+        .member-initials { width: 135px; height: 93px; padding-top: 76px; line-height: 1.09; border-radius: 3px; background: #e7e7e9; color: #595F64; text-align: center; font-weight: 600; font-size: 22px; }
         .member-name { font-weight: 600; }
         .member-title { color: #595F64; margin-bottom: 4px; }
-        .member-bio { line-height: 1.55; }
+        .member-bio { line-height: 1.4; }
         .member-bio p { margin: 0 0 0.6em; }
         .member-bio ul, .member-bio ol { margin: 0.3em 0 0.6em 1.25em; padding: 0; }
         {{-- The team and the About each under a rule, with the same room either side as the scope's. --}}
         .team, .about { margin-top: 26px; padding-top: 26px; border-top: 1px solid #e7e7e9; }
+        {{-- The team starts a page too (its heading never stranded under the
+             total); the About follows it, under its rule. --}}
+        .team { page-break-before: always; margin-top: 0; padding-top: 0; border-top: none; }
         .about { page-break-inside: avoid; }
-        .about-body { color: #595F64; line-height: 1.6; }
+        .about-body { color: #595F64; line-height: 1.4; }
         .about-body p { margin: 0 0 0.6em; }
     </style>
 </head>
@@ -91,13 +106,19 @@
         <div class="estimate">Estimate: ${{ number_format($proposal->estimate_amount, 2) }}</div>
     @endif
 
-    {{-- Editor HTML, sanitized down to the toolbar's own tags. --}}
-    <div class="body">{!! RichText::toSafeHtml($proposal->body) !!}</div>
+    {{-- Page 2: the scope of work. Editor HTML, sanitized down to the
+         toolbar's own tags; skipped when there's none. --}}
+    @if (trim(strip_tags((string) $proposal->body)) !== '')
+        <div class="body">{!! RichText::toSafeHtml($proposal->body) !!}</div>
+    @endif
 
+    {{-- Then the estimate on a page of its own, its disclaimer (fine print
+         about the estimate) at the top. --}}
+    @if (filled($proposal->disclaimer) || $proposal->items->isNotEmpty())
+    <div class="estimate-section">
     @if (filled($proposal->disclaimer))
         <div class="disclaimer">{{ $proposal->disclaimer }}</div>
     @endif
-
 
     @if ($proposal->items->isNotEmpty())
         <div class="section-title">Estimate</div>
@@ -129,6 +150,8 @@
                 <td class="amount">${{ number_format($proposal->itemsTotal(), 2) }}</td>
             </tr>
         </table>
+    @endif
+    </div>
     @endif
 
     @if ($proposal->status === 'accepted')

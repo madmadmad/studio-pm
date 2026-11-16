@@ -8,9 +8,13 @@
         {{-- Laid out like the proposal: "Invoice" on its own line, then what it's for;
              the number's with the dates, three across. --}}
         table.fields td { width: 33.33%; }
-        h1 { margin-bottom: 16px; }
-        table.fields { margin-bottom: 24px; }
-        table.fields td { padding-bottom: 12px; }
+        h1 { margin-bottom: 14px; } {{-- the page's 20px --}}
+        table.fields { margin-bottom: 18px; }
+        {{-- Payments and refunds kept whole: never the heading alone at a page's foot. --}}
+        table.payments { margin-top: 16px; margin-bottom: 0; page-break-inside: avoid; } {{-- last on the page: no bottom margin to push it over --}}
+        table.fields td { padding-bottom: 8px; }
+        {{-- Plain-text notes keep the line breaks typed into them, as on the page. --}}
+        .item-details { white-space: pre-line; }
     </style>
 </head>
 <body>
@@ -113,7 +117,7 @@
     </table>
 
     @if ($invoice->payments->isNotEmpty())
-        <table class="items" style="margin-top: 24px;">
+        <table class="items payments">
             <thead>
                 <tr>
                     <th>Payments</th>

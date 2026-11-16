@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowDown, ArrowUp, Check, DotsSixVertical, Eye, GearSix, DownloadSimple, Paperclip, PencilSimple, Plus, Trash, Users, X } from '@phosphor-icons/react';
 import AppLayout from '../../Layouts/AppLayout';
 import Button from '../../Components/Button';
+import TitleInput from '../../Components/TitleInput';
 import EmptyState from '../../Components/EmptyState';
 import MetricCard from '../../Components/MetricCard';
 import Badge from '../../Components/Badge';
@@ -558,7 +559,7 @@ function TaskDrawer({ task, teamNames, scheduleItems = [], isNew, onClose, onCha
                 <DrawerDate label="Created" date={task.created_at} />
             </DrawerByline>
 
-            <input
+            <TitleInput
                 ref={titleRef}
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
@@ -1308,7 +1309,7 @@ function NoteDrawer({ note, onClose, onChange }) {
                 <DrawerDate label="Edited" date={note.updated_at} />
             </DrawerByline>
 
-            <input
+            <TitleInput
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 onBlur={() => title !== (note.title ?? '') && updateField('title', title)}
@@ -1940,7 +1941,7 @@ function ExpenseDrawer({ expense, onClose, onChange }) {
                 <DrawerDate label="Created" date={expense.created_at} />
                 <ExpenseStatusBadge expense={expense} />
             </DrawerByline>
-            <input
+            <TitleInput
                 value={values.name}
                 disabled={!editable}
                 onChange={(e) => setField('name', e.target.value)}

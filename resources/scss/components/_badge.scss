@@ -3,14 +3,16 @@
 @use '../abstracts' as *;
 
 .badge {
-    // Same height as every other list-row control (--size-row-action).
+    // A step under the list-row controls (--size-row-action, 28px) and
+    // the xs text size, so a compact label saves room in table rows and
+    // card corners. 24px tall, 12px text.
     display: inline-flex;
     align-items: center;
-    height: var(--size-row-action);
-    padding-inline: var(--space-2);
+    height: 1.5rem;
+    padding-inline: var(--space-1-5);
     white-space: nowrap;
-    font-size: var(--font-size-xs);
-    line-height: var(--line-height-xs);
+    font-size: 0.75rem;
+    line-height: 1rem;
     font-weight: var(--font-weight-medium);
     border-radius: var(--radius-base);
 
@@ -24,8 +26,8 @@
     //   accent/warn/info,   grey fill, light text      (Sent, In progress, Queued;
     //   primary, secondary                              the Primary contact label)
     //   info                + an eye glyph             (Opened -- by the client)
-    //   success             solid red, white text      (Paid, Active, Accepted, Done)
-    //   danger              solid red + warning glyph  (Overdue)
+    //   success             solid brand color          (Paid, Active, Accepted, Done)
+    //   danger              solid red                  (Overdue)
     @each $intent in secondary, accent, warning, info, primary {
         &--#{$intent} {
             background-color: var(--color-surface-muted);
@@ -42,20 +44,14 @@
         }
     }
 
-    // Done / settled: the one filled-red status that isn't trouble. The
-    // warning glyph is what sets danger apart from it.
+    // Done / settled: filled in the brand color.
     &--success {
         background-color: var(--color-success);
         color: var(--color-success-on);
     }
 
     &--danger {
-        gap: var(--space-1);
         background-color: var(--color-danger);
         color: var(--color-danger-on);
-
-        &::before {
-            @include glyph(warning-circle, var(--size-icon-sm));
-        }
     }
 }

@@ -4,13 +4,12 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ $proposal->company->name }} Proposal: {{ $proposal->title }}</title>
-    {{-- Inter Display where the mail app loads web fonts (Apple Mail, iOS,
+    {{-- Inter Tight where the mail app loads web fonts (Apple Mail, iOS,
          Outlook for Mac); Gmail and Outlook for Windows drop it and fall
          back to Helvetica/Arial. --}}
-    @php($font = "'Inter Display', Helvetica, Arial, sans-serif")
+    @php($font = "'Inter Tight', Helvetica, Arial, sans-serif")
     <style>
-        @font-face { font-family: 'Inter Display'; src: url('{{ url('/webfonts/InterDisplay/InterDisplay-Regular.woff2') }}') format('woff2'); font-weight: 400; font-style: normal; }
-        @font-face { font-family: 'Inter Display'; src: url('{{ url('/webfonts/InterDisplay/InterDisplay-SemiBold.woff2') }}') format('woff2'); font-weight: 600; font-style: normal; }
+        @font-face { font-family: 'Inter Tight'; src: url('{{ url('/webfonts/InterTight/InterTight-Variable-Latin.woff2') }}') format('woff2'); font-weight: 100 900; font-style: normal; }
     </style>
 </head>
 <body style="margin:0; padding:0; background-color:#f4f4f5; font-family: {!! $font !!};">

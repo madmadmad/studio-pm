@@ -42,8 +42,7 @@ $glyphs: (
     line-height: var(--line-height-xs);
     font-weight: var(--font-weight-normal);
     color: var(--color-text-muted);
-    // Inter's tight -0.02rem, unless the typeface sets its own.
-    letter-spacing: var(--letter-spacing-subhead, -.02rem);
+    letter-spacing: var(--letter-spacing-subhead);
 }
 
 // Vertical rhythm between direct children in normal (block/inline) flow.

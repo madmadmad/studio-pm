@@ -10,8 +10,20 @@ use RuntimeException;
 
 class InvoicePdfRenderer
 {
+    // 72 so a CSS px in the PDF views is one point. At dompdf's default
+    // 96, 11px set as 8.25pt and the PDFs read a size smaller than the web
+    // pages. The views' sizes are the web page's scaled to the printed
+    // column: 468pt (8.5in less 1in side margins) for the page's 680px, ~0.69.
+    public const DPI = 72;
+
+    // dompdf sets each line at line-height times the font's own height
+    // (ascender to descender) times this ratio, its default 1.1. Inter
+    // Tight's height is 1.21em, so line-height: 1.3 printed as 1.73. This
+    // cancels it out: a line-height in the views is what prints.
+    public const FONT_HEIGHT_RATIO = 1 / 1.21;
+
     /**
-     * dompdf caches the Inter TTFs used by pdfs.invoice under storage/fonts
+     * dompdf caches the Inter Tight TTFs used by the PDFs under storage/fonts
      * (font_dir/font_cache in config/dompdf.php's defaults). That directory
      * is gitignored as a whole (.gitignore: "/storage/fonts", not
      * "/storage/fonts/*"), so a fresh deploy never creates it, and neither
@@ -29,7 +41,9 @@ class InvoicePdfRenderer
         return Pdf::loadView('pdfs.invoice', [
             'invoice' => $invoice,
             'studio' => StudioProfile::current(),
-        ])->setPaper('letter'); // US business -- dompdf defaults to A4
+        ])->setPaper('letter') // US business -- dompdf defaults to A4
+            ->setOption('dpi', self::DPI)
+            ->setOption('fontHeightRatio', self::FONT_HEIGHT_RATIO);
     }
 
     // Public so ProposalPdfRenderer, which uses the same fonts, can share it.

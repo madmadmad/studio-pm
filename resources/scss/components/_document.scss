@@ -62,12 +62,13 @@
     // a step larger than the title itself.
     &__title-prefix {
         display: block;
-        font-size: 2.5rem; // one-off: just above --font-size-2xl
-        line-height: 2.75rem;
+        font-size: 2.75rem; // one-off: 44px, well above --font-size-2xl
+        line-height: 3rem;
         font-family: var(--font-family-sans);
-        font-weight: var(--font-weight-light);
+        font-weight: 250; // one-off: between ExtraLight and Light (variable font)
+        letter-spacing: -0.025em; // tight, as large light type wants
         color: var(--color-text-muted);
-        margin-bottom: var(--space-5); // 20px: room between it and the title
+        margin-bottom: var(--space-8); // 32px: room between it and the title
     }
 
     // Document header below the title: a From | Bill to (invoice) or
@@ -194,7 +195,7 @@
         font-family: var(--font-family-display);
         font-size: 1.35rem; // the prose H2's 1.35em, on the sheet's 1rem text
         line-height: 1.3;
-        font-weight: var(--font-weight-medium);
+        font-weight: 640; // as the prose headings
         letter-spacing: var(--letter-spacing-body);
     }
 
@@ -203,7 +204,9 @@
         font-size: var(--font-size-lg);
         line-height: var(--line-height-lg);
         font-weight: var(--font-weight-extrabold);
-        letter-spacing: var(--letter-spacing-display);
+        // A touch more room than the display headings get: a short bold
+        // word at this size reads cramped at Inter Tight's own spacing.
+        letter-spacing: 0.01em;
     }
 
     // Description | Amount, two-thirds / one-third.
@@ -252,8 +255,11 @@
         text-align: right;
     }
 
+    // Tabular figures line the column up but set digits wide apart, so
+    // pulled in a little.
     &__amount {
         font-variant-numeric: tabular-nums;
+        letter-spacing: -0.02em;
     }
 
     &__totals {
@@ -290,6 +296,7 @@
         line-height: var(--line-height-lg);
         font-weight: var(--font-weight-semibold);
         font-variant-numeric: tabular-nums;
+        letter-spacing: -0.02em; // pulled in like the amounts above it
     }
 
     // "Paid on Sep 3. Thank you!" / "Accepted..."

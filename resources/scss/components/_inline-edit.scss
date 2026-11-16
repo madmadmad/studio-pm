@@ -15,8 +15,12 @@
     // A drawer's big editable title, styled as .drawer__title so a record's
     // drawer and a create drawer open with the same heading. Pulled out by
     // its own padding so the text lines up with the content below until
-    // the border appears.
+    // the border appears. A textarea (Components/TitleInput), so a long
+    // title wraps rather than being cut off; a long unbroken word (a URL)
+    // breaks too.
     &--title {
+        display: block;
+        overflow-wrap: anywhere;
         margin-bottom: var(--space-4);
         margin-inline: calc(var(--space-1) * -1);
         padding-inline: var(--space-1);

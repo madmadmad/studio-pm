@@ -20,6 +20,8 @@ class ProposalPdfRenderer
             'team' => $proposal->teamMembers(),
             'about' => $proposal->aboutSection(),
             'studio' => StudioProfile::current(),
-        ])->setPaper('letter');
+        ])->setPaper('letter')
+            ->setOption('dpi', InvoicePdfRenderer::DPI)
+            ->setOption('fontHeightRatio', InvoicePdfRenderer::FONT_HEIGHT_RATIO);
     }
 }

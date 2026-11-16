@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Check, DownloadSimple, PencilSimple } from '@phosphor-icons/react';
 import PortalLayout from '../../../Layouts/PortalLayout';
 import Button from '../../../Components/Button';
+import TitleInput from '../../../Components/TitleInput';
 import Drawer, { DrawerByline, DrawerDate } from '../../../Components/Drawer';
 import EmptyState from '../../../Components/EmptyState';
 import { NewThreadForm, ThreadView, threadParticipantActors } from '../../../Components/MessagesPanel';
@@ -95,7 +96,7 @@ function TaskDrawer({ task, isNew, onClose }) {
                 <DrawerDate label="Created" date={task.created_at} />
             </DrawerByline>
 
-            <input
+            <TitleInput
                 ref={titleRef}
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}

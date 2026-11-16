@@ -4,6 +4,7 @@ import ProposalTeam from './ProposalTeam';
 import ProposalAbout from './ProposalAbout';
 import ProposalFeeSummary from './ProposalFeeSummary';
 import { formatCurrency } from '../lib/format';
+import { isBlankRichText } from '../lib/richText';
 
 // An approved proposal, read-only, for someone on the project without the
 // Proposals permission: the scope, disclaimer and fees as the client saw
@@ -20,8 +21,11 @@ export default function ProposalView({ proposal, onClose }) {
                 {proposal.items.length === 0 && proposal.estimate_amount && (
                     <div className="document__estimate">Estimate: {formatCurrency(proposal.estimate_amount)}</div>
                 )}
-                {/* The editor's own HTML, written by staff. */}
-                <div className="prose document__body" dangerouslySetInnerHTML={{ __html: proposal.body }} />
+                {/* The editor's own HTML, written by staff -- only when there
+                    is some, or its rule would sit over nothing. */}
+                {!isBlankRichText(proposal.body) && (
+                    <div className="prose document__body" dangerouslySetInnerHTML={{ __html: proposal.body }} />
+                )}
                 {proposal.disclaimer && <p className="document__disclaimer">{proposal.disclaimer}</p>}
                 {proposal.items.length > 0 && <ProposalFeeSummary proposal={proposal} />}
                 <ProposalTeam team={proposal.team} />

@@ -28,7 +28,10 @@
     h4 {
         margin: 0.75em 0 0.4em;
         font-family: var(--font-family-display);
-        font-weight: var(--font-weight-medium);
+        // One-off 640, a touch over SemiBold and above the app's 600 cap
+        // (variable font): bold text in a paragraph is 600, and headings
+        // need to outweigh it.
+        font-weight: 640;
         letter-spacing: var(--letter-spacing-body);
     }
     h2 { font-size: 1.35em; }

@@ -52,7 +52,7 @@ a {
 
 b,
 strong {
-    font-weight: bolder;
+    font-weight: var(--font-weight-bold); // not `bolder`, which would reach 700
 }
 
 code,
@@ -144,7 +144,7 @@ textarea,
 }
 
 :where(select:is([multiple], [size])) optgroup {
-    font-weight: bolder;
+    font-weight: var(--font-weight-bold);
 }
 
 :where(select:is([multiple], [size])) optgroup option {
