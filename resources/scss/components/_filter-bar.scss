@@ -31,7 +31,9 @@
         display: flex;
         flex-wrap: wrap;
         flex-shrink: 0;
-        gap: var(--filter-gap);
+        // Its own default too: pills also stand alone, outside a
+        // .filter-bar (a client's Invoices tab, the transfer drawer).
+        gap: var(--filter-gap, var(--space-1-5));
         max-width: 100%;
     }
 
