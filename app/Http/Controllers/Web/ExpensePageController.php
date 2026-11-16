@@ -40,7 +40,11 @@ class ExpensePageController extends Controller
                 ->map(fn (Expense $e) => $e->only('id', 'name', 'amount', 'splits')),
             'categories' => ExpenseCategory::orderBy('name')->get(),
             'taxes' => Tax::orderBy('name')->get(),
-            'projects' => Project::where('status', '!=', 'archived')->orderBy('name')->get(['id', 'name']),
+            // With the client's name: several clients have a project of the
+            // same name (Digital Advertising), so the picker says whose.
+            'projects' => Project::where('status', '!=', 'archived')->with('company:id,name')->orderBy('name')->get(['id', 'name', 'company_id'])
+                ->sortBy(fn (Project $p) => [$p->name, $p->company?->name])->values()
+                ->map(fn (Project $p) => ['id' => $p->id, 'name' => $p->name, 'client' => $p->company?->name]),
             'draftInvoices' => Invoice::where('status', 'draft')->orderByDesc('id')->get(['id', 'invoice_number', 'project_id']),
             // What an expense can be paid from: the bank and card accounts
             // (not Stripe Clearing or Sales Tax Payable, which nothing is

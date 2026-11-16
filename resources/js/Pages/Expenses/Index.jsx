@@ -677,7 +677,7 @@ export default function ExpensesIndex({ expenses: expensesProp, filters, hasEarl
 
                                 <select value={form.project_id} onChange={(e) => setForm({ ...form, project_id: e.target.value })} className="input form-grid__full">
                                     <option value="">No project</option>
-                                    {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+                                    {projects.map((p) => <option key={p.id} value={p.id}>{p.client ? `${p.name} (${p.client})` : p.name}</option>)}
                                 </select>
 
                                 <Toggle
