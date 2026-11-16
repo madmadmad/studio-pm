@@ -34,6 +34,9 @@
         font-weight: var(--font-weight-medium);
         color: var(--color-text);
         font-variant-numeric: tabular-nums;
+        // Tabular digits sit wide apart: pulled in like the document
+        // amounts (.document__amount).
+        letter-spacing: -0.02em;
 
         // Gone the wrong way (over budget, overdue).
         &--negative {

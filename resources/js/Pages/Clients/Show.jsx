@@ -55,7 +55,8 @@ function ClientMetrics({ company }) {
 
     return (
         <div className="metric-grid metric-grid--loose">
-            <MetricCard label="Outstanding" value={formatCurrency(outstanding)} negative={company.invoices.some(isOverdue)} />
+            {/* Filled red when any of it is overdue, as the Invoices pages' Overdue card. */}
+            <MetricCard label="Outstanding" value={formatCurrency(outstanding)} tone={company.invoices.some(isOverdue) ? 'primary' : null} />
             <MetricCard label={`Invoiced in ${year}`} value={formatCurrency(invoicedThisYear)} />
             <MetricCard label="Active projects" value={company.projects.filter((p) => p.status === 'active').length} />
             <MetricCard label="Open proposals" value={company.proposals.filter((p) => p.status === 'sent').length} />
