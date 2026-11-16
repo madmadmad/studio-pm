@@ -1,15 +1,32 @@
-import { useEffect, useRef, useState } from 'react';
-import { addDays, daysBetween, formatShort, startOfWeek, toDay } from '../../lib/scheduleDates';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { addDays, daysBetween, formatMonth, formatShort, monthStarts, startOfWeek, toDay } from '../../lib/scheduleDates';
 import { todayInAppTimezone } from '../../lib/format';
 
 const STATUS_LABELS = { todo: 'To do', in_progress: 'In progress', done: 'Done' };
 // Pointer travel (px) before a press on a bar counts as a drag, not a click.
 const DRAG_THRESHOLD = 3;
+// The least room (px) a timeline label gets before the next: "Sep 28" or
+// "Jan 2027" in the subhead type, with a gap.
+const LABEL_SPACE = 60;
+
+// The timeline's labels (and gridlines), as many as fit its width: each
+// week, every other week, each month, or each quarter. Months name the
+// year on the first label and on each January.
+function timelineTicks(weeks, rangeStart, rangeEnd, pxPerDay) {
+    const weekPx = pxPerDay * 7;
+    if (weekPx >= LABEL_SPACE) return weeks.map((date) => ({ date, label: formatShort(date) }));
+    if (weekPx * 2 >= LABEL_SPACE) return weeks.filter((_, i) => i % 2 === 0).map((date) => ({ date, label: formatShort(date) }));
+    const monthPx = pxPerDay * 30.4;
+    const step = monthPx >= LABEL_SPACE ? 1 : monthPx * 3 >= LABEL_SPACE ? 3 : 6;
+    return monthStarts(rangeStart, rangeEnd)
+        .filter((date) => (Number(date.slice(5, 7)) - 1) % step === 0)
+        .map((date, i) => ({ date, label: formatMonth(date, i === 0 || date.slice(5, 7) === '01') }));
+}
 
 // The Schedule tab's gantt chart: one row per item, a bar across its date
 // range on a shared timeline. The timeline runs from the Monday on or
-// before the earliest date to the Sunday on or after the latest, with a
-// gridline and label each week and a line at today. Bars and labels are
+// before the earliest date to the Sunday on or after the latest, with
+// gridlines and labels as often as fit (timelineTicks) and a line at today. Bars and labels are
 // placed by percentage of the timeline, so the chart fills its width (and
 // scrolls sideways below a minimum on narrow screens). `onOpen(item)` runs
 // when a bar or its label is clicked.
@@ -48,6 +65,23 @@ export default function ScheduleChart({ items, tasks = [], onOpen, onOpenTask, o
 
     const weeks = [];
     for (let week = rangeStart; week <= rangeEnd; week = addDays(week, 7)) weeks.push(week);
+
+    // The timeline's width, so its labels can thin out to fit (weekly on a
+    // short schedule, monthly on a long one). Measured before paint.
+    const headTrack = useRef(null);
+    const [trackWidth, setTrackWidth] = useState(null);
+    useLayoutEffect(() => {
+        const el = headTrack.current;
+        if (!el) return undefined;
+        setTrackWidth(el.getBoundingClientRect().width);
+        const observer = new ResizeObserver(([entry]) => setTrackWidth(entry.contentRect.width));
+        observer.observe(el);
+        return () => observer.disconnect();
+    }, []);
+    // Until measured, weekly, as before.
+    const ticks = trackWidth
+        ? timelineTicks(weeks, rangeStart, rangeEnd, trackWidth / totalDays)
+        : weeks.map((date) => ({ date, label: formatShort(date) }));
 
     const today = todayInAppTimezone();
     const showToday = toDay(today) >= toDay(rangeStart) && toDay(today) <= toDay(rangeEnd);
@@ -112,7 +146,7 @@ export default function ScheduleChart({ items, tasks = [], onOpen, onOpenTask, o
     }
 
     function gridlines() {
-        return weeks.map((week) => <span key={week} className="schedule-chart__gridline" style={{ left: pct(offset(week)) }} />);
+        return ticks.map(({ date }) => <span key={date} className="schedule-chart__gridline" style={{ left: pct(offset(date)) }} />);
     }
 
     function markers(rowTasks) {
@@ -136,10 +170,10 @@ export default function ScheduleChart({ items, tasks = [], onOpen, onOpenTask, o
             <div className="schedule-chart__inner">
                 <div className="schedule-chart__row schedule-chart__row--head">
                     <div className="schedule-chart__label" />
-                    <div className="schedule-chart__track">
-                        {weeks.map((week) => (
-                            <span key={week} className="schedule-chart__week" style={{ left: pct(offset(week)) }}>
-                                {formatShort(week)}
+                    <div ref={headTrack} className="schedule-chart__track">
+                        {ticks.map(({ date, label }) => (
+                            <span key={date} className="schedule-chart__week" style={{ left: pct(offset(date)) }}>
+                                {label}
                             </span>
                         ))}
                     </div>

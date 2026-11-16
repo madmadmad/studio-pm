@@ -13,6 +13,28 @@ export function fromDay(ms) {
     return new Date(ms).toISOString().slice(0, 10);
 }
 
+// The first of each month from start to end, both inclusive ('YYYY-MM-01').
+export function monthStarts(start, end) {
+    const months = [];
+    const s = new Date(toDay(start));
+    let y = s.getUTCFullYear();
+    let m = s.getUTCMonth() + (s.getUTCDate() === 1 ? 0 : 1);
+    for (;;) {
+        const day = fromDay(Date.UTC(y, m, 1));
+        if (day > String(end).slice(0, 10)) return months;
+        months.push(day);
+        m += 1;
+    }
+}
+
+const MONTH = new Intl.DateTimeFormat('en-US', { month: 'short', timeZone: 'UTC' });
+const MONTH_YEAR = new Intl.DateTimeFormat('en-US', { month: 'short', year: 'numeric', timeZone: 'UTC' });
+
+// "Oct", or "Jan 2027" with the year.
+export function formatMonth(value, withYear = false) {
+    return (withYear ? MONTH_YEAR : MONTH).format(new Date(toDay(value)));
+}
+
 // Inclusive: Oct 1 to Oct 1 is one day.
 export function daysBetween(start, end) {
     return Math.round((toDay(end) - toDay(start)) / DAY) + 1;
