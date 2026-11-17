@@ -6,7 +6,9 @@ use App\Models\GoogleCalendarAccount;
 use App\Support\RichText;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\RequestException;
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
 use RuntimeException;
 
 // The Google calls the calendar needs, made as each team member: signing
@@ -175,7 +177,7 @@ class GoogleCalendarClient
     // An event as the Agenda shows it. All-day events keep plain dates
     // (Google's end date is the day after the last); timed ones keep their
     // moments with offset, for the page to show in the app's time zone.
-    private function event(array $e, array $calendar): array
+    public function event(array $e, array $calendar): array
     {
         $allDay = isset($e['start']['date']);
         $join = $e['hangoutLink'] ?? collect($e['conferenceData']['entryPoints'] ?? [])->firstWhere('entryPointType', 'video')['uri'] ?? null;
@@ -195,7 +197,88 @@ class GoogleCalendarClient
             'join_url' => $join,
             'google_url' => $e['htmlLink'] ?? null,
             'type' => $e['eventType'] ?? 'default', // default, outOfOffice, focusTime
+            // For editing (GoogleCalendarController): the version to check a
+            // save against, the series a repeat belongs to, the notes as
+            // plain text, and the guests.
+            'etag' => $e['etag'] ?? null,
+            'recurring_event_id' => $e['recurringEventId'] ?? null,
+            'can_edit' => (bool) ($calendar['can_edit'] ?? false),
+            'notes' => self::plainNotes($e['description'] ?? null),
+            'has_meet' => isset($e['hangoutLink']),
+            'guests' => collect($e['attendees'] ?? [])
+                ->reject(fn ($a) => ($a['self'] ?? false) || ($a['resource'] ?? false))
+                ->map(fn ($a) => ['email' => $a['email'], 'name' => $a['displayName'] ?? null, 'response' => $a['responseStatus'] ?? 'needsAction'])
+                ->values()->all(),
         ];
+    }
+
+    // Google's notes (HTML or plain) as plain text to edit: line breaks kept.
+    public static function plainNotes(?string $description): string
+    {
+        if (blank($description)) {
+            return '';
+        }
+        $text = preg_replace(['#<br\s*/?>#i', '#</(p|div|li|h[1-6])>#i'], "\n", $description);
+
+        return trim(html_entity_decode(strip_tags($text), ENT_QUOTES | ENT_HTML5));
+    }
+
+    /** One event as Google has it now (the series itself, for a recurring one). */
+    public function getEvent(GoogleCalendarAccount $account, string $calendarId, string $eventId): array
+    {
+        return $this->api($account)->get($this->eventPath($calendarId, $eventId))->throw()->json();
+    }
+
+    // A new event; with $meet, Google adds a Meet link. Guests get Google's
+    // invitation.
+    public function createEvent(GoogleCalendarAccount $account, string $calendarId, array $body, bool $meet = false): array
+    {
+        if ($meet) {
+            $body['conferenceData'] = ['createRequest' => ['requestId' => (string) Str::uuid(), 'conferenceSolutionKey' => ['type' => 'hangoutsMeet']]];
+        }
+
+        return $this->api($account)
+            ->post('calendars/'.rawurlencode($calendarId).'/events?'.http_build_query(['sendUpdates' => 'all', 'conferenceDataVersion' => 1]), $body)
+            ->throw()->json();
+    }
+
+    // Only the fields given change. With $etag, refused (GoogleCalendarConflict)
+    // if the event changed in Google since it was read.
+    public function updateEvent(GoogleCalendarAccount $account, string $calendarId, string $eventId, array $body, ?string $etag = null, bool $addMeet = false): array
+    {
+        if ($addMeet) {
+            $body['conferenceData'] = ['createRequest' => ['requestId' => (string) Str::uuid(), 'conferenceSolutionKey' => ['type' => 'hangoutsMeet']]];
+        }
+
+        $response = $this->api($account)
+            ->withHeaders(array_filter(['If-Match' => $etag]))
+            ->patch($this->eventPath($calendarId, $eventId).'?'.http_build_query(['sendUpdates' => 'all', 'conferenceDataVersion' => 1]), $body);
+        $this->refuseConflict($response);
+
+        return $response->throw()->json();
+    }
+
+    public function deleteEvent(GoogleCalendarAccount $account, string $calendarId, string $eventId, ?string $etag = null): void
+    {
+        $response = $this->api($account)
+            ->withHeaders(array_filter(['If-Match' => $etag]))
+            ->delete($this->eventPath($calendarId, $eventId).'?'.http_build_query(['sendUpdates' => 'all']));
+        $this->refuseConflict($response);
+        if ($response->status() !== 410) { // already gone: as good as deleted
+            $response->throw();
+        }
+    }
+
+    private function eventPath(string $calendarId, string $eventId): string
+    {
+        return 'calendars/'.rawurlencode($calendarId).'/events/'.rawurlencode($eventId);
+    }
+
+    private function refuseConflict(Response $response): void
+    {
+        if ($response->status() === 412) {
+            throw new GoogleCalendarConflict('This event changed in Google since you opened it.');
+        }
     }
 
     // Ends the app's access in Google too, so it leaves their account's

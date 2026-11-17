@@ -17,6 +17,7 @@ class GoogleCalendarConnectTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        Http::preventStrayRequests();
         config([
             'services.google.client_id' => 'test-client.apps.googleusercontent.com',
             'services.google.client_secret' => 'test-secret',
@@ -132,6 +133,29 @@ class GoogleCalendarConnectTest extends TestCase
         );
 
         $this->actingAs($me)->putJson('/api/google-calendar/calendars', ['ids' => ['someone-elses@group.calendar.google.com']])->assertStatus(422);
+    }
+
+    public function test_they_choose_which_calendar_new_events_go_on(): void
+    {
+        $this->fakeGoogle();
+        $me = User::factory()->teamMember()->create();
+        $account = $this->connected($me);
+        $account->update(['calendars' => [
+            ['id' => 'bill@madmadmad.com', 'name' => 'Bill', 'color' => null, 'can_edit' => true],
+            ['id' => 'studio@group.calendar.google.com', 'name' => 'Studio', 'color' => null, 'can_edit' => true],
+            ['id' => 'en.usa#holiday@group.v.calendar.google.com', 'name' => 'Holidays', 'color' => null, 'can_edit' => false],
+        ]]);
+
+        // Until they choose: the first they can edit.
+        $this->actingAs($me)->getJson('/api/google-calendar')->assertJsonPath('default', 'bill@madmadmad.com');
+
+        $this->actingAs($me)->putJson('/api/google-calendar/default', ['id' => 'studio@group.calendar.google.com'])
+            ->assertOk()->assertJsonPath('default', 'studio@group.calendar.google.com');
+        $this->actingAs($me)->putJson('/api/google-calendar/default', ['id' => 'en.usa#holiday@group.v.calendar.google.com'])->assertForbidden();
+
+        // Hiding the default falls back to the next one they can edit.
+        $this->actingAs($me)->putJson('/api/google-calendar/calendars', ['ids' => ['bill@madmadmad.com']])
+            ->assertOk()->assertJsonPath('default', 'bill@madmadmad.com');
     }
 
     public function test_an_expired_token_is_renewed_before_calling_google(): void

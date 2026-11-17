@@ -197,3 +197,71 @@
         gap: var(--space-1);
     }
 }
+
+// Adding or changing an event (Components/EventFormDrawer.jsx).
+.event-form {
+    // A date and, unless all day, its time, side by side.
+    &__when {
+        display: flex;
+        gap: var(--space-2);
+
+        > * {
+            min-width: 0;
+        }
+    }
+
+    &__guests {
+        @include stack(var(--space-1));
+
+        margin: 0 0 var(--space-2);
+        padding: 0;
+        list-style: none;
+    }
+
+    &__guest {
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+
+        .icon-btn {
+            margin-left: auto;
+        }
+    }
+
+    // Their reply so far: Going, Maybe, Not going.
+    &__reply {
+        flex-shrink: 0;
+        font-size: var(--font-size-xs);
+        line-height: var(--line-height-xs);
+        color: var(--color-text-muted);
+    }
+
+    &__scope {
+        @include stack(var(--space-2));
+
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+
+        label {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+    }
+}
+
+.agenda-event__confirm {
+    @include stack(var(--space-3));
+
+    padding: var(--space-4);
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-sm);
+    background-color: var(--color-surface-subtle);
+    border-radius: var(--radius-base);
+
+    p {
+        margin: 0;
+    }
+}

@@ -18,13 +18,14 @@ const RETURN_MESSAGES = {
 export default function GoogleCalendarSettings({ returned }) {
     const [state, setState] = useState(null); // GET /api/google-calendar
     const [chosen, setChosen] = useState([]);
+    const [defaultId, setDefaultId] = useState(null);
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState('');
     const notice = RETURN_MESSAGES[returned];
 
     useEffect(() => {
         api.get('/api/google-calendar')
-            .then((data) => { setState(data); setChosen(data.chosen ?? []); })
+            .then((data) => { setState(data); setChosen(data.chosen ?? []); setDefaultId(data.default ?? null); })
             .catch(() => setState({ configured: false }));
     }, []);
 
@@ -36,9 +37,22 @@ export default function GoogleCalendarSettings({ returned }) {
         setChosen(next);
         setError('');
         try {
-            await api.put('/api/google-calendar/calendars', { ids: next });
+            const saved = await api.put('/api/google-calendar/calendars', { ids: next });
+            setDefaultId(saved.default ?? null);
         } catch (err) {
             setChosen(before);
+            setError(err.message || 'Couldn’t save that.');
+        }
+    }
+
+    async function changeDefault(id) {
+        const before = defaultId;
+        setDefaultId(id);
+        setError('');
+        try {
+            await api.put('/api/google-calendar/default', { id });
+        } catch (err) {
+            setDefaultId(before);
             setError(err.message || 'Couldn’t save that.');
         }
     }
@@ -108,6 +122,19 @@ export default function GoogleCalendarSettings({ returned }) {
                                 </ul>
                             )}
                         </div>
+
+                        {state.available && (() => {
+                            const writable = state.available.filter((c) => c.can_edit && chosen.includes(c.id));
+                            return writable.length > 0 && (
+                                <div>
+                                    <label className="label" htmlFor="google-calendar-default">New events go on</label>
+                                    <select id="google-calendar-default" value={defaultId ?? ''} onChange={(e) => changeDefault(e.target.value)} className="input">
+                                        {writable.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                    </select>
+                                    <p className="form-hint form-hint--attached">Where the Agenda&rsquo;s New event starts. You can pick another calendar on each event.</p>
+                                </div>
+                            );
+                        })()}
                     </>
                 )}
                 {error && <div className="form-error">{error}</div>}

@@ -1,8 +1,9 @@
 import { Fragment, useEffect, useState } from 'react';
 import { Link, router } from '@inertiajs/react';
-import { ArrowSquareOut, CaretLeft, CaretRight, CheckSquare, MapPin, Square, VideoCamera } from '@phosphor-icons/react';
+import { ArrowSquareOut, CaretLeft, CaretRight, CheckSquare, MapPin, PencilSimple, Plus, Square, Trash, VideoCamera } from '@phosphor-icons/react';
 import Button from './Button';
 import Drawer from './Drawer';
+import EventFormDrawer from './EventFormDrawer';
 import ViewToggle from './ViewToggle';
 import { api } from '../lib/api';
 import { todayInAppTimezone } from '../lib/format';
@@ -69,6 +70,9 @@ export default function Agenda({ tasks }) {
     const [data, setData] = useState(null); // the events endpoint's answer
     const [loading, setLoading] = useState(true);
     const [open, setOpen] = useState(null);
+    const [editing, setEditing] = useState(null); // { event } to change one, { date } for a new one
+    const [reload, setReload] = useState(0);
+    const [notice, setNotice] = useState('');
 
     const days = VIEWS.find((v) => v.value === view).days;
     const start = view === 'week' ? startOfWeek(anchor) : anchor;
@@ -84,7 +88,10 @@ export default function Agenda({ tasks }) {
             .catch(() => { if (current) setData({ connected: true, events: [], error: 'Your Google calendar couldn’t be loaded just now.' }); })
             .finally(() => { if (current) setLoading(false); });
         return () => { current = false; };
-    }, [start, days]);
+    }, [start, days, reload]);
+
+    const refresh = () => setReload((n) => n + 1);
+    const canAdd = data?.connected && (data.calendars ?? []).some((c) => c.can_edit);
 
     const events = data?.events ?? [];
     const myTasks = tasks.filter((t) => t.is_assigned || t.is_favorite);
@@ -104,7 +111,14 @@ export default function Agenda({ tasks }) {
                     {loading && <span className="agenda__loading">Loading…</span>}
                 </div>
                 <ViewToggle views={VIEWS} value={view} onChange={setView} />
+                {canAdd && (
+                    <button type="button" onClick={() => setEditing({ date: showsToday ? today : start })} title="New event" aria-label="New event" className="icon-btn icon-btn--secondary icon-btn--lg">
+                        <Plus />
+                    </button>
+                )}
             </div>
+
+            {notice && <p className="agenda__notice form-message form-message--error">{notice}</p>}
 
             {data && !data.connected && (
                 <p className="agenda__notice">
@@ -112,7 +126,7 @@ export default function Agenda({ tasks }) {
                     <Link href="/profile" className="link link--inline">Connect it from your profile</Link>.
                 </p>
             )}
-            {data?.connected && data.calendars === 0 && (
+            {data?.connected && data.calendars?.length === 0 && (
                 <p className="agenda__notice">
                     No calendars chosen yet. <Link href="/profile" className="link link--inline">Choose which to show on your profile</Link>.
                 </p>
@@ -146,7 +160,26 @@ export default function Agenda({ tasks }) {
                 })}
             </div>
 
-            {open && <EventDrawer event={open.event} onClose={() => setOpen(null)} />}
+            {open && (
+                <EventDrawer
+                    event={open.event}
+                    onEdit={() => { setEditing({ event: open.event }); setOpen(null); }}
+                    onDeleted={() => { setOpen(null); refresh(); }}
+                    onConflict={(message) => { setOpen(null); setNotice(message); refresh(); }}
+                    onClose={() => setOpen(null)}
+                />
+            )}
+            {editing && (
+                <EventFormDrawer
+                    event={editing.event}
+                    date={editing.date}
+                    calendars={data?.calendars ?? []}
+                    defaultCalendarId={data?.default_calendar_id}
+                    onSaved={() => { setNotice(''); refresh(); }}
+                    onConflict={(message) => { setNotice(message); refresh(); }}
+                    onClose={() => setEditing(null)}
+                />
+            )}
         </div>
     );
 }
@@ -199,8 +232,27 @@ function TaskRow({ task }) {
     );
 }
 
-// An event's details. Read-only for now; editing comes with the event form.
-function EventDrawer({ event, onClose }) {
+// An event's details, with Edit and Delete when it's on a calendar they
+// can change. Deleting a repeat asks: this one, or the whole series.
+function EventDrawer({ event, onEdit, onDeleted, onConflict, onClose }) {
+    const [confirming, setConfirming] = useState(false);
+    const [deleting, setDeleting] = useState(false);
+    const [error, setError] = useState('');
+
+    async function remove(scope) {
+        setDeleting(true);
+        setError('');
+        const query = new URLSearchParams({ calendar_id: event.calendar_id, scope, ...(event.etag ? { etag: event.etag } : {}), ...(event.recurring_event_id ? { recurring_event_id: event.recurring_event_id } : {}) });
+        try {
+            await api.delete(`/api/google-calendar/events/${encodeURIComponent(event.id)}?${query}`);
+            onDeleted();
+        } catch (err) {
+            if (err.status === 409) { onConflict(err.message); return; }
+            setError(err.message || 'Couldn’t delete this event.');
+            setDeleting(false);
+        }
+    }
+
     const when = event.all_day
         ? (addDays(event.start, 1) === event.end ? DAY_LONG.format(dayDate(event.start)) : `${formatRange(event.start, addDays(event.end, -1))} · All day`)
         : dateIn(event.start) === dateIn(new Date(new Date(event.end).getTime() - 1))
@@ -208,8 +260,31 @@ function EventDrawer({ event, onClose }) {
             : `${DAY_HEAD.format(dayDate(dateIn(event.start)))}, ${TIME.format(new Date(event.start))} – ${DAY_HEAD.format(dayDate(dateIn(event.end)))}, ${TIME.format(new Date(event.end))}`;
 
     return (
-        <Drawer onClose={onClose}>
+        <Drawer
+            onClose={onClose}
+            actions={event.can_edit && (
+                <>
+                    <button type="button" onClick={onEdit} title="Edit event" aria-label="Edit event" className="icon-btn drawer__action">
+                        <PencilSimple />
+                    </button>
+                    <button type="button" onClick={() => setConfirming(true)} title="Delete event" aria-label="Delete event" className="icon-btn icon-btn--danger drawer__action">
+                        <Trash />
+                    </button>
+                </>
+            )}
+        >
             <h2 className="drawer__title">{event.title}</h2>
+            {confirming && (
+                <div className="drawer__section agenda-event__confirm">
+                    <p>{event.recurring_event_id ? 'Delete this repeating event?' : 'Delete this event?'}{event.guests?.length ? ' Guests are told it’s cancelled.' : ''}</p>
+                    <div className="form-actions">
+                        <Button variant="secondary" onClick={() => setConfirming(false)} disabled={deleting}>Keep it</Button>
+                        {event.recurring_event_id && <Button variant="danger" onClick={() => remove('all')} disabled={deleting}>All events</Button>}
+                        <Button variant="danger" onClick={() => remove('this')} disabled={deleting}>{event.recurring_event_id ? 'Only this one' : 'Delete'}</Button>
+                    </div>
+                    {error && <div className="form-message form-message--error">{error}</div>}
+                </div>
+            )}
             <div className="drawer__section">
                 <div className="agenda-event__when">{when}</div>
                 <div className="agenda-event__calendar">

@@ -13,6 +13,12 @@ class GoogleCalendarAgendaTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        Http::preventStrayRequests();
+    }
+
     private function connected(User $user, array $calendars): GoogleCalendarAccount
     {
         return GoogleCalendarAccount::create([

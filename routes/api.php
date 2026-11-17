@@ -116,7 +116,11 @@ Route::middleware(['auth:sanctum', 'accountant.restrict', 'two-factor.required']
     Route::middleware('staff')->group(function () {
         Route::get('google-calendar', [GoogleCalendarController::class, 'show']);
         Route::get('google-calendar/events', [GoogleCalendarController::class, 'events']);
+        Route::post('google-calendar/events', [GoogleCalendarController::class, 'storeEvent']);
+        Route::patch('google-calendar/events/{event}', [GoogleCalendarController::class, 'updateEvent']);
+        Route::delete('google-calendar/events/{event}', [GoogleCalendarController::class, 'destroyEvent']);
         Route::put('google-calendar/calendars', [GoogleCalendarController::class, 'updateCalendars']);
+        Route::put('google-calendar/default', [GoogleCalendarController::class, 'updateDefault']);
         Route::delete('google-calendar', [GoogleCalendarController::class, 'destroy']);
     });
 
