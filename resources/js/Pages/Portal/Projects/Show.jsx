@@ -412,7 +412,7 @@ function ScheduleTab({ project }) {
                 <ScheduleChart items={items} tasks={project.tasks} onOpen={(item) => setOpenId(item.id)} />
             </div>
             <div className="card card--flush">
-                <div className="grid-row grid-row--action grid-row--head">
+                <div className="grid-row grid-row--action grid-row--head project-schedule__head">
                     <div className="project-schedule__title">Item</div>
                     <div className="project-schedule__dates">Dates</div>
                     <div className="project-schedule__length">Length</div>

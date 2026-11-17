@@ -15,6 +15,7 @@ import { ProjectStatusBadge, TaskStatusBadge, InvoiceStatusBadge, ProposalStatus
 import { formatCurrency, formatDate, formatDateTime, formatFileSize, invoiceTotal, todayInAppTimezone, formatShortDate } from '../../lib/format';
 import { addDays, daysBetween, formatLength, formatRange } from '../../lib/scheduleDates';
 import ScheduleChart from '../../Components/schedule/ScheduleChart';
+import ProjectMeetings from '../../Components/ProjectMeetings';
 import { todayLocal } from '../../lib/paymentTerms';
 import { api } from '../../lib/api';
 import { isBlankRichText, toRichText } from '../../lib/richText';
@@ -1168,16 +1169,21 @@ function ScheduleTab({ project }) {
             />
 
             {items.length === 0 ? (
-                <div className="card card--flush">
-                    <EmptyState text="No schedule yet. Build it from the project's services, or add phases and milestones one at a time." />
-                </div>
+                <>
+                    <div className="card card--flush page-section">
+                        <EmptyState text="No schedule yet. Build it from the project's services, or add phases and milestones one at a time." />
+                    </div>
+                    <ProjectMeetings project={project} />
+                </>
             ) : (
                 <>
                     <div className="card card--flush page-section">
                         <ScheduleChart items={items} tasks={project.tasks} onOpen={setEditing} onOpenTask={(task) => setTaskId(task.id)} onChangeDates={changeDates} />
                     </div>
+                    {/* Between the chart and its items: what's coming up. */}
+                    <ProjectMeetings project={project} />
                     <div className="card card--flush">
-                        <div className="grid-row grid-row--action grid-row--head">
+                        <div className="grid-row grid-row--action grid-row--head project-schedule__head">
                             <div className="project-schedule__title">Item</div>
                             <div className="project-schedule__dates">Dates</div>
                             <div className="project-schedule__length">Length</div>

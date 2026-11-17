@@ -21,6 +21,28 @@ function addMinutes(time, minutes) {
 }
 const minutesOf = (time) => { const [h, m] = time.split(':').map(Number); return h * 60 + m; };
 
+// The repeat choices, worded from the start date ("2026-11-17"). The
+// server (GoogleCalendarController::recurrence) turns the same keys into
+// Google's rule; a fifth weekday of the month is "the last".
+const ORDINALS = ['first', 'second', 'third', 'fourth', 'last'];
+function repeatOptions(startDate) {
+    const date = new Date(`${startDate}T12:00:00`);
+    if (Number.isNaN(date.getTime())) return [['none', 'Doesn’t repeat']];
+    const weekday = date.toLocaleDateString('en-US', { weekday: 'long' });
+    const day = date.getDate();
+    const suffix = day % 10 === 1 && day !== 11 ? 'st' : day % 10 === 2 && day !== 12 ? 'nd' : day % 10 === 3 && day !== 13 ? 'rd' : 'th';
+    return [
+        ['none', 'Doesn’t repeat'],
+        ['daily', 'Every day'],
+        ['weekdays', 'Every weekday (Monday to Friday)'],
+        ['weekly', `Every week on ${weekday}`],
+        ['biweekly', `Every 2 weeks on ${weekday}`],
+        ['monthly_day', `Every month on the ${day}${suffix}`],
+        ['monthly_weekday', `Every month on the ${ORDINALS[Math.floor((day - 1) / 7)]} ${weekday}`],
+        ['yearly', `Every year on ${date.toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}`],
+    ];
+}
+
 // The form's values for an event: Google's dates and moments as the
 // date and time fields show them (an all-day event's last day, not
 // Google's day after).
@@ -37,17 +59,23 @@ function fromEvent(event) {
         notes: event.notes ?? '',
         guests: (event.guests ?? []).map((g) => g.email),
         add_meet: false,
+        project_id: event.project_id ?? '',
+        ...NO_REPEAT,
     };
 }
 
+const NO_REPEAT = { repeat: 'none', repeat_ends: 'never', repeat_until: '', repeat_count: 10 };
+
 // A new event on `date`: the next hour if that's today, 9 AM otherwise.
-function blank(date, calendarId) {
+function blank(date, calendarId, projectId) {
     const now = timeIn(new Date().toISOString());
     const start = date === todayInAppTimezone() && now < '23:00' ? `${String(Number(now.slice(0, 2)) + 1).padStart(2, '0')}:00` : '09:00';
     return {
         calendar_id: calendarId, title: '', all_day: false,
         start_date: date, start_time: start, end_date: date, end_time: addMinutes(start, 60),
         location: '', notes: '', guests: [], add_meet: false,
+        project_id: projectId ?? '',
+        ...NO_REPEAT,
     };
 }
 
@@ -56,9 +84,11 @@ const TIME_FIELDS = ['all_day', 'start_date', 'start_time', 'end_date', 'end_tim
 // Adding or changing a Google Calendar event (Home → Agenda). A change
 // sends only the fields that changed, checked against the version that
 // was opened; a repeat asks whether it's this event or all of them.
-export default function EventFormDrawer({ event = null, date, calendars, defaultCalendarId = null, onSaved, onConflict, onClose }) {
+export default function EventFormDrawer({ event = null, date, calendars, defaultCalendarId = null, projects = [], projectId = null, onSaved, onConflict, onClose }) {
     const editable = calendars.filter((c) => c.can_edit);
-    const [initial] = useState(() => (event ? fromEvent(event) : blank(date, editable.find((c) => c.id === defaultCalendarId)?.id ?? editable[0]?.id ?? '')));
+    const [initial] = useState(() => (event ? fromEvent(event) : blank(date, editable.find((c) => c.id === defaultCalendarId)?.id ?? editable[0]?.id ?? '', projectId)));
+    // The open projects, plus the one it's linked to if that's since closed.
+    const projectChoices = event?.project && !projects.some((p) => p.id === event.project.id) ? [event.project, ...projects] : projects;
     const [form, setForm] = useState(initial);
     const [guestDraft, setGuestDraft] = useState('');
     const [scope, setScope] = useState('this');
@@ -97,18 +127,33 @@ export default function EventFormDrawer({ event = null, date, calendars, default
         const guests = guestDraft.trim()
             ? [...new Set([...form.guests, ...guestDraft.split(/[\s,;]+/).filter((x) => /^\S+@\S+\.\S+$/.test(x))])]
             : form.guests;
-        const values = { ...form, guests };
+        // Only the end that was chosen goes with a repeat.
+        const ends = form.repeat === 'none' ? 'never' : form.repeat_ends;
+        const repeatValues = {
+            repeat: form.repeat,
+            repeat_ends: ends,
+            repeat_until: ends === 'on' ? form.repeat_until : null,
+            repeat_count: ends === 'after' ? Number(form.repeat_count) : null,
+        };
+        const { repeat: _r, repeat_ends: _e, repeat_until: _u, repeat_count: _c, ...rest } = form;
+        const values = { ...rest, guests, project_id: rest.project_id ? Number(rest.project_id) : null };
         setSaving(true);
         setError('');
         try {
             let saved;
             if (!event) {
-                ({ event: saved } = await api.post('/api/google-calendar/events', values));
+                ({ event: saved } = await api.post('/api/google-calendar/events', { ...values, ...repeatValues }));
             } else {
                 const changed = {};
                 for (const key of ['title', 'location', 'notes']) if (values[key] !== initial[key]) changed[key] = values[key];
                 if (JSON.stringify(values.guests) !== JSON.stringify(initial.guests)) changed.guests = values.guests;
-                if (TIME_FIELDS.some((key) => values[key] !== initial[key])) TIME_FIELDS.forEach((key) => { changed[key] = values[key]; });
+                if (values.project_id !== (initial.project_id ? Number(initial.project_id) : null)) changed.project_id = values.project_id;
+                // Only a one-off event can be made to repeat here (a series
+                // keeps Google's rule). The rule is worded from the start
+                // date, so the dates go with it.
+                const repeatChanged = !repeat && form.repeat !== 'none';
+                if (repeatChanged) Object.assign(changed, repeatValues);
+                if (repeatChanged || TIME_FIELDS.some((key) => values[key] !== initial[key])) TIME_FIELDS.forEach((key) => { changed[key] = values[key]; });
                 if (values.add_meet) changed.add_meet = true;
                 if (Object.keys(changed).length === 0) { onClose(); return; }
                 ({ event: saved } = await api.patch(`/api/google-calendar/events/${encodeURIComponent(event.id)}`, {
@@ -117,6 +162,7 @@ export default function EventFormDrawer({ event = null, date, calendars, default
                     etag: event.etag,
                     scope: repeat ? scope : 'this',
                     recurring_event_id: event.recurring_event_id,
+                    split_at: event.split_at ?? event.start,
                     original_start: event.start,
                     original_end: event.end,
                 }));
@@ -168,6 +214,15 @@ export default function EventFormDrawer({ event = null, date, calendars, default
                 </div>
 
                 <div className="drawer__section">
+                    <div className="section-label section-label--tight">Project</div>
+                    <select value={form.project_id} onChange={(e) => set({ project_id: e.target.value })} className="input input--xs" aria-label="Project">
+                        <option value="">None</option>
+                        {projectChoices.map((p) => <option key={p.id} value={p.id}>{p.name}{p.client ? ` (${p.client})` : ''}</option>)}
+                    </select>
+                    {form.project_id !== '' && <p className="form-hint form-hint--attached">Shows on the project’s Schedule.</p>}
+                </div>
+
+                <div className="drawer__section">
                     <Toggle checked={form.all_day} onChange={(all_day) => set({ all_day })} label="All day" />
                 </div>
 
@@ -187,6 +242,47 @@ export default function EventFormDrawer({ event = null, date, calendars, default
                         </div>
                     </div>
                 </div>
+
+                {!repeat && (
+                    <div className="drawer__section event-form__repeat">
+                        <div>
+                            <div className="section-label section-label--tight">Repeat</div>
+                            <select value={form.repeat} onChange={(e) => set({ repeat: e.target.value })} className="input input--xs" aria-label="Repeat">
+                                {repeatOptions(form.start_date).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+                            </select>
+                        </div>
+                        {form.repeat !== 'none' && (
+                            <div>
+                                <div className="section-label section-label--tight">Ends</div>
+                                <div className="event-form__when">
+                                    <select
+                                        value={form.repeat_ends}
+                                        onChange={(e) => set({
+                                            repeat_ends: e.target.value,
+                                            // Three months out to start with.
+                                            repeat_until: form.repeat_until || addDays(form.start_date, 91),
+                                        })}
+                                        className="input input--xs"
+                                        aria-label="Repeat ends"
+                                    >
+                                        <option value="never">Never</option>
+                                        <option value="on">On</option>
+                                        <option value="after">After</option>
+                                    </select>
+                                    {form.repeat_ends === 'on' && (
+                                        <input required type="date" min={form.start_date} value={form.repeat_until} onChange={(e) => set({ repeat_until: e.target.value })} className="input input--xs" aria-label="Last day" />
+                                    )}
+                                    {form.repeat_ends === 'after' && (
+                                        <span className="event-form__count">
+                                            <input required type="number" min={2} max={500} value={form.repeat_count} onChange={(e) => set({ repeat_count: e.target.value })} className="input input--xs" aria-label="Number of times" />
+                                            times
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
 
                 <div className="drawer__section">
                     <div className="section-label section-label--tight">Location</div>
@@ -241,6 +337,7 @@ export default function EventFormDrawer({ event = null, date, calendars, default
                         <div className="section-label section-label--tight">This is a repeating event</div>
                         <div className="event-form__scope" role="radiogroup" aria-label="Change">
                             <label><input type="radio" name="scope" value="this" checked={scope === 'this'} onChange={() => setScope('this')} /> Change only this event</label>
+                            <label><input type="radio" name="scope" value="following" checked={scope === 'following'} onChange={() => setScope('following')} /> Change this and following events</label>
                             <label><input type="radio" name="scope" value="all" checked={scope === 'all'} onChange={() => setScope('all')} /> Change all events</label>
                         </div>
                     </div>

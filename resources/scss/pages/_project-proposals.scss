@@ -7,6 +7,11 @@
         @include truncate;
         grid-column: span 6;
         font-weight: var(--font-weight-medium);
+
+        // The column's label at the other labels' weight.
+        .grid-row--head & {
+            font-weight: inherit;
+        }
     }
 
     &__estimate {

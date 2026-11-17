@@ -18,6 +18,11 @@ class GoogleCalendarClient
 {
     // See and change events, and list the calendars to choose from; the
     // email says whose account it is.
+    // The project an event is linked to, kept on the event in Google (a
+    // shared extended property: on every guest's copy, not shown in
+    // Google's own screens) so it stays with the event wherever it's seen.
+    public const PROJECT_KEY = 'studioProjectId';
+
     public const SCOPES = [
         'openid',
         'email',
@@ -148,7 +153,7 @@ class GoogleCalendarClient
      *
      * @return list<array<string, mixed>>
      */
-    public function events(GoogleCalendarAccount $account, array $calendar, \DateTimeInterface $from, \DateTimeInterface $to): array
+    public function events(GoogleCalendarAccount $account, array $calendar, \DateTimeInterface $from, \DateTimeInterface $to, ?int $projectId = null): array
     {
         $items = [];
         $page = null;
@@ -159,6 +164,8 @@ class GoogleCalendarClient
                 'singleEvents' => 'true',
                 'orderBy' => 'startTime',
                 'maxResults' => 250,
+                // Only the events linked to this project.
+                'sharedExtendedProperty' => $projectId ? self::PROJECT_KEY.'='.$projectId : null,
                 'pageToken' => $page,
             ]))->throw();
             $items = [...$items, ...$response->json('items', [])];
@@ -206,6 +213,10 @@ class GoogleCalendarClient
             // plain text, and the guests.
             'etag' => $e['etag'] ?? null,
             'recurring_event_id' => $e['recurringEventId'] ?? null,
+            'project_id' => (int) ($e['extendedProperties']['shared'][self::PROJECT_KEY] ?? 0) ?: null,
+            // A repeat's place in its series (where "this and following"
+            // splits it), even if this one was moved.
+            'split_at' => $e['originalStartTime']['dateTime'] ?? $e['originalStartTime']['date'] ?? null,
             'can_edit' => (bool) ($calendar['can_edit'] ?? false),
             'notes' => self::plainNotes($e['description'] ?? null),
             'has_meet' => isset($e['hangoutLink']),
@@ -259,6 +270,28 @@ class GoogleCalendarClient
     public function getEvent(GoogleCalendarAccount $account, string $calendarId, string $eventId): array
     {
         return $this->api($account)->get($this->eventPath($calendarId, $eventId))->throw()->json();
+    }
+
+    /**
+     * How many of a series' repeats come before $before, cancelled ones
+     * too: Google's COUNT counts them all.
+     */
+    public function repeatsBefore(GoogleCalendarAccount $account, string $calendarId, string $seriesId, string $before): int
+    {
+        $count = 0;
+        $page = null;
+        do {
+            $response = $this->api($account)->get($this->eventPath($calendarId, $seriesId).'/instances', array_filter([
+                'timeMax' => $before,
+                'showDeleted' => 'true',
+                'maxResults' => 2500,
+                'pageToken' => $page,
+            ]))->throw()->json();
+            $count += count($response['items'] ?? []);
+            $page = $response['nextPageToken'] ?? null;
+        } while ($page);
+
+        return $count;
     }
 
     // A new event; with $meet, Google adds a Meet link. Guests get Google's

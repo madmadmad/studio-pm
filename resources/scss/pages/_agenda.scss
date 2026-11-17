@@ -151,6 +151,41 @@
     }
 }
 
+// A project's upcoming meetings (Components/ProjectMeetings.jsx), on its
+// Schedule tab: the Agenda's rows under its day bar, the add button at
+// the bar's right.
+.project-meetings {
+    // Twice the usual room above, off the chart: the section's own
+    // padding on top of the chart's margin (padding, so it doesn't
+    // collapse into it).
+    padding-top: var(--space-section);
+
+    // The day and its times side by side: "Thu, Nov 19  10:00 – 10:30 AM".
+    .agenda__time {
+        width: 16rem; // one-off: room for "Wed, Dec 30  11:30 AM – 12:30 PM"
+
+        @include respond-below('sm') {
+            width: 5.5rem;
+        }
+    }
+
+    &__day {
+        margin-right: var(--space-2);
+
+        @include respond-below('sm') {
+            display: block;
+        }
+    }
+
+    // A row-action square, kept from making the bar taller.
+    &__add {
+        align-self: center;
+        width: var(--size-row-action);
+        height: var(--size-row-action);
+        margin-block: calc((var(--line-height-xs) - var(--size-row-action)) / 2);
+    }
+}
+
 // An event's details drawer.
 .agenda-event {
     &__when {
@@ -173,6 +208,14 @@
             min-height: 0;
             border-radius: 50%;
         }
+    }
+
+    // The project it's linked to, opening its Schedule.
+    &__project {
+        display: inline-block;
+        margin-top: var(--space-2);
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
     }
 
     &__links {
@@ -207,6 +250,24 @@
 
         > * {
             min-width: 0;
+        }
+    }
+
+    // Repeat, then (if it repeats) when it ends, each the drawer's width.
+    &__repeat {
+        @include stack(var(--space-3));
+    }
+
+    // "After [10] times" in a repeat's end.
+    &__count {
+        display: flex;
+        align-items: center;
+        gap: var(--space-1-5);
+        font-size: var(--font-size-sm);
+        white-space: nowrap;
+
+        .input {
+            width: 5rem;
         }
     }
 

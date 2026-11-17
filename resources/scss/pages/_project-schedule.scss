@@ -11,6 +11,24 @@
         gap: var(--space-2);
         min-width: 0;
         font-weight: var(--font-weight-medium);
+
+        // The column's label ("Item") at the other labels' weight.
+        .grid-row--head & {
+            font-weight: inherit;
+        }
+    }
+
+    // The items' column labels on the Agenda's day bar (.month-divider__bar):
+    // the subtle fill, "Item" as its label, Dates and Length as its figures.
+    // After __title, so its label weight wins.
+    &__head {
+        padding-block: var(--space-2);
+        background-color: var(--color-surface-subtle);
+
+        .project-schedule__title {
+            font-weight: var(--font-weight-semibold);
+            color: var(--color-text);
+        }
     }
 
     &__text {

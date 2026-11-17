@@ -17,6 +17,11 @@
         gap: var(--space-2);
         min-width: 0;
         font-weight: var(--font-weight-medium);
+
+        // The column's label at the other labels' weight.
+        .grid-row--head & {
+            font-weight: inherit;
+        }
     }
 
     // Marks a task assigned to them (as .task-list__client marks one shown
@@ -70,6 +75,11 @@
         grid-column: span 6;
         min-width: 0;
         font-weight: var(--font-weight-medium);
+
+        // The column's label at the other labels' weight.
+        .grid-row--head & {
+            font-weight: inherit;
+        }
     }
 
     &__client {

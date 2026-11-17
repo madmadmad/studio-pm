@@ -119,6 +119,7 @@ Route::middleware(['auth:sanctum', 'accountant.restrict', 'two-factor.required']
         Route::post('google-calendar/events', [GoogleCalendarController::class, 'storeEvent']);
         Route::patch('google-calendar/events/{event}', [GoogleCalendarController::class, 'updateEvent']);
         Route::delete('google-calendar/events/{event}', [GoogleCalendarController::class, 'destroyEvent']);
+        Route::get('projects/{project}/meetings', [GoogleCalendarController::class, 'projectMeetings']);
         Route::put('google-calendar/calendars', [GoogleCalendarController::class, 'updateCalendars']);
         Route::put('google-calendar/default', [GoogleCalendarController::class, 'updateDefault']);
         Route::delete('google-calendar', [GoogleCalendarController::class, 'destroy']);

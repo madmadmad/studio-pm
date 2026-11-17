@@ -26,7 +26,7 @@ const DAY_LONG = new Intl.DateTimeFormat('en-US', { weekday: 'long', month: 'lon
 
 // "9:00 – 10:30 AM", or "11:00 AM – 1:00 PM" across noon.
 // (By parts: browsers put a narrow no-break space before AM/PM.)
-function timeRange(startIso, endIso) {
+export function timeRange(startIso, endIso) {
     const parts = (iso) => {
         const p = TIME.formatToParts(new Date(iso));
         const clock = p.filter((x) => ['hour', 'literal', 'minute'].includes(x.type)).map((x) => x.value).join('').trim();
@@ -175,6 +175,7 @@ export default function Agenda({ tasks }) {
                     date={editing.date}
                     calendars={data?.calendars ?? []}
                     defaultCalendarId={data?.default_calendar_id}
+                    projects={data?.projects ?? []}
                     onSaved={() => { setNotice(''); refresh(); }}
                     onConflict={(message) => { setNotice(message); refresh(); }}
                     onClose={() => setEditing(null)}
@@ -186,7 +187,7 @@ export default function Agenda({ tasks }) {
 
 // A Google event: its time, the calendar's color, title, where, and a
 // Join link straight to the call. The row opens its details.
-function EventRow({ event, time, onOpen }) {
+export function EventRow({ event, time, onOpen }) {
     return (
         <div role="button" tabIndex={0} onClick={onOpen} onKeyDown={(e) => { if (e.key === 'Enter') onOpen(); }} className="list-row agenda__item">
             <div className="agenda__time">{time}</div>
@@ -194,7 +195,8 @@ function EventRow({ event, time, onOpen }) {
             <div className="agenda__body">
                 <div className="agenda__title">{event.title}</div>
                 <div className="agenda__meta">
-                    {event.calendar}
+                    {/* Linked to a project: its name (the color says which calendar). */}
+                    {event.project ? `${event.project.name}${event.project.client ? ` (${event.project.client})` : ''}` : event.calendar}
                     {/* A location that's only the call's link: the Join covers it. */}
                     {event.location && !/^https?:\/\/\S+$/.test(event.location.trim()) && <> · {event.location}</>}
                 </div>
@@ -235,7 +237,7 @@ function TaskRow({ task }) {
 
 // An event's details, with Edit and Delete when it's on a calendar they
 // can change. Deleting a repeat asks: this one, or the whole series.
-function EventDrawer({ event, onEdit, onDeleted, onConflict, onClose }) {
+export function EventDrawer({ event, onEdit, onDeleted, onConflict, onClose }) {
     const [confirming, setConfirming] = useState(false);
     const [deleting, setDeleting] = useState(false);
     const [error, setError] = useState('');
@@ -243,7 +245,12 @@ function EventDrawer({ event, onEdit, onDeleted, onConflict, onClose }) {
     async function remove(scope) {
         setDeleting(true);
         setError('');
-        const query = new URLSearchParams({ calendar_id: event.calendar_id, scope, ...(event.etag ? { etag: event.etag } : {}), ...(event.recurring_event_id ? { recurring_event_id: event.recurring_event_id } : {}) });
+        const query = new URLSearchParams({
+            calendar_id: event.calendar_id,
+            scope,
+            ...(event.etag ? { etag: event.etag } : {}),
+            ...(event.recurring_event_id ? { recurring_event_id: event.recurring_event_id, split_at: event.split_at ?? event.start } : {}),
+        });
         try {
             await api.delete(`/api/google-calendar/events/${encodeURIComponent(event.id)}?${query}`);
             onDeleted();
@@ -281,6 +288,7 @@ function EventDrawer({ event, onEdit, onDeleted, onConflict, onClose }) {
                     <div className="form-actions">
                         <Button variant="secondary" onClick={() => setConfirming(false)} disabled={deleting}>Keep it</Button>
                         {event.recurring_event_id && <Button variant="danger" onClick={() => remove('all')} disabled={deleting}>All events</Button>}
+                        {event.recurring_event_id && <Button variant="danger" onClick={() => remove('following')} disabled={deleting}>This and following</Button>}
                         <Button variant="danger" onClick={() => remove('this')} disabled={deleting}>{event.recurring_event_id ? 'Only this one' : 'Delete'}</Button>
                     </div>
                     {error && <div className="form-message form-message--error">{error}</div>}
@@ -292,6 +300,11 @@ function EventDrawer({ event, onEdit, onDeleted, onConflict, onClose }) {
                     <span className="agenda__swatch" style={{ backgroundColor: event.color || undefined }} aria-hidden="true" />
                     {event.calendar}
                 </div>
+                {event.project && (
+                    <Link href={`/projects/${event.project.id}?tab=Schedule`} className="link agenda-event__project">
+                        {event.project.name}{event.project.client ? ` · ${event.project.client}` : ''}
+                    </Link>
+                )}
             </div>
             {(event.join_url || event.location) && (
                 <div className="drawer__section agenda-event__links">
