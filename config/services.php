@@ -51,6 +51,16 @@ return [
         'env' => env('PLAID_ENV', 'sandbox'),
     ],
 
+    // Google Calendar (App\Services\GoogleCalendarClient): each person
+    // connects their own madmadmad.com account. The Google Cloud project
+    // "Studio PM" has an Internal sign-in client, so only the studio's
+    // Workspace accounts can connect, with no Google review.
+    'google' => [
+        'client_id' => env('GOOGLE_CLIENT_ID'),
+        'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+        'redirect' => env('GOOGLE_REDIRECT_URI'),
+    ],
+
     'stripe' => [
         'key' => env('STRIPE_KEY'),
         'secret' => env('STRIPE_SECRET'),

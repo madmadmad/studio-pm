@@ -1,0 +1,56 @@
+// Profile → Google Calendar (Components/GoogleCalendarSettings.jsx): the
+// connect button, the connected account, and a toggle per calendar with
+// its Google color.
+@use '../abstracts' as *;
+
+.google-calendar {
+    &__connect {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--space-3);
+    }
+
+    &__account {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--space-3);
+    }
+
+    &__email {
+        font-weight: var(--font-weight-medium);
+        overflow-wrap: anywhere;
+    }
+
+    &__list {
+        @include stack(var(--space-2));
+
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    &__name {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--space-2);
+    }
+
+    // The calendar's own color in Google, so it reads as the same calendar.
+    &__swatch {
+        flex-shrink: 0;
+        width: var(--space-2-5);
+        height: var(--space-2-5);
+        border-radius: 50%;
+        background-color: var(--color-text-muted);
+    }
+
+    &__note {
+        font-size: var(--font-size-xs);
+        line-height: var(--line-height-xs);
+        color: var(--color-text-muted);
+    }
+}

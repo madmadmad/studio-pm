@@ -1,5 +1,5 @@
 import { Head, router } from '@inertiajs/react';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import AppLayout from '../../Layouts/AppLayout';
 import Avatar from '../../Components/Avatar';
 import Button from '../../Components/Button';
@@ -10,6 +10,7 @@ import AlertSettings from '../../Components/AlertSettings';
 import NotificationSettings from '../../Components/NotificationSettings';
 import { AppearanceToggle } from '../../Components/AppearanceSetting';
 import BrandColorSetting from '../../Components/BrandColorSetting';
+import GoogleCalendarSettings from '../../Components/GoogleCalendarSettings';
 import { useRememberedTab } from '../../lib/useRememberedTab';
 import BioForm from '../../Components/BioForm';
 import SecuritySettings from '../../Components/SecuritySettings';
@@ -137,6 +138,16 @@ export default function ProfileIndex({ profileUser, passwordHint, security, push
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
     const inputRef = useRef(null);
+    // Back from Google's sign-in (?calendar=connected|cancelled|failed):
+    // the Account tab, the result said once, and the address cleaned up.
+    const [calendarReturn] = useState(() => new URLSearchParams(window.location.search).get('calendar'));
+    useEffect(() => {
+        if (!calendarReturn) return;
+        setTab('Account');
+        const url = new URL(window.location.href);
+        url.searchParams.delete('calendar');
+        window.history.replaceState(window.history.state, '', url);
+    }, []);
 
     async function uploadAvatar(e) {
         const file = e.target.files?.[0];
@@ -222,6 +233,7 @@ export default function ProfileIndex({ profileUser, passwordHint, security, push
                     <PasswordPanel hint={passwordHint} />
                     <NotificationSettings user={user} push={push} />
                     <AlertSettings user={user} />
+                    <GoogleCalendarSettings returned={calendarReturn} />
                     <SettingsSection title="Look and feel" description="How the app looks for you: light or dark, and the color its buttons, highlights and links take.">
                         <div className="form-panel form-stack">
                             <div>

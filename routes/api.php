@@ -13,11 +13,11 @@ use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\ExpenseCategoryController;
 use App\Http\Controllers\ExpenseController;
+use App\Http\Controllers\GoogleCalendarController;
 use App\Http\Controllers\InvoiceCategoryController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\InvoicePaymentController;
 use App\Http\Controllers\JournalEntryController;
-use App\Http\Controllers\ReconciliationController;
 use App\Http\Controllers\MessageAttachmentController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\NoteController;
@@ -34,6 +34,7 @@ use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectFavoriteController;
 use App\Http\Controllers\ProposalController;
 use App\Http\Controllers\PushSubscriptionController;
+use App\Http\Controllers\ReconciliationController;
 use App\Http\Controllers\ScheduleItemController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\StudioLogoController;
@@ -110,6 +111,13 @@ Route::middleware(['auth:sanctum', 'accountant.restrict', 'two-factor.required']
     Route::post('push-subscriptions/test', [PushSubscriptionController::class, 'test']);
     Route::post('profile/bio-photo', [ProfileController::class, 'updateBioPhoto']);
     Route::delete('profile/bio-photo', [ProfileController::class, 'destroyBioPhoto']);
+
+    // Your Google Calendar connection and which calendars to show.
+    Route::middleware('staff')->group(function () {
+        Route::get('google-calendar', [GoogleCalendarController::class, 'show']);
+        Route::put('google-calendar/calendars', [GoogleCalendarController::class, 'updateCalendars']);
+        Route::delete('google-calendar', [GoogleCalendarController::class, 'destroy']);
+    });
 
     Route::post('notifications/read-all', [NotificationController::class, 'markAllRead']);
     Route::post('notifications/{notification}/read', [NotificationController::class, 'markRead']);

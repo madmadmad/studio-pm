@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Notifications\Notifiable;
@@ -231,6 +232,12 @@ class User extends Authenticatable implements OAuthenticatable, PasskeyUser
         return $this->belongsToMany(Conversation::class)
             ->withPivot(['last_read_message_id', 'joined_at', 'muted', 'hidden_at'])
             ->withTimestamps();
+    }
+
+    // Their Google account, when they've connected their calendars.
+    public function googleCalendarAccount(): HasOne
+    {
+        return $this->hasOne(GoogleCalendarAccount::class);
     }
 
     public function timeEntries(): HasMany

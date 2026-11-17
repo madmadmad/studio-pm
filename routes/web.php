@@ -3,6 +3,7 @@
 use App\Http\Controllers\AvatarController;
 use App\Http\Controllers\Chat\ChatAttachmentController;
 use App\Http\Controllers\Dev\NotificationPreviewController;
+use App\Http\Controllers\GoogleCalendarController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\Portal\TaskFileController as PortalTaskFileController;
 use App\Http\Controllers\ProposalController;
@@ -17,7 +18,6 @@ use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\ExpensePageController;
 use App\Http\Controllers\Web\InvoicePageController;
 use App\Http\Controllers\Web\LedgerPageController;
-use App\Http\Controllers\Web\ReconciliationPageController;
 use App\Http\Controllers\Web\LedgerReportPageController;
 use App\Http\Controllers\Web\MyWorkPageController;
 use App\Http\Controllers\Web\PortalAuthController;
@@ -29,12 +29,14 @@ use App\Http\Controllers\Web\ProjectPageController;
 use App\Http\Controllers\Web\ProposalPageController;
 use App\Http\Controllers\Web\PublicInvoiceController;
 use App\Http\Controllers\Web\PublicProposalController;
+use App\Http\Controllers\Web\ReconciliationPageController;
 use App\Http\Controllers\Web\SecurityPageController;
 use App\Http\Controllers\Web\ServicePageController;
 use App\Http\Controllers\Web\SettingsPageController;
 use App\Http\Controllers\Web\TimePageController;
 use App\Http\Controllers\Web\UserPageController;
 use App\Http\Controllers\Web\WebManifestController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -85,8 +87,15 @@ Route::middleware(['auth', 'accountant.restrict', 'two-factor.required'])->group
     // Overview is off the sidebar for now but still at /overview.
     Route::redirect('/', '/home')->name('home');
     Route::get('/home', [MyWorkPageController::class, 'index'])->name('my-work.index');
-    Route::get('/my-work', fn (Illuminate\Http\Request $request) => redirect('/home'.($request->getQueryString() ? '?'.$request->getQueryString() : '')));
+    Route::get('/my-work', fn (Request $request) => redirect('/home'.($request->getQueryString() ? '?'.$request->getQueryString() : '')));
     Route::get('/overview', [DashboardController::class, 'index'])->name('dashboard');
+
+    // Connecting your own Google Calendar (Profile): out to Google's
+    // sign-in and back. Staff only; clients never see the calendar.
+    Route::middleware('staff')->group(function () {
+        Route::get('/google/calendar/connect', [GoogleCalendarController::class, 'connect'])->name('google-calendar.connect');
+        Route::get('/google/calendar/callback', [GoogleCalendarController::class, 'callback'])->name('google-calendar.callback');
+    });
 
     // Two-factor, required of all staff: where they're sent until it's set
     // up (RequireTwoFactor), and where it's managed from then on is Profile.
