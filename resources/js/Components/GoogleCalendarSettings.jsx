@@ -22,6 +22,7 @@ export default function GoogleCalendarSettings({ returned }) {
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState('');
     const notice = RETURN_MESSAGES[returned];
+    const installedApp = typeof window !== 'undefined' && window.matchMedia?.('(display-mode: standalone)').matches;
 
     useEffect(() => {
         api.get('/api/google-calendar')
@@ -82,9 +83,21 @@ export default function GoogleCalendarSettings({ returned }) {
 
                 {!state.connected ? (
                     <div className="google-calendar__connect">
-                        <p className="form-hint">Sign in with your madmadmad.com Google account.</p>
-                        {/* A full page load: it leaves for Google's sign-in. */}
-                        <a href="/google/calendar/connect" className="btn btn--confirm">Connect Google Calendar</a>
+                        <p className="form-hint">
+                            Sign in with your madmadmad.com Google account.
+                            {installedApp && ' It opens in your browser; come back here once it says Connected.'}
+                        </p>
+                        {/* A full page load: it leaves for Google's sign-in. From the
+                            installed app, in a browser tab instead: Google's sign-in
+                            stalls in an app window. The tab shares the app's sign-in,
+                            so the connection lands on the same account. */}
+                        <a
+                            href="/google/calendar/connect"
+                            {...(installedApp ? { target: '_blank', rel: 'noopener' } : {})}
+                            className="btn btn--confirm"
+                        >
+                            Connect Google Calendar
+                        </a>
                     </div>
                 ) : (
                     <>
