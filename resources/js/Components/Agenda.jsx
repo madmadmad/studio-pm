@@ -195,12 +195,13 @@ function EventRow({ event, time, onOpen }) {
                 <div className="agenda__title">{event.title}</div>
                 <div className="agenda__meta">
                     {event.calendar}
-                    {event.location && <> · {event.location}</>}
+                    {/* A location that's only the call's link: the Join covers it. */}
+                    {event.location && !/^https?:\/\/\S+$/.test(event.location.trim()) && <> · {event.location}</>}
                 </div>
             </div>
             {event.join_url && (
                 <a href={event.join_url} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="agenda__join">
-                    <VideoCamera aria-hidden="true" /> Join
+                    <VideoCamera aria-hidden="true" /> Join{event.join_service ? ` ${event.join_service}` : ''}
                 </a>
             )}
         </div>
@@ -296,7 +297,7 @@ function EventDrawer({ event, onEdit, onDeleted, onConflict, onClose }) {
                 <div className="drawer__section agenda-event__links">
                     {event.join_url && (
                         <a href={event.join_url} target="_blank" rel="noopener noreferrer" className="btn btn--confirm">
-                            <VideoCamera aria-hidden="true" /> Join meeting
+                            <VideoCamera aria-hidden="true" /> Join {event.join_service ? `${event.join_service} meeting` : 'meeting'}
                         </a>
                     )}
                     {event.location && (

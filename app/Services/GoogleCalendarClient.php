@@ -180,7 +180,10 @@ class GoogleCalendarClient
     public function event(array $e, array $calendar): array
     {
         $allDay = isset($e['start']['date']);
-        $join = $e['hangoutLink'] ?? collect($e['conferenceData']['entryPoints'] ?? [])->firstWhere('entryPointType', 'video')['uri'] ?? null;
+        $join = $e['hangoutLink']
+            ?? collect($e['conferenceData']['entryPoints'] ?? [])->firstWhere('entryPointType', 'video')['uri']
+            ?? self::meetingLink($e['location'] ?? null)
+            ?? self::meetingLink($e['description'] ?? null);
 
         return [
             'id' => $e['id'],
@@ -195,6 +198,7 @@ class GoogleCalendarClient
             // Google's notes can be HTML: cut down to plain formatting.
             'description' => RichText::toSafeHtml($e['description'] ?? null) ?: null,
             'join_url' => $join,
+            'join_service' => self::meetingService($join),
             'google_url' => $e['htmlLink'] ?? null,
             'type' => $e['eventType'] ?? 'default', // default, outOfOffice, focusTime
             // For editing (GoogleCalendarController): the version to check a
@@ -210,6 +214,34 @@ class GoogleCalendarClient
                 ->map(fn ($a) => ['email' => $a['email'], 'name' => $a['displayName'] ?? null, 'response' => $a['responseStatus'] ?? 'needsAction'])
                 ->values()->all(),
         ];
+    }
+
+    // A video-call link written into an event's location or notes, as
+    // Zoom's own invitations do (its Google add-on uses conferenceData
+    // instead): Zoom, Meet, Teams or Webex.
+    public static function meetingLink(?string $text): ?string
+    {
+        if (blank($text)) {
+            return null;
+        }
+        $pattern = '~https://(?:[\w-]+\.)*(?:zoom\.us/(?:j|my|s|w)/|meet\.google\.com/|teams\.microsoft\.com/l/meetup-join/|[\w-]+\.webex\.com/)[^\s"\'<>)]*~i';
+
+        return preg_match($pattern, html_entity_decode($text), $m) ? rtrim($m[0], '.,;') : null;
+    }
+
+    // Which service a call link is for, for its button: "Join Zoom".
+    public static function meetingService(?string $url): ?string
+    {
+        $host = strtolower((string) parse_url((string) $url, PHP_URL_HOST));
+
+        return match (true) {
+            $host === '' => null,
+            str_ends_with($host, 'zoom.us') => 'Zoom',
+            $host === 'meet.google.com' => 'Meet',
+            $host === 'teams.microsoft.com' => 'Teams',
+            str_ends_with($host, 'webex.com') => 'Webex',
+            default => null,
+        };
     }
 
     // Google's notes (HTML or plain) as plain text to edit: line breaks kept.

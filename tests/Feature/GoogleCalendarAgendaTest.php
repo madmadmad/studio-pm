@@ -61,6 +61,7 @@ class GoogleCalendarAgendaTest extends TestCase
         $standup = $response->json('events.0');
         $this->assertSame(['Standup', false, '2026-11-17T09:00:00-05:00', 'https://meet.google.com/abc-defg-hij', 'Bill', '#4285f4'],
             [$standup['title'], $standup['all_day'], $standup['start'], $standup['join_url'], $standup['calendar'], $standup['color']]);
+        $this->assertSame('Meet', $standup['join_service']);
         $this->assertStringNotContainsString('<script', $standup['description']);
         $this->assertStringContainsString('<b>Agenda</b>', $standup['description']);
         $this->assertSame(['Studio offsite', true, '2026-11-18', '2026-11-20', 'Toledo'],
@@ -71,6 +72,23 @@ class GoogleCalendarAgendaTest extends TestCase
             && $r['timeMin'] === '2026-11-17T00:00:00-05:00'
             && $r['timeMax'] === '2026-11-20T00:00:00-05:00'
             && $r['singleEvents'] === 'true');
+    }
+
+    public function test_a_zoom_link_in_the_location_or_notes_becomes_the_join_link(): void
+    {
+        Http::fake(['www.googleapis.com/*' => Http::response(['items' => [
+            ['id' => 'z1', 'summary' => 'Client call', 'location' => 'https://us02web.zoom.us/j/81234567890?pwd=abc', 'start' => ['dateTime' => '2026-11-17T10:00:00-05:00'], 'end' => ['dateTime' => '2026-11-17T11:00:00-05:00']],
+            ['id' => 'z2', 'summary' => 'Review', 'location' => 'Studio', 'description' => 'Join Zoom Meeting<br><a href="https://madhouse.zoom.us/j/999?pwd=x">https://madhouse.zoom.us/j/999?pwd=x</a>', 'start' => ['dateTime' => '2026-11-17T12:00:00-05:00'], 'end' => ['dateTime' => '2026-11-17T13:00:00-05:00']],
+            ['id' => 'p1', 'summary' => 'Lunch', 'location' => 'Zoom pricing page https://zoom.us/pricing', 'start' => ['dateTime' => '2026-11-17T14:00:00-05:00'], 'end' => ['dateTime' => '2026-11-17T15:00:00-05:00']],
+        ]])]);
+        $me = User::factory()->teamMember()->create();
+        $this->connected($me, [['id' => 'bill@madmadmad.com', 'name' => 'Bill', 'color' => null, 'can_edit' => true]]);
+
+        $this->actingAs($me)->getJson('/api/google-calendar/events?start=2026-11-17&days=1')
+            ->assertJsonPath('events.0.join_url', 'https://us02web.zoom.us/j/81234567890?pwd=abc')
+            ->assertJsonPath('events.0.join_service', 'Zoom')
+            ->assertJsonPath('events.1.join_url', 'https://madhouse.zoom.us/j/999?pwd=x')
+            ->assertJsonPath('events.2.join_url', null); // not a meeting
     }
 
     public function test_paging_back_within_two_minutes_doesnt_ask_google_again(): void
