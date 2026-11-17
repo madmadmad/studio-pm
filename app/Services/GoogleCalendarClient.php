@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\GoogleCalendarAccount;
+use App\Support\RichText;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
@@ -135,6 +136,66 @@ class GoogleCalendarClient
             ->sortBy([['primary', 'desc'], ['name', 'asc']])
             ->values()
             ->all();
+    }
+
+    /**
+     * One calendar's events between two moments, each repeat of a
+     * recurring event its own (Google expands them), soonest first.
+     * Cancelled ones, ones they've declined, and working-location markers
+     * are left out.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function events(GoogleCalendarAccount $account, array $calendar, \DateTimeInterface $from, \DateTimeInterface $to): array
+    {
+        $items = [];
+        $page = null;
+        do {
+            $response = $this->api($account)->get('calendars/'.rawurlencode($calendar['id']).'/events', array_filter([
+                'timeMin' => $from->format(DATE_RFC3339),
+                'timeMax' => $to->format(DATE_RFC3339),
+                'singleEvents' => 'true',
+                'orderBy' => 'startTime',
+                'maxResults' => 250,
+                'pageToken' => $page,
+            ]))->throw();
+            $items = [...$items, ...$response->json('items', [])];
+            $page = $response->json('nextPageToken');
+        } while ($page);
+
+        return collect($items)
+            ->reject(fn (array $e) => ($e['status'] ?? '') === 'cancelled'
+                || ($e['eventType'] ?? 'default') === 'workingLocation'
+                || collect($e['attendees'] ?? [])->contains(fn ($a) => ($a['self'] ?? false) && ($a['responseStatus'] ?? '') === 'declined'))
+            ->map(fn (array $e) => $this->event($e, $calendar))
+            ->values()
+            ->all();
+    }
+
+    // An event as the Agenda shows it. All-day events keep plain dates
+    // (Google's end date is the day after the last); timed ones keep their
+    // moments with offset, for the page to show in the app's time zone.
+    private function event(array $e, array $calendar): array
+    {
+        $allDay = isset($e['start']['date']);
+        $join = $e['hangoutLink'] ?? collect($e['conferenceData']['entryPoints'] ?? [])->firstWhere('entryPointType', 'video')['uri'] ?? null;
+
+        return [
+            'id' => $e['id'],
+            'calendar_id' => $calendar['id'],
+            'calendar' => $calendar['name'],
+            'color' => $calendar['color'] ?? null,
+            'title' => $e['summary'] ?? '(No title)',
+            'all_day' => $allDay,
+            'start' => $allDay ? $e['start']['date'] : $e['start']['dateTime'],
+            'end' => $allDay ? $e['end']['date'] : $e['end']['dateTime'],
+            'location' => $e['location'] ?? null,
+            // Google's notes can be HTML: cut down to plain formatting.
+            'description' => RichText::toSafeHtml($e['description'] ?? null) ?: null,
+            'join_url' => $join,
+            'google_url' => $e['htmlLink'] ?? null,
+            'type' => $e['eventType'] ?? 'default', // default, outOfOffice, focusTime
+        ];
     }
 
     // Ends the app's access in Google too, so it leaves their account's

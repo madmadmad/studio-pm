@@ -1,0 +1,199 @@
+// Home → Agenda (Components/Agenda.jsx): a toolbar to page through days,
+// then each day's list -- Google events with their calendar's color, and
+// tasks due. Rows are list-rows: time on the left, then what and where.
+@use '../abstracts' as *;
+
+.agenda {
+    // The date stepper tucked beside the Day / 3 days / Week switch, on the right.
+    &__toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: flex-end;
+        gap: var(--space-3);
+        margin-bottom: var(--space-4);
+    }
+
+    // As the Timesheet's week stepper.
+    &__nav {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: var(--space-2);
+    }
+
+    &__step {
+        width: var(--size-control);
+        padding: 0;
+    }
+
+    &__range {
+        min-width: 11rem; // one-off: room for "Dec 30 – Jan 1, 2027"
+        font-weight: var(--font-weight-semibold);
+        text-align: center;
+    }
+
+    &__loading {
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+        color: var(--color-text-muted);
+    }
+
+    &__notice {
+        margin-bottom: var(--space-4);
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+        color: var(--color-text-muted);
+    }
+
+    // The day's bar is .month-divider__bar (the invoice months'), here in
+    // a list of rows rather than a table: its own rule below, and the h3's
+    // margin off.
+    &__day-head {
+        margin: 0;
+        border-bottom: var(--border-width) solid var(--color-border);
+    }
+
+    &__empty {
+        padding: var(--space-row-y) var(--space-row-x);
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+        color: var(--color-text-muted);
+        border-bottom: var(--border-width) solid var(--color-border);
+
+        &:last-child {
+            border-bottom: none;
+        }
+    }
+
+    // A list-row laid out left to right: time, color, what, Join.
+    &__item {
+        justify-content: flex-start;
+        gap: var(--space-3);
+        cursor: pointer;
+
+        &:focus-visible {
+            @include focus-ring;
+        }
+    }
+
+    &__time {
+        flex-shrink: 0;
+        width: 10rem; // one-off: "11:30 AM – 12:30 PM" on one line
+        white-space: nowrap;
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+        color: var(--color-text-muted);
+        font-variant-numeric: tabular-nums;
+
+        // A phone hasn't the room: narrower, and the range wraps.
+        @include respond-below('sm') {
+            width: 5.5rem;
+            white-space: normal;
+        }
+    }
+
+    // The calendar's own color in Google.
+    &__swatch {
+        flex-shrink: 0;
+        width: var(--space-1);
+        align-self: stretch;
+        min-height: var(--line-height-sm);
+        border-radius: var(--radius-base);
+        background-color: var(--color-text-muted);
+    }
+
+    // Filled in the person's chosen color (Profile → Look and feel).
+    &__task-icon {
+        flex-shrink: 0;
+        width: var(--space-5);
+        height: var(--space-5);
+        color: var(--color-primary);
+    }
+
+    &__body {
+        flex: 1;
+        min-width: 0;
+    }
+
+    &__title {
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+        font-weight: 550; // one-off: between medium and semibold (variable font)
+        overflow-wrap: anywhere;
+    }
+
+    &__meta {
+        font-size: var(--font-size-xs);
+        line-height: var(--line-height-xs);
+        color: var(--color-text-muted);
+        overflow-wrap: anywhere;
+    }
+
+    &__item--done &__title {
+        color: var(--color-text-muted);
+        text-decoration: line-through;
+    }
+
+    &__join {
+        display: inline-flex;
+        flex-shrink: 0;
+        align-items: center;
+        gap: var(--space-1);
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+        font-weight: var(--font-weight-semibold);
+        color: var(--color-primary-text);
+
+        &:hover {
+            text-decoration: underline;
+        }
+    }
+}
+
+// An event's details drawer.
+.agenda-event {
+    &__when {
+        font-weight: var(--font-weight-medium);
+    }
+
+    &__calendar {
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
+        margin-top: var(--space-1);
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-sm);
+        color: var(--color-text-muted);
+
+        .agenda__swatch {
+            align-self: auto;
+            width: var(--space-2-5);
+            height: var(--space-2-5);
+            min-height: 0;
+            border-radius: 50%;
+        }
+    }
+
+    &__links {
+        @include stack(var(--space-3));
+    }
+
+    &__location {
+        display: flex;
+        align-items: flex-start;
+        gap: var(--space-2);
+        overflow-wrap: anywhere;
+
+        svg {
+            flex-shrink: 0;
+            margin-top: var(--space-0-5);
+        }
+    }
+
+    &__google {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--space-1);
+    }
+}

@@ -115,6 +115,7 @@ Route::middleware(['auth:sanctum', 'accountant.restrict', 'two-factor.required']
     // Your Google Calendar connection and which calendars to show.
     Route::middleware('staff')->group(function () {
         Route::get('google-calendar', [GoogleCalendarController::class, 'show']);
+        Route::get('google-calendar/events', [GoogleCalendarController::class, 'events']);
         Route::put('google-calendar/calendars', [GoogleCalendarController::class, 'updateCalendars']);
         Route::delete('google-calendar', [GoogleCalendarController::class, 'destroy']);
     });

@@ -5,6 +5,7 @@ import AppLayout from '../../Layouts/AppLayout';
 import PageHeader from '../../Components/PageHeader';
 import TabBar from '../../Components/TabBar';
 import Timesheet from '../../Components/Timesheet';
+import Agenda from '../../Components/Agenda';
 import ProjectBoard from '../../Components/ProjectBoard';
 import EmptyState from '../../Components/EmptyState';
 import AutoResizeTextarea from '../../Components/AutoResizeTextarea';
@@ -17,7 +18,7 @@ import { formatDateTime, todayInAppTimezone, formatShortDate } from '../../lib/f
 import { useRememberedTab } from '../../lib/useRememberedTab';
 import { clearDraft, readDraft, writeDraft } from '../../lib/drafts';
 
-const TABS = ['Projects', 'Tasks', 'Timesheet', 'To-do'];
+const TABS = ['Projects', 'Tasks', 'Agenda', 'Timesheet', 'To-do'];
 
 // Their starred projects as a board, as on the Projects page: drag a card
 // to change its status, or unstar it to take it off here.
@@ -935,7 +936,7 @@ function RecentProjects({ projects }) {
 
 // My Work: the signed-in person's own work, and where they land -- their
 // projects (recently worked on, then starred), their tasks (assigned or
-// starred), their week's time, and their private to-do list. Their
+// starred), their agenda (Google Calendar and tasks due), their week's time, and their private to-do list. Their
 // account and security are Profile.
 export default function MyWorkIndex({ myTasks, todos, recentProjects, starredProjects, timesheet, timeProjects, timeCompanies, timeServices }) {
     const [tab, setTab] = useRememberedTab('my-work-tab', TABS, { param: 'tab' });
@@ -957,6 +958,8 @@ export default function MyWorkIndex({ myTasks, todos, recentProjects, starredPro
             )}
 
             {tab === 'Tasks' && <MyTasks tasks={myTasks} />}
+
+            {tab === 'Agenda' && <Agenda tasks={myTasks} />}
 
             {tab === 'Timesheet' && (
                 <Timesheet

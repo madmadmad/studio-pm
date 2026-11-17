@@ -7,6 +7,8 @@ use App\Services\GoogleCalendarClient;
 use App\Services\GoogleCalendarDisconnected;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
@@ -111,6 +113,38 @@ class GoogleCalendarController extends Controller
         $account->update(['calendars' => collect($data['ids'])->map(fn ($id) => $this->stored($available[$id]))->values()->all()]);
 
         return ['chosen' => $data['ids']];
+    }
+
+    // The Agenda's events (Home → Agenda): every chosen calendar's, from
+    // ?start (a date) for ?days, in the app's time zone. Kept two minutes,
+    // so paging back and forth doesn't ask Google each time.
+    public function events(Request $request): array
+    {
+        $data = $request->validate(['start' => ['required', 'date_format:Y-m-d'], 'days' => ['required', 'integer', 'min:1', 'max:7']]);
+        $account = $request->user()->googleCalendarAccount;
+        if (! $account) {
+            return ['connected' => false, 'events' => []];
+        }
+
+        $calendars = $account->calendars ?? [];
+        $from = Carbon::parse($data['start'], config('app.timezone'))->startOfDay();
+        $to = $from->copy()->addDays((int) $data['days']);
+        $key = 'google-calendar-events:'.$account->id.':'.md5(json_encode([$data, collect($calendars)->pluck('id'), $account->updated_at]));
+
+        try {
+            $events = Cache::remember($key, now()->addMinutes(2), fn () => collect($calendars)
+                ->flatMap(fn (array $calendar) => $this->google->events($account, $calendar, $from, $to))
+                ->values()
+                ->all());
+        } catch (GoogleCalendarDisconnected) {
+            return ['connected' => false, 'lost' => true, 'events' => []];
+        } catch (\Throwable $e) {
+            Log::warning('Google calendar events failed', ['user' => $request->user()->id, 'error' => $e->getMessage()]);
+
+            return ['connected' => true, 'events' => [], 'error' => 'Your Google calendar couldn’t be loaded just now.'];
+        }
+
+        return ['connected' => true, 'events' => $events, 'calendars' => count($calendars)];
     }
 
     public function destroy(Request $request): array
